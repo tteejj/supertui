@@ -244,8 +244,4 @@ namespace SuperTUI.Core
             Layout?.Clear();
         }
     }
-
-    /// <summary>
-    /// Manages workspaces and handles switching between them
-    /// Each workspace maintains its own independent state
 }
