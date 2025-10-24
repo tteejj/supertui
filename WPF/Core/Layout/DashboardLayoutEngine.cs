@@ -20,6 +20,7 @@ namespace SuperTUI.Core
         public DashboardLayoutEngine()
         {
             grid = new Grid();
+            Container = grid; // Set base class Container property
 
             // 2x2 grid
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -152,6 +153,10 @@ namespace SuperTUI.Core
             if (slotIndex >= 0 && slotIndex < 4)
             {
                 SetWidget(slotIndex, child);
+                if (!children.Contains(child))
+                {
+                    children.Add(child);
+                }
             }
         }
 
@@ -172,24 +177,24 @@ namespace SuperTUI.Core
                 if (widgets[i] == child)
                 {
                     ClearSlot(i);
+                    children.Remove(child);
                     return;
                 }
             }
         }
 
-        public override UIElement GetLayoutRoot()
+        public override void Clear()
         {
-            return grid;
+            for (int i = 0; i < 4; i++)
+            {
+                ClearSlot(i);
+            }
+            children.Clear();
         }
 
-        public override void UpdateLayout()
+        public override List<UIElement> GetChildren()
         {
-            grid.UpdateLayout();
-        }
-
-        public override IEnumerable<UIElement> GetChildren()
-        {
-            return GetAllWidgets();
+            return widgets.Where(w => w != null).ToList();
         }
 
         /// <summary>
