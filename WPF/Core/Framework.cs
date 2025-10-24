@@ -1,0 +1,999 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
+
+namespace SuperTUI.Core
+{
+    // ============================================================================
+    // BASE CLASSES
+    // ============================================================================
+
+    /// <summary>
+    /// Base class for all widgets - small, focused, self-contained components
+    /// Each widget maintains its own state independently
+    /// </summary>
+    public abstract class WidgetBase : UserControl, INotifyPropertyChanged
+    {
+        public string WidgetName { get; set; }
+        public string WidgetType { get; set; }
+        public Guid WidgetId { get; private set; } = Guid.NewGuid();
+
+        // Focus management
+        private bool hasFocus;
+        public bool HasFocus
+        {
+            get => hasFocus;
+            set
+            {
+                if (hasFocus != value)
+                {
+                    hasFocus = value;
+                    OnPropertyChanged(nameof(HasFocus));
+                    UpdateFocusVisual();
+
+                    if (value)
+                        OnWidgetFocusReceived();
+                    else
+                        OnWidgetFocusLost();
+                }
+            }
+        }
+
+        // Container wrapper for focus visual
+        private Border containerBorder;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public WidgetBase()
+        {
+            // Wrap widget content in a border for focus indication
+            this.Loaded += (s, e) => WrapInFocusBorder();
+            this.Focusable = true;
+            this.GotFocus += (s, e) => HasFocus = true;
+            this.LostFocus += (s, e) => HasFocus = false;
+        }
+
+        private void WrapInFocusBorder()
+        {
+            if (this.Content != null && containerBorder == null)
+            {
+                var originalContent = this.Content;
+                this.Content = null;
+
+                containerBorder = new Border
+                {
+                    Child = originalContent as UIElement,
+                    BorderThickness = new Thickness(2),
+                    BorderBrush = Brushes.Transparent
+                };
+
+                this.Content = containerBorder;
+                UpdateFocusVisual();
+            }
+        }
+
+        private void UpdateFocusVisual()
+        {
+            if (containerBorder != null)
+            {
+                containerBorder.BorderBrush = HasFocus
+                    ? new SolidColorBrush(Color.FromRgb(78, 201, 176)) // Accent color
+                    : Brushes.Transparent;
+            }
+        }
+
+        /// <summary>
+        /// Initialize widget - called once when widget is created
+        /// </summary>
+        public abstract void Initialize();
+
+        /// <summary>
+        /// Refresh widget data - can be called manually or on timer
+        /// </summary>
+        public virtual void Refresh() { }
+
+        /// <summary>
+        /// Called when widget becomes visible (workspace switched to)
+        /// </summary>
+        public virtual void OnActivated() { }
+
+        /// <summary>
+        /// Called when widget becomes hidden (workspace switched away)
+        /// Widget state is preserved, just hidden
+        /// </summary>
+        public virtual void OnDeactivated() { }
+
+        /// <summary>
+        /// Handle keyboard input when widget has focus
+        /// </summary>
+        public virtual void OnWidgetKeyDown(KeyEventArgs e) { }
+
+        /// <summary>
+        /// Called when widget receives focus
+        /// </summary>
+        public virtual void OnWidgetFocusReceived() { }
+
+        /// <summary>
+        /// Called when widget loses focus
+        /// </summary>
+        public virtual void OnWidgetFocusLost() { }
+
+        /// <summary>
+        /// Save widget state (for persistence)
+        /// </summary>
+        public virtual Dictionary<string, object> SaveState()
+        {
+            return new Dictionary<string, object>
+            {
+                ["WidgetName"] = WidgetName,
+                ["WidgetType"] = WidgetType,
+                ["WidgetId"] = WidgetId
+            };
+        }
+
+        /// <summary>
+        /// Restore widget state (from persistence)
+        /// </summary>
+        public virtual void RestoreState(Dictionary<string, object> state)
+        {
+            // Override in derived classes to restore specific state
+        }
+    }
+
+    /// <summary>
+    /// Base class for screens - larger interactive components
+    /// </summary>
+    public abstract class ScreenBase : UserControl, INotifyPropertyChanged
+    {
+        public string ScreenName { get; set; }
+        public string ScreenType { get; set; }
+        public Guid ScreenId { get; private set; } = Guid.NewGuid();
+
+        private bool hasFocus;
+        public bool HasFocus
+        {
+            get => hasFocus;
+            set
+            {
+                if (hasFocus != value)
+                {
+                    hasFocus = value;
+                    OnPropertyChanged(nameof(HasFocus));
+
+                    if (value)
+                        OnFocusReceived();
+                    else
+                        OnFocusLost();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public ScreenBase()
+        {
+            this.Focusable = true;
+            this.GotFocus += (s, e) => HasFocus = true;
+            this.LostFocus += (s, e) => HasFocus = false;
+        }
+
+        /// <summary>
+        /// Initialize screen - called once when screen is created
+        /// </summary>
+        public abstract void Initialize();
+
+        /// <summary>
+        /// Handle keyboard input
+        /// </summary>
+        public virtual void OnScreenKeyDown(KeyEventArgs e) { }
+
+        /// <summary>
+        /// Called when screen receives focus
+        /// </summary>
+        public virtual void OnFocusReceived() { }
+
+        /// <summary>
+        /// Called when screen loses focus
+        /// </summary>
+        public virtual void OnFocusLost() { }
+
+        /// <summary>
+        /// Check if screen can be closed (return false to prevent)
+        /// </summary>
+        public virtual bool CanClose() => true;
+
+        /// <summary>
+        /// Save screen state
+        /// </summary>
+        public virtual Dictionary<string, object> SaveState()
+        {
+            return new Dictionary<string, object>
+            {
+                ["ScreenName"] = ScreenName,
+                ["ScreenType"] = ScreenType,
+                ["ScreenId"] = ScreenId
+            };
+        }
+
+        /// <summary>
+        /// Restore screen state
+        /// </summary>
+        public virtual void RestoreState(Dictionary<string, object> state)
+        {
+            // Override in derived classes
+        }
+    }
+
+    // ============================================================================
+    // LAYOUT SYSTEM
+    // ============================================================================
+
+    /// <summary>
+    /// Size constraint types
+    /// </summary>
+    public enum SizeMode
+    {
+        Auto,           // Size to content
+        Star,           // Proportional (e.g., 1*, 2*)
+        Pixels,         // Fixed pixels
+        Percentage      // Percentage of available space
+    }
+
+    /// <summary>
+    /// Layout parameters for positioning widgets/screens
+    /// </summary>
+    public class LayoutParams
+    {
+        // Grid layout
+        public int? Row { get; set; }
+        public int? Column { get; set; }
+        public int? RowSpan { get; set; } = 1;
+        public int? ColumnSpan { get; set; } = 1;
+
+        // Dock layout
+        public Dock? Dock { get; set; }
+
+        // Size constraints
+        public double? Width { get; set; }
+        public double? Height { get; set; }
+        public double? MinWidth { get; set; }
+        public double? MinHeight { get; set; }
+        public double? MaxWidth { get; set; }
+        public double? MaxHeight { get; set; }
+
+        // Proportional sizing (for Grid)
+        public double StarWidth { get; set; } = 1.0;  // e.g., 2.0 = 2*, 0.5 = 0.5*
+        public double StarHeight { get; set; } = 1.0;
+
+        // Margin
+        public Thickness? Margin { get; set; }
+
+        // Alignment
+        public HorizontalAlignment? HorizontalAlignment { get; set; }
+        public VerticalAlignment? VerticalAlignment { get; set; }
+    }
+
+    /// <summary>
+    /// Base class for layout engines
+    /// </summary>
+    public abstract class LayoutEngine
+    {
+        public Panel Container { get; protected set; }
+        protected List<UIElement> children = new List<UIElement>();
+        protected Dictionary<UIElement, LayoutParams> layoutParams = new Dictionary<UIElement, LayoutParams>();
+
+        public abstract void AddChild(UIElement child, LayoutParams layoutParams);
+        public abstract void RemoveChild(UIElement child);
+        public abstract void Clear();
+
+        public virtual List<UIElement> GetChildren() => new List<UIElement>(children);
+
+        protected void ApplyCommonParams(UIElement child, LayoutParams lp)
+        {
+            if (child is FrameworkElement fe)
+            {
+                // Size
+                if (lp.Width.HasValue)
+                    fe.Width = lp.Width.Value;
+
+                if (lp.Height.HasValue)
+                    fe.Height = lp.Height.Value;
+
+                // Min/Max size
+                if (lp.MinWidth.HasValue)
+                    fe.MinWidth = lp.MinWidth.Value;
+
+                if (lp.MinHeight.HasValue)
+                    fe.MinHeight = lp.MinHeight.Value;
+
+                if (lp.MaxWidth.HasValue)
+                    fe.MaxWidth = lp.MaxWidth.Value;
+
+                if (lp.MaxHeight.HasValue)
+                    fe.MaxHeight = lp.MaxHeight.Value;
+
+                // Margin
+                if (lp.Margin.HasValue)
+                    fe.Margin = lp.Margin.Value;
+                else
+                    fe.Margin = new Thickness(5); // Default margin
+
+                // Alignment
+                if (lp.HorizontalAlignment.HasValue)
+                    fe.HorizontalAlignment = lp.HorizontalAlignment.Value;
+                else
+                    fe.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
+
+                if (lp.VerticalAlignment.HasValue)
+                    fe.VerticalAlignment = lp.VerticalAlignment.Value;
+                else
+                    fe.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Grid-based layout engine with support for star sizing and splitters
+    /// </summary>
+    public class GridLayoutEngine : LayoutEngine
+    {
+        private Grid grid;
+        private bool enableSplitters;
+
+        public GridLayoutEngine(int rows, int columns, bool enableSplitters = false)
+        {
+            grid = new Grid();
+            Container = grid;
+            this.enableSplitters = enableSplitters;
+
+            // Create row definitions with star sizing
+            for (int i = 0; i < rows; i++)
+            {
+                grid.RowDefinitions.Add(new RowDefinition
+                {
+                    Height = new GridLength(1, GridUnitType.Star),
+                    MinHeight = 50 // Minimum row height
+                });
+            }
+
+            // Create column definitions with star sizing
+            for (int i = 0; i < columns; i++)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition
+                {
+                    Width = new GridLength(1, GridUnitType.Star),
+                    MinWidth = 100 // Minimum column width
+                });
+            }
+
+            // Add splitters if enabled
+            if (enableSplitters)
+            {
+                AddGridSplitters(rows, columns);
+            }
+        }
+
+        private void AddGridSplitters(int rows, int columns)
+        {
+            // Add vertical splitters between columns
+            for (int col = 0; col < columns - 1; col++)
+            {
+                var splitter = new GridSplitter
+                {
+                    Width = 5,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
+                    Background = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                    ResizeDirection = GridResizeDirection.Columns
+                };
+
+                Grid.SetColumn(splitter, col);
+                Grid.SetRowSpan(splitter, rows);
+                grid.Children.Add(splitter);
+            }
+
+            // Add horizontal splitters between rows
+            for (int row = 0; row < rows - 1; row++)
+            {
+                var splitter = new GridSplitter
+                {
+                    Height = 5,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
+                    Background = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                    ResizeDirection = GridResizeDirection.Rows
+                };
+
+                Grid.SetRow(splitter, row);
+                Grid.SetColumnSpan(splitter, columns);
+                grid.Children.Add(splitter);
+            }
+        }
+
+        public void SetColumnWidth(int column, GridLength width)
+        {
+            if (column >= 0 && column < grid.ColumnDefinitions.Count)
+            {
+                grid.ColumnDefinitions[column].Width = width;
+            }
+        }
+
+        public void SetRowHeight(int row, GridLength height)
+        {
+            if (row >= 0 && row < grid.RowDefinitions.Count)
+            {
+                grid.RowDefinitions[row].Height = height;
+            }
+        }
+
+        public override void AddChild(UIElement child, LayoutParams lp)
+        {
+            if (lp.Row.HasValue)
+                Grid.SetRow(child, lp.Row.Value);
+
+            if (lp.Column.HasValue)
+                Grid.SetColumn(child, lp.Column.Value);
+
+            if (lp.RowSpan.HasValue)
+                Grid.SetRowSpan(child, lp.RowSpan.Value);
+
+            if (lp.ColumnSpan.HasValue)
+                Grid.SetColumnSpan(child, lp.ColumnSpan.Value);
+
+            // Apply star sizing to grid definitions if specified
+            if (lp.Row.HasValue && lp.StarHeight != 1.0)
+            {
+                SetRowHeight(lp.Row.Value, new GridLength(lp.StarHeight, GridUnitType.Star));
+            }
+
+            if (lp.Column.HasValue && lp.StarWidth != 1.0)
+            {
+                SetColumnWidth(lp.Column.Value, new GridLength(lp.StarWidth, GridUnitType.Star));
+            }
+
+            ApplyCommonParams(child, lp);
+            children.Add(child);
+            layoutParams[child] = lp;
+            grid.Children.Add(child);
+        }
+
+        public override void RemoveChild(UIElement child)
+        {
+            grid.Children.Remove(child);
+            children.Remove(child);
+            layoutParams.Remove(child);
+        }
+
+        public override void Clear()
+        {
+            grid.Children.Clear();
+            children.Clear();
+            layoutParams.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Dock-based layout engine
+    /// </summary>
+    public class DockLayoutEngine : LayoutEngine
+    {
+        private DockPanel dockPanel;
+
+        public DockLayoutEngine()
+        {
+            dockPanel = new DockPanel();
+            dockPanel.LastChildFill = true;
+            Container = dockPanel;
+        }
+
+        public override void AddChild(UIElement child, LayoutParams lp)
+        {
+            if (lp.Dock.HasValue)
+                DockPanel.SetDock(child, lp.Dock.Value);
+
+            ApplyCommonParams(child, lp);
+            children.Add(child);
+            layoutParams[child] = lp;
+            dockPanel.Children.Add(child);
+        }
+
+        public override void RemoveChild(UIElement child)
+        {
+            dockPanel.Children.Remove(child);
+            children.Remove(child);
+            layoutParams.Remove(child);
+        }
+
+        public override void Clear()
+        {
+            dockPanel.Children.Clear();
+            children.Clear();
+            layoutParams.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Stack-based layout engine
+    /// </summary>
+    public class StackLayoutEngine : LayoutEngine
+    {
+        private StackPanel stackPanel;
+
+        public StackLayoutEngine(Orientation orientation = Orientation.Vertical)
+        {
+            stackPanel = new StackPanel();
+            stackPanel.Orientation = orientation;
+            Container = stackPanel;
+        }
+
+        public override void AddChild(UIElement child, LayoutParams lp)
+        {
+            ApplyCommonParams(child, lp);
+            children.Add(child);
+            layoutParams[child] = lp;
+            stackPanel.Children.Add(child);
+        }
+
+        public override void RemoveChild(UIElement child)
+        {
+            stackPanel.Children.Remove(child);
+            children.Remove(child);
+            layoutParams.Remove(child);
+        }
+
+        public override void Clear()
+        {
+            stackPanel.Children.Clear();
+            children.Clear();
+            layoutParams.Clear();
+        }
+    }
+
+    // ============================================================================
+    // WORKSPACE SYSTEM
+    // ============================================================================
+
+    /// <summary>
+    /// Represents a workspace (desktop) containing widgets and screens
+    /// Each workspace maintains independent state for all its widgets/screens
+    /// </summary>
+    public class Workspace
+    {
+        public string Name { get; set; }
+        public int Index { get; set; }
+        public LayoutEngine Layout { get; set; }
+        public List<WidgetBase> Widgets { get; set; } = new List<WidgetBase>();
+        public List<ScreenBase> Screens { get; set; } = new List<ScreenBase>();
+
+        private bool isActive = false;
+        private UIElement focusedElement;
+        private List<UIElement> focusableElements = new List<UIElement>();
+
+        public Workspace(string name, int index, LayoutEngine layout)
+        {
+            Name = name;
+            Index = index;
+            Layout = layout;
+        }
+
+        public void AddWidget(WidgetBase widget, LayoutParams layoutParams)
+        {
+            Widgets.Add(widget);
+            Layout.AddChild(widget, layoutParams);
+            focusableElements.Add(widget);
+
+            if (isActive)
+                widget.OnActivated();
+        }
+
+        public void AddScreen(ScreenBase screen, LayoutParams layoutParams)
+        {
+            Screens.Add(screen);
+            Layout.AddChild(screen, layoutParams);
+            focusableElements.Add(screen);
+
+            if (isActive)
+                screen.OnFocusReceived();
+        }
+
+        public void Activate()
+        {
+            isActive = true;
+
+            foreach (var widget in Widgets)
+                widget.OnActivated();
+
+            foreach (var screen in Screens)
+                screen.OnFocusReceived();
+
+            // Focus first element if nothing focused
+            if (focusedElement == null && focusableElements.Count > 0)
+            {
+                FocusElement(focusableElements[0]);
+            }
+        }
+
+        public void Deactivate()
+        {
+            isActive = false;
+
+            foreach (var widget in Widgets)
+                widget.OnDeactivated();
+
+            foreach (var screen in Screens)
+                screen.OnFocusLost();
+
+            // Don't clear focus - preserve it for when workspace reactivates
+        }
+
+        public void FocusNext()
+        {
+            if (focusableElements.Count == 0) return;
+
+            int currentIndex = focusedElement != null
+                ? focusableElements.IndexOf(focusedElement)
+                : -1;
+
+            int nextIndex = (currentIndex + 1) % focusableElements.Count;
+            FocusElement(focusableElements[nextIndex]);
+        }
+
+        public void FocusPrevious()
+        {
+            if (focusableElements.Count == 0) return;
+
+            int currentIndex = focusedElement != null
+                ? focusableElements.IndexOf(focusedElement)
+                : 0;
+
+            int prevIndex = (currentIndex - 1 + focusableElements.Count) % focusableElements.Count;
+            FocusElement(focusableElements[prevIndex]);
+        }
+
+        private void FocusElement(UIElement element)
+        {
+            // Clear previous focus
+            if (focusedElement != null)
+            {
+                if (focusedElement is WidgetBase widget)
+                    widget.HasFocus = false;
+                else if (focusedElement is ScreenBase screen)
+                    screen.HasFocus = false;
+            }
+
+            // Set new focus
+            focusedElement = element;
+
+            if (element is WidgetBase newWidget)
+            {
+                newWidget.HasFocus = true;
+                newWidget.Focus();
+            }
+            else if (element is ScreenBase newScreen)
+            {
+                newScreen.HasFocus = true;
+                newScreen.Focus();
+            }
+        }
+
+        public void HandleKeyDown(KeyEventArgs e)
+        {
+            // Let focused element handle key first
+            if (focusedElement is WidgetBase widget)
+            {
+                widget.OnWidgetKeyDown(e);
+            }
+            else if (focusedElement is ScreenBase screen)
+            {
+                screen.OnScreenKeyDown(e);
+            }
+
+            // Handle Tab for focus switching (if not handled by widget/screen)
+            if (!e.Handled && e.Key == Key.Tab)
+            {
+                if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+                    FocusPrevious();
+                else
+                    FocusNext();
+
+                e.Handled = true;
+            }
+        }
+
+        public Panel GetContainer()
+        {
+            return Layout.Container;
+        }
+
+        public Dictionary<string, object> SaveState()
+        {
+            var state = new Dictionary<string, object>
+            {
+                ["Name"] = Name,
+                ["Index"] = Index,
+                ["Widgets"] = Widgets.Select(w => w.SaveState()).ToList(),
+                ["Screens"] = Screens.Select(s => s.SaveState()).ToList()
+            };
+            return state;
+        }
+    }
+
+    /// <summary>
+    /// Manages workspaces and handles switching between them
+    /// Each workspace maintains its own independent state
+    /// </summary>
+    public class WorkspaceManager
+    {
+        public ObservableCollection<Workspace> Workspaces { get; private set; }
+        public Workspace CurrentWorkspace { get; private set; }
+
+        private ContentControl workspaceContainer;
+
+        public event Action<Workspace> WorkspaceChanged;
+
+        public WorkspaceManager(ContentControl container)
+        {
+            Workspaces = new ObservableCollection<Workspace>();
+            workspaceContainer = container;
+        }
+
+        public void AddWorkspace(Workspace workspace)
+        {
+            Workspaces.Add(workspace);
+
+            // First workspace becomes current
+            if (Workspaces.Count == 1)
+            {
+                SwitchToWorkspace(workspace.Index);
+            }
+        }
+
+        public void RemoveWorkspace(int index)
+        {
+            var workspace = Workspaces.FirstOrDefault(w => w.Index == index);
+            if (workspace != null)
+            {
+                workspace.Deactivate();
+                Workspaces.Remove(workspace);
+            }
+        }
+
+        public void SwitchToWorkspace(int index)
+        {
+            var workspace = Workspaces.FirstOrDefault(w => w.Index == index);
+            if (workspace != null && workspace != CurrentWorkspace)
+            {
+                // Deactivate current (preserves state)
+                CurrentWorkspace?.Deactivate();
+
+                // Activate new
+                CurrentWorkspace = workspace;
+                CurrentWorkspace.Activate();
+
+                // Update UI
+                workspaceContainer.Content = CurrentWorkspace.GetContainer();
+
+                // Notify listeners
+                WorkspaceChanged?.Invoke(CurrentWorkspace);
+            }
+        }
+
+        public void SwitchToNext()
+        {
+            if (Workspaces.Count == 0) return;
+
+            int currentIndex = Workspaces.IndexOf(CurrentWorkspace);
+            int nextIndex = (currentIndex + 1) % Workspaces.Count;
+            SwitchToWorkspace(Workspaces[nextIndex].Index);
+        }
+
+        public void SwitchToPrevious()
+        {
+            if (Workspaces.Count == 0) return;
+
+            int currentIndex = Workspaces.IndexOf(CurrentWorkspace);
+            int prevIndex = (currentIndex - 1 + Workspaces.Count) % Workspaces.Count;
+            SwitchToWorkspace(Workspaces[prevIndex].Index);
+        }
+
+        public void HandleKeyDown(KeyEventArgs e)
+        {
+            CurrentWorkspace?.HandleKeyDown(e);
+        }
+    }
+
+    // ============================================================================
+    // SERVICE CONTAINER
+    // ============================================================================
+
+    /// <summary>
+    /// Simple dependency injection container for services
+    /// Services are singleton and shared across all widgets/screens
+    /// </summary>
+    public class ServiceContainer
+    {
+        private static ServiceContainer instance;
+        public static ServiceContainer Instance => instance ??= new ServiceContainer();
+
+        private Dictionary<Type, object> services = new Dictionary<Type, object>();
+
+        public void Register<T>(T service)
+        {
+            services[typeof(T)] = service;
+        }
+
+        public T Get<T>()
+        {
+            if (services.TryGetValue(typeof(T), out var service))
+                return (T)service;
+
+            return default(T);
+        }
+
+        public bool TryGet<T>(out T service)
+        {
+            if (services.TryGetValue(typeof(T), out var obj))
+            {
+                service = (T)obj;
+                return true;
+            }
+
+            service = default(T);
+            return false;
+        }
+
+        public void Clear()
+        {
+            services.Clear();
+        }
+    }
+
+    // ============================================================================
+    // EVENT BUS
+    // ============================================================================
+
+    /// <summary>
+    /// Simple event bus for inter-widget communication
+    /// Allows widgets to communicate without direct references
+    /// </summary>
+    public class EventBus
+    {
+        private static EventBus instance;
+        public static EventBus Instance => instance ??= new EventBus();
+
+        private Dictionary<string, List<Action<object>>> subscribers = new Dictionary<string, List<Action<object>>>();
+
+        public void Subscribe(string eventName, Action<object> handler)
+        {
+            if (!subscribers.ContainsKey(eventName))
+                subscribers[eventName] = new List<Action<object>>();
+
+            subscribers[eventName].Add(handler);
+        }
+
+        public void Unsubscribe(string eventName, Action<object> handler)
+        {
+            if (subscribers.ContainsKey(eventName))
+                subscribers[eventName].Remove(handler);
+        }
+
+        public void Publish(string eventName, object data = null)
+        {
+            if (subscribers.ContainsKey(eventName))
+            {
+                foreach (var handler in subscribers[eventName].ToList())
+                {
+                    handler(data);
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            subscribers.Clear();
+        }
+    }
+
+    // ============================================================================
+    // KEYBOARD SHORTCUT MANAGER
+    // ============================================================================
+
+    public class KeyboardShortcut
+    {
+        public Key Key { get; set; }
+        public ModifierKeys Modifiers { get; set; }
+        public Action Action { get; set; }
+        public string Description { get; set; }
+
+        public bool Matches(Key key, ModifierKeys modifiers)
+        {
+            return Key == key && Modifiers == modifiers;
+        }
+    }
+
+    public class ShortcutManager
+    {
+        private List<KeyboardShortcut> globalShortcuts = new List<KeyboardShortcut>();
+        private Dictionary<string, List<KeyboardShortcut>> workspaceShortcuts = new Dictionary<string, List<KeyboardShortcut>>();
+
+        public void RegisterGlobal(Key key, ModifierKeys modifiers, Action action, string description = "")
+        {
+            globalShortcuts.Add(new KeyboardShortcut
+            {
+                Key = key,
+                Modifiers = modifiers,
+                Action = action,
+                Description = description
+            });
+        }
+
+        public void RegisterForWorkspace(string workspaceName, Key key, ModifierKeys modifiers, Action action, string description = "")
+        {
+            if (!workspaceShortcuts.ContainsKey(workspaceName))
+                workspaceShortcuts[workspaceName] = new List<KeyboardShortcut>();
+
+            workspaceShortcuts[workspaceName].Add(new KeyboardShortcut
+            {
+                Key = key,
+                Modifiers = modifiers,
+                Action = action,
+                Description = description
+            });
+        }
+
+        public bool HandleKeyDown(Key key, ModifierKeys modifiers, string currentWorkspace)
+        {
+            // Try workspace-specific shortcuts first
+            if (!string.IsNullOrEmpty(currentWorkspace) && workspaceShortcuts.ContainsKey(currentWorkspace))
+            {
+                foreach (var shortcut in workspaceShortcuts[currentWorkspace])
+                {
+                    if (shortcut.Matches(key, modifiers))
+                    {
+                        shortcut.Action?.Invoke();
+                        return true;
+                    }
+                }
+            }
+
+            // Try global shortcuts
+            foreach (var shortcut in globalShortcuts)
+            {
+                if (shortcut.Matches(key, modifiers))
+                {
+                    shortcut.Action?.Invoke();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public List<KeyboardShortcut> GetAllShortcuts()
+        {
+            var all = new List<KeyboardShortcut>(globalShortcuts);
+            foreach (var kvp in workspaceShortcuts)
+            {
+                all.AddRange(kvp.Value);
+            }
+            return all;
+        }
+    }
+}
