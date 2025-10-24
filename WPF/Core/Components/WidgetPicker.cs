@@ -39,6 +39,12 @@ namespace SuperTUI.Core.Components
 
             BuildUI();
             LoadWidgetOptions();
+
+            // Set focus to listbox when window loads
+            Loaded += (s, e) => {
+                listBox.Focus();
+                Keyboard.Focus(listBox);
+            };
         }
 
         private void BuildUI()

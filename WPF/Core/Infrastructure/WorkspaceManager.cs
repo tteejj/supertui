@@ -75,18 +75,36 @@ namespace SuperTUI.Core
         {
             if (Workspaces.Count == 0) return;
 
+            if (CurrentWorkspace == null)
+            {
+                SwitchToWorkspace(Workspaces[0].Index);
+                return;
+            }
+
             int currentIndex = Workspaces.IndexOf(CurrentWorkspace);
+            if (currentIndex < 0) currentIndex = 0; // Fallback if not found
             int nextIndex = (currentIndex + 1) % Workspaces.Count;
             SwitchToWorkspace(Workspaces[nextIndex].Index);
+
+            Logger.Instance?.Debug("WorkspaceManager", $"Switched to next workspace: {Workspaces[nextIndex].Name}");
         }
 
         public void SwitchToPrevious()
         {
             if (Workspaces.Count == 0) return;
 
+            if (CurrentWorkspace == null)
+            {
+                SwitchToWorkspace(Workspaces[0].Index);
+                return;
+            }
+
             int currentIndex = Workspaces.IndexOf(CurrentWorkspace);
+            if (currentIndex < 0) currentIndex = 0; // Fallback if not found
             int prevIndex = (currentIndex - 1 + Workspaces.Count) % Workspaces.Count;
             SwitchToWorkspace(Workspaces[prevIndex].Index);
+
+            Logger.Instance?.Debug("WorkspaceManager", $"Switched to previous workspace: {Workspaces[prevIndex].Name}");
         }
 
         public void HandleKeyDown(KeyEventArgs e)

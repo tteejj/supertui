@@ -192,7 +192,10 @@ Write-Host "Initializing SuperTUI infrastructure..." -ForegroundColor Cyan
 
 # Initialize Logger
 $logger = [SuperTUI.Infrastructure.Logger]::Instance
-$logger.Initialize("$env:TEMP\SuperTUI.log")
+$fileLogSink = New-Object SuperTUI.Infrastructure.FileLogSink("$env:TEMP", "SuperTUI")
+$logger.AddSink($fileLogSink)
+$logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Debug)
+Write-Host "Logger initialized with Debug level" -ForegroundColor Green
 
 # Initialize ThemeManager
 $themeManager = [SuperTUI.Infrastructure.ThemeManager]::Instance
@@ -282,7 +285,7 @@ $workspace2Layout.AddChild($rightPanel, $rightParams)
 $workspaceManager.AddWorkspace($workspace2)
 
 # Workspace 3: Placeholder
-$workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine
+$workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
 $workspace3 = New-Object SuperTUI.Core.Workspace("Workspace 3", 3, $workspace3Layout)
 
 $ws3Placeholder = New-Object System.Windows.Controls.Border
@@ -363,11 +366,18 @@ $shortcutManager.RegisterGlobal(
 
             if ($result -eq $true -and $picker.SelectedWidget) {
                 try {
-                    # Create widget instance
-                    $widgetType = [Type]::GetType($picker.SelectedWidget.TypeName)
+                    # Create widget instance by searching loaded assemblies
+                    $widgetType = [AppDomain]::CurrentDomain.GetAssemblies() |
+                        ForEach-Object { $_.GetType($picker.SelectedWidget.TypeName) } |
+                        Where-Object { $_ -ne $null } |
+                        Select-Object -First 1
+
+                    if ($null -eq $widgetType) {
+                        throw "Widget type '$($picker.SelectedWidget.TypeName)' not found"
+                    }
+
                     $widget = [Activator]::CreateInstance($widgetType)
                     $widget.WidgetName = $picker.SelectedWidget.Name
-                    $widget.Initialize()
 
                     # Find first empty slot
                     $layout = [SuperTUI.Core.DashboardLayoutEngine]$current.Layout
@@ -380,9 +390,13 @@ $shortcutManager.RegisterGlobal(
                     }
 
                     if ($slotIndex -ge 0) {
-                        $layout.SetWidget($slotIndex, $widget)
-                        $current.Widgets.Add($widget)
+                        # Use workspace AddWidget method to properly wrap in ErrorBoundary
+                        $layoutParams = New-Object SuperTUI.Core.LayoutParams
+                        $layoutParams.Row = $slotIndex
+                        $current.AddWidget($widget, $layoutParams)
+
                         $statusText.Text = "Added $($picker.SelectedWidget.Name) to slot $($slotIndex + 1)"
+                        $logger.Info("Workspace", "Added widget: $($picker.SelectedWidget.Name) to slot $($slotIndex + 1)")
                     } else {
                         $statusText.Text = "All slots full - close a widget first (Ctrl+W)"
                     }
