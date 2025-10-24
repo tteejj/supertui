@@ -205,7 +205,6 @@ namespace SuperTUI.Core
             };
             return state;
         }
-    }
 
         /// <summary>
         /// Dispose of workspace and all its widgets
