@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
+using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
@@ -89,7 +90,7 @@ namespace SuperTUI.Widgets
                 Text = $"Path: {ShortenPath(repositoryPath)}",
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 10,
-                Foreground = new SolidColorBrush(theme.Comment),
+                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                 Margin = new Thickness(0, 0, 0, 10),
                 TextWrapping = TextWrapping.Wrap
             };
@@ -118,7 +119,7 @@ namespace SuperTUI.Widgets
 
             AddCountItem(countsPanel, "Modified:  ", "0", out modifiedLabel, theme.Warning, theme);
             AddCountItem(countsPanel, "Staged:    ", "0", out stagedLabel, theme.Success, theme);
-            AddCountItem(countsPanel, "Untracked: ", "0", out untrackedLabel, theme.Comment, theme);
+            AddCountItem(countsPanel, "Untracked: ", "0", out untrackedLabel, theme.ForegroundSecondary, theme);
 
             stackPanel.Children.Add(countsPanel);
 
@@ -128,7 +129,7 @@ namespace SuperTUI.Widgets
                 Text = "Updates every 5 seconds",
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 9,
-                Foreground = new SolidColorBrush(theme.Comment),
+                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                 Margin = new Thickness(0, 15, 0, 0),
                 Opacity = 0.7
             };

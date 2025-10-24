@@ -153,7 +153,7 @@ namespace SuperTUI.Widgets
                 Text = "Updates every second",
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 9,
-                Foreground = new SolidColorBrush(theme.Comment),
+                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                 Margin = new Thickness(0, 15, 0, 0),
                 Opacity = 0.7
             };

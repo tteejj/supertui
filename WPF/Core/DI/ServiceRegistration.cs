@@ -1,6 +1,7 @@
 using System;
 using SuperTUI.Core;
 using SuperTUI.Infrastructure;
+using SuperTUI.Extensions;
 
 namespace SuperTUI.DI
 {

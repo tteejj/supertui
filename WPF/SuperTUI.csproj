@@ -24,6 +24,7 @@
 
     <!-- Exclude widgets requiring external dependencies -->
     <Compile Remove="Widgets/TerminalWidget.cs" />
+    <Compile Remove="Widgets/SystemMonitorWidget.cs" />
   </ItemGroup>
 
 </Project>

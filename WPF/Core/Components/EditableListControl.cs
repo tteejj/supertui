@@ -177,7 +177,7 @@ namespace SuperTUI.Core.Components
                 {
                     FontFamily = new FontFamily("Consolas"),
                     FontSize = 9,
-                    Foreground = new SolidColorBrush(theme.Comment),
+                    Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                     Margin = new Thickness(0, 5, 0, 0),
                     Text = "0 items"
                 };
@@ -350,7 +350,7 @@ namespace SuperTUI.Core.Components
         {
             isEditMode = false;
             inputBox.Clear();
-            UpdateStatus($"{items.Count} items", theme.Comment);
+            UpdateStatus($"{items.Count} items", theme.ForegroundSecondary);
         }
 
         public void DeleteSelectedItem()
@@ -403,7 +403,7 @@ namespace SuperTUI.Core.Components
             if (!ShowStatus || statusLabel == null) return;
 
             statusLabel.Text = message;
-            statusLabel.Foreground = new SolidColorBrush(color ?? theme.Comment);
+            statusLabel.Foreground = new SolidColorBrush(color ?? theme.ForegroundSecondary);
         }
 
         // Helper methods
@@ -431,7 +431,7 @@ namespace SuperTUI.Core.Components
         public void RefreshDisplay()
         {
             listBox.Items.Refresh();
-            UpdateStatus($"{items.Count} items", theme.Comment);
+            UpdateStatus($"{items.Count} items", theme.ForegroundSecondary);
         }
     }
 }

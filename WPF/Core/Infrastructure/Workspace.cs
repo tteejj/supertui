@@ -224,7 +224,10 @@ namespace SuperTUI.Core
             {
                 try
                 {
-                    screen.Dispose();
+                    if (screen is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
                 }
                 catch (Exception ex)
                 {

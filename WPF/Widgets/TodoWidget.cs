@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
+using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
@@ -232,7 +233,8 @@ namespace SuperTUI.Widgets
             if (todoList != null)
             {
                 var theme = ThemeManager.Instance.CurrentTheme;
-                todoList.ApplyTheme(theme);
+                // EditableListControl doesn't implement IThemeable yet
+                // todoList.ApplyTheme(theme);
             }
         }
     }

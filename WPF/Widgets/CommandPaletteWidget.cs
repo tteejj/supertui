@@ -100,7 +100,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 9,
-                Foreground = new SolidColorBrush(theme.Comment),
+                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                 Margin = new Thickness(0, 5, 0, 0)
             };
             DockPanel.SetDock(statusLabel, Dock.Bottom);

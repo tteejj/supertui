@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
+using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
@@ -79,7 +80,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 9,
-                Foreground = new SolidColorBrush(theme.Comment),
+                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
                 Margin = new Thickness(0, 5, 0, 0)
             };
             DockPanel.SetDock(statusLabel, Dock.Bottom);
@@ -150,7 +151,7 @@ namespace SuperTUI.Widgets
                     }
                 }
 
-                UpdateStatus($"{dirs.Count} directories, {files.Count} files", theme.Comment);
+                UpdateStatus($"{dirs.Count} directories, {files.Count} files", theme.ForegroundSecondary);
 
                 // Publish directory changed event
                 EventBus.Instance.Publish(new DirectoryChangedEvent
