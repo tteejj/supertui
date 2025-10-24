@@ -18,8 +18,7 @@ Add-Type -AssemblyName System.Xaml
 Write-Host "Compiling framework..." -ForegroundColor Cyan
 
 # Load all sources in dependency order
-$sources = @()
-foreach ($file in @(
+$files = @(
     "Core/Interfaces/ILogger.cs"
     "Core/Interfaces/IThemeManager.cs"
     "Core/Interfaces/IConfigurationManager.cs"
@@ -56,16 +55,33 @@ foreach ($file in @(
     "Widgets/CounterWidget.cs"
     "Widgets/NotesWidget.cs"
     "Widgets/TaskSummaryWidget.cs"
-)) {
+)
+
+# Load all files
+$allUsings = New-Object System.Collections.Generic.HashSet[string]
+$allCode = New-Object System.Collections.Generic.List[string]
+
+foreach ($file in $files) {
     $path = Join-Path $PSScriptRoot $file
     if (Test-Path $path) {
-        $sources += Get-Content $path -Raw
+        $content = Get-Content $path -Raw
+
+        # Extract using statements
+        $usingMatches = [regex]::Matches($content, '^using\s+[^;]+;', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+        foreach ($match in $usingMatches) {
+            [void]$allUsings.Add($match.Value)
+        }
+
+        # Remove using statements and extract code
+        $codeOnly = $content -replace '(?m)^using\s+[^;]+;\s*$', ''
+        $allCode.Add($codeOnly.Trim())
     } else {
         Write-Warning "Missing: $file"
     }
 }
 
-$combinedSource = $sources -join "`n`n"
+# Build combined source: ALL usings first, then ALL code
+$combinedSource = ($allUsings -join "`n") + "`n`n" + ($allCode -join "`n`n")
 
 # Get loaded assemblies for version matching
 $pf = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationFramework' }
