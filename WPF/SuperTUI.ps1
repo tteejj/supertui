@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-#Requires -PSEdition Desktop
+
 
 # SuperTUI - Production Entry Point
 
