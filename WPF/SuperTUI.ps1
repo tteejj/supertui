@@ -57,31 +57,43 @@ $files = @(
     "Widgets/TaskSummaryWidget.cs"
 )
 
-# Load all files
-$allUsings = New-Object System.Collections.Generic.HashSet[string]
-$allCode = New-Object System.Collections.Generic.List[string]
+# Load all files and separate usings from code
+$allUsings = [System.Collections.Generic.HashSet[string]]::new()
+$allNamespaces = [System.Collections.Generic.List[string]]::new()
 
 foreach ($file in $files) {
     $path = Join-Path $PSScriptRoot $file
     if (Test-Path $path) {
-        $content = Get-Content $path -Raw
+        $lines = Get-Content $path
 
-        # Extract using statements
-        $usingMatches = [regex]::Matches($content, '^using\s+[^;]+;', [System.Text.RegularExpressions.RegexOptions]::Multiline)
-        foreach ($match in $usingMatches) {
-            [void]$allUsings.Add($match.Value)
+        $inUsings = $true
+        $codeLines = [System.Collections.Generic.List[string]]::new()
+
+        foreach ($line in $lines) {
+            if ($inUsings) {
+                if ($line -match '^\s*using\s+') {
+                    [void]$allUsings.Add($line.Trim())
+                } elseif ($line -match '^\s*namespace\s+' -or $line -match '^\s*public\s+' -or $line -match '^\s*internal\s+') {
+                    $inUsings = $false
+                    $codeLines.Add($line)
+                } elseif ($line.Trim().Length -gt 0) {
+                    $codeLines.Add($line)
+                }
+            } else {
+                $codeLines.Add($line)
+            }
         }
 
-        # Remove using statements and extract code
-        $codeOnly = $content -replace '(?m)^using\s+[^;]+;\s*$', ''
-        $allCode.Add($codeOnly.Trim())
+        if ($codeLines.Count -gt 0) {
+            $allNamespaces.Add(($codeLines -join "`n"))
+        }
     } else {
         Write-Warning "Missing: $file"
     }
 }
 
-# Build combined source: ALL usings first, then ALL code
-$combinedSource = ($allUsings -join "`n") + "`n`n" + ($allCode -join "`n`n")
+# Build combined source: ALL usings first, then ALL namespace code
+$combinedSource = ($allUsings -join "`n") + "`n`n" + ($allNamespaces -join "`n`n")
 
 # Get loaded assemblies for version matching
 $pf = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationFramework' }
