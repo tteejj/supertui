@@ -2,166 +2,36 @@ PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh build.ps1
 Building SuperTUI...
   Determining projects to restore...
   All projects are up-to-date for restore.
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(277,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'Branch' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Super
-TUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(278,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'ModifiedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WP
-F\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(279,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'StagedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\
-SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(280,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'UntrackedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\W
-PF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(281,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Su
-perTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(196,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'TotalTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
-roj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(197,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'CompletedTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
-.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(198,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'PendingTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(199,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
-oj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
-ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
-jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
-ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(61,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(71,25): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(89,21): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(93,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(97,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(130,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(138,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(161,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(191,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(206,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(237,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(260,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(264,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(180,35): error CS0115: 'Dash
+boardLayoutEngine.GetLayoutRoot()': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\supe
+rtui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(185,30): error CS0115: 'Dash
+boardLayoutEngine.UpdateLayout()': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\super
+tui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(190,48): error CS0508: 'Dash
+boardLayoutEngine.GetChildren()': return type must be 'List<UIElement>' to match overridden member 'LayoutEngine.GetChi
+ldren()' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(14,18): error CS0534: 'Dashb
+oardLayoutEngine' does not implement inherited abstract member 'LayoutEngine.Clear()' [C:\Users\jhnhe\OneDrive\Document
+s\GitHub\supertui\WPF\SuperTUI.csproj]
 
 Build FAILED.
 
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(277,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'Branch' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Super
-TUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(278,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'ModifiedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WP
-F\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(279,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'StagedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\
-SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(280,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'UntrackedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\W
-PF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(281,21): error CS0117: 'RepositoryStat
-usChangedEvent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Su
-perTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(196,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'TotalTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
-roj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(197,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'CompletedTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
-.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(198,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'PendingTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(199,17): error CS0117: 'TaskStatusChangedEv
-ent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
-oj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
-ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
-jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
-ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(61,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(71,25): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(89,21): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(93,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(97,17): error CS0103: The
- name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
-proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(130,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(138,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(161,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(191,13): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(206,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(237,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(260,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(264,17): error CS0103: Th
-e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
-sproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(180,35): error CS0115: 'Dash
+boardLayoutEngine.GetLayoutRoot()': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\supe
+rtui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(185,30): error CS0115: 'Dash
+boardLayoutEngine.UpdateLayout()': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\super
+tui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(190,48): error CS0508: 'Dash
+boardLayoutEngine.GetChildren()': return type must be 'List<UIElement>' to match overridden member 'LayoutEngine.GetChi
+ldren()' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Layout\DashboardLayoutEngine.cs(14,18): error CS0534: 'Dashb
+oardLayoutEngine' does not implement inherited abstract member 'LayoutEngine.Clear()' [C:\Users\jhnhe\OneDrive\Document
+s\GitHub\supertui\WPF\SuperTUI.csproj]
     0 Warning(s)
-    26 Error(s)
+    4 Error(s)
 
-Time Elapsed 00:00:01.38
+Time Elapsed 00:00:02.12
 Write-Error: Build failed
 PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
