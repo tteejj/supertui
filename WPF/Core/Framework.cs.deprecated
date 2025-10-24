@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -19,7 +20,7 @@ namespace SuperTUI.Core
     /// Base class for all widgets - small, focused, self-contained components
     /// Each widget maintains its own state independently
     /// </summary>
-    public abstract class WidgetBase : UserControl, INotifyPropertyChanged
+    public abstract class WidgetBase : UserControl, INotifyPropertyChanged, IDisposable
     {
         public string WidgetName { get; set; }
         public string WidgetType { get; set; }
@@ -88,8 +89,9 @@ namespace SuperTUI.Core
         {
             if (containerBorder != null)
             {
+                var theme = ThemeManager.Instance.CurrentTheme;
                 containerBorder.BorderBrush = HasFocus
-                    ? new SolidColorBrush(Color.FromRgb(78, 201, 176)) // Accent color
+                    ? new SolidColorBrush(theme.Focus)
                     : Brushes.Transparent;
             }
         }
@@ -149,6 +151,40 @@ namespace SuperTUI.Core
         public virtual void RestoreState(Dictionary<string, object> state)
         {
             // Override in derived classes to restore specific state
+        }
+
+        /// <summary>
+        /// Dispose pattern implementation
+        /// </summary>
+        private bool disposed = false;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    OnDispose();
+                }
+
+                disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Override in derived classes to dispose widget-specific resources
+        /// (timers, event subscriptions, etc.)
+        /// </summary>
+        protected virtual void OnDispose()
+        {
+            // Override in derived classes
         }
     }
 
@@ -445,17 +481,49 @@ namespace SuperTUI.Core
 
         public override void AddChild(UIElement child, LayoutParams lp)
         {
+            // Validate row/column references
             if (lp.Row.HasValue)
+            {
+                if (lp.Row.Value < 0 || lp.Row.Value >= grid.RowDefinitions.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(lp.Row),
+                        $"Row {lp.Row.Value} is invalid. Grid has {grid.RowDefinitions.Count} rows (0-{grid.RowDefinitions.Count - 1})");
+                }
                 Grid.SetRow(child, lp.Row.Value);
+            }
 
             if (lp.Column.HasValue)
+            {
+                if (lp.Column.Value < 0 || lp.Column.Value >= grid.ColumnDefinitions.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(lp.Column),
+                        $"Column {lp.Column.Value} is invalid. Grid has {grid.ColumnDefinitions.Count} columns (0-{grid.ColumnDefinitions.Count - 1})");
+                }
                 Grid.SetColumn(child, lp.Column.Value);
+            }
 
+            // Validate span doesn't exceed grid bounds
             if (lp.RowSpan.HasValue)
+            {
+                int row = lp.Row ?? 0;
+                if (row + lp.RowSpan.Value > grid.RowDefinitions.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(lp.RowSpan),
+                        $"RowSpan {lp.RowSpan.Value} starting at row {row} exceeds grid bounds ({grid.RowDefinitions.Count} rows)");
+                }
                 Grid.SetRowSpan(child, lp.RowSpan.Value);
+            }
 
             if (lp.ColumnSpan.HasValue)
+            {
+                int col = lp.Column ?? 0;
+                if (col + lp.ColumnSpan.Value > grid.ColumnDefinitions.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(lp.ColumnSpan),
+                        $"ColumnSpan {lp.ColumnSpan.Value} starting at column {col} exceeds grid bounds ({grid.ColumnDefinitions.Count} columns)");
+                }
                 Grid.SetColumnSpan(child, lp.ColumnSpan.Value);
+            }
 
             // Apply star sizing to grid definitions if specified
             if (lp.Row.HasValue && lp.StarHeight != 1.0)

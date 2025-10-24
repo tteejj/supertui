@@ -18,6 +18,13 @@ $taskSummarySource = Get-Content "$PSScriptRoot/Widgets/TaskSummaryWidget.cs" -R
 $counterWidgetSource = Get-Content "$PSScriptRoot/Widgets/CounterWidget.cs" -Raw
 $notesWidgetSource = Get-Content "$PSScriptRoot/Widgets/NotesWidget.cs" -Raw
 
+# Extract just the namespace content without the using statements for each widget
+# This prevents duplicate using statements and CS1529 errors
+$clockWidgetSource = $clockWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
+$taskSummarySource = $taskSummarySource -replace '(?s)^using.*?(?=namespace)', ''
+$counterWidgetSource = $counterWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
+$notesWidgetSource = $notesWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
+
 $combinedSource = @"
 $frameworkSource
 
@@ -30,6 +37,7 @@ $counterWidgetSource
 $notesWidgetSource
 "@
 
+# Use the assembly references that were already loaded at the top of the script
 Add-Type -TypeDefinition $combinedSource -ReferencedAssemblies @(
     'PresentationFramework',
     'PresentationCore',

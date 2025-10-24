@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using SuperTUI.Core;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
 {
@@ -46,11 +47,13 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
             // Container
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(15)
             };
@@ -67,7 +70,7 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Cascadia Mono, Consolas, Courier New"),
                 FontSize = 36,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176)), // Terminal accent
+                Foreground = new SolidColorBrush(theme.Info),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 10)
             };
@@ -77,7 +80,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Cascadia Mono, Consolas, Courier New"),
                 FontSize = 14,
-                Foreground = new SolidColorBrush(Color.FromRgb(204, 204, 204)),
+                Foreground = new SolidColorBrush(theme.Foreground),
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
@@ -123,6 +126,19 @@ namespace SuperTUI.Widgets
         {
             // Pause timer when workspace is hidden (save CPU)
             timer?.Stop();
+        }
+
+        protected override void OnDispose()
+        {
+            // Stop and dispose timer
+            if (timer != null)
+            {
+                timer.Stop();
+                timer.Tick -= (s, e) => UpdateTime();
+                timer = null;
+            }
+
+            base.OnDispose();
         }
     }
 }

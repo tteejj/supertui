@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
 {
@@ -36,10 +37,12 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(20)
             };
@@ -57,7 +60,7 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 15)
             };
@@ -69,7 +72,7 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 48,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(86, 156, 214)),
+                Foreground = new SolidColorBrush(theme.SyntaxKeyword),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 15)
             };
@@ -80,7 +83,7 @@ namespace SuperTUI.Widgets
                 Text = "Press Up/Down arrows",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
@@ -120,12 +123,14 @@ namespace SuperTUI.Widgets
 
         public override void OnWidgetFocusReceived()
         {
-            instructionText.Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176));
+            var theme = ThemeManager.Instance.CurrentTheme;
+            instructionText.Foreground = new SolidColorBrush(theme.Focus);
         }
 
         public override void OnWidgetFocusLost()
         {
-            instructionText.Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102));
+            var theme = ThemeManager.Instance.CurrentTheme;
+            instructionText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
         }
 
         private void UpdateDisplay()
@@ -146,6 +151,12 @@ namespace SuperTUI.Widgets
             {
                 Count = (int)state["Count"];
             }
+        }
+
+        protected override void OnDispose()
+        {
+            // No resources to dispose currently
+            base.OnDispose();
         }
     }
 }

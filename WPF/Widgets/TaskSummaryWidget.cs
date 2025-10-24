@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
 {
@@ -45,10 +46,12 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(15)
             };
@@ -62,7 +65,7 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                 Margin = new Thickness(0, 0, 0, 10)
             };
             contentPanel.Children.Add(title);
@@ -101,6 +104,8 @@ namespace SuperTUI.Widgets
 
         private void AddStatItem(string label, string value, string colorHex)
         {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
             var itemPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -112,7 +117,7 @@ namespace SuperTUI.Widgets
                 Text = label + ":",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 13,
-                Foreground = new SolidColorBrush(Color.FromRgb(204, 204, 204)),
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Width = 100
             };
 
@@ -145,6 +150,12 @@ namespace SuperTUI.Widgets
                     OverdueTasks = random.Next(0, 5)
                 };
             }
+        }
+
+        protected override void OnDispose()
+        {
+            // No resources to dispose currently
+            base.OnDispose();
         }
     }
 }
