@@ -184,6 +184,31 @@ $statusClockTimer.Add_Tick({
 })
 $statusClockTimer.Start()
 
+# ============================================================================
+# INITIALIZE INFRASTRUCTURE
+# ============================================================================
+
+Write-Host "Initializing SuperTUI infrastructure..." -ForegroundColor Cyan
+
+# Initialize Logger
+$logger = [SuperTUI.Infrastructure.Logger]::Instance
+$logger.Initialize("$env:TEMP\SuperTUI.log")
+
+# Initialize ThemeManager
+$themeManager = [SuperTUI.Infrastructure.ThemeManager]::Instance
+$themeManager.Initialize($null)  # Uses default built-in themes
+
+# Initialize ConfigurationManager
+$configManager = [SuperTUI.Infrastructure.ConfigurationManager]::Instance
+$configManager.Initialize("$env:TEMP\SuperTUI-config.json")
+
+# Initialize other infrastructure
+$errorHandler = [SuperTUI.Infrastructure.ErrorHandler]::Instance
+$securityManager = [SuperTUI.Infrastructure.SecurityManager]::Instance
+$securityManager.Initialize()
+
+Write-Host "Infrastructure initialized" -ForegroundColor Green
+
 # Create WorkspaceManager
 $workspaceManager = New-Object SuperTUI.Core.WorkspaceManager($workspaceContainer)
 
