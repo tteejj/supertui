@@ -128,7 +128,7 @@ try {
             <Grid>
                 <TextBlock
                     x:Name="StatusText"
-                    Text="Ctrl+1-9: Switch Workspace | Ctrl+Q: Quit | Tab: Next Widget"
+                    Text="Ctrl+1-9: Workspace | Tab: Focus | Ctrl+W: Close | Ctrl+N: Add | Ctrl+Shift+Arrows: Move | Ctrl+Q: Quit"
                     FontFamily="Cascadia Mono, Consolas"
                     FontSize="11"
                     Foreground="#666666"
@@ -221,62 +221,25 @@ $shortcutManager = New-Object SuperTUI.Core.ShortcutManager
 
 Write-Host "Setting up workspaces..." -ForegroundColor Cyan
 
-# Workspace 1: Dashboard (Grid layout with widgets)
-$workspace1Layout = New-Object SuperTUI.Core.GridLayoutEngine(2, 2)
+# Workspace 1: Dashboard (Flexible i3-like layout)
+$workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine
 $workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout)
 
-# Add Clock widget (top-left)
+# Add Clock widget to slot 0 (top-left)
 $clockWidget = New-Object SuperTUI.Widgets.ClockWidget
 $clockWidget.WidgetName = "Clock"
 $clockWidget.Initialize()
-$clockParams = New-Object SuperTUI.Core.LayoutParams
-$clockParams.Row = 0
-$clockParams.Column = 0
-$workspace1.AddWidget($clockWidget, $clockParams)
+$workspace1Layout.SetWidget(0, $clockWidget)
+$workspace1.Widgets.Add($clockWidget)
 
-# Add TaskSummary widget (top-right)
+# Add TaskSummary widget to slot 1 (top-right)
 $taskSummary = New-Object SuperTUI.Widgets.TaskSummaryWidget
 $taskSummary.WidgetName = "TaskSummary"
 $taskSummary.Initialize()
-$taskParams = New-Object SuperTUI.Core.LayoutParams
-$taskParams.Row = 0
-$taskParams.Column = 1
-$workspace1.AddWidget($taskSummary, $taskParams)
+$workspace1Layout.SetWidget(1, $taskSummary)
+$workspace1.Widgets.Add($taskSummary)
 
-# Add placeholder widgets for demo
-$placeholder1 = New-Object System.Windows.Controls.Border
-$placeholder1.Background = [System.Windows.Media.Brushes]::Transparent
-$placeholder1.BorderBrush = [System.Windows.Media.Brushes]::Gray
-$placeholder1.BorderThickness = 1
-$placeholder1.Child = (New-Object System.Windows.Controls.TextBlock -Property @{
-    Text = "Widget Slot 3`n(Calendar, Tasks, etc.)"
-    FontFamily = "Cascadia Mono, Consolas"
-    Foreground = [System.Windows.Media.Brushes]::Gray
-    HorizontalAlignment = "Center"
-    VerticalAlignment = "Center"
-    TextAlignment = "Center"
-})
-$placeholder1Params = New-Object SuperTUI.Core.LayoutParams
-$placeholder1Params.Row = 1
-$placeholder1Params.Column = 0
-$workspace1Layout.AddChild($placeholder1, $placeholder1Params)
-
-$placeholder2 = New-Object System.Windows.Controls.Border
-$placeholder2.Background = [System.Windows.Media.Brushes]::Transparent
-$placeholder2.BorderBrush = [System.Windows.Media.Brushes]::Gray
-$placeholder2.BorderThickness = 1
-$placeholder2.Child = (New-Object System.Windows.Controls.TextBlock -Property @{
-    Text = "Widget Slot 4`n(Projects, Notes, etc.)"
-    FontFamily = "Cascadia Mono, Consolas"
-    Foreground = [System.Windows.Media.Brushes]::Gray
-    HorizontalAlignment = "Center"
-    VerticalAlignment = "Center"
-    TextAlignment = "Center"
-})
-$placeholder2Params = New-Object SuperTUI.Core.LayoutParams
-$placeholder2Params.Row = 1
-$placeholder2Params.Column = 1
-$workspace1Layout.AddChild($placeholder2, $placeholder2Params)
+# Slots 2 and 3 are empty (will show "Empty Slot" placeholders)
 
 $workspaceManager.AddWorkspace($workspace1)
 
@@ -366,14 +329,89 @@ $shortcutManager.RegisterGlobal(
     "Quit SuperTUI"
 )
 
+# Close focused widget
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::W,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $focused = $current.GetFocusedWidget()
+            if ($focused) {
+                $widgetName = $focused.WidgetName
+                $current.RemoveFocusedWidget()
+                $statusText.Text = "Closed widget: $widgetName"
+            } else {
+                $statusText.Text = "No widget focused"
+            }
+        }
+    },
+    "Close focused widget"
+)
+
+# Add new widget (Ctrl+N)
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::N,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current -and $current.Layout -is [SuperTUI.Core.DashboardLayoutEngine]) {
+            # Show widget picker
+            $picker = New-Object SuperTUI.Core.Components.WidgetPicker
+            $picker.Owner = $window
+            $result = $picker.ShowDialog()
+
+            if ($result -eq $true -and $picker.SelectedWidget) {
+                try {
+                    # Create widget instance
+                    $widgetType = [Type]::GetType($picker.SelectedWidget.TypeName)
+                    $widget = [Activator]::CreateInstance($widgetType)
+                    $widget.WidgetName = $picker.SelectedWidget.Name
+                    $widget.Initialize()
+
+                    # Find first empty slot
+                    $layout = [SuperTUI.Core.DashboardLayoutEngine]$current.Layout
+                    $slotIndex = -1
+                    for ($i = 0; $i -lt 4; $i++) {
+                        if ($null -eq $layout.GetWidget($i)) {
+                            $slotIndex = $i
+                            break
+                        }
+                    }
+
+                    if ($slotIndex -ge 0) {
+                        $layout.SetWidget($slotIndex, $widget)
+                        $current.Widgets.Add($widget)
+                        $statusText.Text = "Added $($picker.SelectedWidget.Name) to slot $($slotIndex + 1)"
+                    } else {
+                        $statusText.Text = "All slots full - close a widget first (Ctrl+W)"
+                    }
+                } catch {
+                    $statusText.Text = "Error adding widget: $_"
+                    Write-Host "Error: $_" -ForegroundColor Red
+                }
+            }
+        } else {
+            $statusText.Text = "Add widget only works in Dashboard workspace"
+        }
+    },
+    "Add new widget"
+)
+
 # Next/Previous workspace
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Right,
     [System.Windows.Input.ModifierKeys]::Control,
     {
-        $workspaceManager.SwitchToNext()
-        $current = $workspaceManager.CurrentWorkspace
-        $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+        try {
+            $workspaceManager.SwitchToNext()
+            $current = $workspaceManager.CurrentWorkspace
+            if ($current) {
+                $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+            }
+        } catch {
+            Write-Host "Error switching workspace: $_" -ForegroundColor Red
+        }
     },
     "Next workspace"
 )
@@ -382,11 +420,105 @@ $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Left,
     [System.Windows.Input.ModifierKeys]::Control,
     {
-        $workspaceManager.SwitchToPrevious()
-        $current = $workspaceManager.CurrentWorkspace
-        $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+        try {
+            $workspaceManager.SwitchToPrevious()
+            $current = $workspaceManager.CurrentWorkspace
+            if ($current) {
+                $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+            }
+        } catch {
+            Write-Host "Error switching workspace: $_" -ForegroundColor Red
+        }
     },
     "Previous workspace"
+)
+
+# Tab: Cycle focus between widgets in current workspace
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Tab,
+    [System.Windows.Input.ModifierKeys]::None,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusForward()
+        }
+    },
+    "Next widget focus"
+)
+
+# Shift+Tab: Cycle focus backward
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Tab,
+    [System.Windows.Input.ModifierKeys]::Shift,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusBackward()
+        }
+    },
+    "Previous widget focus"
+)
+
+# Move widget with Ctrl+Shift+Arrow
+$moveWidgetScript = {
+    param($direction)
+    $current = $workspaceManager.CurrentWorkspace
+    if ($current -and $current.Layout -is [SuperTUI.Core.DashboardLayoutEngine]) {
+        $focused = $current.GetFocusedWidget()
+        if ($focused) {
+            $layout = [SuperTUI.Core.DashboardLayoutEngine]$current.Layout
+            $currentSlot = $layout.FindSlotIndex($focused)
+
+            if ($currentSlot -ge 0) {
+                $targetSlot = -1
+                switch ($direction) {
+                    "Left"  { if ($currentSlot % 2 -eq 1) { $targetSlot = $currentSlot - 1 } }  # Right col -> Left col
+                    "Right" { if ($currentSlot % 2 -eq 0) { $targetSlot = $currentSlot + 1 } }  # Left col -> Right col
+                    "Up"    { if ($currentSlot -ge 2) { $targetSlot = $currentSlot - 2 } }      # Bottom row -> Top row
+                    "Down"  { if ($currentSlot -le 1) { $targetSlot = $currentSlot + 2 } }      # Top row -> Bottom row
+                }
+
+                if ($targetSlot -ge 0 -and $targetSlot -lt 4) {
+                    $layout.SwapWidgets($currentSlot, $targetSlot)
+                    $statusText.Text = "Moved $($focused.WidgetName) to slot $($targetSlot + 1)"
+                } else {
+                    $statusText.Text = "Cannot move widget in that direction"
+                }
+            }
+        } else {
+            $statusText.Text = "No widget focused"
+        }
+    } else {
+        $statusText.Text = "Widget movement only works in Dashboard"
+    }
+}
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Left,
+    ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
+    { & $moveWidgetScript "Left" },
+    "Move widget left"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Right,
+    ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
+    { & $moveWidgetScript "Right" },
+    "Move widget right"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Up,
+    ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
+    { & $moveWidgetScript "Up" },
+    "Move widget up"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Down,
+    ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
+    { & $moveWidgetScript "Down" },
+    "Move widget down"
 )
 
 # Keyboard handler

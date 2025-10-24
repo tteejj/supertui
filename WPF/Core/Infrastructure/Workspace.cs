@@ -207,6 +207,76 @@ namespace SuperTUI.Core
         }
 
         /// <summary>
+        /// Cycle focus to next widget
+        /// </summary>
+        public void CycleFocusForward()
+        {
+            if (focusableElements.Count == 0) return;
+
+            int currentIndex = focusedElement != null ? focusableElements.IndexOf(focusedElement) : -1;
+            int nextIndex = (currentIndex + 1) % focusableElements.Count;
+            SetFocus(focusableElements[nextIndex]);
+        }
+
+        /// <summary>
+        /// Cycle focus to previous widget
+        /// </summary>
+        public void CycleFocusBackward()
+        {
+            if (focusableElements.Count == 0) return;
+
+            int currentIndex = focusedElement != null ? focusableElements.IndexOf(focusedElement) : -1;
+            int prevIndex = (currentIndex - 1 + focusableElements.Count) % focusableElements.Count;
+            SetFocus(focusableElements[prevIndex]);
+        }
+
+        /// <summary>
+        /// Get currently focused widget (or null)
+        /// </summary>
+        public WidgetBase GetFocusedWidget()
+        {
+            return focusedElement as WidgetBase;
+        }
+
+        /// <summary>
+        /// Remove the currently focused widget
+        /// </summary>
+        public void RemoveFocusedWidget()
+        {
+            var focused = GetFocusedWidget();
+            if (focused == null) return;
+
+            // Remove from widgets list
+            Widgets.Remove(focused);
+
+            // Remove from focusable elements
+            focusableElements.Remove(focused);
+
+            // Remove from layout
+            Layout.RemoveChild(focused);
+
+            // Find and remove error boundary
+            var errorBoundary = errorBoundaries.FirstOrDefault(eb =>
+                eb.Children.OfType<UIElement>().Contains(focused));
+            if (errorBoundary != null)
+            {
+                errorBoundaries.Remove(errorBoundary);
+                errorBoundary.SafeDispose();
+            }
+
+            // Clear focus
+            focusedElement = null;
+
+            // Focus next widget if available
+            if (focusableElements.Count > 0)
+            {
+                SetFocus(focusableElements[0]);
+            }
+
+            Logger.Instance?.Info("Workspace", $"Removed widget: {focused.WidgetName}");
+        }
+
+        /// <summary>
         /// Dispose of workspace and all its widgets
         /// </summary>
         public void Dispose()
