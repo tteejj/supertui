@@ -1,6 +1,3 @@
-#Requires -Version 5.1
-#Requires -PSEdition Desktop
-
 # SuperTUI - Production Entry Point
 
 # Platform check
@@ -9,113 +6,25 @@ if ($PSVersionTable.Platform -eq 'Unix') {
     exit 1
 }
 
-# Load WPF
-Add-Type -AssemblyName PresentationFramework
-Add-Type -AssemblyName PresentationCore
-Add-Type -AssemblyName WindowsBase
-Add-Type -AssemblyName System.Xaml
+# Load SuperTUI.dll
+$dllPath = Join-Path $PSScriptRoot "bin/Release/net8.0-windows/SuperTUI.dll"
 
-Write-Host "Compiling framework..." -ForegroundColor Cyan
-
-# Load all sources in dependency order
-$files = @(
-    "Core/Interfaces/ILogger.cs"
-    "Core/Interfaces/IThemeManager.cs"
-    "Core/Interfaces/IConfigurationManager.cs"
-    "Core/Interfaces/ISecurityManager.cs"
-    "Core/Interfaces/IErrorHandler.cs"
-    "Core/Interfaces/IServiceContainer.cs"
-    "Core/Interfaces/IEventBus.cs"
-    "Core/Interfaces/ILayoutEngine.cs"
-    "Core/Interfaces/IWidget.cs"
-    "Core/Interfaces/IThemeable.cs"
-    "Core/Interfaces/IWorkspace.cs"
-    "Core/Interfaces/IWorkspaceManager.cs"
-    "Core/Infrastructure/Logger.cs"
-    "Core/Infrastructure/ConfigurationManager.cs"
-    "Core/Infrastructure/ThemeManager.cs"
-    "Core/Infrastructure/SecurityManager.cs"
-    "Core/Infrastructure/ErrorHandler.cs"
-    "Core/Infrastructure/ServiceContainer.cs"
-    "Core/Infrastructure/Events.cs"
-    "Core/Infrastructure/EventBus.cs"
-    "Core/Infrastructure/ShortcutManager.cs"
-    "Core/Layout/LayoutEngine.cs"
-    "Core/Layout/GridLayoutEngine.cs"
-    "Core/Layout/DockLayoutEngine.cs"
-    "Core/Layout/StackLayoutEngine.cs"
-    "Core/Components/WidgetBase.cs"
-    "Core/Components/ScreenBase.cs"
-    "Core/Components/ErrorBoundary.cs"
-    "Core/Infrastructure/Workspace.cs"
-    "Core/Infrastructure/WorkspaceManager.cs"
-    "Core/Infrastructure/WorkspaceTemplate.cs"
-    "Core/Extensions.cs"
-    "Widgets/ClockWidget.cs"
-    "Widgets/CounterWidget.cs"
-    "Widgets/NotesWidget.cs"
-    "Widgets/TaskSummaryWidget.cs"
-)
-
-# Load all files and separate usings from code
-$allUsings = [System.Collections.Generic.HashSet[string]]::new()
-$allCode = [System.Collections.Generic.List[string]]::new()
-
-foreach ($file in $files) {
-    $path = Join-Path $PSScriptRoot $file
-    if (Test-Path $path) {
-        $content = Get-Content $path -Raw
-
-        # Split at first namespace declaration
-        if ($content -match '(?s)(^.*?)(namespace\s+.*)$') {
-            $usingSection = $matches[1]
-            $codeSection = $matches[2]
-
-            # Extract using statements
-            $usingMatches = [regex]::Matches($usingSection, '^\s*using\s+[^;]+;', [System.Text.RegularExpressions.RegexOptions]::Multiline)
-            foreach ($match in $usingMatches) {
-                [void]$allUsings.Add($match.Value.Trim())
-            }
-
-            # Add code section
-            $allCode.Add($codeSection)
-        } else {
-            # No namespace, just add the whole file
-            $allCode.Add($content)
-        }
-    } else {
-        Write-Warning "Missing: $file"
+if (-not (Test-Path $dllPath)) {
+    Write-Host "SuperTUI.dll not found. Building..." -ForegroundColor Yellow
+    & "$PSScriptRoot/build.ps1"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Build failed"
+        exit 1
     }
 }
 
-# Build combined source: ALL usings first, then ALL code
-$combinedSource = ($allUsings -join "`n") + "`n`n" + ($allCode -join "`n`n")
-
-# Get loaded assemblies for version matching
-$pf = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationFramework' }
-$pc = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationCore' }
-$wb = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'WindowsBase' }
-$sx = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'System.Xaml' }
+Write-Host "Loading SuperTUI..." -ForegroundColor Cyan
 
 try {
-    Add-Type -TypeDefinition $combinedSource -ReferencedAssemblies @(
-        $pf.Location
-        $pc.Location
-        $wb.Location
-        $sx.Location
-    ) -IgnoreWarnings -ErrorAction Stop
-    Write-Host "Compiled successfully" -ForegroundColor Green
+    Add-Type -Path $dllPath
+    Write-Host "Loaded successfully" -ForegroundColor Green
 } catch {
-    Write-Error "Compilation failed: $_"
-    $combinedSource | Out-File "$PSScriptRoot/compile_error.cs" -Encoding UTF8
-    Write-Host "Debug output saved to compile_error.cs" -ForegroundColor Yellow
-
-    # Show line 4260-4265 to see the problem
-    $lines = $combinedSource -split "`n"
-    Write-Host "`nLines 4258-4265:" -ForegroundColor Yellow
-    for ($i = 4257; $i -lt 4265 -and $i -lt $lines.Count; $i++) {
-        Write-Host "$($i+1): $($lines[$i])" -ForegroundColor Gray
-    }
+    Write-Error "Failed to load SuperTUI.dll: $_"
     exit 1
 }
 

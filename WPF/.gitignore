@@ -1,7 +1,4 @@
-# SuperTUI portable data directory
-# All runtime data, logs, config, and state files are stored here
-.data/
-
-# Test output files (if any stray outside .data)
-*.log
-*_test_*.json
+bin/
+obj/
+*.user
+compile_error.cs
