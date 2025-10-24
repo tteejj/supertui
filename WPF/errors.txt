@@ -2,15 +2,1080 @@ PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh build.ps1
 Building SuperTUI...
   Determining projects to restore...
   All projects are up-to-date for restore.
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\Workspace.cs(247,1): error CS1022: Type or na
-mespace definition, or end-of-file expected [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(3,7): error CS0246: The type o
+r namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhn
+he\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(5,16): error CS0234: The type
+or namespace name 'Components' does not exist in the namespace 'SuperTUI' (are you missing an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(6,7): error CS0246: The type o
+r namespace name 'Moq' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(4,7): error CS0
+246: The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?
+) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(3,7): error CS0246: The
+ type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(3,7): error CS0246:
+The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(3,7): error CS0246: T
+he type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(4,7): error CS0246: The
+ type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(4,7): error CS0246: The typ
+e or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\
+jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(5,16): error CS0234: The ty
+pe or namespace name 'Layout' does not exist in the namespace 'SuperTUI' (are you missing an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(4,14): error CS0234: The type or namesp
+ace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(5,14): error CS0234: The type or namesp
+ace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Register(string, object, string, str
+ing, Func<object, bool>)' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Save()' [C:\Users\jhnhe\OneDrive\Doc
+uments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Load()' [C:\Users\jhnhe\OneDrive\Doc
+uments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(29,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(29,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(12,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(12,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(11,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(11,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(24,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(24,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(40,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(40,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(24,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(24,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(41,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(41,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(53,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(53,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(56,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(56,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(63,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(63,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(73,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(73,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(41,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(41,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(31,17): error CS0246: The
+type or namespace name 'Theme' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(75,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(75,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(90,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(90,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(57,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(57,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(422,30): error CS0115: 'CommandPa
+letteWidget.LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Docum
+ents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(93,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(93,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(100,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(100,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(72,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(72,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(87,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(87,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(527,22): error CS0246: The type or namespace n
+ame 'Task' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Do
+cuments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(128,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(128,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(111,10): error
+CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+ reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(111,10): error
+CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(102,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(102,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(148,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(148,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(125,10): error
+CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+ reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(125,10): error
+CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(117,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(117,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(180,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(180,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(561,22): error CS0246: The type or namespace n
+ame 'Task<>' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\
+Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(132,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(132,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(215,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(215,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(665,23): error CS0246: The type or namespace n
+ame 'Task' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Do
+cuments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(146,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(146,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(17,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(17,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(160,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(160,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(36,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(36,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(179,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(179,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(52,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(52,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(200,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(200,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(73,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(73,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(98,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(98,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(111,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(111,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(131,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(131,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(155,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(155,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(18,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(18,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(182,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(182,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(33,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(33,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(309,30): error CS0115: 'FileExplore
+rWidget.LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents
+\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(48,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(48,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(65,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(65,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(81,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(81,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(96,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(96,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(107,10): error CS024
+6: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refe
+rence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(107,10): error CS024
+6: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(273,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(273,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(10,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(10,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(28,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(28,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(31,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(31,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(38,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(38,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(39,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(39,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(381,30): error CS0115: 'TerminalWidget.
+LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\
+supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(54,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(54,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(58,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(58,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(64,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(64,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(211,30): error CS0115: 'TodoWidget.LoadStat
+e(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui
+\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(78,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(78,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(27,17): error CS0246: The type or names
+pace name 'Runspace' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\O
+neDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(78,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(78,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(93,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(93,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(91,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(91,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(108,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(108,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(110,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(110,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(129,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(129,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(28,41): error CS0246: The type or
+namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(133,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(133,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(151,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(151,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(100,41): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(146,53): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(145,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(145,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(192,56): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(167,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(167,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(255,52): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(33,38): error CS0246: The type or
+namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(33,16): error CS0246: The type or
+namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(105,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(105,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(151,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(151,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(181,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(181,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(260,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(260,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(197,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(197,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(240,39): error CS0246: The type or
+ namespace name 'WorkspaceState' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 
 Build FAILED.
 
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\Workspace.cs(247,1): error CS1022: Type or na
-mespace definition, or end-of-file expected [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(3,7): error CS0246: The type o
+r namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhn
+he\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(5,16): error CS0234: The type
+or namespace name 'Components' does not exist in the namespace 'SuperTUI' (are you missing an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(6,7): error CS0246: The type o
+r namespace name 'Moq' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(4,7): error CS0
+246: The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?
+) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(3,7): error CS0246: The
+ type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(3,7): error CS0246:
+The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(3,7): error CS0246: T
+he type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(4,7): error CS0246: The
+ type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(4,7): error CS0246: The typ
+e or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\
+jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(5,16): error CS0234: The ty
+pe or namespace name 'Layout' does not exist in the namespace 'SuperTUI' (are you missing an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(4,14): error CS0234: The type or namesp
+ace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(5,14): error CS0234: The type or namesp
+ace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\Users\jhnhe
+\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Register(string, object, string, str
+ing, Func<object, bool>)' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Save()' [C:\Users\jhnhe\OneDrive\Doc
+uments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs(33,41): error CS0535:
+ 'ConfigurationManager' does not implement interface member 'IConfigurationManager.Load()' [C:\Users\jhnhe\OneDrive\Doc
+uments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(29,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(29,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(12,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(12,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(11,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(11,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(24,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(24,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(40,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(40,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(24,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(24,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(41,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(41,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(53,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(53,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(56,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(56,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(63,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(63,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(73,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(73,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(41,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(41,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(31,17): error CS0246: The
+type or namespace name 'Theme' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(75,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(75,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(90,10): error CS0246: The type
+ or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(90,10): error CS0246: The type
+ or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jh
+nhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(57,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(57,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(422,30): error CS0115: 'CommandPa
+letteWidget.LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Docum
+ents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(93,10): error C
+S0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(93,10): error C
+S0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference
+?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(100,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(100,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(72,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(72,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(87,10): error CS0246: The t
+ype or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(87,10): error CS0246: The t
+ype or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users
+\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(527,22): error CS0246: The type or namespace n
+ame 'Task' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Do
+cuments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(128,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(128,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(111,10): error
+CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+ reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(111,10): error
+CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(102,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(102,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(148,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(148,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(125,10): error
+CS0246: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly
+ reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ConfigurationManagerTests.cs(125,10): error
+CS0246: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(117,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(117,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(180,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(180,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(561,22): error CS0246: The type or namespace n
+ame 'Task<>' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\
+Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(132,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(132,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(215,10): error CS0246: The typ
+e or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Components\WorkspaceTests.cs(215,10): error CS0246: The typ
+e or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\j
+hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(665,23): error CS0246: The type or namespace n
+ame 'Task' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Do
+cuments\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(146,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(146,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(17,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(17,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(160,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(160,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(36,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(36,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(179,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(179,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(52,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(52,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(200,10): error CS0246: The
+type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly reference?)
+ [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Layout\GridLayoutEngineTests.cs(200,10): error CS0246: The
+type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\User
+s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(73,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(73,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(98,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(98,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(111,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(111,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(131,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(131,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(155,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(155,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(18,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(18,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(182,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(182,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(33,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(33,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(309,30): error CS0115: 'FileExplore
+rWidget.LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents
+\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(48,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(48,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(65,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(65,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(81,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(81,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(96,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(96,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(107,10): error CS024
+6: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refe
+rence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(107,10): error CS024
+6: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(273,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(273,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(10,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(10,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(28,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(28,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(31,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(31,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(38,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(38,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(39,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(39,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(381,30): error CS0115: 'TerminalWidget.
+LoadState(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\
+supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(54,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(54,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(58,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(58,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(64,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(64,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(211,30): error CS0115: 'TodoWidget.LoadStat
+e(Dictionary<string, object>)': no suitable method found to override [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui
+\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(78,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(78,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TerminalWidget.cs(27,17): error CS0246: The type or names
+pace name 'Runspace' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\O
+neDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(78,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(78,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(93,10): error CS0246:
+ The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refere
+nce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(93,10): error CS0246:
+ The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:
+\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(91,10): error CS0246: T
+he type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referenc
+e?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(91,10): error CS0246: T
+he type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(108,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(108,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(110,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(110,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(129,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(129,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(28,41): error CS0246: The type or
+namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(133,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(133,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(151,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(151,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(100,41): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(146,53): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(145,10): error CS0246:
+The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly referen
+ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ThemeManagerTests.cs(145,10): error CS0246:
+The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(192,56): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(167,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(167,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(255,52): error CS0246: The type or
+ namespace name 'IStateMigration' could not be found (are you missing a using directive or an assembly reference?) [C:\
+Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(33,38): error CS0246: The type or
+namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(33,16): error CS0246: The type or
+namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(105,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(105,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(151,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(151,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(181,10): error CS0246
+: The type or namespace name 'FactAttribute' could not be found (are you missing a using directive or an assembly refer
+ence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\StateMigrationTests.cs(181,10): error CS0246
+: The type or namespace name 'Fact' could not be found (are you missing a using directive or an assembly reference?) [C
+:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(260,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(260,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(197,38): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(197,16): error CS0246: The type or
+ namespace name 'StateSnapshot' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
+ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\StateMigrationExamples.cs(240,39): error CS0246: The type or
+ namespace name 'WorkspaceState' could not be found (are you missing a using directive or an assembly reference?) [C:\U
+sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
     0 Warning(s)
-    1 Error(s)
+    178 Error(s)
 
-Time Elapsed 00:00:01.38
+Time Elapsed 00:00:01.92
 Write-Error: Build failed
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
