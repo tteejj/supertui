@@ -138,6 +138,13 @@ namespace SuperTUI.Core.Events
         public int FilesDeleted { get; set; }
         public bool HasUncommittedChanges { get; set; }
         public DateTime ChangedAt { get; set; }
+
+        // Additional properties for detailed status
+        public string Branch { get; set; }
+        public int ModifiedFiles { get; set; }
+        public int StagedFiles { get; set; }
+        public int UntrackedFiles { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 
     // ============================================================================
@@ -219,6 +226,12 @@ namespace SuperTUI.Core.Events
         public string OldStatus { get; set; }
         public string NewStatus { get; set; }
         public DateTime ChangedAt { get; set; }
+
+        // Summary properties for bulk status updates
+        public int TotalTasks { get; set; }
+        public int CompletedTasks { get; set; }
+        public int PendingTasks { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 
     // ============================================================================

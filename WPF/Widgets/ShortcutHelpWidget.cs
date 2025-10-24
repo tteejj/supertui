@@ -299,9 +299,9 @@ namespace SuperTUI.Widgets
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
                 Margin = new Thickness(15, 0, 15, 10),
-                MinHeight = 300,
-                ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                MinHeight = 300
             };
+            ScrollViewer.SetVerticalScrollBarVisibility(shortcutList, ScrollBarVisibility.Auto);
 
             // Footer
             footerText = new TextBlock

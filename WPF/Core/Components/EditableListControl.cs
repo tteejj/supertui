@@ -16,7 +16,7 @@ namespace SuperTUI.Core.Components
     /// Supports Add, Edit, Delete, and navigation. Fully keyboard-driven.
     /// </summary>
     /// <typeparam name="T">The type of items in the list</typeparam>
-    public class EditableListControl<T> : UserControl where T : class
+    public class EditableListControl<T> : UserControl, IThemeable where T : class
     {
         private ObservableCollection<T> items;
         private ListBox listBox;
@@ -432,6 +432,34 @@ namespace SuperTUI.Core.Components
         {
             listBox.Items.Refresh();
             UpdateStatus($"{items.Count} items", theme.ForegroundSecondary);
+        }
+
+        public void ApplyTheme()
+        {
+            theme = ThemeManager.Instance.CurrentTheme;
+
+            // Update all themed elements
+            if (Content is DockPanel mainPanel)
+            {
+                mainPanel.Background = new SolidColorBrush(theme.Background);
+            }
+
+            if (listBox != null)
+            {
+                listBox.Foreground = new SolidColorBrush(theme.Foreground);
+                listBox.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (inputBox != null)
+            {
+                inputBox.Foreground = new SolidColorBrush(theme.Foreground);
+                inputBox.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (statusLabel != null)
+            {
+                statusLabel.Foreground = new SolidColorBrush(theme.ForegroundSecondary);
+            }
         }
     }
 }

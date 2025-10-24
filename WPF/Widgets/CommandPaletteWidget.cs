@@ -9,6 +9,7 @@ using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
+using SuperTUI.Extensions;
 
 namespace SuperTUI.Widgets
 {

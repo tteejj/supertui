@@ -232,9 +232,7 @@ namespace SuperTUI.Widgets
             // We just need to refresh the display
             if (todoList != null)
             {
-                var theme = ThemeManager.Instance.CurrentTheme;
-                // EditableListControl doesn't implement IThemeable yet
-                // todoList.ApplyTheme(theme);
+                todoList.ApplyTheme();
             }
         }
     }
