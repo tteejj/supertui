@@ -93,6 +93,32 @@ namespace SuperTUI.Infrastructure
             Register("Backup.CompressBackups", true, "Compress backup files", "Backup");
         }
 
+        // Interface-compliant non-generic Register method
+        public void Register(string key, object defaultValue, string description, string category = "General", Func<object, bool> validator = null)
+        {
+            var configValue = new ConfigValue
+            {
+                Key = key,
+                Value = defaultValue,
+                DefaultValue = defaultValue,
+                ValueType = defaultValue?.GetType() ?? typeof(object),
+                Description = description,
+                Category = category,
+                Validator = validator,
+                IsReadOnly = false
+            };
+
+            config[key] = configValue;
+
+            if (!categories.ContainsKey(category))
+            {
+                categories[category] = new Dictionary<string, ConfigValue>();
+            }
+            categories[category][key] = configValue;
+
+            Logger.Instance.Debug("Config", $"Registered config key: {key} = {defaultValue}");
+        }
+
         public void Register<T>(string key, T defaultValue, string description = "", string category = "General", Func<object, bool> validator = null)
         {
             var configValue = new ConfigValue
@@ -312,6 +338,31 @@ namespace SuperTUI.Infrastructure
         public List<string> GetCategories()
         {
             return categories.Keys.ToList();
+        }
+
+        // Interface-compliant Save method (uses configured path)
+        public void Save()
+        {
+            if (string.IsNullOrEmpty(configFilePath))
+            {
+                Logger.Instance.Warning("Config", "Cannot save: no config file path configured");
+                return;
+            }
+            SaveToFile(configFilePath);
+        }
+
+        // Interface-compliant Load method (uses configured path)
+        public void Load()
+        {
+            if (string.IsNullOrEmpty(configFilePath))
+            {
+                Logger.Instance.Warning("Config", "Cannot load: no config file path configured");
+                return;
+            }
+            if (File.Exists(configFilePath))
+            {
+                LoadFromFile(configFilePath);
+            }
         }
 
         public void SaveToFile(string path)

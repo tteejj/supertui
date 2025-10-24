@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core.Infrastructure;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core.Components
 {

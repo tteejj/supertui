@@ -15,6 +15,15 @@
     <!-- Exclude debug/temp files from compilation -->
     <Compile Remove="compile_error.cs" />
     <Compile Remove="**/*.ps1" />
+
+    <!-- Exclude test files (require Xunit/Moq dependencies) -->
+    <Compile Remove="Tests/**/*.cs" />
+
+    <!-- Exclude example/documentation files -->
+    <Compile Remove="Core/StateMigrationExamples.cs" />
+
+    <!-- Exclude widgets requiring external dependencies -->
+    <Compile Remove="Widgets/TerminalWidget.cs" />
   </ItemGroup>
 
 </Project>

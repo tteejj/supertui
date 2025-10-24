@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using SuperTUI.Core;
 using SuperTUI.Infrastructure;
 
