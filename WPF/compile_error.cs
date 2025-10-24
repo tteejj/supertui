@@ -1,5 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.ComponentModel;
+using System.Windows.Input;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Windows.Media;
+using System.Text.RegularExpressions;
+using System.Windows.Threading;
+using SuperTUI.Infrastructure;
+using System.Text.Json.Serialization;
+using System.Reflection;
+using System.IO.Compression;
+using SuperTUI.Core;
 
 namespace SuperTUI.Infrastructure
 {
@@ -26,10 +44,6 @@ namespace SuperTUI.Infrastructure
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-
 namespace SuperTUI.Infrastructure
 {
     /// <summary>
@@ -48,10 +62,6 @@ namespace SuperTUI.Infrastructure
         List<Theme> GetAvailableThemes();
     }
 }
-
-
-using System;
-using System.Collections.Generic;
 
 namespace SuperTUI.Infrastructure
 {
@@ -75,9 +85,6 @@ namespace SuperTUI.Infrastructure
     }
 }
 
-
-using System;
-
 namespace SuperTUI.Infrastructure
 {
     /// <summary>
@@ -91,10 +98,6 @@ namespace SuperTUI.Infrastructure
         bool ValidateScriptExecution();
     }
 }
-
-
-using System;
-using System.Threading.Tasks;
 
 namespace SuperTUI.Infrastructure
 {
@@ -113,10 +116,6 @@ namespace SuperTUI.Infrastructure
         Task<T> ExecuteWithRetryAsync<T>(Func<Task<T>> action, int maxRetries = 3, int delayMs = 100, string context = "Operation");
     }
 }
-
-
-using System;
-using System.Collections.Generic;
 
 namespace SuperTUI.Core
 {
@@ -147,9 +146,6 @@ namespace SuperTUI.Core
         void Clear();
     }
 }
-
-
-using System;
 
 namespace SuperTUI.Core
 {
@@ -183,11 +179,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-
 namespace SuperTUI.Core
 {
     /// <summary>
@@ -203,12 +194,6 @@ namespace SuperTUI.Core
         List<UIElement> GetChildren();
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows.Input;
 
 namespace SuperTUI.Core
 {
@@ -235,9 +220,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System;
-
 namespace SuperTUI.Core
 {
     /// <summary>
@@ -252,12 +234,6 @@ namespace SuperTUI.Core
         void ApplyTheme();
     }
 }
-
-
-using System;
-using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace SuperTUI.Core
 {
@@ -281,10 +257,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System;
-using System.Collections.ObjectModel;
-
 namespace SuperTUI.Core
 {
     /// <summary>
@@ -303,13 +275,6 @@ namespace SuperTUI.Core
         void PreviousWorkspace();
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace SuperTUI.Infrastructure
 {
@@ -781,15 +746,6 @@ namespace SuperTUI.Infrastructure
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-
 namespace SuperTUI.Infrastructure
 {
     // ============================================================================
@@ -1183,16 +1139,6 @@ namespace SuperTUI.Infrastructure
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows.Media;
-
 namespace SuperTUI.Infrastructure
 {
     // ============================================================================
@@ -1449,13 +1395,6 @@ namespace SuperTUI.Infrastructure
         public Theme NewTheme { get; set; }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace SuperTUI.Infrastructure
 {
@@ -1766,11 +1705,6 @@ namespace SuperTUI.Infrastructure
     }
 }
 
-
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-
 namespace SuperTUI.Infrastructure
 {
     // ============================================================================
@@ -1902,19 +1836,6 @@ namespace SuperTUI.Infrastructure
         public DateTime Timestamp { get; set; }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -2302,9 +2223,6 @@ namespace SuperTUI.Core
     /// Allows widgets to communicate without direct references
 }
 
-
-using System;
-
 namespace SuperTUI.Core.Events
 {
     // ============================================================================
@@ -2652,19 +2570,6 @@ namespace SuperTUI.Core.Events
         public int PendingTasks { get; set; }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -3106,19 +3011,6 @@ namespace SuperTUI.Core
     // ============================================================================
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Core
 {
     public class KeyboardShortcut
@@ -3213,12 +3105,6 @@ namespace SuperTUI.Core
         }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace SuperTUI.Core
 {
@@ -3326,19 +3212,6 @@ namespace SuperTUI.Core
         }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -3515,19 +3388,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Core
 {
     public class DockLayoutEngine : LayoutEngine
@@ -3570,19 +3430,6 @@ namespace SuperTUI.Core
     /// <summary>
     /// Stack-based layout engine
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -3628,16 +3475,6 @@ namespace SuperTUI.Core
     /// Represents a workspace (desktop) containing widgets and screens
     /// Each workspace maintains independent state for all its widgets/screens
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -3840,14 +3677,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-
 namespace SuperTUI.Core
 {
     /// <summary>
@@ -3939,13 +3768,6 @@ namespace SuperTUI.Core
         }
     }
 }
-
-
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -4199,19 +4021,6 @@ namespace SuperTUI.Core
     }
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Core
 {
     public class Workspace
@@ -4452,19 +4261,6 @@ namespace SuperTUI.Core
     /// Each workspace maintains its own independent state
 }
 
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Core
 {
     public class WorkspaceManager
@@ -4583,14 +4379,6 @@ namespace SuperTUI.Core
     /// Simple dependency injection container for services
     /// Services are singleton and shared across all widgets/screens
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace SuperTUI.Core.Infrastructure
 {
@@ -4990,19 +4778,6 @@ namespace SuperTUI.Core.Infrastructure
         }
     }
 }
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.IO.Compression;
-using SuperTUI.Core;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Extensions
 {
@@ -6103,15 +5878,6 @@ namespace SuperTUI.Extensions
     }
 }
 
-
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Threading;
-using SuperTUI.Core;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Widgets
 {
     /// <summary>
@@ -6278,15 +6044,6 @@ namespace SuperTUI.Widgets
         }
     }
 }
-
-
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using SuperTUI.Core;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
 {
@@ -6476,15 +6233,6 @@ namespace SuperTUI.Widgets
     }
 }
 
-
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using SuperTUI.Core;
-using SuperTUI.Infrastructure;
-
 namespace SuperTUI.Widgets
 {
     /// <summary>
@@ -6613,16 +6361,6 @@ namespace SuperTUI.Widgets
         }
     }
 }
-
-
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using SuperTUI.Core;
-using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
 {
@@ -6805,4 +6543,3 @@ namespace SuperTUI.Widgets
         }
     }
 }
-
