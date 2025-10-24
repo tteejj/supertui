@@ -2,79 +2,44 @@ PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh build.ps1
 Building SuperTUI...
   Determining projects to restore...
   All projects are up-to-date for restore.
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(29,41): error CS0103: The name 'St
-atePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Sup
-erTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(30,41): error CS0103: The name 'Pe
-rformanceMonitor' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
+StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
+uperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
+StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
+uperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(277,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'Branch' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Super
+TUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(278,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'ModifiedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WP
+F\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(279,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'StagedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\
+SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(280,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'UntrackedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\W
+PF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(281,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Su
+perTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(196,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'TotalTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
+roj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(197,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'CompletedTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
 .csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(31,41): error CS0103: The name 'Pl
-uginManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(198,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'PendingTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
+sproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(199,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
 oj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(66,43): error CS0246: The type or
-namespace name 'StatePersistenceManager' could not be found (are you missing a using directive or an assembly reference
-?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(70,45): error CS0246: The type or
-namespace name 'PluginManager' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
-rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(71,37): error CS0246: The type or
-namespace name 'PluginContext' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
-rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(125,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(129,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(154,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(159,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(180,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(184,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(202,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(207,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(224,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(180,60): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(265,25): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(269,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(273,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(103,56): error CS1061: 'Theme' do
-es not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of ty
-pe 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Docume
-nts\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(193,43): error CS0246: The type or namespac
-e name 'TaskStatusChangedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
-ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(353,56): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(235,26): error CS1061: 'EditableListControl
-<TodoItem>' does not contain a definition for 'ApplyTheme' and no accessible extension method 'ApplyTheme' accepting a
-first argument of type 'EditableListControl<TodoItem>' could be found (are you missing a using directive or an assembly
- reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
+ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
+jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
+ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(61,17): error CS0103: The
  name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
 proj]
@@ -90,16 +55,6 @@ proj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(97,17): error CS0103: The
  name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
 proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(406,73): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(130,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
@@ -109,10 +64,6 @@ sproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(161,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(434,56): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(191,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
@@ -128,142 +79,47 @@ sproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(264,17): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(156,56): error CS1061: 'Theme' doe
-s not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of typ
-e 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documen
-ts\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\SecurityManager.cs(71,20): error CS0246: The
-type or namespace name 'SecurityException' could not be found (are you missing a using directive or an assembly referen
-ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\Workspace.cs(227,28): error CS1061: 'ScreenBa
-se' does not contain a definition for 'Dispose' and no accessible extension method 'Dispose' accepting a first argument
- of type 'ScreenBase' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneD
-rive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(264,47): error CS0246: The type or
- namespace name 'SystemResourcesChangedEvent' could not be found (are you missing a using directive or an assembly refe
-rence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(82,56): error CS1061: 'Theme' does
-not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type
-'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents
-\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(292,43): error CS0234: The type or
- namespace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\User
-s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(293,33): error CS0234: The type or
- namespace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\User
-s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(370,17): error CS0103: The name 'U
-pdateDisplay' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
-roj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(92,56): error CS1061: 'Theme' does not
- contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'Th
-eme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\Gi
-tHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(121,85): error CS1061: 'Theme' does no
-t contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'T
-heme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\G
-itHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(131,56): error CS1061: 'Theme' does no
-t contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'T
-heme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\G
-itHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(153,86): error CS1061: 'Theme' does
- not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type
- 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Document
-s\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(156,47): error CS0246: The type or
-namespace name 'DirectoryChangedEvent' could not be found (are you missing a using directive or an assembly reference?)
- [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(263,51): error CS0246: The type or nam
-espace name 'BranchChangedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:\U
-sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(273,47): error CS0246: The type or nam
-espace name 'RepositoryStatusChangedEvent' could not be found (are you missing a using directive or an assembly referen
-ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
-ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
-jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
-ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(259,47): error CS0246: The type or
-namespace name 'FileSelectedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:
-\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 
 Build FAILED.
 
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(29,41): error CS0103: The name 'St
-atePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Sup
-erTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(30,41): error CS0103: The name 'Pe
-rformanceMonitor' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
+StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
+uperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
+StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
+uperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(277,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'Branch' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Super
+TUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(278,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'ModifiedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WP
+F\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(279,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'StagedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\
+SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(280,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'UntrackedFiles' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\W
+PF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(281,21): error CS0117: 'RepositoryStat
+usChangedEvent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Su
+perTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(196,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'TotalTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
+roj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(197,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'CompletedTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI
 .csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(31,41): error CS0103: The name 'Pl
-uginManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(198,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'PendingTasks' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
+sproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(199,17): error CS0117: 'TaskStatusChangedEv
+ent' does not contain a definition for 'Timestamp' [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cspr
 oj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(66,43): error CS0246: The type or
-namespace name 'StatePersistenceManager' could not be found (are you missing a using directive or an assembly reference
-?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(70,45): error CS0246: The type or
-namespace name 'PluginManager' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
-rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\DI\ServiceRegistration.cs(71,37): error CS0246: The type or
-namespace name 'PluginContext' could not be found (are you missing a using directive or an assembly reference?) [C:\Use
-rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(125,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(129,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(154,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(159,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(180,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(184,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(202,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(207,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(224,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(180,60): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(265,25): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(269,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\WorkspaceTemplate.cs(273,17): error CS0103: T
-he name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.
-csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(103,56): error CS1061: 'Theme' do
-es not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of ty
-pe 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Docume
-nts\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(193,43): error CS0246: The type or namespac
-e name 'TaskStatusChangedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:\Us
-ers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(353,56): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\TodoWidget.cs(235,26): error CS1061: 'EditableListControl
-<TodoItem>' does not contain a definition for 'ApplyTheme' and no accessible extension method 'ApplyTheme' accepting a
-first argument of type 'EditableListControl<TodoItem>' could be found (are you missing a using directive or an assembly
- reference?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
+ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
+jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
+ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(61,17): error CS0103: The
  name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
 proj]
@@ -279,16 +135,6 @@ proj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(97,17): error CS0103: The
  name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.cs
 proj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(406,73): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(201,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\CommandPaletteWidget.cs(215,39): error CS0103: The name '
-StatePersistenceManager' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\S
-uperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(130,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
@@ -298,10 +144,6 @@ sproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(161,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Components\EditableListControl.cs(434,56): error CS1061: 'Th
-eme' does not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argumen
-t of type 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive
-\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(191,13): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
@@ -317,68 +159,9 @@ sproj]
 C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\HotReloadManager.cs(264,17): error CS0103: Th
 e name 'Logger' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.c
 sproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(156,56): error CS1061: 'Theme' doe
-s not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of typ
-e 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documen
-ts\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\SecurityManager.cs(71,20): error CS0246: The
-type or namespace name 'SecurityException' could not be found (are you missing a using directive or an assembly referen
-ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\Workspace.cs(227,28): error CS1061: 'ScreenBa
-se' does not contain a definition for 'Dispose' and no accessible extension method 'Dispose' accepting a first argument
- of type 'ScreenBase' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneD
-rive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(264,47): error CS0246: The type or
- namespace name 'SystemResourcesChangedEvent' could not be found (are you missing a using directive or an assembly refe
-rence?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(82,56): error CS1061: 'Theme' does
-not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type
-'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents
-\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(292,43): error CS0234: The type or
- namespace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\User
-s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(293,33): error CS0234: The type or
- namespace name 'Management' does not exist in the namespace 'System' (are you missing an assembly reference?) [C:\User
-s\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\SystemMonitorWidget.cs(370,17): error CS0103: The name 'U
-pdateDisplay' does not exist in the current context [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csp
-roj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(92,56): error CS1061: 'Theme' does not
- contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'Th
-eme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\Gi
-tHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(121,85): error CS1061: 'Theme' does no
-t contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'T
-heme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\G
-itHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(131,56): error CS1061: 'Theme' does no
-t contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type 'T
-heme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Documents\G
-itHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(153,86): error CS1061: 'Theme' does
- not contain a definition for 'Comment' and no accessible extension method 'Comment' accepting a first argument of type
- 'Theme' could be found (are you missing a using directive or an assembly reference?) [C:\Users\jhnhe\OneDrive\Document
-s\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(156,47): error CS0246: The type or
-namespace name 'DirectoryChangedEvent' could not be found (are you missing a using directive or an assembly reference?)
- [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(263,51): error CS0246: The type or nam
-espace name 'BranchChangedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:\U
-sers\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\GitStatusWidget.cs(273,47): error CS0246: The type or nam
-espace name 'RepositoryStatusChangedEvent' could not be found (are you missing a using directive or an assembly referen
-ce?) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0120: An object re
-ference is required for the non-static field, method, or property 'ScrollViewer.VerticalScrollBarVisibility' [C:\Users\
-jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ShortcutHelpWidget.cs(303,17): error CS0747: Invalid init
-ializer member declarator [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
-C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\FileExplorerWidget.cs(259,47): error CS0246: The type or
-namespace name 'FileSelectedEvent' could not be found (are you missing a using directive or an assembly reference?) [C:
-\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
     0 Warning(s)
-    58 Error(s)
+    26 Error(s)
 
-Time Elapsed 00:00:02.40
+Time Elapsed 00:00:01.38
 Write-Error: Build failed
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
