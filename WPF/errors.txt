@@ -1,3 +1,34 @@
-Building SuperTUI...
-[31;1mWrite-Error: [31;1mBuild error: The term 'dotnet' is not recognized as a name of a cmdlet, function, script file, or executable program.[0m
-[31;1m[31;1mCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.[0m
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh SuperTUI.ps1
+Loading SuperTUI...
+Loaded successfully
+Initializing SuperTUI infrastructure...
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:195
+Line |
+ 195 |  $logger.Initialize("$env:TEMP\SuperTUI.log")
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Method invocation failed because [SuperTUI.Infrastructure.Logger] does not contain a method named 'Initialize'.
+Infrastructure initialized
+Setting up workspaces...
+New-Object: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:285
+Line |
+ 285 |  $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine
+     |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | A constructor was not found. Cannot find an appropriate constructor for type SuperTUI.Core.StackLayoutEngine.
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:302
+Line |
+ 302 |  $workspace3Layout.AddChild($ws3Placeholder, $ws3Params)
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You cannot call a method on a null-valued expression.
+Workspaces created!
+
+Starting SuperTUI...
+Keyboard shortcuts:
+  Ctrl+1-9      Switch workspaces
+  Ctrl+Left/Right   Previous/Next workspace
+  Ctrl+Q        Quit
+
+Error: Exception calling "CreateInstance" with "1" argument(s): "Value cannot be null. (Parameter 'type')"
+Error switching workspace: Exception calling "SwitchToNext" with "0" argument(s): "Object reference not set to an instance of an object."
+Error switching workspace: Exception calling "SwitchToNext" with "0" argument(s): "Object reference not set to an instance of an object."
+Error: Exception calling "CreateInstance" with "1" argument(s): "Value cannot be null. (Parameter 'type')"
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
