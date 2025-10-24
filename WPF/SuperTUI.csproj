@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <OutputType>Library</OutputType>
+    <AssemblyName>SuperTUI</AssemblyName>
+    <RootNamespace>SuperTUI</RootNamespace>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Interfaces -->
+    <Compile Include="Core/Interfaces/ILogger.cs" />
+    <Compile Include="Core/Interfaces/IThemeManager.cs" />
+    <Compile Include="Core/Interfaces/IConfigurationManager.cs" />
+    <Compile Include="Core/Interfaces/ISecurityManager.cs" />
+    <Compile Include="Core/Interfaces/IErrorHandler.cs" />
+    <Compile Include="Core/Interfaces/IServiceContainer.cs" />
+    <Compile Include="Core/Interfaces/IEventBus.cs" />
+    <Compile Include="Core/Interfaces/ILayoutEngine.cs" />
+    <Compile Include="Core/Interfaces/IWidget.cs" />
+    <Compile Include="Core/Interfaces/IThemeable.cs" />
+    <Compile Include="Core/Interfaces/IWorkspace.cs" />
+    <Compile Include="Core/Interfaces/IWorkspaceManager.cs" />
+
+    <!-- Infrastructure -->
+    <Compile Include="Core/Infrastructure/Logger.cs" />
+    <Compile Include="Core/Infrastructure/ConfigurationManager.cs" />
+    <Compile Include="Core/Infrastructure/ThemeManager.cs" />
+    <Compile Include="Core/Infrastructure/SecurityManager.cs" />
+    <Compile Include="Core/Infrastructure/ErrorHandler.cs" />
+    <Compile Include="Core/Infrastructure/ServiceContainer.cs" />
+    <Compile Include="Core/Infrastructure/Events.cs" />
+    <Compile Include="Core/Infrastructure/EventBus.cs" />
+    <Compile Include="Core/Infrastructure/ShortcutManager.cs" />
+    <Compile Include="Core/Infrastructure/Workspace.cs" />
+    <Compile Include="Core/Infrastructure/WorkspaceManager.cs" />
+    <Compile Include="Core/Infrastructure/WorkspaceTemplate.cs" />
+
+    <!-- Layout -->
+    <Compile Include="Core/Layout/LayoutEngine.cs" />
+    <Compile Include="Core/Layout/GridLayoutEngine.cs" />
+    <Compile Include="Core/Layout/DockLayoutEngine.cs" />
+    <Compile Include="Core/Layout/StackLayoutEngine.cs" />
+
+    <!-- Components -->
+    <Compile Include="Core/Components/WidgetBase.cs" />
+    <Compile Include="Core/Components/ScreenBase.cs" />
+    <Compile Include="Core/Components/ErrorBoundary.cs" />
+
+    <!-- Extensions -->
+    <Compile Include="Core/Extensions.cs" />
+
+    <!-- Widgets -->
+    <Compile Include="Widgets/ClockWidget.cs" />
+    <Compile Include="Widgets/CounterWidget.cs" />
+    <Compile Include="Widgets/NotesWidget.cs" />
+    <Compile Include="Widgets/TaskSummaryWidget.cs" />
+  </ItemGroup>
+
+</Project>
