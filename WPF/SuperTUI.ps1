@@ -111,7 +111,15 @@ try {
     Write-Host "Compiled successfully" -ForegroundColor Green
 } catch {
     Write-Error "Compilation failed: $_"
-    $combinedSource | Out-File "$PSScriptRoot/compile_error.cs"
+    $combinedSource | Out-File "$PSScriptRoot/compile_error.cs" -Encoding UTF8
+    Write-Host "Debug output saved to compile_error.cs" -ForegroundColor Yellow
+
+    # Show line 4260-4265 to see the problem
+    $lines = $combinedSource -split "`n"
+    Write-Host "`nLines 4258-4265:" -ForegroundColor Yellow
+    for ($i = 4257; $i -lt 4265 -and $i -lt $lines.Count; $i++) {
+        Write-Host "$($i+1): $($lines[$i])" -ForegroundColor Gray
+    }
     exit 1
 }
 
