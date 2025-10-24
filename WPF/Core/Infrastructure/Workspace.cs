@@ -215,7 +215,7 @@ namespace SuperTUI.Core
 
             int currentIndex = focusedElement != null ? focusableElements.IndexOf(focusedElement) : -1;
             int nextIndex = (currentIndex + 1) % focusableElements.Count;
-            SetFocus(focusableElements[nextIndex]);
+            FocusElement(focusableElements[nextIndex]);
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace SuperTUI.Core
 
             int currentIndex = focusedElement != null ? focusableElements.IndexOf(focusedElement) : -1;
             int prevIndex = (currentIndex - 1 + focusableElements.Count) % focusableElements.Count;
-            SetFocus(focusableElements[prevIndex]);
+            FocusElement(focusableElements[prevIndex]);
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace SuperTUI.Core
 
             // Find and remove error boundary
             var errorBoundary = errorBoundaries.FirstOrDefault(eb =>
-                eb.Children.OfType<UIElement>().Contains(focused));
+                eb.Content == focused);
             if (errorBoundary != null)
             {
                 errorBoundaries.Remove(errorBoundary);
@@ -270,7 +270,7 @@ namespace SuperTUI.Core
             // Focus next widget if available
             if (focusableElements.Count > 0)
             {
-                SetFocus(focusableElements[0]);
+                FocusElement(focusableElements[0]);
             }
 
             Logger.Instance?.Info("Workspace", $"Removed widget: {focused.WidgetName}");
