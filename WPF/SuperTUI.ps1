@@ -1,33 +1,91 @@
-# SuperTUI WPF Framework - Main Entry Point
-# Compile and run the WPF-based workspace/widget system
+#Requires -Version 5.1
+#Requires -PSEdition Desktop
 
+# SuperTUI - Production Entry Point
+
+# Platform check
+if ($PSVersionTable.Platform -eq 'Unix') {
+    Write-Error "SuperTUI requires Windows (WPF is Windows-only)"
+    exit 1
+}
+
+# Load WPF
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
+Add-Type -AssemblyName System.Xaml
 
-# Compile C# framework
-Write-Host "Compiling SuperTUI Framework..." -ForegroundColor Cyan
+Write-Host "Compiling framework..." -ForegroundColor Cyan
 
-$frameworkSource = Get-Content "$PSScriptRoot/Core/Framework.cs" -Raw
-$clockWidgetSource = Get-Content "$PSScriptRoot/Widgets/ClockWidget.cs" -Raw
-$taskSummarySource = Get-Content "$PSScriptRoot/Widgets/TaskSummaryWidget.cs" -Raw
+# Load all sources in dependency order
+$sources = @()
+foreach ($file in @(
+    "Core/Interfaces/ILogger.cs"
+    "Core/Interfaces/IThemeManager.cs"
+    "Core/Interfaces/IConfigurationManager.cs"
+    "Core/Interfaces/ISecurityManager.cs"
+    "Core/Interfaces/IErrorHandler.cs"
+    "Core/Interfaces/IServiceContainer.cs"
+    "Core/Interfaces/IEventBus.cs"
+    "Core/Interfaces/ILayoutEngine.cs"
+    "Core/Interfaces/IWidget.cs"
+    "Core/Interfaces/IThemeable.cs"
+    "Core/Interfaces/IWorkspace.cs"
+    "Core/Interfaces/IWorkspaceManager.cs"
+    "Core/Infrastructure/Logger.cs"
+    "Core/Infrastructure/ConfigurationManager.cs"
+    "Core/Infrastructure/ThemeManager.cs"
+    "Core/Infrastructure/SecurityManager.cs"
+    "Core/Infrastructure/ErrorHandler.cs"
+    "Core/Infrastructure/ServiceContainer.cs"
+    "Core/Infrastructure/Events.cs"
+    "Core/Infrastructure/EventBus.cs"
+    "Core/Infrastructure/ShortcutManager.cs"
+    "Core/Layout/LayoutEngine.cs"
+    "Core/Layout/GridLayoutEngine.cs"
+    "Core/Layout/DockLayoutEngine.cs"
+    "Core/Layout/StackLayoutEngine.cs"
+    "Core/Components/WidgetBase.cs"
+    "Core/Components/ScreenBase.cs"
+    "Core/Components/ErrorBoundary.cs"
+    "Core/Infrastructure/Workspace.cs"
+    "Core/Infrastructure/WorkspaceManager.cs"
+    "Core/Infrastructure/WorkspaceTemplate.cs"
+    "Core/Extensions.cs"
+    "Widgets/ClockWidget.cs"
+    "Widgets/CounterWidget.cs"
+    "Widgets/NotesWidget.cs"
+    "Widgets/TaskSummaryWidget.cs"
+)) {
+    $path = Join-Path $PSScriptRoot $file
+    if (Test-Path $path) {
+        $sources += Get-Content $path -Raw
+    } else {
+        Write-Warning "Missing: $file"
+    }
+}
 
-$combinedSource = @"
-$frameworkSource
+$combinedSource = $sources -join "`n`n"
 
-$clockWidgetSource
+# Get loaded assemblies for version matching
+$pf = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationFramework' }
+$pc = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'PresentationCore' }
+$wb = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'WindowsBase' }
+$sx = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'System.Xaml' }
 
-$taskSummarySource
-"@
-
-Add-Type -TypeDefinition $combinedSource -ReferencedAssemblies @(
-    'PresentationFramework',
-    'PresentationCore',
-    'WindowsBase',
-    'System.Xaml'
-)
-
-Write-Host "Framework compiled successfully!" -ForegroundColor Green
+try {
+    Add-Type -TypeDefinition $combinedSource -ReferencedAssemblies @(
+        $pf.Location
+        $pc.Location
+        $wb.Location
+        $sx.Location
+    ) -IgnoreWarnings -ErrorAction Stop
+    Write-Host "Compiled successfully" -ForegroundColor Green
+} catch {
+    Write-Error "Compilation failed: $_"
+    $combinedSource | Out-File "$PSScriptRoot/compile_error.cs"
+    exit 1
+}
 
 # Create main window XAML
 [xml]$xaml = @"
