@@ -12,8 +12,10 @@ namespace SuperTUI.Widgets
     /// Simple counter widget - demonstrates independent state management
     /// Each instance maintains its own count, even when switching workspaces
     /// </summary>
-    public class CounterWidget : WidgetBase
+    public class CounterWidget : WidgetBase, IThemeable
     {
+        private Border containerBorder;
+        private TextBlock titleText;
         private TextBlock countText;
         private TextBlock instructionText;
 
@@ -39,7 +41,7 @@ namespace SuperTUI.Widgets
         {
             var theme = ThemeManager.Instance.CurrentTheme;
 
-            var border = new Border
+            containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
                 BorderBrush = new SolidColorBrush(theme.Border),
@@ -54,7 +56,7 @@ namespace SuperTUI.Widgets
             };
 
             // Title
-            var title = new TextBlock
+            titleText = new TextBlock
             {
                 Text = "COUNTER",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
@@ -87,12 +89,12 @@ namespace SuperTUI.Widgets
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
-            stackPanel.Children.Add(title);
+            stackPanel.Children.Add(titleText);
             stackPanel.Children.Add(countText);
             stackPanel.Children.Add(instructionText);
 
-            border.Child = stackPanel;
-            this.Content = border;
+            containerBorder.Child = stackPanel;
+            this.Content = containerBorder;
         }
 
         public override void Initialize()
@@ -157,6 +159,37 @@ namespace SuperTUI.Widgets
         {
             // No resources to dispose currently
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Apply current theme to all UI elements
+        /// </summary>
+        public void ApplyTheme()
+        {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
+            if (containerBorder != null)
+            {
+                containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
+                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (titleText != null)
+            {
+                titleText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
+            }
+
+            if (countText != null)
+            {
+                countText.Foreground = new SolidColorBrush(theme.SyntaxKeyword);
+            }
+
+            if (instructionText != null)
+            {
+                // Update based on focus state
+                instructionText.Foreground = new SolidColorBrush(
+                    HasFocus ? theme.Focus : theme.ForegroundDisabled);
+            }
         }
     }
 }

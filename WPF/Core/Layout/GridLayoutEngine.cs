@@ -52,6 +52,9 @@ namespace SuperTUI.Core
 
         private void AddGridSplitters(int rows, int columns)
         {
+            var theme = ThemeManager.Instance.CurrentTheme;
+            var splitterBrush = new SolidColorBrush(theme.Border);
+
             // Add vertical splitters between columns
             for (int col = 0; col < columns - 1; col++)
             {
@@ -60,7 +63,7 @@ namespace SuperTUI.Core
                     Width = 5,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                     VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
-                    Background = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                    Background = splitterBrush,
                     ResizeDirection = GridResizeDirection.Columns
                 };
 
@@ -77,7 +80,7 @@ namespace SuperTUI.Core
                     Height = 5,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
                     VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
-                    Background = new SolidColorBrush(Color.FromRgb(58, 58, 58)),
+                    Background = splitterBrush,
                     ResizeDirection = GridResizeDirection.Rows
                 };
 

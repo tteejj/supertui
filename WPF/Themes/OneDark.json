@@ -1,0 +1,21 @@
+{
+  "Name": "One Dark",
+  "Author": "Atom Team",
+  "Description": "The iconic Atom editor dark theme",
+  "Background": "#282C34",
+  "Foreground": "#ABB2BF",
+  "Selection": "#3E4451",
+  "Comment": "#5C6370",
+  "Cyan": "#56B6C2",
+  "Green": "#98C379",
+  "Orange": "#D19A66",
+  "Pink": "#C678DD",
+  "Purple": "#C678DD",
+  "Red": "#E06C75",
+  "Yellow": "#E5C07B",
+  "Border": "#4B5263",
+  "Success": "#98C379",
+  "Error": "#E06C75",
+  "Warning": "#E5C07B",
+  "Info": "#61AFEF"
+}

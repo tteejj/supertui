@@ -19,6 +19,7 @@ namespace SuperTUI.Core
         public LayoutEngine Layout { get; set; }
         public List<WidgetBase> Widgets { get; set; } = new List<WidgetBase>();
         public List<ScreenBase> Screens { get; set; } = new List<ScreenBase>();
+        private List<ErrorBoundary> errorBoundaries = new List<ErrorBoundary>();
 
         private bool isActive = false;
         private UIElement focusedElement;
@@ -34,11 +35,20 @@ namespace SuperTUI.Core
         public void AddWidget(WidgetBase widget, LayoutParams layoutParams)
         {
             Widgets.Add(widget);
-            Layout.AddChild(widget, layoutParams);
-            focusableElements.Add(widget);
+
+            // Wrap widget in error boundary
+            var errorBoundary = new ErrorBoundary(widget);
+            errorBoundaries.Add(errorBoundary);
+
+            // Add error boundary to layout instead of widget directly
+            Layout.AddChild(errorBoundary, layoutParams);
+            focusableElements.Add(widget); // Focus still goes to widget
+
+            // Safely initialize
+            errorBoundary.SafeInitialize();
 
             if (isActive)
-                widget.OnActivated();
+                errorBoundary.SafeActivate();
         }
 
         public void AddScreen(ScreenBase screen, LayoutParams layoutParams)
@@ -55,11 +65,23 @@ namespace SuperTUI.Core
         {
             isActive = true;
 
-            foreach (var widget in Widgets)
-                widget.OnActivated();
+            // Safely activate widgets through error boundaries
+            foreach (var errorBoundary in errorBoundaries)
+            {
+                errorBoundary.SafeActivate();
+            }
 
             foreach (var screen in Screens)
-                screen.OnFocusReceived();
+            {
+                try
+                {
+                    screen.OnFocusReceived();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance?.Error("Workspace", $"Error activating screen: {ex.Message}", ex);
+                }
+            }
 
             // Focus first element if nothing focused
             if (focusedElement == null && focusableElements.Count > 0)
@@ -72,11 +94,23 @@ namespace SuperTUI.Core
         {
             isActive = false;
 
-            foreach (var widget in Widgets)
-                widget.OnDeactivated();
+            // Safely deactivate widgets through error boundaries
+            foreach (var errorBoundary in errorBoundaries)
+            {
+                errorBoundary.SafeDeactivate();
+            }
 
             foreach (var screen in Screens)
-                screen.OnFocusLost();
+            {
+                try
+                {
+                    screen.OnFocusLost();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance?.Error("Workspace", $"Error deactivating screen: {ex.Message}", ex);
+                }
+            }
 
             // Don't clear focus - preserve it for when workspace reactivates
         }
@@ -170,6 +204,44 @@ namespace SuperTUI.Core
                 ["Screens"] = Screens.Select(s => s.SaveState()).ToList()
             };
             return state;
+        }
+    }
+
+        /// <summary>
+        /// Dispose of workspace and all its widgets
+        /// </summary>
+        public void Dispose()
+        {
+            Logger.Instance?.Info("Workspace", $"Disposing workspace: {Name}");
+
+            // Safely dispose all widgets through error boundaries
+            foreach (var errorBoundary in errorBoundaries.ToList())
+            {
+                errorBoundary.SafeDispose();
+            }
+
+            // Dispose all screens
+            foreach (var screen in Screens.ToList())
+            {
+                try
+                {
+                    screen.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance?.Error("Workspace", $"Error disposing screen: {ex.Message}", ex);
+                }
+            }
+
+            // Clear collections
+            Widgets.Clear();
+            Screens.Clear();
+            errorBoundaries.Clear();
+            focusableElements.Clear();
+            focusedElement = null;
+
+            // Clear layout
+            Layout?.Clear();
         }
     }
 

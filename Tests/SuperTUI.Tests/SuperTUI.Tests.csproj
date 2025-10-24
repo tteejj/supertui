@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\WPF\Core\Interfaces\*.cs" Link="Core\Interfaces\%(Filename)%(Extension)" />
+    <Compile Include="..\..\WPF\Core\Infrastructure.cs" Link="Core\Infrastructure.cs" />
+    <Compile Include="..\..\WPF\Core\Extensions.cs" Link="Core\Extensions.cs" />
+    <Compile Include="..\..\WPF\Core\Layout\*.cs" Link="Core\Layout\%(Filename)%(Extension)" />
+    <Compile Include="..\..\WPF\Core\Components\*.cs" Link="Core\Components\%(Filename)%(Extension)" />
+    <Compile Include="..\..\WPF\Core\Infrastructure\*.cs" Link="Core\Infrastructure\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

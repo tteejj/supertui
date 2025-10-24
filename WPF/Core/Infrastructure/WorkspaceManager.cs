@@ -45,6 +45,9 @@ namespace SuperTUI.Core
             {
                 workspace.Deactivate();
                 Workspaces.Remove(workspace);
+
+                // Dispose of workspace resources
+                workspace.Dispose();
             }
         }
 
@@ -89,6 +92,31 @@ namespace SuperTUI.Core
         public void HandleKeyDown(KeyEventArgs e)
         {
             CurrentWorkspace?.HandleKeyDown(e);
+        }
+
+        /// <summary>
+        /// Dispose all workspaces and cleanup resources
+        /// Call this when the application is closing
+        /// </summary>
+        public void Dispose()
+        {
+            Logger.Instance?.Info("WorkspaceManager", "Disposing all workspaces");
+
+            foreach (var workspace in Workspaces.ToList())
+            {
+                try
+                {
+                    workspace.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance?.Error("WorkspaceManager", $"Error disposing workspace {workspace.Name}: {ex.Message}", ex);
+                }
+            }
+
+            Workspaces.Clear();
+            CurrentWorkspace = null;
+            workspaceContainer.Content = null;
         }
     }
 

@@ -1,0 +1,21 @@
+{
+  "Name": "Monokai",
+  "Author": "Wimer Hazenberg",
+  "Description": "A professional and colorful dark theme",
+  "Background": "#272822",
+  "Foreground": "#F8F8F2",
+  "Selection": "#49483E",
+  "Comment": "#75715E",
+  "Cyan": "#66D9EF",
+  "Green": "#A6E22E",
+  "Orange": "#FD971F",
+  "Pink": "#F92672",
+  "Purple": "#AE81FF",
+  "Red": "#F92672",
+  "Yellow": "#E6DB74",
+  "Border": "#75715E",
+  "Success": "#A6E22E",
+  "Error": "#F92672",
+  "Warning": "#FD971F",
+  "Info": "#66D9EF"
+}

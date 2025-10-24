@@ -11,8 +11,10 @@ namespace SuperTUI.Widgets
     /// <summary>
     /// Simple notes widget - demonstrates text input and state preservation
     /// </summary>
-    public class NotesWidget : WidgetBase
+    public class NotesWidget : WidgetBase, IThemeable
     {
+        private Border containerBorder;
+        private TextBlock titleText;
         private TextBox notesTextBox;
 
         public NotesWidget()
@@ -25,7 +27,7 @@ namespace SuperTUI.Widgets
         {
             var theme = ThemeManager.Instance.CurrentTheme;
 
-            var border = new Border
+            containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
                 BorderBrush = new SolidColorBrush(theme.Border),
@@ -36,7 +38,7 @@ namespace SuperTUI.Widgets
             var stackPanel = new StackPanel();
 
             // Title
-            var title = new TextBlock
+            titleText = new TextBlock
             {
                 Text = "NOTES",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
@@ -62,11 +64,11 @@ namespace SuperTUI.Widgets
                 MinHeight = 100
             };
 
-            stackPanel.Children.Add(title);
+            stackPanel.Children.Add(titleText);
             stackPanel.Children.Add(notesTextBox);
 
-            border.Child = stackPanel;
-            this.Content = border;
+            containerBorder.Child = stackPanel;
+            this.Content = containerBorder;
         }
 
         public override void Initialize()
@@ -103,6 +105,32 @@ namespace SuperTUI.Widgets
         {
             // No resources to dispose currently
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Apply current theme to all UI elements
+        /// </summary>
+        public void ApplyTheme()
+        {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
+            if (containerBorder != null)
+            {
+                containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
+                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (titleText != null)
+            {
+                titleText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
+            }
+
+            if (notesTextBox != null)
+            {
+                notesTextBox.Background = new SolidColorBrush(theme.Surface);
+                notesTextBox.Foreground = new SolidColorBrush(theme.Foreground);
+                notesTextBox.BorderBrush = new SolidColorBrush(theme.Border);
+            }
         }
     }
 }

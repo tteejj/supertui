@@ -1,0 +1,21 @@
+{
+  "Name": "Gruvbox Dark",
+  "Author": "Pavel Pertsev",
+  "Description": "Retro groove color scheme with pastel colors",
+  "Background": "#282828",
+  "Foreground": "#EBDBB2",
+  "Selection": "#3C3836",
+  "Comment": "#928374",
+  "Cyan": "#8EC07C",
+  "Green": "#B8BB26",
+  "Orange": "#FE8019",
+  "Pink": "#D3869B",
+  "Purple": "#D3869B",
+  "Red": "#FB4934",
+  "Yellow": "#FABD2F",
+  "Border": "#665C54",
+  "Success": "#B8BB26",
+  "Error": "#FB4934",
+  "Warning": "#FABD2F",
+  "Info": "#83A598"
+}

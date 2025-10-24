@@ -12,6 +12,57 @@ using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Extensions
 {
+    /// <summary>
+    /// Helper for portable data directory paths
+    /// </summary>
+    public static class PortableDataDirectory
+    {
+        private static string dataDirectory;
+
+        /// <summary>
+        /// Get or set the data directory. If not set, returns a directory next to the current directory.
+        /// </summary>
+        public static string DataDirectory
+        {
+            get
+            {
+                if (dataDirectory == null)
+                {
+                    // Default: .data folder in current directory
+                    dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), ".data");
+                }
+
+                if (!Directory.Exists(dataDirectory))
+                {
+                    Directory.CreateDirectory(dataDirectory);
+                }
+
+                return dataDirectory;
+            }
+            set
+            {
+                dataDirectory = value;
+                if (!Directory.Exists(dataDirectory))
+                {
+                    Directory.CreateDirectory(dataDirectory);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get path to SuperTUI data directory
+        /// </summary>
+        public static string GetSuperTUIDataDirectory()
+        {
+            var path = Path.Combine(DataDirectory, "SuperTUI");
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+    }
+
     // ============================================================================
     // STATE PERSISTENCE SYSTEM
     // ============================================================================
@@ -123,8 +174,11 @@ namespace SuperTUI.Extensions
         public StateMigrationManager()
         {
             // Register migrations in order
-            // Future migrations will be added here:
             // RegisterMigration(new Migration_1_0_to_1_1());
+            // ^ Migration 1.0 to 1.1 adds WidgetId to all widgets
+            // ^ Uncomment when needed (currently at 1.0)
+
+            // Future migrations will be added here:
             // RegisterMigration(new Migration_1_1_to_2_0());
         }
 
@@ -302,8 +356,7 @@ namespace SuperTUI.Extensions
         public void Initialize(string stateDir = null)
         {
             stateDirectory = stateDir ?? Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SuperTUI", "State");
+                PortableDataDirectory.GetSuperTUIDataDirectory(), "State");
 
             Directory.CreateDirectory(stateDirectory);
             currentStateFile = Path.Combine(stateDirectory, "current_state.json");
@@ -355,6 +408,20 @@ namespace SuperTUI.Extensions
             return snapshot;
         }
 
+        /// <summary>
+        /// Restores application state from a snapshot
+        /// Matches widgets by WidgetId ONLY - does not fallback to WidgetName
+        /// </summary>
+        /// <remarks>
+        /// Design Decision: We require WidgetId for state restoration because:
+        /// 1. Multiple widgets can have the same name (e.g., "Counter 1", "Counter 2" both named "Counter")
+        /// 2. Name-based matching is non-deterministic (depends on widget creation order)
+        /// 3. Name-based matching can restore state to the WRONG widget silently
+        /// 4. WidgetId is unique per widget instance and never changes
+        ///
+        /// Legacy states without WidgetId will log a warning and be skipped.
+        /// User should save state again to generate WidgetIds for all widgets.
+        /// </remarks>
         public void RestoreState(StateSnapshot snapshot, WorkspaceManager workspaceManager)
         {
             try
@@ -367,41 +434,70 @@ namespace SuperTUI.Extensions
                     var workspace = workspaceManager.Workspaces.FirstOrDefault(w => w.Index == workspaceState.Index);
                     if (workspace != null)
                     {
-                        // Restore widget states by matching WidgetId
+                        // Restore widget states by matching WidgetId ONLY
+                        // WidgetName fallback removed to prevent ambiguous matching with duplicate names
                         foreach (var widgetState in workspaceState.WidgetStates)
                         {
                             try
                             {
-                                // Find widget by ID
-                                if (widgetState.TryGetValue("WidgetId", out var widgetIdObj) && widgetIdObj is Guid widgetId)
+                                // Find widget by ID (required)
+                                if (widgetState.TryGetValue("WidgetId", out var widgetIdObj))
                                 {
+                                    Guid widgetId;
+
+                                    // Handle different serialization formats
+                                    if (widgetIdObj is Guid guid)
+                                    {
+                                        widgetId = guid;
+                                    }
+                                    else if (widgetIdObj is string guidString && Guid.TryParse(guidString, out var parsedGuid))
+                                    {
+                                        widgetId = parsedGuid;
+                                    }
+                                    else
+                                    {
+                                        Logger.Instance.Warning("StatePersistence",
+                                            $"Widget state has invalid WidgetId format: {widgetIdObj?.GetType().Name ?? "null"}");
+                                        continue;
+                                    }
+
+                                    // Find widget by ID
                                     var widget = workspace.Widgets.FirstOrDefault(w => w.WidgetId == widgetId);
                                     if (widget != null)
                                     {
                                         widget.RestoreState(widgetState);
+                                        Logger.Instance.Debug("StatePersistence",
+                                            $"Restored widget: {widget.WidgetName} (ID: {widgetId})");
                                     }
                                     else
                                     {
-                                        Logger.Instance.Debug("StatePersistence", $"Widget with ID {widgetId} not found in workspace");
+                                        // Widget with this ID doesn't exist (might have been removed)
+                                        string widgetName = widgetState.TryGetValue("WidgetName", out var nameObj) ? nameObj?.ToString() : "Unknown";
+                                        Logger.Instance.Debug("StatePersistence",
+                                            $"Widget '{widgetName}' with ID {widgetId} not found in workspace (may have been removed)");
                                     }
                                 }
                                 else
                                 {
-                                    // Fallback: Try to match by WidgetName (legacy support)
-                                    if (widgetState.TryGetValue("WidgetName", out var nameObj) && nameObj is string widgetName)
-                                    {
-                                        var widget = workspace.Widgets.FirstOrDefault(w => w.WidgetName == widgetName);
-                                        if (widget != null)
-                                        {
-                                            widget.RestoreState(widgetState);
-                                            Logger.Instance.Debug("StatePersistence", $"Restored widget by name (legacy): {widgetName}");
-                                        }
-                                    }
+                                    // No WidgetId in saved state - this is a legacy state or corrupted data
+                                    string widgetName = widgetState.TryGetValue("WidgetName", out var nameObj) ? nameObj?.ToString() : "Unknown";
+                                    string widgetType = widgetState.TryGetValue("WidgetType", out var typeObj) ? typeObj?.ToString() : "Unknown";
+
+                                    Logger.Instance.Warning("StatePersistence",
+                                        $"LEGACY STATE DETECTED: Widget '{widgetName}' (type: {widgetType}) has no WidgetId. " +
+                                        $"State will NOT be restored. Please save state again to generate WidgetIds.");
+
+                                    // NOTE: We deliberately do NOT attempt name-based matching because:
+                                    // 1. It's ambiguous when multiple widgets have the same name
+                                    // 2. It's non-deterministic (depends on widget order)
+                                    // 3. It leads to subtle bugs that are hard to diagnose
+                                    // Instead, we require the user to save state again, which will generate WidgetIds
                                 }
                             }
                             catch (Exception ex)
                             {
-                                Logger.Instance.Warning("StatePersistence", $"Failed to restore widget state: {ex.Message}");
+                                Logger.Instance.Error("StatePersistence",
+                                    $"Failed to restore widget state: {ex.Message}", ex);
                             }
                         }
                     }
@@ -424,6 +520,12 @@ namespace SuperTUI.Extensions
 
         public void SaveState(StateSnapshot snapshot = null, bool createBackup = false)
         {
+            // Synchronous wrapper for backward compatibility
+            SaveStateAsync(snapshot, createBackup).GetAwaiter().GetResult();
+        }
+
+        public async Task SaveStateAsync(StateSnapshot snapshot = null, bool createBackup = false)
+        {
             snapshot = snapshot ?? currentState;
             if (snapshot == null)
             {
@@ -436,11 +538,11 @@ namespace SuperTUI.Extensions
                 // Create backup if requested
                 if (createBackup && File.Exists(currentStateFile))
                 {
-                    CreateBackup();
+                    await CreateBackupAsync();
                 }
 
                 string json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(currentStateFile, json, Encoding.UTF8);
+                await File.WriteAllTextAsync(currentStateFile, json, Encoding.UTF8);
 
                 Logger.Instance.Info("StatePersistence", $"State saved to {currentStateFile}");
             }
@@ -452,6 +554,12 @@ namespace SuperTUI.Extensions
 
         public StateSnapshot LoadState()
         {
+            // Synchronous wrapper for backward compatibility
+            return LoadStateAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<StateSnapshot> LoadStateAsync()
+        {
             try
             {
                 if (!File.Exists(currentStateFile))
@@ -460,7 +568,7 @@ namespace SuperTUI.Extensions
                     return null;
                 }
 
-                string json = File.ReadAllText(currentStateFile, Encoding.UTF8);
+                string json = await File.ReadAllTextAsync(currentStateFile, Encoding.UTF8);
                 var snapshot = JsonSerializer.Deserialize<StateSnapshot>(json);
 
                 // Check version and migrate if necessary
@@ -470,13 +578,13 @@ namespace SuperTUI.Extensions
                         $"State version mismatch. Loaded: {snapshot.Version}, Current: {StateVersion.Current}");
 
                     // Create backup before migration
-                    CreateBackup();
+                    await CreateBackupAsync();
 
                     // Perform migration
                     snapshot = migrationManager.MigrateToCurrentVersion(snapshot);
 
                     // Save migrated state
-                    SaveState(snapshot, createBackup: false);
+                    await SaveStateAsync(snapshot, createBackup: false);
                 }
 
                 Logger.Instance.Info("StatePersistence", $"State loaded successfully (version {snapshot.Version})");
@@ -550,6 +658,12 @@ namespace SuperTUI.Extensions
 
         private void CreateBackup()
         {
+            // Synchronous wrapper for backward compatibility
+            CreateBackupAsync().GetAwaiter().GetResult();
+        }
+
+        private async Task CreateBackupAsync()
+        {
             if (!ConfigurationManager.Instance.Get<bool>("Backup.Enabled", true))
                 return;
 
@@ -569,7 +683,7 @@ namespace SuperTUI.Extensions
                     using (var output = File.Create(zipFile))
                     using (var gzip = new GZipStream(output, CompressionMode.Compress))
                     {
-                        input.CopyTo(gzip);
+                        await input.CopyToAsync(gzip);
                     }
                     File.Delete(backupFile);
                     backupFile = zipFile;
@@ -709,8 +823,7 @@ namespace SuperTUI.Extensions
         public void Initialize(string pluginsDir, PluginContext context)
         {
             pluginsDirectory = pluginsDir ?? Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SuperTUI", "Plugins");
+                PortableDataDirectory.GetSuperTUIDataDirectory(), "Plugins");
 
             pluginContext = context;
 

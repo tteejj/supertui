@@ -11,8 +11,9 @@ namespace SuperTUI.Widgets
     /// <summary>
     /// Simple clock widget showing current time
     /// </summary>
-    public class ClockWidget : WidgetBase
+    public class ClockWidget : WidgetBase, IThemeable
     {
+        private Border containerBorder;
         private TextBlock timeText;
         private TextBlock dateText;
         private DispatcherTimer timer;
@@ -50,7 +51,7 @@ namespace SuperTUI.Widgets
             var theme = ThemeManager.Instance.CurrentTheme;
 
             // Container
-            var border = new Border
+            containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
                 BorderBrush = new SolidColorBrush(theme.Border),
@@ -86,9 +87,9 @@ namespace SuperTUI.Widgets
 
             stackPanel.Children.Add(timeText);
             stackPanel.Children.Add(dateText);
-            border.Child = stackPanel;
+            containerBorder.Child = stackPanel;
 
-            this.Content = border;
+            this.Content = containerBorder;
 
             // Bind to properties (for demonstration of data binding)
             timeText.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding("CurrentTime") { Source = this });
@@ -105,8 +106,13 @@ namespace SuperTUI.Widgets
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
-            timer.Tick += (s, e) => UpdateTime();
+            timer.Tick += Timer_Tick;
             timer.Start();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            UpdateTime();
         }
 
         private void UpdateTime()
@@ -134,11 +140,35 @@ namespace SuperTUI.Widgets
             if (timer != null)
             {
                 timer.Stop();
-                timer.Tick -= (s, e) => UpdateTime();
+                timer.Tick -= Timer_Tick;
                 timer = null;
             }
 
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Apply current theme to all UI elements
+        /// </summary>
+        public void ApplyTheme()
+        {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
+            if (containerBorder != null)
+            {
+                containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
+                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (timeText != null)
+            {
+                timeText.Foreground = new SolidColorBrush(theme.Info);
+            }
+
+            if (dateText != null)
+            {
+                dateText.Foreground = new SolidColorBrush(theme.Foreground);
+            }
         }
     }
 }

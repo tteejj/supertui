@@ -1,0 +1,21 @@
+{
+  "Name": "Nord",
+  "Author": "Arctic Ice Studio",
+  "Description": "An arctic, north-bluish color palette",
+  "Background": "#2E3440",
+  "Foreground": "#D8DEE9",
+  "Selection": "#434C5E",
+  "Comment": "#616E88",
+  "Cyan": "#88C0D0",
+  "Green": "#A3BE8C",
+  "Orange": "#D08770",
+  "Pink": "#B48EAD",
+  "Purple": "#B48EAD",
+  "Red": "#BF616A",
+  "Yellow": "#EBCB8B",
+  "Border": "#4C566A",
+  "Success": "#A3BE8C",
+  "Error": "#BF616A",
+  "Warning": "#EBCB8B",
+  "Info": "#88C0D0"
+}

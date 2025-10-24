@@ -16,6 +16,7 @@ namespace SuperTUI.Core
     {
         public Key Key { get; set; }
         public ModifierKeys Modifiers { get; set; }
+        public ModifierKeys Modifier => Modifiers; // Alias for consistency
         public Action Action { get; set; }
         public string Description { get; set; }
 
@@ -27,6 +28,10 @@ namespace SuperTUI.Core
 
     public class ShortcutManager
     {
+        private static readonly Lazy<ShortcutManager> instance =
+            new Lazy<ShortcutManager>(() => new ShortcutManager());
+        public static ShortcutManager Instance => instance.Value;
+
         private List<KeyboardShortcut> globalShortcuts = new List<KeyboardShortcut>();
         private Dictionary<string, List<KeyboardShortcut>> workspaceShortcuts = new Dictionary<string, List<KeyboardShortcut>>();
 
@@ -92,6 +97,10 @@ namespace SuperTUI.Core
             }
             return all;
         }
+
+        public bool HandleKeyDown(Key key, ModifierKeys modifiers)
+        {
+            return HandleKeyDown(key, modifiers, null);
+        }
     }
-}
 }

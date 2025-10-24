@@ -57,6 +57,12 @@ namespace SuperTUI.Core
             this.Focusable = true;
             this.GotFocus += (s, e) => HasFocus = true;
             this.LostFocus += (s, e) => HasFocus = false;
+
+            // Subscribe to theme changes if widget implements IThemeable
+            if (this is IThemeable)
+            {
+                ThemeManager.Instance.ThemeChanged += OnThemeChanged;
+            }
         }
 
         private void WrapInFocusBorder()
@@ -87,6 +93,20 @@ namespace SuperTUI.Core
                     ? new SolidColorBrush(theme.Focus)
                     : Brushes.Transparent;
             }
+        }
+
+        /// <summary>
+        /// Handler for theme changes - calls ApplyTheme() if widget implements IThemeable
+        /// </summary>
+        private void OnThemeChanged(object sender, ThemeChangedEventArgs e)
+        {
+            if (this is IThemeable themeable)
+            {
+                themeable.ApplyTheme();
+            }
+
+            // Always update focus visual (uses theme colors)
+            UpdateFocusVisual();
         }
 
         /// <summary>
@@ -177,6 +197,12 @@ namespace SuperTUI.Core
         /// </summary>
         protected virtual void OnDispose()
         {
+            // Unsubscribe from theme changes
+            if (this is IThemeable)
+            {
+                ThemeManager.Instance.ThemeChanged -= OnThemeChanged;
+            }
+
             // Override in derived classes
         }
     }

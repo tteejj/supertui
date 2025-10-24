@@ -12,7 +12,7 @@ namespace SuperTUI.Widgets
     /// <summary>
     /// Widget showing task count summary
     /// </summary>
-    public class TaskSummaryWidget : WidgetBase
+    public class TaskSummaryWidget : WidgetBase, IThemeable
     {
         // This would normally come from a service
         // For demo purposes, we'll create a simple data structure
@@ -36,6 +36,8 @@ namespace SuperTUI.Widgets
             }
         }
 
+        private Border containerBorder;
+        private TextBlock titleText;
         private StackPanel contentPanel;
 
         public TaskSummaryWidget()
@@ -48,7 +50,7 @@ namespace SuperTUI.Widgets
         {
             var theme = ThemeManager.Instance.CurrentTheme;
 
-            var border = new Border
+            containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
                 BorderBrush = new SolidColorBrush(theme.Border),
@@ -59,7 +61,7 @@ namespace SuperTUI.Widgets
             contentPanel = new StackPanel();
 
             // Title
-            var title = new TextBlock
+            titleText = new TextBlock
             {
                 Text = "TASKS",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
@@ -68,10 +70,10 @@ namespace SuperTUI.Widgets
                 Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                 Margin = new Thickness(0, 0, 0, 10)
             };
-            contentPanel.Children.Add(title);
+            contentPanel.Children.Add(titleText);
 
-            border.Child = contentPanel;
-            this.Content = border;
+            containerBorder.Child = contentPanel;
+            this.Content = containerBorder;
         }
 
         public override void Initialize()
@@ -95,14 +97,16 @@ namespace SuperTUI.Widgets
 
             if (Data == null) return;
 
-            // Add stat items
-            AddStatItem("Total", Data.TotalTasks.ToString(), "#4EC9B0");
-            AddStatItem("Completed", Data.CompletedTasks.ToString(), "#6A9955");
-            AddStatItem("Pending", Data.PendingTasks.ToString(), "#569CD6");
-            AddStatItem("Overdue", Data.OverdueTasks.ToString(), "#F48771");
+            var theme = ThemeManager.Instance.CurrentTheme;
+
+            // Add stat items using theme colors
+            AddStatItem("Total", Data.TotalTasks.ToString(), theme.Info);
+            AddStatItem("Completed", Data.CompletedTasks.ToString(), theme.Success);
+            AddStatItem("Pending", Data.PendingTasks.ToString(), theme.Primary);
+            AddStatItem("Overdue", Data.OverdueTasks.ToString(), theme.Error);
         }
 
-        private void AddStatItem(string label, string value, string colorHex)
+        private void AddStatItem(string label, string value, Color color)
         {
             var theme = ThemeManager.Instance.CurrentTheme;
 
@@ -127,7 +131,7 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex))
+                Foreground = new SolidColorBrush(color)
             };
 
             itemPanel.Children.Add(labelText);
@@ -156,6 +160,31 @@ namespace SuperTUI.Widgets
         {
             // No resources to dispose currently
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Apply current theme to all UI elements
+        /// </summary>
+        public void ApplyTheme()
+        {
+            var theme = ThemeManager.Instance.CurrentTheme;
+
+            if (containerBorder != null)
+            {
+                containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
+                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
+            }
+
+            if (titleText != null)
+            {
+                titleText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
+            }
+
+            // Rebuild display with new theme colors
+            if (Data != null)
+            {
+                UpdateDisplay();
+            }
         }
     }
 }

@@ -12,30 +12,62 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 # Compile C# framework and widgets
 Write-Host "[1/3] Compiling framework..." -ForegroundColor Yellow
 
-$frameworkSource = Get-Content "$PSScriptRoot/Core/Framework.cs" -Raw
-$clockWidgetSource = Get-Content "$PSScriptRoot/Widgets/ClockWidget.cs" -Raw
-$taskSummarySource = Get-Content "$PSScriptRoot/Widgets/TaskSummaryWidget.cs" -Raw
-$counterWidgetSource = Get-Content "$PSScriptRoot/Widgets/CounterWidget.cs" -Raw
-$notesWidgetSource = Get-Content "$PSScriptRoot/Widgets/NotesWidget.cs" -Raw
+# Load all core framework files (refactored structure)
+$coreFiles = @(
+    "Core/Interfaces/IWidget.cs"
+    "Core/Interfaces/ILogger.cs"
+    "Core/Interfaces/IThemeManager.cs"
+    "Core/Interfaces/IConfigurationManager.cs"
+    "Core/Interfaces/ISecurityManager.cs"
+    "Core/Interfaces/IErrorHandler.cs"
+    "Core/Interfaces/ILayoutEngine.cs"
+    "Core/Interfaces/IServiceContainer.cs"
+    "Core/Interfaces/IWorkspace.cs"
+    "Core/Interfaces/IWorkspaceManager.cs"
+    "Core/Infrastructure/Logger.cs"
+    "Core/Infrastructure/ConfigurationManager.cs"
+    "Core/Infrastructure/ThemeManager.cs"
+    "Core/Infrastructure/SecurityManager.cs"
+    "Core/Infrastructure/ErrorHandler.cs"
+    "Core/Extensions.cs"
+    "Core/Layout/LayoutEngine.cs"
+    "Core/Layout/GridLayoutEngine.cs"
+    "Core/Layout/DockLayoutEngine.cs"
+    "Core/Layout/StackLayoutEngine.cs"
+    "Core/Components/WidgetBase.cs"
+    "Core/Components/ScreenBase.cs"
+    "Core/Infrastructure/Workspace.cs"
+    "Core/Infrastructure/WorkspaceManager.cs"
+    "Core/Infrastructure/ShortcutManager.cs"
+    "Core/Infrastructure/EventBus.cs"
+    "Core/Infrastructure/ServiceContainer.cs"
+)
 
-# Extract just the namespace content without the using statements for each widget
-# This prevents duplicate using statements and CS1529 errors
-$clockWidgetSource = $clockWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
-$taskSummarySource = $taskSummarySource -replace '(?s)^using.*?(?=namespace)', ''
-$counterWidgetSource = $counterWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
-$notesWidgetSource = $notesWidgetSource -replace '(?s)^using.*?(?=namespace)', ''
+# Load widget files
+$widgetFiles = @(
+    "Widgets/ClockWidget.cs"
+    "Widgets/TaskSummaryWidget.cs"
+    "Widgets/CounterWidget.cs"
+    "Widgets/NotesWidget.cs"
+)
 
-$combinedSource = @"
-$frameworkSource
+# Combine all source files
+$allSources = @()
+foreach ($file in ($coreFiles + $widgetFiles)) {
+    $fullPath = Join-Path $PSScriptRoot $file
+    if (Test-Path $fullPath) {
+        $source = Get-Content $fullPath -Raw
+        # Remove using statements except from first file to avoid duplicates
+        if ($allSources.Count -gt 0) {
+            $source = $source -replace '(?s)^using.*?(?=namespace)', ''
+        }
+        $allSources += $source
+    } else {
+        Write-Warning "File not found: $fullPath"
+    }
+}
 
-$clockWidgetSource
-
-$taskSummarySource
-
-$counterWidgetSource
-
-$notesWidgetSource
-"@
+$combinedSource = $allSources -join "`n`n"
 
 # Use the assembly references that were already loaded at the top of the script
 Add-Type -TypeDefinition $combinedSource -ReferencedAssemblies @(
@@ -198,7 +230,13 @@ $minimizeButton = $window.FindName("MinimizeButton")
 $maximizeButton = $window.FindName("MaximizeButton")
 
 # Window chrome handlers
-$closeButton.Add_Click({ $window.Close() })
+$closeButton.Add_Click({
+    # Dispose resources before closing
+    $workspaceManager.Dispose()
+    $statusClockTimer.Stop()
+    [SuperTUI.Infrastructure.Logger]::Instance.Flush()
+    $window.Close()
+})
 $minimizeButton.Add_Click({ $window.WindowState = 'Minimized' })
 $maximizeButton.Add_Click({
     if ($window.WindowState -eq 'Maximized') {
@@ -349,6 +387,21 @@ Write-Host "`n✓ Created 3 workspaces with 12 total widgets" -ForegroundColor G
 # ============================================================================
 # KEYBOARD SHORTCUTS
 # ============================================================================
+
+# Register built-in Tab navigation shortcuts (these are handled by Workspace but register for help)
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Tab,
+    [System.Windows.Input.ModifierKeys]::None,
+    {}, # Handled by Workspace, no-op action
+    "Focus next widget"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Tab,
+    [System.Windows.Input.ModifierKeys]::Shift,
+    {}, # Handled by Workspace, no-op action
+    "Focus previous widget"
+)
 
 # Workspace switching (Ctrl+1 through Ctrl+9)
 for ($i = 1; $i -le 9; $i++) {

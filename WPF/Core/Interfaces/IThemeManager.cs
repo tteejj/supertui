@@ -9,13 +9,13 @@ namespace SuperTUI.Infrastructure
     public interface IThemeManager
     {
         Theme CurrentTheme { get; }
+        event EventHandler<ThemeChangedEventArgs> ThemeChanged;
 
-        void Initialize(string themesDirectory);
+        void Initialize(string themesDirectory = null);
         void ApplyTheme(string themeName);
         void RegisterTheme(Theme theme);
-        void SaveTheme(Theme theme);
+        void SaveTheme(Theme theme, string filename = null);
 
         List<Theme> GetAvailableThemes();
-        Theme LoadThemeFromFile(string filePath);
     }
 }

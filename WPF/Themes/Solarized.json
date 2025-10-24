@@ -1,0 +1,21 @@
+{
+  "Name": "Solarized Dark",
+  "Author": "Ethan Schoonover",
+  "Description": "Precision colors for machines and people",
+  "Background": "#002B36",
+  "Foreground": "#839496",
+  "Selection": "#073642",
+  "Comment": "#586E75",
+  "Cyan": "#2AA198",
+  "Green": "#859900",
+  "Orange": "#CB4B16",
+  "Pink": "#D33682",
+  "Purple": "#6C71C4",
+  "Red": "#DC322F",
+  "Yellow": "#B58900",
+  "Border": "#586E75",
+  "Success": "#859900",
+  "Error": "#DC322F",
+  "Warning": "#B58900",
+  "Info": "#268BD2"
+}
