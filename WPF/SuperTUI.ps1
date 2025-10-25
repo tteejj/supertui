@@ -210,6 +210,10 @@ $errorHandler = [SuperTUI.Infrastructure.ErrorHandler]::Instance
 $securityManager = [SuperTUI.Infrastructure.SecurityManager]::Instance
 $securityManager.Initialize()
 
+# Initialize ExcelMappingService (will create default profiles if none exist)
+$excelMappingService = [SuperTUI.Core.Services.ExcelMappingService]::Instance
+$excelMappingService.Initialize()
+
 Write-Host "Infrastructure initialized" -ForegroundColor Green
 
 # ============================================================================
@@ -348,6 +352,31 @@ $workspace5Layout.AddChild($statsWidget, $ws5Params)
 $workspace5.Widgets.Add($statsWidget)
 
 $workspaceManager.AddWorkspace($workspace5)
+
+# Workspace 6: Excel Integration (Import/Export)
+$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(2, 1)
+$workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout)
+
+# Top: Import widget (left) and Export widget (right)
+$importWidget = New-Object SuperTUI.Widgets.ExcelImportWidget
+$importWidget.WidgetName = "ExcelImport"
+$importWidget.Initialize()
+$ws6Params1 = New-Object SuperTUI.Core.LayoutParams
+$ws6Params1.Row = 0
+$ws6Params1.Column = 0
+$workspace6Layout.AddChild($importWidget, $ws6Params1)
+$workspace6.Widgets.Add($importWidget)
+
+$exportWidget = New-Object SuperTUI.Widgets.ExcelExportWidget
+$exportWidget.WidgetName = "ExcelExport"
+$exportWidget.Initialize()
+$ws6Params2 = New-Object SuperTUI.Core.LayoutParams
+$ws6Params2.Row = 0
+$ws6Params2.Column = 1
+$workspace6Layout.AddChild($exportWidget, $ws6Params2)
+$workspace6.Widgets.Add($exportWidget)
+
+$workspaceManager.AddWorkspace($workspace6)
 
 Write-Host "Workspaces created!" -ForegroundColor Green
 
