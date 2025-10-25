@@ -16,6 +16,8 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class ShortcutHelpWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
         private Border containerBorder;
         private TextBlock titleText;
         private TextBox searchBox;
@@ -32,10 +34,17 @@ namespace SuperTUI.Widgets
             public string Category { get; set; }
         }
 
-        public ShortcutHelpWidget()
+        public ShortcutHelpWidget(ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             WidgetType = "ShortcutHelp";
             WidgetName = "Keyboard Shortcuts";
+        }
+
+        // Backward compatibility constructor
+        public ShortcutHelpWidget() : this(Logger.Instance, ThemeManager.Instance)
+        {
         }
 
         public override void Initialize()
@@ -66,11 +75,11 @@ namespace SuperTUI.Widgets
                     });
                 }
 
-                Logger.Instance?.Info("ShortcutHelp", $"Loaded {registeredShortcuts.Count} shortcuts from ShortcutManager");
+                logger.Info("ShortcutHelp", $"Loaded {registeredShortcuts.Count} shortcuts from ShortcutManager");
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Warning("ShortcutHelp", $"Failed to load shortcuts from ShortcutManager: {ex.Message}");
+                logger.Warning("ShortcutHelp", $"Failed to load shortcuts from ShortcutManager: {ex.Message}");
             }
 
             // Add widget-specific shortcuts that aren't globally registered
@@ -188,7 +197,7 @@ namespace SuperTUI.Widgets
                 Description = "Clear search"
             });
 
-            Logger.Instance?.Info("ShortcutHelp", $"Loaded total of {allShortcuts.Count} keyboard shortcuts");
+            logger.Info("ShortcutHelp", $"Loaded total of {allShortcuts.Count} keyboard shortcuts");
         }
 
         /// <summary>
@@ -233,7 +242,7 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var mainPanel = new StackPanel
             {
@@ -355,7 +364,7 @@ namespace SuperTUI.Widgets
                     {
                         Text = $"─── {currentCategory} ───",
                         FontWeight = FontWeights.Bold,
-                        Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Info),
+                        Foreground = new SolidColorBrush(themeManager.CurrentTheme.Info),
                         Margin = new Thickness(0, 10, 0, 5)
                     };
 
@@ -374,7 +383,7 @@ namespace SuperTUI.Widgets
                     Text = shortcut.Keys.PadRight(20),
                     FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                     FontWeight = FontWeights.Bold,
-                    Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.SyntaxKeyword),
+                    Foreground = new SolidColorBrush(themeManager.CurrentTheme.SyntaxKeyword),
                     Width = 150
                 };
 
@@ -382,7 +391,7 @@ namespace SuperTUI.Widgets
                 {
                     Text = shortcut.Description,
                     FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                    Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Foreground)
+                    Foreground = new SolidColorBrush(themeManager.CurrentTheme.Foreground)
                 };
 
                 itemPanel.Children.Add(keysText);
@@ -423,7 +432,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             if (containerBorder != null)
             {

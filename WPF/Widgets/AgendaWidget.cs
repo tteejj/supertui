@@ -21,6 +21,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class AgendaWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Theme theme;
         private TaskService taskService;
 
@@ -55,15 +59,27 @@ namespace SuperTUI.Widgets
         // Refresh timer
         private DispatcherTimer refreshTimer;
 
-        public AgendaWidget()
+        public AgendaWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "Agenda";
             WidgetType = "Agenda";
         }
 
+        public AgendaWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             taskService = TaskService.Instance;
 
             // Initialize service
@@ -94,7 +110,7 @@ namespace SuperTUI.Widgets
             refreshTimer.Tick += (s, e) => LoadTasks();
             refreshTimer.Start();
 
-            Logger.Instance?.Info("AgendaWidget", "Agenda widget initialized");
+            logger.Info("AgendaWidget", "Agenda widget initialized");
         }
 
         private void BuildUI()
@@ -298,7 +314,7 @@ namespace SuperTUI.Widgets
             UpdateHeader(laterExpander, "LATER", laterTasks.Count);
             UpdateHeader(noDueDateExpander, "NO DUE DATE", noDueDateTasks.Count);
 
-            Logger.Instance?.Debug("AgendaWidget", $"Loaded {allTasks.Count} tasks");
+            logger.Debug("AgendaWidget", $"Loaded {allTasks.Count} tasks");
         }
 
         private void UpdateHeader(Expander expander, string title, int count)
@@ -536,7 +552,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("AgendaWidget", $"Failed to show edit dialog: {ex.Message}", ex);
+                logger.Error("AgendaWidget", $"Failed to show edit dialog: {ex.Message}", ex);
             }
         }
 
@@ -596,20 +612,49 @@ namespace SuperTUI.Widgets
                 taskService.TasksReloaded -= LoadTasks;
             }
 
-            // Stop timer
+            // Stop and dispose timer
             if (refreshTimer != null)
             {
                 refreshTimer.Stop();
+                refreshTimer.Tick -= (s, e) => LoadTasks();
                 refreshTimer = null;
             }
 
-            Logger.Instance?.Info("AgendaWidget", "Agenda widget disposed");
+            // Unsubscribe from ListBox events
+            if (overdueListBox != null)
+                overdueListBox.KeyDown -= ListBox_KeyDown;
+            if (todayListBox != null)
+                todayListBox.KeyDown -= ListBox_KeyDown;
+            if (tomorrowListBox != null)
+                tomorrowListBox.KeyDown -= ListBox_KeyDown;
+            if (thisWeekListBox != null)
+                thisWeekListBox.KeyDown -= ListBox_KeyDown;
+            if (laterListBox != null)
+                laterListBox.KeyDown -= ListBox_KeyDown;
+            if (noDueDateListBox != null)
+                noDueDateListBox.KeyDown -= ListBox_KeyDown;
+
+            // Unsubscribe from Expander events
+            if (overdueExpander != null)
+                overdueExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+            if (todayExpander != null)
+                todayExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+            if (tomorrowExpander != null)
+                tomorrowExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+            if (thisWeekExpander != null)
+                thisWeekExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+            if (laterExpander != null)
+                laterExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+            if (noDueDateExpander != null)
+                noDueDateExpander.PreviewKeyDown -= Expander_PreviewKeyDown;
+
+            logger.Info("AgendaWidget", "Agenda widget disposed");
             base.OnDispose();
         }
 
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
 
             if (mainPanel != null)
             {
@@ -619,7 +664,7 @@ namespace SuperTUI.Widgets
             // Refresh UI to apply new theme
             LoadTasks();
 
-            Logger.Instance?.Debug("AgendaWidget", "Applied theme update");
+            logger.Debug("AgendaWidget", "Applied theme update");
         }
     }
 }

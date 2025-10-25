@@ -234,7 +234,9 @@ namespace SuperTUI.Infrastructure
             catch (Exception ex)
             {
                 // Log to console as fallback (can't use Logger here - infinite loop!)
-                Console.WriteLine($"FileLogSink writer thread error: {ex.Message}");
+                // Don't use ErrorPolicy here to avoid circular dependency
+                Console.WriteLine($"[CRITICAL] FileLogSink writer thread error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
             finally
             {

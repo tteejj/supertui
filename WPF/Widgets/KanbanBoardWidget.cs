@@ -21,6 +21,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class KanbanBoardWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Theme theme;
         private TaskService taskService;
 
@@ -51,15 +55,27 @@ namespace SuperTUI.Widgets
         // Refresh timer
         private DispatcherTimer refreshTimer;
 
-        public KanbanBoardWidget()
+        public KanbanBoardWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "Kanban Board";
             WidgetType = "KanbanBoard";
         }
 
+        public KanbanBoardWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             taskService = TaskService.Instance;
 
             // Initialize service
@@ -87,7 +103,7 @@ namespace SuperTUI.Widgets
             refreshTimer.Tick += (s, e) => LoadTasks();
             refreshTimer.Start();
 
-            Logger.Instance?.Info("KanbanWidget", "Kanban board widget initialized");
+            logger.Info("KanbanWidget", "Kanban board widget initialized");
         }
 
         private void BuildUI()
@@ -170,10 +186,13 @@ namespace SuperTUI.Widgets
 
             // Custom item template
             var itemTemplate = new DataTemplate();
+            var borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.MarginProperty, new Thickness(0, 3, 0, 3));
+            borderFactory.SetValue(Border.BackgroundProperty, new SolidColorBrush(theme.Surface));
+            borderFactory.SetValue(Border.PaddingProperty, new Thickness(8, 5, 8, 5));
+
             var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
-            stackFactory.SetValue(StackPanel.MarginProperty, new Thickness(0, 3, 0, 3));
-            stackFactory.SetValue(StackPanel.BackgroundProperty, new SolidColorBrush(theme.Surface));
-            stackFactory.SetValue(StackPanel.PaddingProperty, new Thickness(8, 5, 8, 5));
+            borderFactory.AppendChild(stackFactory);
 
             // Status + Priority + Title
             var titleTextFactory = new FrameworkElementFactory(typeof(TextBlock));
@@ -198,7 +217,7 @@ namespace SuperTUI.Widgets
 
             stackFactory.AppendChild(detailsTextFactory);
 
-            itemTemplate.VisualTree = stackFactory;
+            itemTemplate.VisualTree = borderFactory;
             listBox.ItemTemplate = itemTemplate;
 
             // Selection and keyboard handling
@@ -253,7 +272,7 @@ namespace SuperTUI.Widgets
             // Apply color coding
             UpdateTaskColors();
 
-            Logger.Instance?.Debug("KanbanWidget", $"Loaded {allTasks.Count} tasks");
+            logger.Debug("KanbanWidget", $"Loaded {allTasks.Count} tasks");
         }
 
         private void UpdateTaskColors()
@@ -400,7 +419,7 @@ namespace SuperTUI.Widgets
                 task.Progress = 0;
 
             taskService.UpdateTask(task);
-            Logger.Instance?.Info("KanbanWidget", $"Moved task '{task.Title}' to {newStatus}");
+            logger.Info("KanbanWidget", $"Moved task '{task.Title}' to {newStatus}");
         }
 
         private void EditTask(TaskItem task)
@@ -513,7 +532,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("KanbanWidget", $"Failed to show edit dialog: {ex.Message}", ex);
+                logger.Error("KanbanWidget", $"Failed to show edit dialog: {ex.Message}", ex);
             }
         }
 
@@ -574,20 +593,38 @@ namespace SuperTUI.Widgets
                 taskService.TasksReloaded -= LoadTasks;
             }
 
-            // Stop timer
+            // Stop and dispose timer
             if (refreshTimer != null)
             {
                 refreshTimer.Stop();
+                refreshTimer.Tick -= (s, e) => LoadTasks();
                 refreshTimer = null;
             }
 
-            Logger.Instance?.Info("KanbanWidget", "Kanban board widget disposed");
+            // Unsubscribe from ListBox events
+            if (todoListBox != null)
+            {
+                todoListBox.SelectionChanged -= ListBox_SelectionChanged;
+                todoListBox.KeyDown -= ListBox_KeyDown;
+            }
+            if (inProgressListBox != null)
+            {
+                inProgressListBox.SelectionChanged -= ListBox_SelectionChanged;
+                inProgressListBox.KeyDown -= ListBox_KeyDown;
+            }
+            if (doneListBox != null)
+            {
+                doneListBox.SelectionChanged -= ListBox_SelectionChanged;
+                doneListBox.KeyDown -= ListBox_KeyDown;
+            }
+
+            logger.Info("KanbanWidget", "Kanban board widget disposed");
             base.OnDispose();
         }
 
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
 
             if (mainGrid != null)
             {
@@ -597,7 +634,7 @@ namespace SuperTUI.Widgets
             // Refresh UI to apply new theme
             LoadTasks();
 
-            Logger.Instance?.Debug("KanbanWidget", "Applied theme update");
+            logger.Debug("KanbanWidget", "Applied theme update");
         }
     }
 }

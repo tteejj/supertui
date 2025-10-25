@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using SuperTUI.Core.Infrastructure;
 
 namespace SuperTUI.Infrastructure
 {
@@ -187,18 +188,14 @@ namespace SuperTUI.Infrastructure
                 }
                 catch (Exception ex)
                 {
-                    // PHASE 2 FIX: Better error reporting
+                    // PHASE 2 FIX: Better error reporting with ErrorPolicy
                     var targetType = typeof(T);
                     var sourceType = configValue.Value?.GetType().Name ?? "null";
 
-                    Logger.Instance.Error("Config",
-                        $"CONFIGURATION ERROR: Failed to convert '{key}'\n" +
-                        $"  Expected type: {targetType.Name}\n" +
-                        $"  Actual type: {sourceType}\n" +
-                        $"  Value: {configValue.Value}\n" +
-                        $"  Error: {ex.Message}\n" +
-                        $"  Returning default: {defaultValue}",
-                        ex);
+                    ErrorHandlingPolicy.Handle(
+                        ErrorCategory.Configuration,
+                        ex,
+                        $"Failed to convert config key '{key}' from {sourceType} to {targetType.Name} (value: {configValue.Value})");
 
                     return defaultValue;
                 }
@@ -371,7 +368,10 @@ namespace SuperTUI.Infrastructure
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Config", $"Failed to deserialize JsonElement for key {key}: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Configuration,
+                    ex,
+                    $"Failed to deserialize JsonElement for key {key}");
                 return defaultValue;
             }
         }
@@ -469,7 +469,10 @@ namespace SuperTUI.Infrastructure
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Config", $"Failed to save configuration: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Configuration,
+                    ex,
+                    $"Saving configuration to {path}");
             }
         }
 
@@ -490,16 +493,15 @@ namespace SuperTUI.Infrastructure
                 {
                     if (config.TryGetValue(kvp.Key, out var configValue))
                     {
-                        try
-                        {
-                            // Deserialize based on the registered type
-                            object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
-                            configValue.Value = value;
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Warning("Config", $"Failed to load config value {kvp.Key}: {ex.Message}");
-                        }
+                        ErrorHandlingPolicy.SafeExecute(
+                            ErrorCategory.Configuration,
+                            () =>
+                            {
+                                // Deserialize based on the registered type
+                                object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
+                                configValue.Value = value;
+                            },
+                            context: $"Loading config value {kvp.Key}");
                     }
                 }
 
@@ -507,7 +509,10 @@ namespace SuperTUI.Infrastructure
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Config", $"Failed to load configuration: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Configuration,
+                    ex,
+                    $"Loading configuration from {path}");
             }
         }
 

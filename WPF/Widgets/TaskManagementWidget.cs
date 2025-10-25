@@ -19,6 +19,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class TaskManagementWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Theme theme;
         private TaskService taskService;
 
@@ -51,15 +55,26 @@ namespace SuperTUI.Widgets
         private Button saveDescButton;
         private Button saveTagsButton;
 
-        public TaskManagementWidget()
+        public TaskManagementWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "Task Manager";
             WidgetType = "TaskManagement";
         }
 
+        public TaskManagementWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             taskService = TaskService.Instance;
 
             // Initialize service
@@ -73,7 +88,7 @@ namespace SuperTUI.Widgets
             RefreshFilterList();
             LoadCurrentFilter();
 
-            Logger.Instance?.Info("TaskWidget", "Task Management widget initialized");
+            logger?.Info("TaskWidget", "Task Management widget initialized");
         }
 
         private void BuildUI()
@@ -177,7 +192,7 @@ namespace SuperTUI.Widgets
             {
                 currentFilter = filter;
                 LoadCurrentFilter();
-                Logger.Instance?.Debug("TaskWidget", $"Filter changed to: {filter.Name}");
+                logger?.Debug("TaskWidget", $"Filter changed to: {filter.Name}");
             }
         }
 
@@ -621,7 +636,7 @@ namespace SuperTUI.Widgets
             selectedTask.UpdatedAt = DateTime.Now;
             taskService.UpdateTask(selectedTask);
 
-            Logger.Instance?.Info("TaskWidget", $"Updated description for: {selectedTask.Title}");
+            logger?.Info("TaskWidget", $"Updated description for: {selectedTask.Title}");
         }
 
         private void SaveTags_Click(object sender, RoutedEventArgs e)
@@ -636,7 +651,7 @@ namespace SuperTUI.Widgets
             selectedTask.UpdatedAt = DateTime.Now;
             taskService.UpdateTask(selectedTask);
 
-            Logger.Instance?.Info("TaskWidget", $"Updated tags for: {selectedTask.Title}");
+            logger?.Info("TaskWidget", $"Updated tags for: {selectedTask.Title}");
         }
 
         private void AddNote_Click(object sender, RoutedEventArgs e)
@@ -654,7 +669,7 @@ namespace SuperTUI.Widgets
             // Clear the input box
             addNoteBox.Text = "";
 
-            Logger.Instance?.Info("TaskWidget", $"Added note to: {selectedTask.Title}");
+            logger?.Info("TaskWidget", $"Added note to: {selectedTask.Title}");
         }
 
         #endregion
@@ -769,7 +784,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskWidget", $"Failed to show export dialog: {ex.Message}", ex);
+                logger?.Error("TaskWidget", $"Failed to show export dialog: {ex.Message}", ex);
             }
         }
 
@@ -804,17 +819,17 @@ namespace SuperTUI.Widgets
 
                     if (success)
                     {
-                        Logger.Instance?.Info("TaskWidget", $"Successfully exported tasks to {saveDialog.FileName}");
+                        logger?.Info("TaskWidget", $"Successfully exported tasks to {saveDialog.FileName}");
                     }
                     else
                     {
-                        Logger.Instance?.Error("TaskWidget", $"Failed to export tasks");
+                        logger?.Error("TaskWidget", $"Failed to export tasks");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskWidget", $"Failed to export tasks: {ex.Message}", ex);
+                logger?.Error("TaskWidget", $"Failed to export tasks: {ex.Message}", ex);
             }
         }
 
@@ -844,7 +859,7 @@ namespace SuperTUI.Widgets
                 selectedTask = taskService.GetTask(id);
                 if (selectedTask == null)
                 {
-                    Logger.Instance?.Warning("TaskWidget", $"Could not restore task {id}, it may have been deleted");
+                    logger?.Warning("TaskWidget", $"Could not restore task {id}, it may have been deleted");
                 }
             }
 
@@ -875,7 +890,9 @@ namespace SuperTUI.Widgets
         {
             // Unsubscribe from UI events
             if (filterListBox != null)
+            {
                 filterListBox.SelectionChanged -= FilterListBox_SelectionChanged;
+            }
 
             if (taskListControl != null)
             {
@@ -884,15 +901,26 @@ namespace SuperTUI.Widgets
                 taskListControl.TaskAdded -= OnTaskAdded;
                 taskListControl.TaskDeleted -= OnTaskDeleted;
                 taskListControl.Dispose();
+                taskListControl = null;
             }
 
-            Logger.Instance?.Info("TaskWidget", "Task Management widget disposed");
+            if (saveDescButton != null)
+            {
+                saveDescButton.Click -= SaveDescription_Click;
+            }
+
+            if (saveTagsButton != null)
+            {
+                saveTagsButton.Click -= SaveTags_Click;
+            }
+
+            logger?.Info("TaskWidget", "Task Management widget disposed");
             base.OnDispose();
         }
 
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
 
             if (mainGrid != null)
             {
@@ -902,7 +930,7 @@ namespace SuperTUI.Widgets
             taskListControl?.ApplyTheme();
             RefreshDetailPanel();
 
-            Logger.Instance?.Debug("TaskWidget", "Applied theme update");
+            logger?.Debug("TaskWidget", "Applied theme update");
         }
 
         #endregion

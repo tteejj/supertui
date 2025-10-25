@@ -19,6 +19,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class SystemMonitorWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private DispatcherTimer updateTimer;
         private System.Diagnostics.PerformanceCounter cpuCounter;
         private System.Diagnostics.PerformanceCounter ramCounter;
@@ -43,9 +47,20 @@ namespace SuperTUI.Widgets
 
         private const int UPDATE_INTERVAL_MS = 1000;
 
-        public SystemMonitorWidget()
+        public SystemMonitorWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "System Monitor";
+        }
+
+        public SystemMonitorWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
         }
 
         public override void Initialize()
@@ -70,7 +85,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("SystemMonitor", $"Failed to initialize performance counters: {ex.Message}");
+                logger.Error("SystemMonitor", $"Failed to initialize performance counters: {ex.Message}");
             }
 
             BuildUI();
@@ -96,7 +111,7 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var stackPanel = new StackPanel
             {
@@ -218,7 +233,7 @@ namespace SuperTUI.Widgets
         {
             try
             {
-                var theme = ThemeManager.Instance.CurrentTheme;
+                var theme = themeManager.CurrentTheme;
 
                 // Update CPU
                 if (cpuCounter != null)
@@ -280,7 +295,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("SystemMonitor", $"Failed to update stats: {ex.Message}");
+                logger.Error("SystemMonitor", $"Failed to update stats: {ex.Message}");
             }
         }
 
@@ -334,10 +349,26 @@ namespace SuperTUI.Widgets
             }
 
             // Dispose performance counters
-            cpuCounter?.Dispose();
-            ramCounter?.Dispose();
-            networkSentCounter?.Dispose();
-            networkReceivedCounter?.Dispose();
+            if (cpuCounter != null)
+            {
+                cpuCounter.Dispose();
+                cpuCounter = null;
+            }
+            if (ramCounter != null)
+            {
+                ramCounter.Dispose();
+                ramCounter = null;
+            }
+            if (networkSentCounter != null)
+            {
+                networkSentCounter.Dispose();
+                networkSentCounter = null;
+            }
+            if (networkReceivedCounter != null)
+            {
+                networkReceivedCounter.Dispose();
+                networkReceivedCounter = null;
+            }
 
             base.OnDispose();
         }
@@ -359,7 +390,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             // Rebuild UI with new theme
             if (this.Content != null)

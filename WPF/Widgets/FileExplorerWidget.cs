@@ -31,6 +31,11 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class FileExplorerWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+        private readonly ISecurityManager security;
+
         private string currentPath;
         private ListBox fileListBox;
         private TextBlock pathLabel;
@@ -68,20 +73,34 @@ namespace SuperTUI.Widgets
             ".reg", ".hta", ".cpl", ".msc", ".jar", ".app", ".deb", ".rpm"
         };
 
-        public FileExplorerWidget() : this(null)
+        public FileExplorerWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config,
+            ISecurityManager security,
+            string initialPath = null)
         {
-        }
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.security = security ?? throw new ArgumentNullException(nameof(security));
 
-        public FileExplorerWidget(string initialPath)
-        {
             WidgetName = "File Explorer";
             currentPath = initialPath ?? Directory.GetCurrentDirectory();
             currentItems = new List<FileSystemInfo>();
         }
 
+        public FileExplorerWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, SecurityManager.Instance, null)
+        {
+        }
+
+        public FileExplorerWidget(string initialPath) : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, SecurityManager.Instance, initialPath)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             BuildUI();
             LoadDirectory(currentPath);
         }
@@ -205,17 +224,20 @@ namespace SuperTUI.Widgets
                     ChangedAt = DateTime.Now
                 });
 
-                Logger.Instance.Info("FileExplorer", $"Loaded directory: {currentPath}");
+                logger.Info("FileExplorer", $"Loaded directory: {currentPath}");
             }
             catch (UnauthorizedAccessException)
             {
                 UpdateStatus("Access denied", theme.Error);
-                Logger.Instance.Error("FileExplorer", $"Access denied: {path}");
+                logger.Error("FileExplorer", $"Access denied: {path}");
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Error: {ex.Message}", theme.Error);
-                Logger.Instance.Error("FileExplorer", $"Failed to load directory: {ex.Message}");
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Widget,
+                    ex,
+                    $"Loading directory: {path}");
             }
         }
 
@@ -317,10 +339,10 @@ namespace SuperTUI.Widgets
             try
             {
                 // Step 1: Security validation via SecurityManager
-                if (!SecurityManager.Instance.ValidateFileAccess(file.FullName, checkWrite: false))
+                if (!security.ValidateFileAccess(file.FullName, checkWrite: false))
                 {
                     UpdateStatus("Access denied by security policy", theme.Error);
-                    Logger.Instance.Warning("FileExplorer",
+                    logger.Warning("FileExplorer",
                         $"File access denied by security policy: {file.FullName}");
                     return;
                 }
@@ -335,13 +357,13 @@ namespace SuperTUI.Widgets
                     if (result != MessageBoxResult.Yes)
                     {
                         UpdateStatus($"Cancelled: {file.Name}", theme.ForegroundSecondary);
-                        Logger.Instance.Info("FileExplorer",
+                        logger.Info("FileExplorer",
                             $"User cancelled opening dangerous file: {file.FullName}");
                         return;
                     }
 
                     // User confirmed - log for security audit
-                    Logger.Instance.Warning("FileExplorer",
+                    logger.Warning("FileExplorer",
                         $"User confirmed opening dangerous file: {file.FullName} (extension: {extension})");
                 }
 
@@ -356,7 +378,7 @@ namespace SuperTUI.Widgets
                         return;
                     }
 
-                    Logger.Instance.Info("FileExplorer",
+                    logger.Info("FileExplorer",
                         $"User confirmed opening unknown file type: {file.FullName} (extension: {extension})");
                 }
 
@@ -377,13 +399,15 @@ namespace SuperTUI.Widgets
                 });
 
                 UpdateStatus($"Opened: {file.Name}", theme.Success);
-                Logger.Instance.Info("FileExplorer", $"Successfully opened file: {file.FullName}");
+                logger.Info("FileExplorer", $"Successfully opened file: {file.FullName}");
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Cannot open: {ex.Message}", theme.Error);
-                Logger.Instance.Error("FileExplorer",
-                    $"Failed to open file '{file.FullName}': {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Widget,
+                    ex,
+                    $"Opening file: {file.FullName}");
             }
         }
 
@@ -477,7 +501,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             BuildUI();
             LoadDirectory(currentPath);
         }

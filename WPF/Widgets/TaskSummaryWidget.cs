@@ -14,6 +14,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class TaskSummaryWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         // This would normally come from a service
         // For demo purposes, we'll create a simple data structure
         public class TaskData
@@ -40,15 +44,33 @@ namespace SuperTUI.Widgets
         private TextBlock titleText;
         private StackPanel contentPanel;
 
-        public TaskSummaryWidget()
+        /// <summary>
+        /// DI constructor - preferred for new code
+        /// </summary>
+        public TaskSummaryWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetType = "TaskSummary";
             BuildUI();
         }
 
+        /// <summary>
+        /// Parameterless constructor for backward compatibility
+        /// </summary>
+        public TaskSummaryWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             containerBorder = new Border
             {
@@ -97,7 +119,7 @@ namespace SuperTUI.Widgets
 
             if (Data == null) return;
 
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             // Add stat items using theme colors
             AddStatItem("Total", Data.TotalTasks.ToString(), theme.Info);
@@ -108,7 +130,7 @@ namespace SuperTUI.Widgets
 
         private void AddStatItem(string label, string value, Color color)
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var itemPanel = new StackPanel
             {
@@ -167,7 +189,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             if (containerBorder != null)
             {

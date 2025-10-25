@@ -19,6 +19,8 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class CommandPaletteWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
         private TextBox searchBox;
         private ListBox resultsBox;
         private TextBlock statusLabel;
@@ -26,16 +28,23 @@ namespace SuperTUI.Widgets
         private List<PaletteItem> filteredItems;
         private Theme theme;
 
-        public CommandPaletteWidget()
+        public CommandPaletteWidget(ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             WidgetName = "Command Palette";
             allItems = new List<PaletteItem>();
             filteredItems = new List<PaletteItem>();
         }
 
+        // Backward compatibility constructor
+        public CommandPaletteWidget() : this(Logger.Instance, ThemeManager.Instance)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             BuildUI();
             PopulateCommands();
             RefreshResults();
@@ -136,7 +145,7 @@ namespace SuperTUI.Widgets
                 Name = "Switch to Next Workspace",
                 Description = "Navigate to next workspace",
                 Icon = "📂",
-                Action = () => Logger.Instance.Info("Palette", "Switch to next workspace")
+                Action = () => logger.Info("Palette", "Switch to next workspace")
             });
 
             allItems.Add(new PaletteItem
@@ -145,7 +154,7 @@ namespace SuperTUI.Widgets
                 Name = "Switch to Previous Workspace",
                 Description = "Navigate to previous workspace",
                 Icon = "📂",
-                Action = () => Logger.Instance.Info("Palette", "Switch to previous workspace")
+                Action = () => logger.Info("Palette", "Switch to previous workspace")
             });
 
             // Theme commands
@@ -155,7 +164,7 @@ namespace SuperTUI.Widgets
                 Name = "Change Theme",
                 Description = "Select a different theme",
                 Icon = "🎨",
-                Action = () => Logger.Instance.Info("Palette", "Change theme")
+                Action = () => logger.Info("Palette", "Change theme")
             });
 
             allItems.Add(new PaletteItem
@@ -166,8 +175,8 @@ namespace SuperTUI.Widgets
                 Icon = "🔄",
                 Action = () =>
                 {
-                    theme = ThemeManager.Instance.CurrentTheme;
-                    Logger.Instance.Info("Palette", "Theme reloaded");
+                    theme = themeManager.CurrentTheme;
+                    logger.Info("Palette", "Theme reloaded");
                 }
             });
 
@@ -178,7 +187,7 @@ namespace SuperTUI.Widgets
                 Name = "Edit Configuration",
                 Description = "Open configuration file",
                 Icon = "⚙️",
-                Action = () => Logger.Instance.Info("Palette", "Edit configuration")
+                Action = () => logger.Info("Palette", "Edit configuration")
             });
 
             allItems.Add(new PaletteItem
@@ -187,7 +196,7 @@ namespace SuperTUI.Widgets
                 Name = "Reload Configuration",
                 Description = "Reload settings from file",
                 Icon = "🔄",
-                Action = () => Logger.Instance.Info("Palette", "Reload configuration")
+                Action = () => logger.Info("Palette", "Reload configuration")
             });
 
             // State commands
@@ -201,7 +210,7 @@ namespace SuperTUI.Widgets
                 {
                     var persistence = StatePersistenceManager.Instance;
                     persistence.SaveState();
-                    Logger.Instance.Info("Palette", "State saved");
+                    logger.Info("Palette", "State saved");
                 }
             });
 
@@ -215,7 +224,7 @@ namespace SuperTUI.Widgets
                 {
                     var persistence = StatePersistenceManager.Instance;
                     persistence.LoadState();
-                    Logger.Instance.Info("Palette", "State loaded");
+                    logger.Info("Palette", "State loaded");
                 }
             });
 
@@ -226,7 +235,7 @@ namespace SuperTUI.Widgets
                 Name = "Show Keyboard Shortcuts",
                 Description = "Display all keyboard shortcuts",
                 Icon = "⌨️",
-                Action = () => Logger.Instance.Info("Palette", "Show shortcuts")
+                Action = () => logger.Info("Palette", "Show shortcuts")
             });
 
             allItems.Add(new PaletteItem
@@ -238,7 +247,7 @@ namespace SuperTUI.Widgets
                 Action = () =>
                 {
                     var stats = EventBus.Instance.GetStatistics();
-                    Logger.Instance.Info("Palette", $"Events: {stats.Published} published, {stats.Delivered} delivered");
+                    logger.Info("Palette", $"Events: {stats.Published} published, {stats.Delivered} delivered");
                 }
             });
 
@@ -248,7 +257,7 @@ namespace SuperTUI.Widgets
                 Name = "About SuperTUI",
                 Description = "Version and information",
                 Icon = "ℹ️",
-                Action = () => Logger.Instance.Info("Palette", "SuperTUI Framework v0.1.0")
+                Action = () => logger.Info("Palette", "SuperTUI Framework v0.1.0")
             });
         }
 
@@ -387,13 +396,13 @@ namespace SuperTUI.Widgets
             try
             {
                 item.Action?.Invoke();
-                Logger.Instance.Info("Palette", $"Executed: {item.Name}");
+                logger.Info("Palette", $"Executed: {item.Name}");
                 statusLabel.Text = $"✓ Executed: {item.Name}";
                 statusLabel.Foreground = new SolidColorBrush(theme.Success);
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Palette", $"Failed to execute: {ex.Message}");
+                logger.Error("Palette", $"Failed to execute: {ex.Message}");
                 statusLabel.Text = $"✗ Error: {ex.Message}";
                 statusLabel.Foreground = new SolidColorBrush(theme.Error);
             }
@@ -441,7 +450,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
 
             if (searchBox != null)
             {

@@ -293,65 +293,61 @@ $workspace1.Widgets.Add($taskSummary)
 
 $workspaceManager.AddWorkspace($workspace1)
 
-# Workspace 2: Projects (Dock layout - list on left, detail on right)
-$workspace2Layout = New-Object SuperTUI.Core.DockLayoutEngine
+# Workspace 2: Projects (Full Project Management)
+$workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout)
 
-$leftPanel = New-Object System.Windows.Controls.Border
-$leftPanel.Background = [System.Windows.Media.Brushes]::Transparent
-$leftPanel.BorderBrush = [System.Windows.Media.Brushes]::Gray
-$leftPanel.BorderThickness = 1
-$leftPanel.Child = (New-Object System.Windows.Controls.TextBlock -Property @{
-    Text = "Project List`n(Screen)"
-    FontFamily = "Cascadia Mono, Consolas"
-    Foreground = [System.Windows.Media.Brushes]::Gray
-    HorizontalAlignment = "Center"
-    VerticalAlignment = "Center"
-    TextAlignment = "Center"
-})
-$leftParams = New-Object SuperTUI.Core.LayoutParams
-$leftParams.Dock = [System.Windows.Controls.Dock]::Left
-$leftParams.Width = 400
-$workspace2Layout.AddChild($leftPanel, $leftParams)
-
-$rightPanel = New-Object System.Windows.Controls.Border
-$rightPanel.Background = [System.Windows.Media.Brushes]::Transparent
-$rightPanel.BorderBrush = [System.Windows.Media.Brushes]::Gray
-$rightPanel.BorderThickness = 1
-$rightPanel.Child = (New-Object System.Windows.Controls.TextBlock -Property @{
-    Text = "Task Detail`n(Screen)"
-    FontFamily = "Cascadia Mono, Consolas"
-    Foreground = [System.Windows.Media.Brushes]::Gray
-    HorizontalAlignment = "Center"
-    VerticalAlignment = "Center"
-    TextAlignment = "Center"
-})
-$rightParams = New-Object SuperTUI.Core.LayoutParams
-$workspace2Layout.AddChild($rightPanel, $rightParams)
+# Add ProjectManagementWidget (3-pane layout: list, context, details)
+$projectManagementWidget = New-Object SuperTUI.Widgets.ProjectManagementWidget
+$projectManagementWidget.WidgetName = "ProjectManagement"
+$projectManagementWidget.Initialize()
+$ws2Params = New-Object SuperTUI.Core.LayoutParams
+$workspace2Layout.AddChild($projectManagementWidget, $ws2Params)
+$workspace2.Widgets.Add($projectManagementWidget)
 
 $workspaceManager.AddWorkspace($workspace2)
 
-# Workspace 3: Placeholder
+# Workspace 3: Kanban Board (3-column task board)
 $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
-$workspace3 = New-Object SuperTUI.Core.Workspace("Workspace 3", 3, $workspace3Layout)
+$workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout)
 
-$ws3Placeholder = New-Object System.Windows.Controls.Border
-$ws3Placeholder.Background = [System.Windows.Media.Brushes]::Transparent
-$ws3Placeholder.BorderBrush = [System.Windows.Media.Brushes]::Gray
-$ws3Placeholder.BorderThickness = 1
-$ws3Placeholder.Child = (New-Object System.Windows.Controls.TextBlock -Property @{
-    Text = "Workspace 3`n(Define your layout)"
-    FontFamily = "Cascadia Mono, Consolas"
-    FontSize = 24
-    Foreground = [System.Windows.Media.Brushes]::Gray
-    HorizontalAlignment = "Center"
-    VerticalAlignment = "Center"
-    TextAlignment = "Center"
-})
+# Add KanbanBoardWidget (Todo, In Progress, Done columns)
+$kanbanWidget = New-Object SuperTUI.Widgets.KanbanBoardWidget
+$kanbanWidget.WidgetName = "KanbanBoard"
+$kanbanWidget.Initialize()
 $ws3Params = New-Object SuperTUI.Core.LayoutParams
-$workspace3Layout.AddChild($ws3Placeholder, $ws3Params)
+$workspace3Layout.AddChild($kanbanWidget, $ws3Params)
+$workspace3.Widgets.Add($kanbanWidget)
 
 $workspaceManager.AddWorkspace($workspace3)
+
+# Workspace 4: Agenda (Time-grouped task view)
+$workspace4Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
+$workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout)
+
+# Add AgendaWidget (Overdue, Today, Tomorrow, This Week, Later, No Due Date)
+$agendaWidget = New-Object SuperTUI.Widgets.AgendaWidget
+$agendaWidget.WidgetName = "Agenda"
+$agendaWidget.Initialize()
+$ws4Params = New-Object SuperTUI.Core.LayoutParams
+$workspace4Layout.AddChild($agendaWidget, $ws4Params)
+$workspace4.Widgets.Add($agendaWidget)
+
+$workspaceManager.AddWorkspace($workspace4)
+
+# Workspace 5: Project Analytics (Stats and metrics)
+$workspace5Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
+$workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout)
+
+# Add ProjectStatsWidget (Metrics, charts, recent activity)
+$statsWidget = New-Object SuperTUI.Widgets.ProjectStatsWidget
+$statsWidget.WidgetName = "ProjectStats"
+$statsWidget.Initialize()
+$ws5Params = New-Object SuperTUI.Core.LayoutParams
+$workspace5Layout.AddChild($statsWidget, $ws5Params)
+$workspace5.Widgets.Add($statsWidget)
+
+$workspaceManager.AddWorkspace($workspace5)
 
 Write-Host "Workspaces created!" -ForegroundColor Green
 

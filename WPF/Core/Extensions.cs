@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using SuperTUI.Core;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Extensions
@@ -183,7 +184,10 @@ namespace SuperTUI.Extensions
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Warning("StatePersistence", $"Failed to save widget state: {ex.Message}");
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.Widget,
+                            ex,
+                            $"Saving state for widget {widget.WidgetName}");
                     }
                 }
 
@@ -284,8 +288,10 @@ namespace SuperTUI.Extensions
                             }
                             catch (Exception ex)
                             {
-                                Logger.Instance.Error("StatePersistence",
-                                    $"Failed to restore widget state: {ex.Message}", ex);
+                                ErrorHandlingPolicy.Handle(
+                                    ErrorCategory.Widget,
+                                    ex,
+                                    "Restoring widget state from snapshot");
                             }
                         }
                     }
@@ -302,7 +308,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to restore state: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    "Restoring application state from snapshot");
             }
         }
 
@@ -341,7 +350,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to save state: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving application state to {currentStateFile}");
             }
         }
 
@@ -430,7 +442,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to load state: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading application state from {currentStateFile}");
                 return null;
             }
         }
@@ -558,7 +573,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to create backup: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    "Creating state backup");
             }
         }
 
@@ -576,7 +594,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to get backups: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    "Getting list of available backups");
                 return new List<string>();
             }
         }
@@ -620,7 +641,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to restore from backup: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Restoring state from backup {backupFilePath}");
             }
         }
 
@@ -653,7 +677,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to load backup snapshot: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading backup snapshot from {backupPath}");
                 return null;
             }
         }
@@ -751,7 +778,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("PluginManager", $"Failed to load plugins: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Plugin,
+                    ex,
+                    $"Loading plugins from directory {pluginsDirectory}");
             }
         }
 
@@ -811,13 +841,19 @@ namespace SuperTUI.Extensions
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error("PluginManager", $"Failed to instantiate plugin {pluginType.Name}: {ex.Message}", ex);
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.Plugin,
+                            ex,
+                            $"Instantiating plugin {pluginType.Name}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("PluginManager", $"Failed to load plugin assembly {assemblyPath}: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Plugin,
+                    ex,
+                    $"Loading plugin assembly from {assemblyPath}");
             }
         }
 
@@ -854,7 +890,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("PluginManager", $"Error unloading plugin {pluginName}: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Plugin,
+                    ex,
+                    $"Unloading plugin {pluginName}");
             }
         }
 
@@ -913,8 +952,10 @@ namespace SuperTUI.Extensions
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("PluginManager",
-                    $"Failed to execute command '{command}' on plugin '{pluginName}': {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Plugin,
+                    ex,
+                    $"Executing command '{command}' on plugin '{pluginName}'");
             }
         }
 

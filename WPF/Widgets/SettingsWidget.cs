@@ -16,6 +16,9 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class SettingsWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
         private Border containerBorder;
         private TextBlock titleText;
         private ComboBox categoryCombo;
@@ -28,10 +31,18 @@ namespace SuperTUI.Widgets
         private string currentCategory = "Application";
         private Dictionary<string, object> pendingChanges = new Dictionary<string, object>();
 
-        public SettingsWidget()
+        public SettingsWidget(ILogger logger, IThemeManager themeManager, IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
             WidgetType = "Settings";
             WidgetName = "Settings";
+        }
+
+        // Backward compatibility constructor
+        public SettingsWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
         }
 
         public override void Initialize()
@@ -43,7 +54,7 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var mainPanel = new StackPanel();
 
@@ -182,7 +193,6 @@ namespace SuperTUI.Widgets
         {
             try
             {
-                var config = ConfigurationManager.Instance;
                 var categories = config.GetCategories();
 
                 categoryCombo.Items.Clear();
@@ -198,7 +208,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("Settings", $"Failed to load categories: {ex.Message}", ex);
+                logger.Error("Settings", $"Failed to load categories: {ex.Message}", ex);
                 footerText.Text = "Error loading categories";
             }
         }
@@ -209,7 +219,6 @@ namespace SuperTUI.Widgets
 
             try
             {
-                var config = ConfigurationManager.Instance;
                 var settings = config.GetCategory(category);
 
                 if (settings.Count == 0)
@@ -219,7 +228,7 @@ namespace SuperTUI.Widgets
                         Text = "No settings in this category",
                         FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                         FontSize = 12,
-                        Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.ForegroundDisabled),
+                        Foreground = new SolidColorBrush(themeManager.CurrentTheme.ForegroundDisabled),
                         Margin = new Thickness(10)
                     };
                     settingsPanel.Children.Add(emptyText);
@@ -237,14 +246,14 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("Settings", $"Failed to display category: {ex.Message}", ex);
+                logger.Error("Settings", $"Failed to display category: {ex.Message}", ex);
                 footerText.Text = $"Error displaying {category} settings";
             }
         }
 
         private UIElement CreateSettingControl(ConfigValue setting)
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var panel = new StackPanel
             {
@@ -460,28 +469,26 @@ namespace SuperTUI.Widgets
         {
             try
             {
-                var config = ConfigurationManager.Instance;
-
                 foreach (var kvp in pendingChanges)
                 {
                     config.Set(kvp.Key, kvp.Value, saveImmediately: false);
-                    Logger.Instance?.Info("Settings", $"Updated {kvp.Key} = {kvp.Value}");
+                    logger.Info("Settings", $"Updated {kvp.Key} = {kvp.Value}");
                 }
 
-                config.SaveToFile(config.Get<string>("App.ConfigPath", "config.json"));
+                config.Save();
 
                 pendingChanges.Clear();
                 footerText.Text = "Settings saved successfully";
-                footerText.Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Success);
+                footerText.Foreground = new SolidColorBrush(themeManager.CurrentTheme.Success);
 
                 // Refresh display
                 DisplayCategory(currentCategory);
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("Settings", $"Failed to save settings: {ex.Message}", ex);
+                logger.Error("Settings", $"Failed to save settings: {ex.Message}", ex);
                 footerText.Text = $"Error saving settings: {ex.Message}";
-                footerText.Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Error);
+                footerText.Foreground = new SolidColorBrush(themeManager.CurrentTheme.Error);
             }
         }
 
@@ -497,22 +504,21 @@ namespace SuperTUI.Widgets
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    var config = ConfigurationManager.Instance;
                     config.ResetToDefaults();
-                    config.SaveToFile(config.Get<string>("App.ConfigPath", "config.json"));
+                    config.Save();
 
                     pendingChanges.Clear();
                     DisplayCategory(currentCategory);
 
                     footerText.Text = "Settings reset to defaults";
-                    footerText.Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Warning);
+                    footerText.Foreground = new SolidColorBrush(themeManager.CurrentTheme.Warning);
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("Settings", $"Failed to reset settings: {ex.Message}", ex);
+                logger.Error("Settings", $"Failed to reset settings: {ex.Message}", ex);
                 footerText.Text = $"Error resetting settings: {ex.Message}";
-                footerText.Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Error);
+                footerText.Foreground = new SolidColorBrush(themeManager.CurrentTheme.Error);
             }
         }
 
@@ -544,7 +550,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             if (containerBorder != null)
             {

@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using SuperTUI.Core.Models;
 using SuperTUI.Infrastructure;
 
+// Resolve ambiguity between SuperTUI.Core.Models.TaskStatus and System.Threading.Tasks.TaskStatus
+using TaskStatus = SuperTUI.Core.Models.TaskStatus;
+
 namespace SuperTUI.Core.Services
 {
     /// <summary>

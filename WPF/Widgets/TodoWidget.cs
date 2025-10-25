@@ -20,18 +20,29 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class TodoWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
         private EditableListControl<TodoItem> todoList;
         private string dataFile;
 
-        public TodoWidget() : this(null)
+        public TodoWidget(ILogger logger) : this(logger, null)
         {
         }
 
-        public TodoWidget(string dataFilePath)
+        public TodoWidget(ILogger logger, string dataFilePath)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             WidgetName = "Todo List";
             dataFile = dataFilePath ?? Path.Combine(
                 SuperTUI.Extensions.PortableDataDirectory.GetSuperTUIDataDirectory(), "todos.json");
+        }
+
+        // Backward compatibility constructor
+        public TodoWidget() : this(Logger.Instance, null)
+        {
+        }
+
+        public TodoWidget(string dataFilePath) : this(Logger.Instance, dataFilePath)
+        {
         }
 
         public override void Initialize()
@@ -77,21 +88,21 @@ namespace SuperTUI.Widgets
                 // Event callbacks
                 OnItemAdded = item =>
                 {
-                    Logger.Instance.Info("Todo", $"Added task: {item.Text}");
+                    logger.Info("Todo", $"Added task: {item.Text}");
                     SaveTodos();
                     PublishTaskEvent();
                 },
 
                 OnItemDeleted = item =>
                 {
-                    Logger.Instance.Info("Todo", $"Deleted task: {item.Text}");
+                    logger.Info("Todo", $"Deleted task: {item.Text}");
                     SaveTodos();
                     PublishTaskEvent();
                 },
 
                 OnItemUpdated = (oldItem, newItem) =>
                 {
-                    Logger.Instance.Info("Todo", $"Updated task: {oldItem.Text} → {newItem.Text}");
+                    logger.Info("Todo", $"Updated task: {oldItem.Text} → {newItem.Text}");
                     SaveTodos();
                     PublishTaskEvent();
                 }
@@ -144,7 +155,7 @@ namespace SuperTUI.Widgets
                 SaveTodos();
                 PublishTaskEvent();
 
-                Logger.Instance.Info("Todo",
+                logger.Info("Todo",
                     updatedItem.IsCompleted
                         ? $"Completed: {updatedItem.Text}"
                         : $"Uncompleted: {updatedItem.Text}");
@@ -162,13 +173,13 @@ namespace SuperTUI.Widgets
                     if (todos != null && todos.Any())
                     {
                         todoList.LoadItems(todos);
-                        Logger.Instance.Info("Todo", $"Loaded {todos.Count} tasks from {dataFile}");
+                        logger.Info("Todo", $"Loaded {todos.Count} tasks from {dataFile}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Todo", $"Failed to load todos: {ex.Message}");
+                logger.Error("Todo", $"Failed to load todos: {ex.Message}");
             }
         }
 
@@ -185,7 +196,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Todo", $"Failed to save todos: {ex.Message}");
+                logger.Error("Todo", $"Failed to save todos: {ex.Message}");
             }
         }
 

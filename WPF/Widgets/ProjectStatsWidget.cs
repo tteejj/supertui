@@ -22,6 +22,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class ProjectStatsWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Theme theme;
         private TaskService taskService;
         private ProjectService projectService;
@@ -44,15 +48,27 @@ namespace SuperTUI.Widgets
         private ListBox topProjectsListBox;
         private ListBox recentActivityListBox;
 
-        public ProjectStatsWidget()
+        public ProjectStatsWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "Project Stats";
             WidgetType = "ProjectStats";
         }
 
+        public ProjectStatsWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         public override void Initialize()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
             taskService = TaskService.Instance;
             projectService = ProjectService.Instance;
             timeService = TimeTrackingService.Instance;
@@ -82,7 +98,7 @@ namespace SuperTUI.Widgets
             refreshTimer.Tick += (s, e) => RefreshMetrics();
             refreshTimer.Start();
 
-            Logger.Instance?.Info("ProjectStatsWidget", "Project stats widget initialized");
+            logger.Info("ProjectStatsWidget", "Project stats widget initialized");
         }
 
         private void BuildUI()
@@ -362,7 +378,7 @@ namespace SuperTUI.Widgets
                 var projects = projectService.GetAllProjects();
                 var activeProjects = projects.Where(p => p.Status == ProjectStatus.Active).ToList();
                 var allTasks = taskService.GetAllTasks();
-                var totalHours = timeService.GetTotalHours();
+                var totalHours = timeService.GetAllProjectAggregates().Sum(a => (double)a.TotalHours);
 
                 // Active Projects
                 activeProjectsValue.Text = activeProjects.Count.ToString();
@@ -403,11 +419,11 @@ namespace SuperTUI.Widgets
                 // Recent Activity
                 RefreshRecentActivity();
 
-                Logger.Instance?.Debug("ProjectStatsWidget", "Refreshed metrics");
+                logger.Debug("ProjectStatsWidget", "Refreshed metrics");
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ProjectStatsWidget", $"Failed to refresh metrics: {ex.Message}", ex);
+                logger.Error("ProjectStatsWidget", $"Failed to refresh metrics: {ex.Message}", ex);
             }
         }
 
@@ -425,7 +441,12 @@ namespace SuperTUI.Widgets
         {
             topProjectsListBox.Items.Clear();
 
-            var hoursByProject = timeService.GetHoursByProject();
+            var projectAggregates = timeService.GetAllProjectAggregates()
+                .OrderByDescending(a => a.TotalHours)
+                .Take(10)
+                .ToList();
+
+            var hoursByProject = projectAggregates.ToDictionary(a => a.ProjectId, a => (double)a.TotalHours);
             var projects = projectService.GetAllProjects();
 
             var topProjects = hoursByProject
@@ -485,7 +506,7 @@ namespace SuperTUI.Widgets
                 }
             }
 
-            if (topProjects.Count == 0)
+            if (hoursByProject.Count == 0)
             {
                 var emptyMessage = new TextBlock
                 {
@@ -634,20 +655,21 @@ namespace SuperTUI.Widgets
                 timeService.EntryUpdated -= (e) => RefreshMetrics();
             }
 
-            // Stop timer
+            // Stop and dispose timer
             if (refreshTimer != null)
             {
                 refreshTimer.Stop();
+                refreshTimer.Tick -= (s, e) => RefreshMetrics();
                 refreshTimer = null;
             }
 
-            Logger.Instance?.Info("ProjectStatsWidget", "Project stats widget disposed");
+            logger.Info("ProjectStatsWidget", "Project stats widget disposed");
             base.OnDispose();
         }
 
         public void ApplyTheme()
         {
-            theme = ThemeManager.Instance.CurrentTheme;
+            theme = themeManager.CurrentTheme;
 
             if (mainGrid != null)
             {
@@ -657,7 +679,7 @@ namespace SuperTUI.Widgets
             // Refresh UI to apply new theme
             RefreshMetrics();
 
-            Logger.Instance?.Debug("ProjectStatsWidget", "Applied theme update");
+            logger.Debug("ProjectStatsWidget", "Applied theme update");
         }
     }
 }

@@ -13,19 +13,41 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class NotesWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Border containerBorder;
         private TextBlock titleText;
         private TextBox notesTextBox;
 
-        public NotesWidget()
+        /// <summary>
+        /// DI constructor - preferred for new code
+        /// </summary>
+        public NotesWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetType = "Notes";
             BuildUI();
         }
 
+        /// <summary>
+        /// Parameterless constructor for backward compatibility
+        /// </summary>
+        public NotesWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             containerBorder = new Border
             {
@@ -113,7 +135,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             if (containerBorder != null)
             {

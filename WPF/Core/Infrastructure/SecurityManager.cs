@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
+using SuperTUI.Core.Infrastructure;
 
 namespace SuperTUI.Infrastructure
 {
@@ -364,20 +365,19 @@ namespace SuperTUI.Infrastructure
 
         public void AddAllowedDirectory(string directory)
         {
-            try
-            {
-                string fullPath = Path.GetFullPath(directory);
+            ErrorHandlingPolicy.SafeExecute(
+                ErrorCategory.Security,
+                () =>
+                {
+                    string fullPath = Path.GetFullPath(directory);
 
-                // Normalize by removing trailing separators for consistent comparison
-                fullPath = fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    // Normalize by removing trailing separators for consistent comparison
+                    fullPath = fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-                allowedDirectories.Add(fullPath);
-                Logger.Instance.Debug("Security", $"Added allowed directory: {fullPath}");
-            }
-            catch (Exception ex)
-            {
-                Logger.Instance.Warning("Security", $"Failed to add allowed directory {directory}: {ex.Message}");
-            }
+                    allowedDirectories.Add(fullPath);
+                    Logger.Instance.Debug("Security", $"Added allowed directory: {fullPath}");
+                },
+                context: $"Adding allowed directory: {directory}");
         }
 
         /// <summary>
@@ -512,12 +512,11 @@ namespace SuperTUI.Infrastructure
             catch (Exception ex)
             {
                 // Security audit log for unexpected errors
-                // DENY by default on any exception
-                Logger.Instance.Error("Security",
-                    $"SECURITY ERROR: File access validation failed with exception\n" +
-                    $"  Path: '{path}'\n" +
-                    $"  Mode: {mode}\n" +
-                    $"  Error: {ex.Message}", ex);
+                // DENY by default on any exception - use ErrorPolicy for consistent handling
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Security,
+                    ex,
+                    $"File access validation failed for path '{path}' in mode {mode}");
                 return false;
             }
         }
@@ -533,47 +532,43 @@ namespace SuperTUI.Infrastructure
         /// </summary>
         private void ShowDevelopmentModeWarning()
         {
-            try
-            {
-                // Use Dispatcher to ensure we're on UI thread
-                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            ErrorHandlingPolicy.SafeExecute(
+                ErrorCategory.Security,
+                () =>
                 {
-                    var result = System.Windows.MessageBox.Show(
-                        "╔════════════════════════════════════════════════════════╗\n" +
-                        "║  ⚠️  DEVELOPMENT MODE - SECURITY DISABLED  ⚠️          ║\n" +
-                        "╚════════════════════════════════════════════════════════╝\n\n" +
-                        "Security validation is DISABLED:\n\n" +
-                        "  • Path traversal attacks are NOT prevented\n" +
-                        "  • File size limits are NOT enforced\n" +
-                        "  • Extension filtering is NOT applied\n" +
-                        "  • ALL file access is allowed\n\n" +
-                        "This mode is for DEBUGGING ONLY.\n" +
-                        "DO NOT USE IN PRODUCTION.\n" +
-                        "DO NOT EXPOSE TO UNTRUSTED INPUT.\n\n" +
-                        "Continue anyway?",
-                        "Security Warning - Development Mode Active",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Warning,
-                        System.Windows.MessageBoxResult.No);  // Default to NO
+                    // Use Dispatcher to ensure we're on UI thread
+                    System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        var result = System.Windows.MessageBox.Show(
+                            "╔════════════════════════════════════════════════════════╗\n" +
+                            "║  ⚠️  DEVELOPMENT MODE - SECURITY DISABLED  ⚠️          ║\n" +
+                            "╚════════════════════════════════════════════════════════╝\n\n" +
+                            "Security validation is DISABLED:\n\n" +
+                            "  • Path traversal attacks are NOT prevented\n" +
+                            "  • File size limits are NOT enforced\n" +
+                            "  • Extension filtering is NOT applied\n" +
+                            "  • ALL file access is allowed\n\n" +
+                            "This mode is for DEBUGGING ONLY.\n" +
+                            "DO NOT USE IN PRODUCTION.\n" +
+                            "DO NOT EXPOSE TO UNTRUSTED INPUT.\n\n" +
+                            "Continue anyway?",
+                            "Security Warning - Development Mode Active",
+                            System.Windows.MessageBoxButton.YesNo,
+                            System.Windows.MessageBoxImage.Warning,
+                            System.Windows.MessageBoxResult.No);  // Default to NO
 
-                    if (result == System.Windows.MessageBoxResult.No)
-                    {
-                        Logger.Instance.Critical("Security", "User declined to continue with Development mode. Exiting application.");
-                        System.Environment.Exit(1);
-                    }
-                    else
-                    {
-                        Logger.Instance.Warning("Security", "User accepted Development mode warning and chose to continue.");
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                // If we can't show the dialog (no UI thread, etc.), log and continue
-                // The critical log message above should still alert developers
-                Logger.Instance.Error("Security",
-                    $"Failed to show Development mode warning dialog: {ex.Message}", ex);
-            }
+                        if (result == System.Windows.MessageBoxResult.No)
+                        {
+                            Logger.Instance.Critical("Security", "User declined to continue with Development mode. Exiting application.");
+                            System.Environment.Exit(1);
+                        }
+                        else
+                        {
+                            Logger.Instance.Warning("Security", "User accepted Development mode warning and chose to continue.");
+                        }
+                    });
+                },
+                context: "Showing Development mode security warning dialog");
         }
 
         /// <summary>

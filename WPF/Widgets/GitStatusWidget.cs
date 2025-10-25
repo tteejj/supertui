@@ -21,6 +21,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class GitStatusWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private DispatcherTimer refreshTimer;
         private string repositoryPath;
 
@@ -40,10 +44,26 @@ namespace SuperTUI.Widgets
 
         private const int REFRESH_INTERVAL_MS = 5000; // 5 seconds
 
-        public GitStatusWidget(string repoPath = null)
+        public GitStatusWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config,
+            string repoPath = null)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetName = "Git Status";
             repositoryPath = repoPath ?? Directory.GetCurrentDirectory();
+        }
+
+        public GitStatusWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, null)
+        {
+        }
+
+        public GitStatusWidget(string repoPath) : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, repoPath)
+        {
         }
 
         public override void Initialize()
@@ -64,7 +84,7 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             var stackPanel = new StackPanel
             {
@@ -210,7 +230,7 @@ namespace SuperTUI.Widgets
         {
             try
             {
-                var theme = ThemeManager.Instance.CurrentTheme;
+                var theme = themeManager.CurrentTheme;
 
                 // Check if this is a git repository
                 if (!IsGitRepository())
@@ -283,9 +303,9 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("GitStatus", $"Failed to update git status: {ex.Message}");
+                logger.Error("GitStatus", $"Failed to update git status: {ex.Message}");
                 statusLabel.Text = "Error reading status";
-                statusLabel.Foreground = new SolidColorBrush(ThemeManager.Instance.CurrentTheme.Error);
+                statusLabel.Foreground = new SolidColorBrush(themeManager.CurrentTheme.Error);
             }
         }
 
@@ -375,7 +395,7 @@ namespace SuperTUI.Widgets
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("GitStatus", $"Failed to get file status: {ex.Message}");
+                logger.Error("GitStatus", $"Failed to get file status: {ex.Message}");
             }
         }
 
@@ -423,7 +443,7 @@ namespace SuperTUI.Widgets
 
         protected override void OnDispose()
         {
-            // Stop timer
+            // Stop and dispose timer
             if (refreshTimer != null)
             {
                 refreshTimer.Stop();
