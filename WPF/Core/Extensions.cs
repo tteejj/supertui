@@ -334,7 +334,7 @@ namespace SuperTUI.Extensions
     /// <summary>
     /// State persistence manager with versioning and backup
     /// </summary>
-    public class StatePersistenceManager
+    public class StatePersistenceManager : IStatePersistenceManager
     {
         private static StatePersistenceManager instance;
         public static StatePersistenceManager Instance => instance ??= new StatePersistenceManager();
@@ -522,7 +522,8 @@ namespace SuperTUI.Extensions
         public void SaveState(StateSnapshot snapshot = null, bool createBackup = false)
         {
             // Synchronous wrapper for backward compatibility
-            SaveStateAsync(snapshot, createBackup).GetAwaiter().GetResult();
+            // Use Task.Run to avoid WPF UI thread deadlocks
+            Task.Run(async () => await SaveStateAsync(snapshot, createBackup)).Wait();
         }
 
         public async Task SaveStateAsync(StateSnapshot snapshot = null, bool createBackup = false)
@@ -556,7 +557,8 @@ namespace SuperTUI.Extensions
         public StateSnapshot LoadState()
         {
             // Synchronous wrapper for backward compatibility
-            return LoadStateAsync().GetAwaiter().GetResult();
+            // Use Task.Run to avoid WPF UI thread deadlocks
+            return Task.Run(async () => await LoadStateAsync()).Result;
         }
 
         public async Task<StateSnapshot> LoadStateAsync()
@@ -598,7 +600,7 @@ namespace SuperTUI.Extensions
             }
         }
 
-        public void PushUndo(StateSnapshot snapshot)
+        public void PushUndoState(StateSnapshot snapshot)
         {
             // Add to end (most recent)
             undoHistory.AddLast(snapshot);
@@ -657,10 +659,22 @@ namespace SuperTUI.Extensions
             return snapshot;
         }
 
+        public bool CanUndo => undoHistory.Count > 0;
+
+        public bool CanRedo => redoHistory.Count > 0;
+
+        public void ClearHistory()
+        {
+            undoHistory.Clear();
+            redoHistory.Clear();
+            Logger.Instance.Debug("StatePersistence", "Undo/redo history cleared");
+        }
+
         private void CreateBackup()
         {
             // Synchronous wrapper for backward compatibility
-            CreateBackupAsync().GetAwaiter().GetResult();
+            // Use Task.Run to avoid WPF UI thread deadlocks
+            Task.Run(async () => await CreateBackupAsync()).Wait();
         }
 
         private async Task CreateBackupAsync()
@@ -806,9 +820,42 @@ namespace SuperTUI.Extensions
     }
 
     /// <summary>
-    /// Plugin manager for loading and managing extensions
+    /// Plugin manager for loading and managing extensions.
+    ///
+    /// ⚠️ SECURITY LIMITATIONS - READ BEFORE USE ⚠️
+    ///
+    /// CRITICAL LIMITATIONS:
+    /// 1. Plugins CANNOT be unloaded once loaded (requires application restart)
+    ///    - Assembly.LoadFrom() loads into default AppDomain
+    ///    - .NET Framework does not support assembly unloading
+    ///    - Repeatedly loading/unloading accumulates assemblies in memory
+    ///
+    /// 2. Plugins have FULL ACCESS to SuperTUI internals
+    ///    - No sandboxing or permission model
+    ///    - Plugins can access all framework APIs
+    ///    - Malicious plugins can compromise entire application
+    ///
+    /// 3. No built-in signature verification
+    ///    - Plugins are not validated by default
+    ///    - Set Security.RequireSignedPlugins=true to enable (optional)
+    ///
+    /// SECURITY BEST PRACTICES:
+    /// - Only load plugins from TRUSTED sources
+    /// - Code review plugins before deployment
+    /// - Consider requiring signed assemblies in production
+    /// - Monitor plugin directory for unauthorized changes
+    /// - Log all plugin load attempts for audit
+    ///
+    /// FUTURE IMPROVEMENTS:
+    /// - Migrate to .NET 6+ with AssemblyLoadContext for unloadability
+    /// - Add plugin permission model (file access, network, etc.)
+    /// - Implement plugin sandboxing via AppDomain (deprecated) or separate process
+    /// - Add plugin manifest schema validation
+    /// - Add automated plugin scanning (malware detection)
+    ///
+    /// See PLUGIN_GUIDE.md for plugin development best practices.
     /// </summary>
-    public class PluginManager
+    public class PluginManager : IPluginManager
     {
         private static PluginManager instance;
         public static PluginManager Instance => instance ??= new PluginManager();
@@ -1040,7 +1087,7 @@ namespace SuperTUI.Extensions
     /// <summary>
     /// Performance monitor for tracking various metrics
     /// </summary>
-    public class PerformanceMonitor
+    public class PerformanceMonitor : IPerformanceMonitor
     {
         private static PerformanceMonitor instance;
         public static PerformanceMonitor Instance => instance ??= new PerformanceMonitor();

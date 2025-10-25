@@ -13,11 +13,21 @@ using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
+// File extension security classifications
+using SafeExtensions = System.Collections.Generic.HashSet<string>;
+using DangerousExtensions = System.Collections.Generic.HashSet<string>;
+
 namespace SuperTUI.Widgets
 {
     /// <summary>
     /// File explorer widget for navigating directories and viewing files.
     /// Supports navigation, file selection, and opening files.
+    ///
+    /// SECURITY FEATURES:
+    /// - Integration with SecurityManager for path validation
+    /// - Dangerous file type detection and confirmation
+    /// - Safe file extensions allowlist
+    /// - All file operations logged for audit
     /// </summary>
     public class FileExplorerWidget : WidgetBase, IThemeable
     {
@@ -28,7 +38,41 @@ namespace SuperTUI.Widgets
         private List<FileSystemInfo> currentItems;
         private Theme theme;
 
-        public FileExplorerWidget(string initialPath = null)
+        // File extension security classifications
+        private static readonly SafeExtensions SafeFileExtensions = new SafeExtensions(StringComparer.OrdinalIgnoreCase)
+        {
+            // Text files
+            ".txt", ".md", ".log", ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
+            // Documents
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp",
+            // Images
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".ico", ".webp",
+            // Media
+            ".mp3", ".mp4", ".avi", ".mov", ".mkv", ".flac", ".ogg", ".wav", ".m4a",
+            // Archives (view only, not extract)
+            ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2",
+            // Code files (read-only viewing)
+            ".cs", ".fs", ".vb", ".java", ".py", ".js", ".ts", ".html", ".css", ".scss",
+            ".cpp", ".c", ".h", ".rs", ".go", ".rb", ".php", ".sh"
+        };
+
+        private static readonly DangerousExtensions DangerousFileExtensions = new DangerousExtensions(StringComparer.OrdinalIgnoreCase)
+        {
+            // Executables
+            ".exe", ".com", ".bat", ".cmd", ".msi", ".scr", ".pif",
+            // Scripts
+            ".ps1", ".psm1", ".psd1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh",
+            // System files
+            ".sys", ".drv", ".dll", ".ocx",
+            // Other dangerous
+            ".reg", ".hta", ".cpl", ".msc", ".jar", ".app", ".deb", ".rpm"
+        };
+
+        public FileExplorerWidget() : this(null)
+        {
+        }
+
+        public FileExplorerWidget(string initialPath)
         {
             Name = "File Explorer";
             currentPath = initialPath ?? Directory.GetCurrentDirectory();
@@ -91,7 +135,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 11,
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -250,13 +294,73 @@ namespace SuperTUI.Widgets
 
             var item = currentItems[fileListBox.SelectedIndex];
 
+            // Handle directory navigation
             if (item is DirectoryInfo dir)
             {
                 LoadDirectory(dir.FullName);
+                return;
             }
-            else if (item is FileInfo file)
+
+            // Handle file opening with security checks
+            if (item is FileInfo file)
             {
-                // Publish file selected event
+                OpenFile(file);
+            }
+        }
+
+        /// <summary>
+        /// Opens a file with security validation and user confirmation for dangerous files.
+        /// </summary>
+        /// <param name="file">File to open</param>
+        private void OpenFile(FileInfo file)
+        {
+            try
+            {
+                // Step 1: Security validation via SecurityManager
+                if (!SecurityManager.Instance.ValidateFileAccess(file.FullName, checkWrite: false))
+                {
+                    UpdateStatus("Access denied by security policy", theme.Error);
+                    Logger.Instance.Warning("FileExplorer",
+                        $"File access denied by security policy: {file.FullName}");
+                    return;
+                }
+
+                string extension = file.Extension.ToLowerInvariant();
+
+                // Step 2: Check if file type is dangerous
+                if (DangerousFileExtensions.Contains(extension))
+                {
+                    // Show security warning for dangerous files
+                    var result = ShowDangerousFileWarning(file);
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        UpdateStatus($"Cancelled: {file.Name}", theme.ForegroundSecondary);
+                        Logger.Instance.Info("FileExplorer",
+                            $"User cancelled opening dangerous file: {file.FullName}");
+                        return;
+                    }
+
+                    // User confirmed - log for security audit
+                    Logger.Instance.Warning("FileExplorer",
+                        $"User confirmed opening dangerous file: {file.FullName} (extension: {extension})");
+                }
+
+                // Step 3: Check if file type is recognized as safe
+                else if (!SafeFileExtensions.Contains(extension))
+                {
+                    // Unknown extension - show generic warning
+                    var result = ShowUnknownFileWarning(file);
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        UpdateStatus($"Cancelled: {file.Name}", theme.ForegroundSecondary);
+                        return;
+                    }
+
+                    Logger.Instance.Info("FileExplorer",
+                        $"User confirmed opening unknown file type: {file.FullName} (extension: {extension})");
+                }
+
+                // Step 4: Publish file selected event (other widgets can listen)
                 EventBus.Instance.Publish(new FileSelectedEvent
                 {
                     FilePath = file.FullName,
@@ -265,23 +369,69 @@ namespace SuperTUI.Widgets
                     SelectedAt = DateTime.Now
                 });
 
-                // Try to open file with default application
-                try
+                // Step 5: Open file with default application
+                Process.Start(new ProcessStartInfo
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = file.FullName,
-                        UseShellExecute = true
-                    });
-                    UpdateStatus($"Opened: {file.Name}", theme.Success);
-                    Logger.Instance.Info("FileExplorer", $"Opened file: {file.FullName}");
-                }
-                catch (Exception ex)
-                {
-                    UpdateStatus($"Cannot open: {ex.Message}", theme.Error);
-                    Logger.Instance.Error("FileExplorer", $"Failed to open file: {ex.Message}");
-                }
+                    FileName = file.FullName,
+                    UseShellExecute = true
+                });
+
+                UpdateStatus($"Opened: {file.Name}", theme.Success);
+                Logger.Instance.Info("FileExplorer", $"Successfully opened file: {file.FullName}");
             }
+            catch (Exception ex)
+            {
+                UpdateStatus($"Cannot open: {ex.Message}", theme.Error);
+                Logger.Instance.Error("FileExplorer",
+                    $"Failed to open file '{file.FullName}': {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Shows a security warning for dangerous file types.
+        /// </summary>
+        private MessageBoxResult ShowDangerousFileWarning(FileInfo file)
+        {
+            string message =
+                $"⚠️ SECURITY WARNING ⚠️\n\n" +
+                $"File: {file.Name}\n" +
+                $"Type: {file.Extension.ToUpperInvariant()} (Executable/Script)\n" +
+                $"Size: {FormatFileSize(file.Length)}\n" +
+                $"Path: {file.DirectoryName}\n\n" +
+                $"This file type can execute code on your computer.\n" +
+                $"Only open files from trusted sources.\n\n" +
+                $"Do you want to open this file?";
+
+            return MessageBox.Show(
+                message,
+                "Security Warning - Dangerous File Type",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No  // Default to NO for safety
+            );
+        }
+
+        /// <summary>
+        /// Shows a warning for unknown file types.
+        /// </summary>
+        private MessageBoxResult ShowUnknownFileWarning(FileInfo file)
+        {
+            string message =
+                $"Unknown File Type\n\n" +
+                $"File: {file.Name}\n" +
+                $"Extension: {file.Extension}\n" +
+                $"Size: {FormatFileSize(file.Length)}\n\n" +
+                $"This file type is not recognized as safe.\n" +
+                $"Opening it may be unsafe.\n\n" +
+                $"Do you want to open this file?";
+
+            return MessageBox.Show(
+                message,
+                "Unknown File Type",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No
+            );
         }
 
         private void NavigateUp()

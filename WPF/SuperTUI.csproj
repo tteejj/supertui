@@ -9,6 +9,8 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <!-- Enable Windows targeting on Linux for syntax/type checking -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +27,9 @@
     <!-- Exclude widgets requiring external dependencies -->
     <Compile Remove="Widgets/TerminalWidget.cs" />
     <Compile Remove="Widgets/SystemMonitorWidget.cs" />
+
+    <!-- Exclude DI extensions requiring Microsoft.Extensions.DependencyInjection -->
+    <Compile Remove="Core/DependencyInjection/**/*.cs" />
   </ItemGroup>
 
 </Project>

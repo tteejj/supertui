@@ -212,6 +212,53 @@ $securityManager.Initialize()
 
 Write-Host "Infrastructure initialized" -ForegroundColor Green
 
+# ============================================================================
+# GLOBAL EXCEPTION HANDLER
+# ============================================================================
+
+# Catch unhandled exceptions as last resort
+[System.AppDomain]::CurrentDomain.add_UnhandledException({
+    param($sender, $e)
+    $exception = $e.ExceptionObject
+
+    # Log critical error with full details
+    $logger.Critical("Application",
+        "UNHANDLED EXCEPTION CAUGHT`n" +
+        "  Message: $($exception.Message)`n" +
+        "  Type: $($exception.GetType().FullName)`n" +
+        "  Stack Trace:`n$($exception.StackTrace)", $exception)
+
+    # Show user-friendly error dialog
+    $logPath = "$env:TEMP\SuperTUI\Logs"
+    [System.Windows.MessageBox]::Show(
+        "A critical error occurred. The application will attempt to continue but may be unstable.`n`n" +
+        "Error: $($exception.Message)`n`n" +
+        "Details have been logged to:`n$logPath`n`n" +
+        "Please report this issue with the log files.",
+        "SuperTUI - Critical Error",
+        [System.Windows.MessageBoxButton]::OK,
+        [System.Windows.MessageBoxImage]::Error)
+
+    # Check if CLR is terminating
+    if ($e.IsTerminating)
+    {
+        $logger.Critical("Application", "CLR is terminating. Application will exit.")
+
+        # Save state before exit (best effort)
+        try
+        {
+            Write-Host "Attempting emergency state save..." -ForegroundColor Yellow
+            # StatePersistenceManager would go here if initialized
+        }
+        catch
+        {
+            $logger.Error("Application", "Emergency state save failed: $_")
+        }
+    }
+})
+
+Write-Host "Global exception handler registered" -ForegroundColor Green
+
 # Create WorkspaceManager
 $workspaceManager = New-Object SuperTUI.Core.WorkspaceManager($workspaceContainer)
 
@@ -313,15 +360,22 @@ Write-Host "Workspaces created!" -ForegroundColor Green
 # ============================================================================
 
 # Workspace switching (Ctrl+1 through Ctrl+9)
+# NOTE: Must use GetNewClosure() to capture current loop value
 for ($i = 1; $i -le 9; $i++) {
-    $index = $i
     $key = [System.Windows.Input.Key]::("D$i")
-    $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Control, {
-        $workspaceManager.SwitchToWorkspace($index)
+
+    # GetNewClosure() captures ALL variables in current scope at this moment
+    # This creates a new closure for each iteration with the current value of $i
+    $action = {
+        $workspaceManager.SwitchToWorkspace($i)
         $current = $workspaceManager.CurrentWorkspace
-        $workspaceTitle.Text = "SuperTUI - $($current.Name)"
-        $statusText.Text = "Switched to workspace: $($current.Name)"
-    }.GetNewClosure(), "Switch to workspace $i")
+        if ($current) {
+            $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+            $statusText.Text = "Switched to workspace: $($current.Name)"
+        }
+    }.GetNewClosure()
+
+    $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Control, $action, "Switch to workspace $i")
 }
 
 # Quit
@@ -332,9 +386,9 @@ $shortcutManager.RegisterGlobal(
     "Quit SuperTUI"
 )
 
-# Close focused widget
+# Close focused widget (Ctrl+C)
 $shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::W,
+    [System.Windows.Input.Key]::C,
     [System.Windows.Input.ModifierKeys]::Control,
     {
         $current = $workspaceManager.CurrentWorkspace
@@ -344,12 +398,70 @@ $shortcutManager.RegisterGlobal(
                 $widgetName = $focused.WidgetName
                 $current.RemoveFocusedWidget()
                 $statusText.Text = "Closed widget: $widgetName"
+                $logger.Info("Workspace", "Closed widget: $widgetName")
             } else {
                 $statusText.Text = "No widget focused"
             }
         }
     },
     "Close focused widget"
+)
+
+# Focus navigation (Ctrl+Arrow keys)
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Right,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusForward()
+            $focused = $current.GetFocusedWidget()
+            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
+        }
+    },
+    "Focus next widget"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Left,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusBackward()
+            $focused = $current.GetFocusedWidget()
+            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
+        }
+    },
+    "Focus previous widget"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Down,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusForward()
+            $focused = $current.GetFocusedWidget()
+            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
+        }
+    },
+    "Focus next widget"
+)
+
+$shortcutManager.RegisterGlobal(
+    [System.Windows.Input.Key]::Up,
+    [System.Windows.Input.ModifierKeys]::Control,
+    {
+        $current = $workspaceManager.CurrentWorkspace
+        if ($current) {
+            $current.CycleFocusBackward()
+            $focused = $current.GetFocusedWidget()
+            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
+        }
+    },
+    "Focus previous widget"
 )
 
 # Add new widget (Ctrl+N)

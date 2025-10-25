@@ -97,7 +97,8 @@ namespace SuperTUI.Widgets
         {
             if (state.ContainsKey("Notes"))
             {
-                notesTextBox.Text = (string)state["Notes"];
+                // Handle JsonElement from deserialized state files
+                notesTextBox.Text = state["Notes"]?.ToString() ?? string.Empty;
             }
         }
 

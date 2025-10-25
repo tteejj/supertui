@@ -78,7 +78,7 @@ namespace SuperTUI.Widgets
         {
             var mainPanel = new DockPanel
             {
-                Background = new SolidColorBrush(Color.FromRgb(20, 20, 20)),
+                Background = new SolidColorBrush(theme.Background),
                 LastChildFill = true
             };
 
@@ -100,7 +100,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 11,
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = new SolidColorBrush(theme.Surface),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -117,7 +117,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 11,
-                Background = new SolidColorBrush(Color.FromRgb(20, 20, 20)),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(5),

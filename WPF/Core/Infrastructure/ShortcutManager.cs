@@ -26,7 +26,7 @@ namespace SuperTUI.Core
         }
     }
 
-    public class ShortcutManager
+    public class ShortcutManager : IShortcutManager
     {
         private static readonly Lazy<ShortcutManager> instance =
             new Lazy<ShortcutManager>(() => new ShortcutManager());
@@ -101,6 +101,40 @@ namespace SuperTUI.Core
         public bool HandleKeyDown(Key key, ModifierKeys modifiers)
         {
             return HandleKeyDown(key, modifiers, null);
+        }
+
+        // Interface implementation - HandleKeyPress is an alias for HandleKeyDown
+        public bool HandleKeyPress(Key key, ModifierKeys modifiers, string currentWorkspace = null)
+        {
+            return HandleKeyDown(key, modifiers, currentWorkspace);
+        }
+
+        public IReadOnlyList<KeyboardShortcut> GetGlobalShortcuts()
+        {
+            return globalShortcuts.AsReadOnly();
+        }
+
+        public IReadOnlyList<KeyboardShortcut> GetWorkspaceShortcuts(string workspaceName)
+        {
+            if (workspaceShortcuts.TryGetValue(workspaceName, out var shortcuts))
+            {
+                return shortcuts.AsReadOnly();
+            }
+            return new List<KeyboardShortcut>().AsReadOnly();
+        }
+
+        public void ClearAll()
+        {
+            globalShortcuts.Clear();
+            workspaceShortcuts.Clear();
+        }
+
+        public void ClearWorkspace(string workspaceName)
+        {
+            if (workspaceShortcuts.ContainsKey(workspaceName))
+            {
+                workspaceShortcuts.Remove(workspaceName);
+            }
         }
     }
 }

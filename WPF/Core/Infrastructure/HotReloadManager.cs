@@ -11,7 +11,7 @@ namespace SuperTUI.Core.Infrastructure
     /// Manages hot reload functionality for development.
     /// Watches source files and triggers reload events when changes are detected.
     /// </summary>
-    public class HotReloadManager : IDisposable
+    public class HotReloadManager : IHotReloadManager
     {
         private static HotReloadManager instance;
         private static readonly object lockObject = new object();

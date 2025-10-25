@@ -199,7 +199,7 @@ namespace SuperTUI.Widgets
                 Maximum = 100,
                 Value = 0,
                 Margin = new Thickness(0, 5, 0, 0),
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
                 Foreground = new SolidColorBrush(theme.Success),
                 BorderThickness = new Thickness(0)
             };

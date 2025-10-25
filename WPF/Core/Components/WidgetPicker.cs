@@ -181,6 +181,12 @@ namespace SuperTUI.Core.Components
                     Name = "Shortcut Help",
                     Description = "View all keyboard shortcuts",
                     TypeName = "SuperTUI.Widgets.ShortcutHelpWidget"
+                },
+                new WidgetOption
+                {
+                    Name = "Task Management",
+                    Description = "Full task manager with subtasks, filters, and priorities",
+                    TypeName = "SuperTUI.Widgets.TaskManagementWidget"
                 }
             };
 

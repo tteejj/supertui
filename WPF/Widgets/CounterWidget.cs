@@ -14,6 +14,10 @@ namespace SuperTUI.Widgets
     /// </summary>
     public class CounterWidget : WidgetBase, IThemeable
     {
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+
         private Border containerBorder;
         private TextBlock titleText;
         private TextBlock countText;
@@ -31,15 +35,33 @@ namespace SuperTUI.Widgets
             }
         }
 
-        public CounterWidget()
+        /// <summary>
+        /// DI constructor - preferred for new code
+        /// </summary>
+        public CounterWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+
             WidgetType = "Counter";
             BuildUI();
         }
 
+        /// <summary>
+        /// Parameterless constructor for backward compatibility
+        /// </summary>
+        public CounterWidget()
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        {
+        }
+
         private void BuildUI()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             containerBorder = new Border
             {
@@ -125,13 +147,13 @@ namespace SuperTUI.Widgets
 
         public override void OnWidgetFocusReceived()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
             instructionText.Foreground = new SolidColorBrush(theme.Focus);
         }
 
         public override void OnWidgetFocusLost()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
             instructionText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
         }
 
@@ -151,7 +173,16 @@ namespace SuperTUI.Widgets
         {
             if (state.ContainsKey("Count"))
             {
-                Count = (int)state["Count"];
+                // Handle JsonElement from deserialized state files
+                try
+                {
+                    Count = Convert.ToInt32(state["Count"]);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning("CounterWidget", $"Failed to restore Count state: {ex.Message}");
+                    Count = 0; // Reset to default
+                }
             }
         }
 
@@ -166,7 +197,7 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
 
             if (containerBorder != null)
             {

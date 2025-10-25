@@ -83,7 +83,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 12,
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = new SolidColorBrush(theme.Surface),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -112,7 +112,7 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = 11,
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),

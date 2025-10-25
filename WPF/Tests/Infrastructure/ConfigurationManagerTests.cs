@@ -15,6 +15,10 @@ namespace SuperTUI.Tests.Infrastructure
         {
             testConfigPath = Path.Combine(Path.GetTempPath(), $"test_config_{Guid.NewGuid()}.json");
             configManager = new ConfigurationManager();
+
+            // Reset for testing (only available in DEBUG builds)
+            configManager.ResetForTesting();
+
             configManager.Initialize(testConfigPath);
         }
 
@@ -136,6 +140,127 @@ namespace SuperTUI.Tests.Infrastructure
             Assert.NotNull(result);
             Assert.Equal(3, result.Count);
             Assert.Equal("item1", result[0]);
+        }
+
+        // ====================================================================
+        // PHASE 2 ADDITIONS: Configuration Validation Tests
+        // ====================================================================
+
+        [Fact]
+        public void Validate_WithAllValidValues_ShouldReturnTrue()
+        {
+            // Arrange
+            configManager.Register("test.valid", 50, "Valid value",
+                validator: val => (int)val >= 0 && (int)val <= 100);
+            configManager.Set("test.valid", 75);
+
+            // Act
+            bool result = configManager.Validate();
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void Validate_WithInvalidValue_ShouldResetToDefault()
+        {
+            // Arrange
+            configManager.Register("test.invalid", 50, "Must be 0-100",
+                validator: val => (int)val >= 0 && (int)val <= 100);
+
+            // Manually set to invalid value (bypassing validator in Set)
+            var configValue = configManager.GetType()
+                .GetField("config", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(configManager) as Dictionary<string, ConfigValue>;
+
+            if (configValue != null && configValue.ContainsKey("test.invalid"))
+            {
+                configValue["test.invalid"].Value = 150; // Invalid!
+            }
+
+            // Act
+            bool result = configManager.Validate();
+
+            // Assert
+            Assert.False(result); // Validation should fail
+            Assert.Equal(50, configManager.Get<int>("test.invalid")); // Should reset to default
+        }
+
+        [Fact]
+        public void Validate_WithNullValue_ShouldResetToDefault()
+        {
+            // Arrange
+            configManager.Register("test.null", "default_value", "Should not be null");
+
+            // Manually set to null (simulating corrupted config file)
+            var configDict = configManager.GetType()
+                .GetField("config", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(configManager) as Dictionary<string, ConfigValue>;
+
+            if (configDict != null && configDict.ContainsKey("test.null"))
+            {
+                configDict["test.null"].Value = null;
+            }
+
+            // Act
+            bool result = configManager.Validate();
+
+            // Assert
+            Assert.False(result); // Validation should fail
+            Assert.Equal("default_value", configManager.Get<string>("test.null")); // Should reset
+        }
+
+        [Fact]
+        public void GetStrict_WithExistingKey_ShouldReturnValue()
+        {
+            // Arrange
+            configManager.Register("test.exists", "test_value", "Exists test");
+
+            // Act
+            var result = configManager.GetStrict<string>("test.exists");
+
+            // Assert
+            Assert.Equal("test_value", result);
+        }
+
+        [Fact]
+        public void GetStrict_WithMissingKey_ShouldThrowKeyNotFoundException()
+        {
+            // Act & Assert
+            Assert.Throws<KeyNotFoundException>(() =>
+                configManager.GetStrict<string>("test.missing"));
+        }
+
+        [Fact]
+        public void GetStrict_WithWrongType_ShouldThrowInvalidCastException()
+        {
+            // Arrange
+            configManager.Register("test.string", "text_value", "String value");
+
+            // Act & Assert
+            Assert.Throws<InvalidCastException>(() =>
+                configManager.GetStrict<int>("test.string"));
+        }
+
+        [Fact]
+        public void GetStrict_WithNullForValueType_ShouldThrowInvalidOperationException()
+        {
+            // Arrange
+            configManager.Register("test.nullable", 42, "Should not be null");
+
+            // Manually set to null
+            var configDict = configManager.GetType()
+                .GetField("config", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(configManager) as Dictionary<string, ConfigValue>;
+
+            if (configDict != null && configDict.ContainsKey("test.nullable"))
+            {
+                configDict["test.nullable"].Value = null;
+            }
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() =>
+                configManager.GetStrict<int>("test.nullable"));
         }
     }
 }

@@ -23,7 +23,11 @@ namespace SuperTUI.Widgets
         private EditableListControl<TodoItem> todoList;
         private string dataFile;
 
-        public TodoWidget(string dataFilePath = null)
+        public TodoWidget() : this(null)
+        {
+        }
+
+        public TodoWidget(string dataFilePath)
         {
             Name = "Todo List";
             dataFile = dataFilePath ?? Path.Combine(
