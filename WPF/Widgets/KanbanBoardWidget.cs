@@ -29,6 +29,7 @@ namespace SuperTUI.Widgets
         private TaskService taskService;
 
         // UI Components
+        private StandardWidgetFrame frame;
         private Grid mainGrid;
         private ListBox todoListBox;
         private ListBox inProgressListBox;
@@ -103,11 +104,67 @@ namespace SuperTUI.Widgets
             refreshTimer.Tick += (s, e) => LoadTasks();
             refreshTimer.Start();
 
+            // Subscribe to EventBus for inter-widget communication
+            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+
             logger.Info("KanbanWidget", "Kanban board widget initialized");
+        }
+
+        private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
+        {
+            // If task was selected from another widget, select it here too
+            if (evt.SourceWidget == WidgetType) return; // Ignore our own events
+
+            var task = evt.Task;
+            if (task == null) return;
+
+            // Find which list contains this task and select it
+            ListBox targetList = null;
+            ObservableCollection<TaskItem> targetCollection = null;
+
+            if (task.Status == TaskStatus.Completed)
+            {
+                targetList = doneListBox;
+                targetCollection = doneTasks;
+            }
+            else if (task.Status == TaskStatus.InProgress)
+            {
+                targetList = inProgressListBox;
+                targetCollection = inProgressTasks;
+            }
+            else
+            {
+                targetList = todoListBox;
+                targetCollection = todoTasks;
+            }
+
+            // Find and select the task
+            var matchingTask = targetCollection.FirstOrDefault(t => t.Id == task.Id);
+            if (matchingTask != null && targetList != null)
+            {
+                targetList.SelectedItem = matchingTask;
+                targetList.ScrollIntoView(matchingTask);
+            }
+        }
+
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            if (evt.TargetWidget == null || evt.TargetWidget == WidgetType)
+            {
+                LoadTasks();
+            }
         }
 
         private void BuildUI()
         {
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "KANBAN BOARD"
+            };
+            frame.SetStandardShortcuts("Enter: Edit", "E: Open in Tasks", "←/→: Navigate", "Ctrl+←/→: Move Task", "?: Help");
+
             // Main grid with 3 equal columns
             mainGrid = new Grid
             {
@@ -131,7 +188,8 @@ namespace SuperTUI.Widgets
             mainGrid.Children.Add(inProgressColumn);
             mainGrid.Children.Add(doneColumn);
 
-            this.Content = mainGrid;
+            frame.Content = mainGrid;
+            this.Content = frame;
         }
 
         private Border BuildColumn(string title, ObservableCollection<TaskItem> dataSource, out ListBox listBox, out TextBlock header, System.Windows.Media.Color headerColor)
@@ -269,6 +327,13 @@ namespace SuperTUI.Widgets
             if (doneHeader != null)
                 doneHeader.Text = $"DONE ({doneTasks.Count})";
 
+            // Update frame context info
+            if (frame != null)
+            {
+                var totalTasks = todoTasks.Count + inProgressTasks.Count + doneTasks.Count;
+                frame.ContextInfo = $"{totalTasks} tasks";
+            }
+
             // Apply color coding
             UpdateTaskColors();
 
@@ -330,6 +395,17 @@ namespace SuperTUI.Widgets
                 currentColumn = 1;
             else if (sender == doneListBox && doneListBox.SelectedItem != null)
                 currentColumn = 2;
+
+            // Publish TaskSelectedEvent for other widgets
+            var listBox = sender as ListBox;
+            if (listBox?.SelectedItem is TaskItem task)
+            {
+                EventBus.Publish(new Core.Events.TaskSelectedEvent
+                {
+                    Task = task,
+                    SourceWidget = WidgetType
+                });
+            }
         }
 
         private void ListBox_KeyDown(object sender, KeyEventArgs e)
@@ -337,10 +413,16 @@ namespace SuperTUI.Widgets
             var listBox = sender as ListBox;
             if (listBox?.SelectedItem is TaskItem task)
             {
-                // Enter to edit task
+                // Enter to edit task inline
                 if (e.Key == Key.Enter)
                 {
                     EditTask(task);
+                    e.Handled = true;
+                }
+                // E to navigate to TaskManagement widget with this task
+                else if (e.Key == Key.E)
+                {
+                    AppContext.RequestNavigation("TaskManagement", task);
                     e.Handled = true;
                 }
                 // Delete to remove task
@@ -584,7 +666,7 @@ namespace SuperTUI.Widgets
 
         protected override void OnDispose()
         {
-            // Unsubscribe from events
+            // Unsubscribe from task service events
             if (taskService != null)
             {
                 taskService.TaskAdded -= OnTaskChanged;
@@ -592,6 +674,10 @@ namespace SuperTUI.Widgets
                 taskService.TaskDeleted -= (id) => LoadTasks();
                 taskService.TasksReloaded -= LoadTasks;
             }
+
+            // Unsubscribe from EventBus
+            EventBus.Unsubscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Unsubscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
 
             // Stop and dispose timer
             if (refreshTimer != null)

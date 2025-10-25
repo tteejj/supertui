@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Core.Components;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
@@ -18,8 +19,8 @@ namespace SuperTUI.Widgets
     {
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
+        private StandardWidgetFrame frame;
         private Border containerBorder;
-        private TextBlock titleText;
         private TextBox searchBox;
         private ListBox shortcutList;
         private TextBlock footerText;
@@ -244,20 +245,16 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "KEYBOARD SHORTCUTS"
+            };
+            frame.SetStandardShortcuts("Type to search", "F5: Refresh", "?: Help");
+
             var mainPanel = new StackPanel
             {
-                Margin = new Thickness(0)
-            };
-
-            // Title
-            titleText = new TextBlock
-            {
-                Text = "⌨  KEYBOARD SHORTCUTS",
-                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Primary),
-                Margin = new Thickness(15, 15, 15, 10)
+                Margin = new Thickness(15)
             };
 
             // Search box
@@ -322,7 +319,6 @@ namespace SuperTUI.Widgets
                 TextAlignment = TextAlignment.Center
             };
 
-            mainPanel.Children.Add(titleText);
             mainPanel.Children.Add(searchPanel);
             mainPanel.Children.Add(shortcutList);
             mainPanel.Children.Add(footerText);
@@ -330,12 +326,11 @@ namespace SuperTUI.Widgets
             containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1),
                 Child = mainPanel
             };
 
-            this.Content = containerBorder;
+            frame.Content = containerBorder;
+            this.Content = frame;
         }
 
         private void UpdateDisplay()
@@ -434,15 +429,14 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            if (frame != null)
+            {
+                frame.ApplyTheme();
+            }
+
             if (containerBorder != null)
             {
                 containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
-                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
-            }
-
-            if (titleText != null)
-            {
-                titleText.Foreground = new SolidColorBrush(theme.Primary);
             }
 
             if (searchBox != null)

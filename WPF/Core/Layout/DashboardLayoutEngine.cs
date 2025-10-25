@@ -52,7 +52,7 @@ namespace SuperTUI.Core
 
             var textBlock = new TextBlock
             {
-                Text = $"Empty Slot {slotIndex + 1}\n\nPress Ctrl+{slotIndex + 1} to add widget",
+                Text = $"Empty Slot {slotIndex + 1}\n\nPress Ctrl+N to add widget\nPress ? for help",
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 FontSize = 14,
                 Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128)),

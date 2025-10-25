@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Infrastructure;
+using SuperTUI.Core.Effects;
 
 namespace SuperTUI.Core
 {
@@ -18,6 +19,10 @@ namespace SuperTUI.Core
         public string WidgetName { get; set; }
         public string WidgetType { get; set; }
         public Guid WidgetId { get; private set; } = Guid.NewGuid();
+
+        // Infrastructure helpers for easy access
+        protected IEventBus EventBus => SuperTUI.Core.EventBus.Instance;
+        protected ApplicationContext AppContext => ApplicationContext.Instance;
 
         // Focus management
         private bool hasFocus;
@@ -89,9 +94,35 @@ namespace SuperTUI.Core
             if (containerBorder != null)
             {
                 var theme = ThemeManager.Instance.CurrentTheme;
-                containerBorder.BorderBrush = HasFocus
-                    ? new SolidColorBrush(theme.Focus)
-                    : Brushes.Transparent;
+
+                if (HasFocus)
+                {
+                    // 2px colored border
+                    containerBorder.BorderBrush = new SolidColorBrush(theme.Focus);
+                    containerBorder.BorderThickness = new Thickness(2);
+
+                    // Apply glow effect from theme settings
+                    if (theme.Glow != null)
+                    {
+                        GlowEffectHelper.ApplyGlow(containerBorder, theme.Glow, GlowState.Focus);
+                    }
+                }
+                else
+                {
+                    // 1px subtle border
+                    containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
+                    containerBorder.BorderThickness = new Thickness(1);
+
+                    // Apply always-on glow or remove glow based on theme settings
+                    if (theme.Glow != null && theme.Glow.Mode == GlowMode.Always)
+                    {
+                        GlowEffectHelper.ApplyGlow(containerBorder, theme.Glow, GlowState.Normal);
+                    }
+                    else
+                    {
+                        GlowEffectHelper.RemoveGlow(containerBorder);
+                    }
+                }
             }
         }
 
@@ -107,6 +138,52 @@ namespace SuperTUI.Core
 
             // Always update focus visual (uses theme colors)
             UpdateFocusVisual();
+        }
+
+        /// <summary>
+        /// Apply typography settings from theme to this widget
+        /// Call this in Initialize() or ApplyTheme() to use themed fonts
+        /// </summary>
+        protected void ApplyTypography()
+        {
+            var theme = ThemeManager.Instance.CurrentTheme;
+            if (theme?.Typography == null) return;
+
+            // Check for widget-specific font override
+            if (theme.Typography.PerWidgetFonts != null &&
+                theme.Typography.PerWidgetFonts.TryGetValue(WidgetType ?? WidgetName, out var widgetFont))
+            {
+                FontFamily = new FontFamily(widgetFont.FontFamily);
+                FontSize = widgetFont.FontSize;
+                FontWeight = ParseFontWeight(widgetFont.FontWeight);
+            }
+            else
+            {
+                // Apply global typography settings
+                FontFamily = new FontFamily(theme.Typography.FontFamily);
+                FontSize = theme.Typography.FontSize;
+                FontWeight = ParseFontWeight(theme.Typography.FontWeight);
+            }
+        }
+
+        /// <summary>
+        /// Parse font weight string to FontWeight
+        /// </summary>
+        private FontWeight ParseFontWeight(string weight)
+        {
+            return weight?.ToLower() switch
+            {
+                "thin" => FontWeights.Thin,
+                "extralight" => FontWeights.ExtraLight,
+                "light" => FontWeights.Light,
+                "normal" => FontWeights.Normal,
+                "medium" => FontWeights.Medium,
+                "semibold" => FontWeights.SemiBold,
+                "bold" => FontWeights.Bold,
+                "extrabold" => FontWeights.ExtraBold,
+                "black" => FontWeights.Black,
+                _ => FontWeights.Normal
+            };
         }
 
         /// <summary>

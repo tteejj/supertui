@@ -36,6 +36,7 @@ namespace SuperTUI.Widgets
         private readonly IConfigurationManager config;
         private readonly ISecurityManager security;
 
+        private StandardWidgetFrame frame;
         private string currentPath;
         private ListBox fileListBox;
         private TextBlock pathLabel;
@@ -107,24 +108,19 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "FILE EXPLORER"
+            };
+            frame.SetStandardShortcuts("Enter: Open", "Backspace: Up", "Del: Delete", "F5: Refresh", "?: Help");
+
             var mainPanel = new DockPanel
             {
                 Background = new SolidColorBrush(theme.Background),
-                LastChildFill = true
+                LastChildFill = true,
+                Margin = new Thickness(15)
             };
-
-            // Title
-            var title = new TextBlock
-            {
-                Text = "FILE EXPLORER",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            DockPanel.SetDock(title, Dock.Top);
-            mainPanel.Children.Add(title);
 
             // Path label
             pathLabel = new TextBlock
@@ -165,7 +161,9 @@ namespace SuperTUI.Widgets
             fileListBox.MouseDoubleClick += FileListBox_MouseDoubleClick;
 
             mainPanel.Children.Add(fileListBox);
-            Content = mainPanel;
+
+            frame.Content = mainPanel;
+            Content = frame;
         }
 
         private void LoadDirectory(string path)
@@ -217,7 +215,7 @@ namespace SuperTUI.Widgets
                 UpdateStatus($"{dirs.Count} directories, {files.Count} files", theme.ForegroundSecondary);
 
                 // Publish directory changed event
-                EventBus.Instance.Publish(new DirectoryChangedEvent
+                SuperTUI.Core.EventBus.Instance.Publish(new DirectoryChangedEvent
                 {
                     OldPath = null,
                     NewPath = currentPath,
@@ -383,7 +381,7 @@ namespace SuperTUI.Widgets
                 }
 
                 // Step 4: Publish file selected event (other widgets can listen)
-                EventBus.Instance.Publish(new FileSelectedEvent
+                SuperTUI.Core.EventBus.Instance.Publish(new FileSelectedEvent
                 {
                     FilePath = file.FullName,
                     FileName = file.Name,

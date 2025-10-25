@@ -25,6 +25,7 @@ namespace SuperTUI.Widgets
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
 
+        private StandardWidgetFrame frame;
         private DispatcherTimer refreshTimer;
         private string repositoryPath;
 
@@ -86,23 +87,18 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "GIT REPOSITORY"
+            };
+            frame.SetStandardShortcuts("F5: Refresh", "?: Help");
+
             var stackPanel = new StackPanel
             {
-                Margin = new Thickness(10),
+                Margin = new Thickness(15),
                 Background = new SolidColorBrush(theme.Background)
             };
-
-            // Title
-            var title = new TextBlock
-            {
-                Text = "GIT REPOSITORY",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 16,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Margin = new Thickness(0, 0, 0, 15)
-            };
-            stackPanel.Children.Add(title);
 
             // Repository Path
             repoPathLabel = new TextBlock
@@ -155,7 +151,8 @@ namespace SuperTUI.Widgets
             };
             stackPanel.Children.Add(legend);
 
-            Content = stackPanel;
+            frame.Content = stackPanel;
+            Content = frame;
         }
 
         private void AddInfoItem(StackPanel parent, string label, string value,
@@ -281,7 +278,7 @@ namespace SuperTUI.Widgets
                 // Publish branch changed event if branch changed
                 if (oldBranch != null && oldBranch != currentBranch)
                 {
-                    EventBus.Instance.Publish(new BranchChangedEvent
+                    SuperTUI.Core.EventBus.Instance.Publish(new BranchChangedEvent
                     {
                         Repository = repositoryPath,
                         OldBranch = oldBranch,
@@ -291,7 +288,7 @@ namespace SuperTUI.Widgets
                 }
 
                 // Publish repository status event
-                EventBus.Instance.Publish(new RepositoryStatusChangedEvent
+                SuperTUI.Core.EventBus.Instance.Publish(new RepositoryStatusChangedEvent
                 {
                     Repository = repositoryPath,
                     Branch = currentBranch,

@@ -406,7 +406,7 @@ namespace SuperTUI.Core.Models
             if (project == null || string.IsNullOrEmpty(propertyName))
                 return string.Empty;
 
-            var prop = typeof(ProjectModels.Project).GetProperty(propertyName);
+            var prop = typeof(Project).GetProperty(propertyName);
             if (prop == null)
                 return string.Empty;
 

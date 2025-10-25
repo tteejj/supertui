@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Core.Components;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
@@ -19,8 +20,8 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private StandardWidgetFrame frame;
         private Border containerBorder;
-        private TextBlock titleText;
         private ComboBox categoryCombo;
         private ScrollViewer settingsScroll;
         private StackPanel settingsPanel;
@@ -56,17 +57,16 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
-            var mainPanel = new StackPanel();
-
-            // Title
-            titleText = new TextBlock
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
             {
-                Text = "⚙  SETTINGS",
-                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Primary),
-                Margin = new Thickness(15, 15, 15, 10)
+                Title = "SETTINGS"
+            };
+            frame.SetStandardShortcuts("Ctrl+S: Save", "F5: Refresh", "?: Help");
+
+            var mainPanel = new StackPanel
+            {
+                Margin = new Thickness(15)
             };
 
             // Category selector
@@ -172,7 +172,6 @@ namespace SuperTUI.Widgets
                 TextAlignment = TextAlignment.Center
             };
 
-            mainPanel.Children.Add(titleText);
             mainPanel.Children.Add(categoryPanel);
             mainPanel.Children.Add(settingsScroll);
             mainPanel.Children.Add(buttonPanel);
@@ -181,12 +180,11 @@ namespace SuperTUI.Widgets
             containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1),
                 Child = mainPanel
             };
 
-            this.Content = containerBorder;
+            frame.Content = containerBorder;
+            this.Content = frame;
         }
 
         private void UpdateCategoryList()
@@ -552,15 +550,14 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            if (frame != null)
+            {
+                frame.ApplyTheme();
+            }
+
             if (containerBorder != null)
             {
                 containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
-                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
-            }
-
-            if (titleText != null)
-            {
-                titleText.Foreground = new SolidColorBrush(theme.Primary);
             }
 
             // Rebuild display with new theme

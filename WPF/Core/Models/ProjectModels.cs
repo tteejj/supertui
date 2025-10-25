@@ -136,7 +136,9 @@ namespace SuperTUI.Core.Models
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Nickname { get; set; }  // Short identifier (e.g., "ABC123")
-        public string Id1 { get; set; }       // Legacy/external ID
+        public string Id1 { get; set; }       // Legacy/external ID (AuditCase)
+        public string ID2 { get; set; }       // CAA Report ID (CASCase) - 6-9 digit unique identifier
+        public string FullProjectName { get; set; }  // Full client/project name (TPName)
         public string Description { get; set; }
 
         // Status and priority
@@ -169,12 +171,61 @@ namespace SuperTUI.Core.Models
         // Custom fields (extensibility)
         public Dictionary<string, string> CustomFields { get; set; }
 
+        // Excel import fields (SVI-CAS Audit Request Form)
+        public DateTime? RequestDate { get; set; }
+        public string AuditType { get; set; }
+        public string AuditorName { get; set; }
+        public DateTime? DateAssigned { get; set; }
+        public string AuditProgram { get; set; }
+        public string ClientID { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public string Province { get; set; }
+        public string PostalCode { get; set; }
+        public string Country { get; set; }
+        public string TaxID { get; set; }
+        public DateTime? AuditPeriodFrom { get; set; }
+        public DateTime? AuditPeriodTo { get; set; }
+        public DateTime? AuditPeriod1Start { get; set; }
+        public DateTime? AuditPeriod1End { get; set; }
+        public DateTime? AuditPeriod2Start { get; set; }
+        public DateTime? AuditPeriod2End { get; set; }
+        public DateTime? AuditPeriod3Start { get; set; }
+        public DateTime? AuditPeriod3End { get; set; }
+        public DateTime? AuditPeriod4Start { get; set; }
+        public DateTime? AuditPeriod4End { get; set; }
+        public string Contact1Name { get; set; }
+        public string Contact1Phone { get; set; }
+        public string Contact1Ext { get; set; }
+        public string Contact1Address { get; set; }
+        public string Contact1Title { get; set; }
+        public string Contact2Name { get; set; }
+        public string Contact2Phone { get; set; }
+        public string Contact2Ext { get; set; }
+        public string Contact2Address { get; set; }
+        public string Contact2Title { get; set; }
+        public string AccountingSoftware1 { get; set; }
+        public string AccountingSoftware1Other { get; set; }
+        public string AccountingSoftware1Type { get; set; }
+        public string AccountingSoftware2 { get; set; }
+        public string AccountingSoftware2Other { get; set; }
+        public string AccountingSoftware2Type { get; set; }
+        public string TPEmailAddress { get; set; }
+        public string TPPhoneNumber { get; set; }
+        public string CASNumber { get; set; }
+        public string EmailReference { get; set; }
+        public string Comments { get; set; }
+        public string FXInfo { get; set; }
+        public string ShipToAddress { get; set; }
+
         public Project()
         {
             Id = Guid.NewGuid();
             Name = string.Empty;
             Nickname = string.Empty;
             Id1 = string.Empty;
+            ID2 = string.Empty;
+            FullProjectName = string.Empty;
             Description = string.Empty;
             Status = ProjectStatus.Planned;
             Priority = TaskPriority.Medium;
@@ -187,6 +238,41 @@ namespace SuperTUI.Core.Models
             UpdatedAt = DateTime.Now;
             Deleted = false;
             Archived = false;
+
+            // Initialize Excel import fields
+            AuditType = string.Empty;
+            AuditorName = string.Empty;
+            AuditProgram = string.Empty;
+            ClientID = string.Empty;
+            Address = string.Empty;
+            City = string.Empty;
+            Province = string.Empty;
+            PostalCode = string.Empty;
+            Country = string.Empty;
+            TaxID = string.Empty;
+            Contact1Name = string.Empty;
+            Contact1Phone = string.Empty;
+            Contact1Ext = string.Empty;
+            Contact1Address = string.Empty;
+            Contact1Title = string.Empty;
+            Contact2Name = string.Empty;
+            Contact2Phone = string.Empty;
+            Contact2Ext = string.Empty;
+            Contact2Address = string.Empty;
+            Contact2Title = string.Empty;
+            AccountingSoftware1 = string.Empty;
+            AccountingSoftware1Other = string.Empty;
+            AccountingSoftware1Type = string.Empty;
+            AccountingSoftware2 = string.Empty;
+            AccountingSoftware2Other = string.Empty;
+            AccountingSoftware2Type = string.Empty;
+            TPEmailAddress = string.Empty;
+            TPPhoneNumber = string.Empty;
+            CASNumber = string.Empty;
+            EmailReference = string.Empty;
+            Comments = string.Empty;
+            FXInfo = string.Empty;
+            ShipToAddress = string.Empty;
         }
 
         /// <summary>

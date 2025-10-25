@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Core.Components;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
@@ -18,8 +19,8 @@ namespace SuperTUI.Widgets
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
 
+        private StandardWidgetFrame frame;
         private Border containerBorder;
-        private TextBlock titleText;
         private TextBlock countText;
         private TextBlock instructionText;
 
@@ -63,11 +64,16 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "COUNTER"
+            };
+            frame.SetStandardShortcuts("↑/↓: Increment/Decrement", "R: Reset", "?: Help");
+
             containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1),
                 Padding = new Thickness(20)
             };
 
@@ -75,18 +81,6 @@ namespace SuperTUI.Widgets
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
-            };
-
-            // Title
-            titleText = new TextBlock
-            {
-                Text = "COUNTER",
-                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                FontSize = 12,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 15)
             };
 
             // Count display
@@ -111,12 +105,12 @@ namespace SuperTUI.Widgets
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
-            stackPanel.Children.Add(titleText);
             stackPanel.Children.Add(countText);
             stackPanel.Children.Add(instructionText);
 
             containerBorder.Child = stackPanel;
-            this.Content = containerBorder;
+            frame.Content = containerBorder;
+            this.Content = frame;
         }
 
         public override void Initialize()
@@ -199,15 +193,14 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            if (frame != null)
+            {
+                frame.ApplyTheme();
+            }
+
             if (containerBorder != null)
             {
                 containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
-                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
-            }
-
-            if (titleText != null)
-            {
-                titleText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
             }
 
             if (countText != null)

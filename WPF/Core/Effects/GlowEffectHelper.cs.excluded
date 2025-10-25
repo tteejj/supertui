@@ -1,0 +1,267 @@
+using System;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
+
+namespace SuperTUI.Core.Effects
+{
+    /// <summary>
+    /// State indicating when/why a glow effect is being applied
+    /// </summary>
+    public enum GlowState
+    {
+        /// <summary>Glow is always visible (default state)</summary>
+        Always,
+        /// <summary>Glow is visible because element has focus</summary>
+        Focus,
+        /// <summary>Glow is visible because mouse is hovering over element</summary>
+        Hover
+    }
+
+    /// <summary>
+    /// Helper class for applying and managing neon glow effects on WPF controls.
+    /// Uses DropShadowEffect with ShadowDepth=0 to create a glow rather than a shadow.
+    /// </summary>
+    public static class GlowEffectHelper
+    {
+        /// <summary>
+        /// Applies a glow effect to the specified UI element.
+        /// </summary>
+        /// <param name="element">The UI element to apply the glow to</param>
+        /// <param name="settings">Glow configuration settings from the theme</param>
+        /// <param name="state">The state determining which glow color to use</param>
+        public static void ApplyGlow(UIElement element, GlowSettings settings, GlowState state)
+        {
+            if (element == null || settings == null)
+                return;
+
+            // Never show glow if mode is Never
+            if (settings.GlowMode == GlowMode.Never)
+            {
+                RemoveGlow(element);
+                return;
+            }
+
+            // Select appropriate glow color based on state
+            Color glowColor = state switch
+            {
+                GlowState.Focus => settings.FocusGlowColor,
+                GlowState.Hover => settings.HoverGlowColor,
+                _ => settings.GlowColor
+            };
+
+            // Create glow effect using DropShadow with ShadowDepth=0
+            element.Effect = new DropShadowEffect
+            {
+                Color = glowColor,
+                BlurRadius = settings.GlowRadius,
+                Opacity = settings.GlowOpacity,
+                ShadowDepth = 0,  // Zero depth creates a glow, not a shadow
+                RenderingBias = RenderingBias.Performance
+            };
+        }
+
+        /// <summary>
+        /// Removes any glow effect from the specified UI element.
+        /// </summary>
+        /// <param name="element">The UI element to remove the glow from</param>
+        public static void RemoveGlow(UIElement element)
+        {
+            if (element == null)
+                return;
+
+            element.Effect = null;
+        }
+
+        /// <summary>
+        /// Updates an existing glow effect with new settings.
+        /// If no glow exists, applies a new one.
+        /// </summary>
+        /// <param name="element">The UI element to update</param>
+        /// <param name="settings">New glow configuration settings</param>
+        /// <param name="state">The state determining which glow color to use</param>
+        public static void UpdateGlow(UIElement element, GlowSettings settings, GlowState state)
+        {
+            if (element == null || settings == null)
+                return;
+
+            // If element already has a DropShadowEffect, update it
+            if (element.Effect is DropShadowEffect existingEffect)
+            {
+                // Never show glow if mode is Never
+                if (settings.GlowMode == GlowMode.Never)
+                {
+                    RemoveGlow(element);
+                    return;
+                }
+
+                // Select appropriate glow color based on state
+                Color glowColor = state switch
+                {
+                    GlowState.Focus => settings.FocusGlowColor,
+                    GlowState.Hover => settings.HoverGlowColor,
+                    _ => settings.GlowColor
+                };
+
+                // Update existing effect properties
+                existingEffect.Color = glowColor;
+                existingEffect.BlurRadius = settings.GlowRadius;
+                existingEffect.Opacity = settings.GlowOpacity;
+                existingEffect.ShadowDepth = 0;
+                existingEffect.RenderingBias = RenderingBias.Performance;
+            }
+            else
+            {
+                // No existing effect, apply a new one
+                ApplyGlow(element, settings, state);
+            }
+        }
+
+        /// <summary>
+        /// Attaches event handlers to automatically manage glow effects based on focus and hover state.
+        /// Respects the GlowMode setting to determine when glows should be shown.
+        /// </summary>
+        /// <param name="element">The framework element to attach handlers to</param>
+        /// <param name="themeManager">Theme manager providing glow settings</param>
+        public static void AttachGlowHandlers(FrameworkElement element, IThemeManager themeManager)
+        {
+            if (element == null || themeManager == null)
+                return;
+
+            var settings = themeManager.CurrentTheme.Glow;
+
+            // Handle focus-based glow
+            if (settings.GlowMode == GlowMode.OnFocus || settings.GlowMode == GlowMode.Always)
+            {
+                element.GotFocus += (s, e) =>
+                {
+                    ApplyGlow(element, themeManager.CurrentTheme.Glow, GlowState.Focus);
+                };
+
+                element.LostFocus += (s, e) =>
+                {
+                    var currentSettings = themeManager.CurrentTheme.Glow;
+
+                    // If Always mode, revert to default glow
+                    if (currentSettings.GlowMode == GlowMode.Always)
+                        ApplyGlow(element, currentSettings, GlowState.Always);
+                    else
+                        RemoveGlow(element);
+                };
+            }
+
+            // Handle hover-based glow
+            if (settings.GlowMode == GlowMode.OnHover)
+            {
+                element.MouseEnter += (s, e) =>
+                {
+                    ApplyGlow(element, themeManager.CurrentTheme.Glow, GlowState.Hover);
+                };
+
+                element.MouseLeave += (s, e) =>
+                {
+                    RemoveGlow(element);
+                };
+            }
+
+            // Apply initial glow if Always mode
+            if (settings.GlowMode == GlowMode.Always)
+            {
+                ApplyGlow(element, settings, GlowState.Always);
+            }
+        }
+
+        /// <summary>
+        /// Attaches event handlers with explicit glow settings (without theme manager).
+        /// Useful for one-off glows or testing.
+        /// </summary>
+        /// <param name="element">The framework element to attach handlers to</param>
+        /// <param name="settings">Glow configuration settings</param>
+        public static void AttachGlowHandlers(FrameworkElement element, GlowSettings settings)
+        {
+            if (element == null || settings == null)
+                return;
+
+            // Handle focus-based glow
+            if (settings.GlowMode == GlowMode.OnFocus || settings.GlowMode == GlowMode.Always)
+            {
+                element.GotFocus += (s, e) =>
+                {
+                    ApplyGlow(element, settings, GlowState.Focus);
+                };
+
+                element.LostFocus += (s, e) =>
+                {
+                    // If Always mode, revert to default glow
+                    if (settings.GlowMode == GlowMode.Always)
+                        ApplyGlow(element, settings, GlowState.Always);
+                    else
+                        RemoveGlow(element);
+                };
+            }
+
+            // Handle hover-based glow
+            if (settings.GlowMode == GlowMode.OnHover)
+            {
+                element.MouseEnter += (s, e) =>
+                {
+                    ApplyGlow(element, settings, GlowState.Hover);
+                };
+
+                element.MouseLeave += (s, e) =>
+                {
+                    RemoveGlow(element);
+                };
+            }
+
+            // Apply initial glow if Always mode
+            if (settings.GlowMode == GlowMode.Always)
+            {
+                ApplyGlow(element, settings, GlowState.Always);
+            }
+        }
+
+        /// <summary>
+        /// Detaches glow event handlers from an element and removes any active glow.
+        /// Note: This removes ALL event handlers, not just glow-related ones.
+        /// Use with caution.
+        /// </summary>
+        /// <param name="element">The framework element to detach handlers from</param>
+        public static void DetachGlowHandlers(FrameworkElement element)
+        {
+            if (element == null)
+                return;
+
+            // Remove any active glow effect
+            RemoveGlow(element);
+
+            // Note: WPF doesn't provide a clean way to remove specific event handlers
+            // without storing references to them. In practice, this isn't usually needed
+            // as elements are disposed with their handlers still attached.
+            // If needed, store handler references when attaching in AttachGlowHandlers.
+        }
+
+        /// <summary>
+        /// Creates a simple glow effect with default settings.
+        /// Useful for quick testing or simple use cases.
+        /// </summary>
+        /// <param name="element">The UI element to apply the glow to</param>
+        /// <param name="color">The glow color</param>
+        /// <param name="blurRadius">The blur radius (default: 10)</param>
+        /// <param name="opacity">The glow opacity (default: 0.8)</param>
+        public static void ApplySimpleGlow(UIElement element, Color color, double blurRadius = 10, double opacity = 0.8)
+        {
+            if (element == null)
+                return;
+
+            element.Effect = new DropShadowEffect
+            {
+                Color = color,
+                BlurRadius = blurRadius,
+                Opacity = opacity,
+                ShadowDepth = 0,
+                RenderingBias = RenderingBias.Performance
+            };
+        }
+    }
+}

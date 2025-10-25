@@ -21,6 +21,7 @@ namespace SuperTUI.Widgets
     {
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
+        private StandardWidgetFrame frame;
         private TextBox searchBox;
         private ListBox resultsBox;
         private TextBlock statusLabel;
@@ -52,24 +53,19 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "COMMAND PALETTE"
+            };
+            frame.SetStandardShortcuts("Type to search", "Enter: Execute", "Esc: Clear", "↑/↓: Navigate", "?: Help");
+
             var mainPanel = new DockPanel
             {
                 Background = new SolidColorBrush(theme.Background),
-                LastChildFill = true
+                LastChildFill = true,
+                Margin = new Thickness(15)
             };
-
-            // Title
-            var title = new TextBlock
-            {
-                Text = "COMMAND PALETTE",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            DockPanel.SetDock(title, Dock.Top);
-            mainPanel.Children.Add(title);
 
             // Search box
             var searchPanel = new StackPanel
@@ -130,7 +126,9 @@ namespace SuperTUI.Widgets
             resultsBox.MouseDoubleClick += ResultsBox_MouseDoubleClick;
 
             mainPanel.Children.Add(resultsBox);
-            Content = mainPanel;
+
+            frame.Content = mainPanel;
+            Content = frame;
 
             // Focus search box
             searchBox.Focus();
@@ -246,7 +244,7 @@ namespace SuperTUI.Widgets
                 Icon = "📊",
                 Action = () =>
                 {
-                    var stats = EventBus.Instance.GetStatistics();
+                    var stats = SuperTUI.Core.EventBus.Instance.GetStatistics();
                     logger.Info("Palette", $"Events: {stats.Published} published, {stats.Delivered} delivered");
                 }
             });
@@ -451,6 +449,11 @@ namespace SuperTUI.Widgets
         public void ApplyTheme()
         {
             theme = themeManager.CurrentTheme;
+
+            if (frame != null)
+            {
+                frame.ApplyTheme();
+            }
 
             if (searchBox != null)
             {

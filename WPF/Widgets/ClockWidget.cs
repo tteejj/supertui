@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using SuperTUI.Core;
+using SuperTUI.Core.Components;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
@@ -17,6 +18,7 @@ namespace SuperTUI.Widgets
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
 
+        private StandardWidgetFrame frame;
         private Border containerBorder;
         private TextBlock timeText;
         private TextBlock dateText;
@@ -72,12 +74,17 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "CLOCK"
+            };
+            frame.SetStandardShortcuts("Updates every second", "?: Help");
+
             // Container
             containerBorder = new Border
             {
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1),
                 Padding = new Thickness(15)
             };
 
@@ -111,7 +118,8 @@ namespace SuperTUI.Widgets
             stackPanel.Children.Add(dateText);
             containerBorder.Child = stackPanel;
 
-            this.Content = containerBorder;
+            frame.Content = containerBorder;
+            this.Content = frame;
 
             // Bind to properties (for demonstration of data binding)
             timeText.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding("CurrentTime") { Source = this });

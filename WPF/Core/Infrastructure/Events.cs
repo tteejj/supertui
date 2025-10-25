@@ -220,6 +220,17 @@ namespace SuperTUI.Core.Events
         public DateTime DeletedAt { get; set; }
     }
 
+    public class TaskSelectedEvent
+    {
+        public Core.Models.TaskItem Task { get; set; }
+        public string SourceWidget { get; set; }
+    }
+
+    public class TaskUpdatedEvent
+    {
+        public Core.Models.TaskItem Task { get; set; }
+    }
+
     public class TaskStatusChangedEvent
     {
         public Guid TaskId { get; set; }
@@ -359,4 +370,34 @@ namespace SuperTUI.Core.Events
         public int CompletedTasks { get; set; }
         public int PendingTasks { get; set; }
     }
+
+    // ============================================================================
+    // NAVIGATION & PROJECT EVENTS (for Phase 2 EventBus integration)
+    // ============================================================================
+
+    public class NavigationRequestedEvent
+    {
+        public string TargetWidgetType { get; set; }
+        public object Context { get; set; }
+        public string SourceWidget { get; set; }
+    }
+
+    public class ProjectSelectedEvent
+    {
+        public Core.Models.Project Project { get; set; }
+        public string SourceWidget { get; set; }
+    }
+
+    public class RefreshRequestedEvent
+    {
+        public string TargetWidget { get; set; } // null = all widgets
+        public string Reason { get; set; }
+    }
+
+    public class FilterChangedEvent
+    {
+        public SuperTUI.Infrastructure.TaskFilterType Filter { get; set; }
+        public string SourceWidget { get; set; }
+    }
 }
+

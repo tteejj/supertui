@@ -88,7 +88,70 @@ namespace SuperTUI.Widgets
             RefreshFilterList();
             LoadCurrentFilter();
 
+            // Subscribe to EventBus for inter-widget communication
+            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Subscribe<Core.Events.NavigationRequestedEvent>(OnNavigationRequested);
+
             logger?.Info("TaskWidget", "Task Management widget initialized");
+        }
+
+        private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
+        {
+            if (evt.SourceWidget == WidgetType) return; // Ignore our own events
+            if (evt.Task == null || taskListControl == null) return;
+
+            // Try to select the task if it's in the current view
+            SelectTaskById(evt.Task.Id);
+        }
+
+        private void OnNavigationRequested(Core.Events.NavigationRequestedEvent evt)
+        {
+            // Handle navigation to this widget
+            if (evt.TargetWidgetType != WidgetType) return;
+            if (!(evt.Context is TaskItem task)) return;
+            if (taskListControl == null) return;
+
+            // Try to select in current filter first
+            if (!SelectTaskById(task.Id))
+            {
+                // Not in current filter, switch to "All" and try again
+                currentFilter = TaskFilter.All;
+                LoadCurrentFilter();
+                SelectTaskById(task.Id);
+            }
+
+            // Focus this widget so user can see the selection
+            this.Focus();
+        }
+
+        private bool SelectTaskById(Guid taskId)
+        {
+            // Access the listBox through reflection or use public API
+            // Since TaskListControl doesn't expose a SelectTask method,
+            // we'll trigger the selection by finding the task in displayTasks
+            var taskSelectedField = typeof(TaskListControl).GetField("displayTasks",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var listBoxField = typeof(TaskListControl).GetField("listBox",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (taskSelectedField != null && listBoxField != null)
+            {
+                var displayTasks = taskSelectedField.GetValue(taskListControl) as System.Collections.ObjectModel.ObservableCollection<Core.ViewModels.TaskViewModel>;
+                var listBox = listBoxField.GetValue(taskListControl) as System.Windows.Controls.ListBox;
+
+                if (displayTasks != null && listBox != null)
+                {
+                    var taskVM = displayTasks.FirstOrDefault(vm => vm.Task.Id == taskId);
+                    if (taskVM != null)
+                    {
+                        listBox.SelectedItem = taskVM;
+                        listBox.ScrollIntoView(taskVM);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private void BuildUI()
@@ -913,6 +976,10 @@ namespace SuperTUI.Widgets
             {
                 saveTagsButton.Click -= SaveTags_Click;
             }
+
+            // Unsubscribe from EventBus
+            EventBus.Unsubscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Unsubscribe<Core.Events.NavigationRequestedEvent>(OnNavigationRequested);
 
             logger?.Info("TaskWidget", "Task Management widget disposed");
             base.OnDispose();

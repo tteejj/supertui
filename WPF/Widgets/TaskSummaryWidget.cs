@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using SuperTUI.Core;
+using SuperTUI.Core.Components;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Widgets
@@ -40,8 +41,7 @@ namespace SuperTUI.Widgets
             }
         }
 
-        private Border containerBorder;
-        private TextBlock titleText;
+        private StandardWidgetFrame frame;
         private StackPanel contentPanel;
 
         /// <summary>
@@ -70,56 +70,67 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            var theme = themeManager.CurrentTheme;
-
-            containerBorder = new Border
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
             {
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(15)
+                Title = "TASK SUMMARY"
             };
 
-            contentPanel = new StackPanel();
-
-            // Title
-            titleText = new TextBlock
+            // Create content panel
+            contentPanel = new StackPanel
             {
-                Text = "TASKS",
-                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                FontSize = 12,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                Margin = new Thickness(0, 0, 0, 10)
+                Margin = new Thickness(15)
             };
-            contentPanel.Children.Add(titleText);
 
-            containerBorder.Child = contentPanel;
-            this.Content = containerBorder;
+            frame.Content = contentPanel;
+            frame.SetStandardShortcuts("F5: Refresh", "?: Help");
+
+            this.Content = frame;
         }
 
         public override void Initialize()
         {
-            // Initialize with sample data
-            // In real implementation, this would come from TaskService
+            // Load real data from TaskService
+            RefreshData();
+
+            // Subscribe to task events for real-time updates
+            var taskService = Core.Services.TaskService.Instance;
+            taskService.TaskAdded += OnTaskChanged;
+            taskService.TaskUpdated += OnTaskChanged;
+            taskService.TaskDeleted += (id) => RefreshData();
+            taskService.TasksReloaded += RefreshData;
+        }
+
+        private void OnTaskChanged(Core.Models.TaskItem task)
+        {
+            RefreshData();
+        }
+
+        private void RefreshData()
+        {
+            var taskService = Core.Services.TaskService.Instance;
+            var allTasks = taskService.GetAllTasks();
+
             Data = new TaskData
             {
-                TotalTasks = 15,
-                CompletedTasks = 7,
-                PendingTasks = 6,
-                OverdueTasks = 2
+                TotalTasks = allTasks.Count,
+                CompletedTasks = allTasks.Count(t => t.Status == Core.Models.TaskStatus.Completed),
+                PendingTasks = allTasks.Count(t => t.Status == Core.Models.TaskStatus.Pending),
+                OverdueTasks = allTasks.Count(t => t.IsOverdue)
             };
         }
 
         private void UpdateDisplay()
         {
-            // Clear existing items (except title)
-            while (contentPanel.Children.Count > 1)
-                contentPanel.Children.RemoveAt(1);
+            // Clear existing items
+            contentPanel.Children.Clear();
 
             if (Data == null) return;
 
             var theme = themeManager.CurrentTheme;
+
+            // Update context info in frame
+            frame.ContextInfo = $"{Data.TotalTasks} total tasks";
 
             // Add stat items using theme colors
             AddStatItem("Total", Data.TotalTasks.ToString(), theme.Info);
@@ -163,24 +174,21 @@ namespace SuperTUI.Widgets
 
         public override void Refresh()
         {
-            // In real implementation, fetch latest data from TaskService
-            // For now, simulate data change
-            if (Data != null)
-            {
-                var random = new Random();
-                Data = new TaskData
-                {
-                    TotalTasks = Data.TotalTasks,
-                    CompletedTasks = random.Next(0, Data.TotalTasks),
-                    PendingTasks = random.Next(0, Data.TotalTasks),
-                    OverdueTasks = random.Next(0, 5)
-                };
-            }
+            RefreshData();
         }
 
         protected override void OnDispose()
         {
-            // No resources to dispose currently
+            // Unsubscribe from task events
+            var taskService = Core.Services.TaskService.Instance;
+            if (taskService != null)
+            {
+                taskService.TaskAdded -= OnTaskChanged;
+                taskService.TaskUpdated -= OnTaskChanged;
+                taskService.TaskDeleted -= (id) => RefreshData();
+                taskService.TasksReloaded -= RefreshData;
+            }
+
             base.OnDispose();
         }
 
@@ -189,17 +197,9 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
-            var theme = themeManager.CurrentTheme;
-
-            if (containerBorder != null)
+            if (frame != null)
             {
-                containerBorder.Background = new SolidColorBrush(theme.BackgroundSecondary);
-                containerBorder.BorderBrush = new SolidColorBrush(theme.Border);
-            }
-
-            if (titleText != null)
-            {
-                titleText.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
+                frame.ApplyTheme();
             }
 
             // Rebuild display with new theme colors

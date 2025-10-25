@@ -128,7 +128,7 @@ try {
             <Grid>
                 <TextBlock
                     x:Name="StatusText"
-                    Text="Ctrl+1-9: Workspace | Ctrl+Left/Right: Prev/Next WS | Tab: Focus | Ctrl+Up/Down: Cycle | Ctrl+C: Close | Ctrl+N: Add | Ctrl+Shift+Arrows: Move | Ctrl+Q: Quit"
+                    Text="Ctrl+1-6: Workspaces | Tab: Next Widget | ?: Help | Ctrl+Q: Quit"
                     FontFamily="Cascadia Mono, Consolas"
                     FontSize="11"
                     Foreground="#666666"
@@ -143,6 +143,28 @@ try {
                     VerticalAlignment="Center"/>
             </Grid>
         </Border>
+
+        <!-- Shortcut Overlay (spans all rows, renders on top) -->
+        <Border
+            x:Name="ShortcutOverlayContainer"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Visibility="Collapsed"/>
+
+        <!-- Quick Jump Overlay (spans all rows, renders on top) -->
+        <Border
+            x:Name="QuickJumpOverlayContainer"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Visibility="Collapsed"/>
+
+        <!-- CRT Effects Overlay (spans all rows, renders on top of everything) -->
+        <Canvas
+            x:Name="CRTOverlay"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            IsHitTestVisible="False"
+            Background="Transparent"/>
     </Grid>
 </Window>
 "@
@@ -159,6 +181,9 @@ $clockStatus = $window.FindName("ClockStatus")
 $closeButton = $window.FindName("CloseButton")
 $minimizeButton = $window.FindName("MinimizeButton")
 $maximizeButton = $window.FindName("MaximizeButton")
+$shortcutOverlayContainer = $window.FindName("ShortcutOverlayContainer")
+$quickJumpOverlayContainer = $window.FindName("QuickJumpOverlayContainer")
+$crtOverlayCanvas = $window.FindName("CRTOverlay")
 
 # Window chrome handlers
 $closeButton.Add_Click({ $window.Close() })
@@ -197,13 +222,18 @@ $logger.AddSink($fileLogSink)
 $logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Debug)
 Write-Host "Logger initialized with Debug level" -ForegroundColor Green
 
+# Initialize ConfigurationManager
+$configManager = [SuperTUI.Infrastructure.ConfigurationManager]::Instance
+$configManager.Initialize("$env:TEMP\SuperTUI-config.json")
+
 # Initialize ThemeManager
 $themeManager = [SuperTUI.Infrastructure.ThemeManager]::Instance
 $themeManager.Initialize($null)  # Uses default built-in themes
 
-# Initialize ConfigurationManager
-$configManager = [SuperTUI.Infrastructure.ConfigurationManager]::Instance
-$configManager.Initialize("$env:TEMP\SuperTUI-config.json")
+# Apply saved theme (or default to "Cyberpunk" to showcase new effects)
+$savedThemeName = $configManager.Get("UI.Theme", "Cyberpunk")
+$themeManager.ApplyTheme($savedThemeName)
+Write-Host "Applied theme: $savedThemeName" -ForegroundColor Green
 
 # Initialize other infrastructure
 $errorHandler = [SuperTUI.Infrastructure.ErrorHandler]::Instance
@@ -214,7 +244,129 @@ $securityManager.Initialize()
 $excelMappingService = [SuperTUI.Core.Services.ExcelMappingService]::Instance
 $excelMappingService.Initialize()
 
+# Initialize EventBus
+$eventBus = [SuperTUI.Core.EventBus]::Instance
+Write-Host "EventBus initialized" -ForegroundColor Green
+
+# Initialize ApplicationContext
+$appContext = [SuperTUI.Infrastructure.ApplicationContext]::Instance
+Write-Host "ApplicationContext initialized" -ForegroundColor Green
+
+# Initialize StatePersistenceManager
+$stateManager = [SuperTUI.Infrastructure.StatePersistenceManager]::Instance
+$stateManager.Initialize("$env:TEMP\SuperTUI-state.json")
+Write-Host "StatePersistenceManager initialized" -ForegroundColor Green
+
 Write-Host "Infrastructure initialized" -ForegroundColor Green
+
+# ============================================================================
+# SHORTCUT OVERLAY
+# ============================================================================
+
+# Create and initialize the shortcut overlay
+$shortcutOverlay = New-Object SuperTUI.Core.Components.ShortcutOverlay(
+    $themeManager,
+    [SuperTUI.Infrastructure.ShortcutManager]::Instance,
+    $logger
+)
+$shortcutOverlayContainer.Child = $shortcutOverlay
+Write-Host "ShortcutOverlay initialized" -ForegroundColor Green
+
+# ============================================================================
+# QUICK JUMP OVERLAY
+# ============================================================================
+
+# Create and initialize the quick jump overlay
+$quickJumpOverlay = New-Object SuperTUI.Core.Components.QuickJumpOverlay(
+    $themeManager,
+    $logger
+)
+$quickJumpOverlayContainer.Child = $quickJumpOverlay
+
+# Wire up QuickJumpOverlay events
+$quickJumpOverlay.add_JumpRequested({
+    param($targetWidget, $context)
+
+    # Find the target widget in the current workspace
+    $current = $workspaceManager.CurrentWorkspace
+    if ($current) {
+        $widgets = $current.GetAllWidgets()
+        foreach ($widget in $widgets) {
+            if ($widget.WidgetName -eq $targetWidget -or $widget.WidgetType -eq $targetWidget) {
+                $current.FocusWidget($widget)
+
+                # If context is provided, apply it to the widget
+                if ($context -ne $null) {
+                    # Context could be a task ID, date, file path, etc.
+                    # Widgets can handle context via a method or property
+                    if ($widget | Get-Member -Name "SetContext" -MemberType Method) {
+                        $widget.SetContext($context)
+                    }
+                }
+
+                $logger.Info("QuickJump", "Jumped to $targetWidget")
+                break
+            }
+        }
+    }
+})
+
+$quickJumpOverlay.add_CloseRequested({
+    # Nothing special needed - overlay already hidden itself
+})
+
+Write-Host "QuickJumpOverlay initialized" -ForegroundColor Green
+
+# ============================================================================
+# CRT EFFECTS OVERLAY
+# ============================================================================
+
+# Create and initialize the CRT effects overlay
+$crtOverlay = New-Object SuperTUI.Core.Components.CRTEffectsOverlay
+$crtOverlayCanvas.Children.Add($crtOverlay)
+
+# Apply CRT effects from current theme
+$currentTheme = $themeManager.CurrentTheme
+if ($currentTheme.CRTEffects -ne $null) {
+    $crtOverlay.UpdateFromTheme(
+        $currentTheme.CRTEffects.EnableScanlines,
+        $currentTheme.CRTEffects.ScanlineOpacity,
+        $currentTheme.CRTEffects.ScanlineSpacing,
+        $currentTheme.CRTEffects.ScanlineColor,
+        $currentTheme.CRTEffects.EnableBloom,
+        $currentTheme.CRTEffects.BloomIntensity
+    )
+}
+
+# Apply window opacity from theme
+if ($currentTheme.Opacity -ne $null) {
+    $window.Opacity = $currentTheme.Opacity.WindowOpacity
+}
+
+# Subscribe to theme changes to update CRT overlay and opacity
+$themeManager.ThemeChanged += {
+    param($sender, $args)
+    $newTheme = $args.NewTheme
+
+    # Update CRT overlay
+    if ($newTheme.CRTEffects -ne $null) {
+        $crtOverlay.UpdateFromTheme(
+            $newTheme.CRTEffects.EnableScanlines,
+            $newTheme.CRTEffects.ScanlineOpacity,
+            $newTheme.CRTEffects.ScanlineSpacing,
+            $newTheme.CRTEffects.ScanlineColor,
+            $newTheme.CRTEffects.EnableBloom,
+            $newTheme.CRTEffects.BloomIntensity
+        )
+    }
+
+    # Update window opacity
+    if ($newTheme.Opacity -ne $null) {
+        $window.Opacity = $newTheme.Opacity.WindowOpacity
+    }
+}
+
+Write-Host "CRT Effects Overlay initialized" -ForegroundColor Green
 
 # ============================================================================
 # GLOBAL EXCEPTION HANDLER
@@ -301,9 +453,9 @@ $workspaceManager.AddWorkspace($workspace1)
 $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout)
 
-# Add ProjectManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = New-Object SuperTUI.Widgets.ProjectManagementWidget
-$projectManagementWidget.WidgetName = "ProjectManagement"
+# Add TaskManagementWidget (3-pane layout: list, context, details)
+$projectManagementWidget = New-Object SuperTUI.Widgets.TaskManagementWidget
+$projectManagementWidget.WidgetName = "TaskManagement"
 $projectManagementWidget.Initialize()
 $ws2Params = New-Object SuperTUI.Core.LayoutParams
 $workspace2Layout.AddChild($projectManagementWidget, $ws2Params)
@@ -353,11 +505,11 @@ $workspace5.Widgets.Add($statsWidget)
 
 $workspaceManager.AddWorkspace($workspace5)
 
-# Workspace 6: Excel Integration (Import/Export)
-$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(2, 1)
+# Workspace 6: Excel Integration (Import/Export/Automation)
+$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(3, 2)
 $workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout)
 
-# Top: Import widget (left) and Export widget (right)
+# Row 0: Import widget (left) and Export widget (right)
 $importWidget = New-Object SuperTUI.Widgets.ExcelImportWidget
 $importWidget.WidgetName = "ExcelImport"
 $importWidget.Initialize()
@@ -375,6 +527,18 @@ $ws6Params2.Row = 0
 $ws6Params2.Column = 1
 $workspace6Layout.AddChild($exportWidget, $ws6Params2)
 $workspace6.Widgets.Add($exportWidget)
+
+# Row 1-2: Automation widget (spans both columns and 2 rows for more space)
+$automationWidget = New-Object SuperTUI.Widgets.ExcelAutomationWidget
+$automationWidget.WidgetName = "ExcelAutomation"
+$automationWidget.Initialize()
+$ws6Params3 = New-Object SuperTUI.Core.LayoutParams
+$ws6Params3.Row = 1
+$ws6Params3.Column = 0
+$ws6Params3.ColumnSpan = 2
+$ws6Params3.RowSpan = 2
+$workspace6Layout.AddChild($automationWidget, $ws6Params3)
+$workspace6.Widgets.Add($automationWidget)
 
 $workspaceManager.AddWorkspace($workspace6)
 
@@ -648,6 +812,100 @@ $shortcutManager.RegisterGlobal(
 $window.Add_KeyDown({
     param($sender, $e)
 
+    # Handle '?' key for shortcut overlay (intercept before other handlers)
+    # '?' is Shift+/ which is Key.OemQuestion or Key.Oem2 with Shift modifier
+    if (($e.Key -eq [System.Windows.Input.Key]::OemQuestion) -or
+        ($e.Key -eq [System.Windows.Input.Key]::Oem2 -and
+         ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Shift) -eq [System.Windows.Input.ModifierKeys]::Shift)) {
+
+        # Toggle overlay visibility
+        if ($shortcutOverlay.Visibility -eq [System.Windows.Visibility]::Visible) {
+            $shortcutOverlay.Hide()
+        } else {
+            # Get current focused widget type if any
+            $focusedWidget = $workspaceManager.CurrentWorkspace.FocusedWidget
+            $widgetType = if ($focusedWidget) { $focusedWidget.WidgetType } else { $null }
+            $shortcutOverlay.Show($widgetType)
+        }
+        $e.Handled = $true
+        return
+    }
+
+    # Handle Esc key to close overlays if they're open
+    if ($e.Key -eq [System.Windows.Input.Key]::Escape) {
+        if ($shortcutOverlay.Visibility -eq [System.Windows.Visibility]::Visible) {
+            $shortcutOverlay.Hide()
+            $e.Handled = $true
+            return
+        }
+        if ($quickJumpOverlay.Visibility -eq [System.Windows.Visibility]::Visible) {
+            $quickJumpOverlay.Hide()
+            $e.Handled = $true
+            return
+        }
+    }
+
+    # Handle 'G' key for quick jump overlay (only if no modifiers)
+    if ($e.Key -eq [System.Windows.Input.Key]::G -and
+        [System.Windows.Input.Keyboard]::Modifiers -eq [System.Windows.Input.ModifierKeys]::None -and
+        $quickJumpOverlay.Visibility -eq [System.Windows.Visibility]::Collapsed) {
+
+        # Clear any existing jump targets
+        $quickJumpOverlay.ClearJumps()
+
+        # Get current focused widget and register its jump targets
+        $focusedWidget = $workspaceManager.CurrentWorkspace.FocusedWidget
+        if ($focusedWidget) {
+            # Register context-specific jumps based on widget type
+            switch ($focusedWidget.WidgetType) {
+                "TaskManagement" {
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::K, "KanbanBoard", "Kanban Board (current status)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::A, "Agenda", "Agenda (today)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::P, "ProjectStats", "Project Stats")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::N, "Notes", "Notes (current task)")
+                }
+                "KanbanBoard" {
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::T, "TaskManagement", "Tasks (current item)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::A, "Agenda", "Agenda (today)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::P, "ProjectStats", "Project Stats")
+                }
+                "Agenda" {
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::T, "TaskManagement", "Tasks (current item)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::K, "KanbanBoard", "Kanban Board")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::P, "ProjectStats", "Project Stats")
+                }
+                "Notes" {
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::T, "TaskManagement", "Tasks (related)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::F, "FileExplorer", "File Explorer")
+                }
+                "FileExplorer" {
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::N, "Notes", "Notes (current file)")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::G, "GitStatus", "Git Status")
+                }
+                Default {
+                    # Generic jumps available from any widget
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::T, "TaskManagement", "Tasks")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::K, "KanbanBoard", "Kanban Board")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::A, "Agenda", "Agenda")
+                    $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::F, "FileExplorer", "File Explorer")
+                }
+            }
+        } else {
+            # No focused widget - show generic jumps
+            $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::T, "TaskManagement", "Tasks")
+            $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::K, "KanbanBoard", "Kanban Board")
+            $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::A, "Agenda", "Agenda")
+            $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::F, "FileExplorer", "File Explorer")
+            $quickJumpOverlay.RegisterJump([System.Windows.Input.Key]::N, "Notes", "Notes")
+        }
+
+        # Show the overlay
+        $quickJumpOverlay.Show()
+        $e.Handled = $true
+        return
+    }
+
+    # Handle other shortcuts
     $currentWorkspaceName = $workspaceManager.CurrentWorkspace.Name
     $handled = $shortcutManager.HandleKeyDown($e.Key, $e.KeyboardDevice.Modifiers, $currentWorkspaceName)
 
@@ -657,13 +915,59 @@ $window.Add_KeyDown({
 })
 
 # ============================================================================
+# STATE PERSISTENCE HOOKS
+# ============================================================================
+
+# Save state on window closing
+$window.Add_Closing({
+    Write-Host "Saving workspace states..." -ForegroundColor Yellow
+
+    foreach ($ws in $workspaceManager.Workspaces) {
+        try {
+            $state = $ws.SaveState()
+            $stateManager.SaveState("workspace_$($ws.Index)", $state)
+            $logger.Debug("StateManagement", "Saved state for workspace: $($ws.Name)")
+        } catch {
+            $logger.Error("StateManagement", "Failed to save workspace $($ws.Name): $_")
+        }
+    }
+
+    # Flush to disk
+    $stateManager.Flush()
+    Write-Host "Workspace states saved" -ForegroundColor Green
+})
+
+# Auto-save on workspace switch
+$workspaceManager.WorkspaceChanged += {
+    param($workspace)
+
+    # Update ApplicationContext
+    $appContext.CurrentWorkspace = $workspace
+
+    # Save previous workspace state (if any)
+    foreach ($ws in $workspaceManager.Workspaces) {
+        if ($ws -ne $workspace) {
+            try {
+                $state = $ws.SaveState()
+                $stateManager.SaveState("workspace_$($ws.Index)", $state)
+            } catch {
+                $logger.Error("StateManagement", "Failed to auto-save workspace: $_")
+            }
+        }
+    }
+}
+
+Write-Host "State persistence hooks registered" -ForegroundColor Green
+
+# ============================================================================
 # SHOW WINDOW
 # ============================================================================
 
 Write-Host "`nStarting SuperTUI..." -ForegroundColor Green
 Write-Host "Keyboard shortcuts:" -ForegroundColor Yellow
-Write-Host "  Ctrl+1-9      Switch workspaces" -ForegroundColor Gray
-Write-Host "  Ctrl+Left/Right   Previous/Next workspace" -ForegroundColor Gray
+Write-Host "  Ctrl+1-6      Switch workspaces" -ForegroundColor Gray
+Write-Host "  Tab           Next widget" -ForegroundColor Gray
+Write-Host "  ?             Help" -ForegroundColor Gray
 Write-Host "  Ctrl+Q        Quit" -ForegroundColor Gray
 Write-Host ""
 

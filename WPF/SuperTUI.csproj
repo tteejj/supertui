@@ -42,6 +42,9 @@
     <!-- Note: System.Management is part of .NET Framework but provides WMI access which can be abused -->
     <Compile Remove="Widgets/SystemMonitorWidget.cs" />
 
+    <!-- ThemeEditorWidget requires System.Windows.Forms (ColorDialog) - missing assembly reference -->
+    <Compile Remove="Widgets/ThemeEditorWidget.cs" />
+
     <!-- Exclude old DI implementation (requires Microsoft.Extensions.DependencyInjection) -->
     <!-- We're building our own zero-dependency DI container for security -->
     <Compile Remove="Core/DependencyInjection/**/*.cs" />

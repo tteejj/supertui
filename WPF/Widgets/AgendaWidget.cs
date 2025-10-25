@@ -29,6 +29,7 @@ namespace SuperTUI.Widgets
         private TaskService taskService;
 
         // UI Components
+        private StandardWidgetFrame frame;
         private StackPanel mainPanel;
         private ScrollViewer scrollViewer;
 
@@ -110,28 +111,58 @@ namespace SuperTUI.Widgets
             refreshTimer.Tick += (s, e) => LoadTasks();
             refreshTimer.Start();
 
+            // Subscribe to EventBus for inter-widget communication
+            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+
             logger.Info("AgendaWidget", "Agenda widget initialized");
+        }
+
+        private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
+        {
+            if (evt.SourceWidget == WidgetType) return; // Ignore our own events
+
+            var task = evt.Task;
+            if (task == null) return;
+
+            // Find which list contains this task and select it
+            var allListBoxes = new[] { overdueListBox, todayListBox, tomorrowListBox, thisWeekListBox, laterListBox, noDueDateListBox };
+            var allCollections = new[] { overdueTasks, todayTasks, tomorrowTasks, thisWeekTasks, laterTasks, noDueDateTasks };
+
+            for (int i = 0; i < allCollections.Length; i++)
+            {
+                var matchingTask = allCollections[i].FirstOrDefault(t => t.Id == task.Id);
+                if (matchingTask != null)
+                {
+                    allListBoxes[i].SelectedItem = matchingTask;
+                    allListBoxes[i].ScrollIntoView(matchingTask);
+                    break;
+                }
+            }
+        }
+
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            if (evt.TargetWidget == null || evt.TargetWidget == WidgetType)
+            {
+                LoadTasks();
+            }
         }
 
         private void BuildUI()
         {
+            // Create standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "AGENDA"
+            };
+            frame.SetStandardShortcuts("Enter: Edit", "E: Open in Tasks", "Space: Toggle Complete", "↑/↓: Navigate", "?: Help");
+
             mainPanel = new StackPanel
             {
                 Background = new SolidColorBrush(theme.Background),
                 Margin = new Thickness(10)
             };
-
-            // Title
-            var title = new TextBlock
-            {
-                Text = "AGENDA",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Margin = new Thickness(0, 0, 0, 15)
-            };
-            mainPanel.Children.Add(title);
 
             // Build each time group
             overdueExpander = BuildTimeGroup("OVERDUE", overdueTasks, out overdueListBox, theme.Error);
@@ -162,7 +193,8 @@ namespace SuperTUI.Widgets
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             };
 
-            this.Content = scrollViewer;
+            frame.Content = scrollViewer;
+            this.Content = frame;
         }
 
         private Expander BuildTimeGroup(string title, ObservableCollection<TaskItem> dataSource, out ListBox listBox, System.Windows.Media.Color headerColor)
@@ -247,6 +279,7 @@ namespace SuperTUI.Widgets
             listBox.ItemTemplate = itemTemplate;
 
             // Event handlers
+            listBox.SelectionChanged += ListBox_SelectionChanged;
             listBox.KeyDown += ListBox_KeyDown;
             expander.PreviewKeyDown += Expander_PreviewKeyDown;
 
@@ -344,15 +377,35 @@ namespace SuperTUI.Widgets
             }
         }
 
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var listBox = sender as ListBox;
+            if (listBox?.SelectedItem is TaskItem task)
+            {
+                // Publish TaskSelectedEvent for other widgets
+                EventBus.Publish(new Core.Events.TaskSelectedEvent
+                {
+                    Task = task,
+                    SourceWidget = WidgetType
+                });
+            }
+        }
+
         private void ListBox_KeyDown(object sender, KeyEventArgs e)
         {
             var listBox = sender as ListBox;
             if (listBox?.SelectedItem is TaskItem task)
             {
-                // Enter to edit task
+                // Enter to edit task inline
                 if (e.Key == Key.Enter)
                 {
                     EditTask(task);
+                    e.Handled = true;
+                }
+                // E to navigate to TaskManagement widget
+                else if (e.Key == Key.E)
+                {
+                    AppContext.RequestNavigation("TaskManagement", task);
                     e.Handled = true;
                 }
                 // D to mark done
@@ -612,6 +665,10 @@ namespace SuperTUI.Widgets
                 taskService.TasksReloaded -= LoadTasks;
             }
 
+            // Unsubscribe from EventBus
+            EventBus.Unsubscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+            EventBus.Unsubscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+
             // Stop and dispose timer
             if (refreshTimer != null)
             {
@@ -622,17 +679,35 @@ namespace SuperTUI.Widgets
 
             // Unsubscribe from ListBox events
             if (overdueListBox != null)
+            {
+                overdueListBox.SelectionChanged -= ListBox_SelectionChanged;
                 overdueListBox.KeyDown -= ListBox_KeyDown;
+            }
             if (todayListBox != null)
+            {
+                todayListBox.SelectionChanged -= ListBox_SelectionChanged;
                 todayListBox.KeyDown -= ListBox_KeyDown;
+            }
             if (tomorrowListBox != null)
+            {
+                tomorrowListBox.SelectionChanged -= ListBox_SelectionChanged;
                 tomorrowListBox.KeyDown -= ListBox_KeyDown;
+            }
             if (thisWeekListBox != null)
+            {
+                thisWeekListBox.SelectionChanged -= ListBox_SelectionChanged;
                 thisWeekListBox.KeyDown -= ListBox_KeyDown;
+            }
             if (laterListBox != null)
+            {
+                laterListBox.SelectionChanged -= ListBox_SelectionChanged;
                 laterListBox.KeyDown -= ListBox_KeyDown;
+            }
             if (noDueDateListBox != null)
+            {
+                noDueDateListBox.SelectionChanged -= ListBox_SelectionChanged;
                 noDueDateListBox.KeyDown -= ListBox_KeyDown;
+            }
 
             // Unsubscribe from Expander events
             if (overdueExpander != null)

@@ -63,7 +63,7 @@ namespace SuperTUI.Core.Services
                 activeProfile = profiles[0];
             }
 
-            Logger.Instance.Info("ExcelMappingService", $"Initialized with {profiles.Count} profiles");
+            SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Initialized with {profiles.Count} profiles");
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace SuperTUI.Core.Services
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error("ExcelMappingService", $"Failed to load profile {file}: {ex.Message}");
+                        SuperTUI.Infrastructure.Logger.Instance.Error("ExcelMappingService", $"Failed to load profile {file}: {ex.Message}");
                     }
                 }
 
@@ -124,7 +124,7 @@ namespace SuperTUI.Core.Services
                 string filePath = Path.Combine(profilesDirectory, fileName);
                 profile.SaveToJson(filePath);
 
-                Logger.Instance.Info("ExcelMappingService", $"Saved profile: {profile.Name}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Saved profile: {profile.Name}");
                 ProfileChanged?.Invoke(profile);
             }
         }
@@ -157,7 +157,7 @@ namespace SuperTUI.Core.Services
                     ProfileChanged?.Invoke(activeProfile);
                 }
 
-                Logger.Instance.Info("ExcelMappingService", $"Deleted profile: {profile.Name}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Deleted profile: {profile.Name}");
             }
         }
 
@@ -173,7 +173,7 @@ namespace SuperTUI.Core.Services
                 {
                     activeProfile = profile;
                     ProfileChanged?.Invoke(activeProfile);
-                    Logger.Instance.Info("ExcelMappingService", $"Active profile: {profile.Name}");
+                    SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Active profile: {profile.Name}");
                 }
             }
         }
@@ -336,7 +336,7 @@ namespace SuperTUI.Core.Services
                 SetProjectProperty(project, mapping.ProjectPropertyName, value, mapping.DataType);
             }
 
-            Logger.Instance.Info("ExcelMappingService", $"Imported project: {project.Nickname}");
+            SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Imported project: {project.Nickname}");
             return project;
         }
 
@@ -361,7 +361,7 @@ namespace SuperTUI.Core.Services
             if (!string.IsNullOrEmpty(exportData))
             {
                 System.Windows.Clipboard.SetText(exportData);
-                Logger.Instance.Info("ExcelMappingService", $"Exported {projects.Count} projects to clipboard as {format}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Exported {projects.Count} projects to clipboard as {format}");
             }
         }
 
@@ -375,7 +375,7 @@ namespace SuperTUI.Core.Services
             if (!string.IsNullOrEmpty(exportData))
             {
                 File.WriteAllText(filePath, exportData, Encoding.UTF8);
-                Logger.Instance.Info("ExcelMappingService", $"Exported {projects.Count} projects to {filePath} as {format}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", $"Exported {projects.Count} projects to {filePath} as {format}");
             }
         }
 
@@ -388,7 +388,7 @@ namespace SuperTUI.Core.Services
 
             if (exportMappings.Count == 0)
             {
-                Logger.Instance.Warning("ExcelMappingService", "No export mappings configured");
+                SuperTUI.Infrastructure.Logger.Instance.Warning("ExcelMappingService", "No export mappings configured");
                 return string.Empty;
             }
 
@@ -422,7 +422,7 @@ namespace SuperTUI.Core.Services
             var essentialsProfile = CreateProjectEssentialsProfile();
             SaveProfile(essentialsProfile);
 
-            Logger.Instance.Info("ExcelMappingService", "Created default profiles");
+            SuperTUI.Infrastructure.Logger.Instance.Info("ExcelMappingService", "Created default profiles");
         }
 
         /// <summary>
@@ -556,7 +556,7 @@ namespace SuperTUI.Core.Services
             if (string.IsNullOrEmpty(propertyName))
                 return;
 
-            var prop = typeof(ProjectModels.Project).GetProperty(propertyName);
+            var prop = typeof(Project).GetProperty(propertyName);
             if (prop == null || !prop.CanWrite)
                 return;
 
@@ -601,7 +601,7 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance.Warning("ExcelMappingService", $"Failed to set {propertyName}: {ex.Message}");
+                SuperTUI.Infrastructure.Logger.Instance.Warning("ExcelMappingService", $"Failed to set {propertyName}: {ex.Message}");
             }
         }
 

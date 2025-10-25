@@ -21,27 +21,34 @@ namespace SuperTUI.Widgets
     public class TodoWidget : WidgetBase, IThemeable
     {
         private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
+        private StandardWidgetFrame frame;
         private EditableListControl<TodoItem> todoList;
         private string dataFile;
 
-        public TodoWidget(ILogger logger) : this(logger, null)
+        public TodoWidget(ILogger logger, IThemeManager themeManager) : this(logger, themeManager, null)
         {
         }
 
-        public TodoWidget(ILogger logger, string dataFilePath)
+        public TodoWidget(ILogger logger, IThemeManager themeManager, string dataFilePath)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? ThemeManager.Instance;
             WidgetName = "Todo List";
             dataFile = dataFilePath ?? Path.Combine(
                 SuperTUI.Extensions.PortableDataDirectory.GetSuperTUIDataDirectory(), "todos.json");
         }
 
-        // Backward compatibility constructor
-        public TodoWidget() : this(Logger.Instance, null)
+        // Backward compatibility constructors
+        public TodoWidget() : this(Logger.Instance, ThemeManager.Instance, null)
         {
         }
 
-        public TodoWidget(string dataFilePath) : this(Logger.Instance, dataFilePath)
+        public TodoWidget(ILogger logger) : this(logger, ThemeManager.Instance, null)
+        {
+        }
+
+        public TodoWidget(string dataFilePath) : this(Logger.Instance, ThemeManager.Instance, dataFilePath)
         {
         }
 
@@ -114,7 +121,15 @@ namespace SuperTUI.Widgets
             // Load existing todos
             LoadTodos();
 
-            Content = todoList;
+            // Wrap in standard frame
+            frame = new StandardWidgetFrame(themeManager)
+            {
+                Title = "TODO LIST"
+            };
+            frame.SetStandardShortcuts("Enter: Add/Edit", "Del: Delete", "Space: Toggle Complete", "?: Help");
+            frame.Content = todoList;
+
+            Content = frame;
         }
 
         private void TodoList_KeyDown(object sender, KeyEventArgs e)
@@ -206,7 +221,7 @@ namespace SuperTUI.Widgets
             var completedCount = items.Count(i => i.IsCompleted);
             var pendingCount = items.Count - completedCount;
 
-            EventBus.Instance.Publish(new TaskStatusChangedEvent
+            SuperTUI.Core.EventBus.Instance.Publish(new TaskStatusChangedEvent
             {
                 TotalTasks = items.Count,
                 CompletedTasks = completedCount,
@@ -243,8 +258,13 @@ namespace SuperTUI.Widgets
         /// </summary>
         public void ApplyTheme()
         {
+            // Apply theme to frame
+            if (frame != null)
+            {
+                frame.ApplyTheme();
+            }
+
             // EditableListControl handles its own theme updates
-            // We just need to refresh the display
             if (todoList != null)
             {
                 todoList.ApplyTheme();

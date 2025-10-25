@@ -330,7 +330,7 @@ namespace SuperTUI.Widgets
             {
                 statusLabel.Text = $"Error: {ex.Message}";
                 statusLabel.Foreground = Brushes.Red;
-                Logger.Instance.Error("ExcelImportWidget", $"Paste failed: {ex.Message}");
+                SuperTUI.Infrastructure.Logger.Instance.Error("ExcelImportWidget", $"Paste failed: {ex.Message}");
             }
         }
 
@@ -410,13 +410,13 @@ namespace SuperTUI.Widgets
                 // Clear after import
                 OnClearClick(null, null);
 
-                Logger.Instance.Info("ExcelImportWidget", $"Imported project: {project.Id}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelImportWidget", $"Imported project: {project.Id}");
             }
             catch (Exception ex)
             {
                 statusLabel.Text = $"Import failed: {ex.Message}";
                 statusLabel.Foreground = Brushes.Red;
-                Logger.Instance.Error("ExcelImportWidget", $"Import failed: {ex.Message}");
+                SuperTUI.Infrastructure.Logger.Instance.Error("ExcelImportWidget", $"Import failed: {ex.Message}");
             }
         }
 

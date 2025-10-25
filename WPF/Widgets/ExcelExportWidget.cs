@@ -391,7 +391,7 @@ namespace SuperTUI.Widgets
                 {
                     Project = project,
                     IsSelected = false,
-                    DisplayText = $"{project.ID2 ?? project.ID1} - {project.Nickname ?? project.FullProjectName}"
+                    DisplayText = $"{project.ID2 ?? project.Id1} - {project.Nickname ?? project.FullProjectName}"
                 });
             }
 
@@ -522,13 +522,13 @@ namespace SuperTUI.Widgets
                 statusLabel.Text = $"Exported {selectedProjects.Count} projects to clipboard as {format}";
                 statusLabel.Foreground = Brushes.Green;
 
-                Logger.Instance.Info("ExcelExportWidget", $"Exported {selectedProjects.Count} projects to clipboard");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelExportWidget", $"Exported {selectedProjects.Count} projects to clipboard");
             }
             catch (Exception ex)
             {
                 statusLabel.Text = $"Export failed: {ex.Message}";
                 statusLabel.Foreground = Brushes.Red;
-                Logger.Instance.Error("ExcelExportWidget", $"Export to clipboard failed: {ex.Message}");
+                SuperTUI.Infrastructure.Logger.Instance.Error("ExcelExportWidget", $"Export to clipboard failed: {ex.Message}");
             }
         }
 
@@ -559,13 +559,13 @@ namespace SuperTUI.Widgets
                 statusLabel.Text = $"Exported {selectedProjects.Count} projects to {System.IO.Path.GetFileName(filePath)}";
                 statusLabel.Foreground = Brushes.Green;
 
-                Logger.Instance.Info("ExcelExportWidget", $"Exported {selectedProjects.Count} projects to {filePath}");
+                SuperTUI.Infrastructure.Logger.Instance.Info("ExcelExportWidget", $"Exported {selectedProjects.Count} projects to {filePath}");
             }
             catch (Exception ex)
             {
                 statusLabel.Text = $"Export failed: {ex.Message}";
                 statusLabel.Foreground = Brushes.Red;
-                Logger.Instance.Error("ExcelExportWidget", $"Export to file failed: {ex.Message}");
+                SuperTUI.Infrastructure.Logger.Instance.Error("ExcelExportWidget", $"Export to file failed: {ex.Message}");
             }
         }
 
