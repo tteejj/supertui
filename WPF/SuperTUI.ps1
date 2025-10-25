@@ -128,7 +128,7 @@ try {
             <Grid>
                 <TextBlock
                     x:Name="StatusText"
-                    Text="Ctrl+1-9: Workspace | Tab: Focus | Ctrl+W: Close | Ctrl+N: Add | Ctrl+Shift+Arrows: Move | Ctrl+Q: Quit"
+                    Text="Ctrl+1-9: Workspace | Ctrl+Left/Right: Prev/Next WS | Tab: Focus | Ctrl+Up/Down: Cycle | Ctrl+C: Close | Ctrl+N: Add | Ctrl+Shift+Arrows: Move | Ctrl+Q: Quit"
                     FontFamily="Cascadia Mono, Consolas"
                     FontSize="11"
                     Foreground="#666666"
@@ -407,35 +407,7 @@ $shortcutManager.RegisterGlobal(
     "Close focused widget"
 )
 
-# Focus navigation (Ctrl+Arrow keys)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::Right,
-    [System.Windows.Input.ModifierKeys]::Control,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.CycleFocusForward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus next widget"
-)
-
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::Left,
-    [System.Windows.Input.ModifierKeys]::Control,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.CycleFocusBackward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus previous widget"
-)
-
+# Focus navigation (Ctrl+Up/Down for cycling focus)
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Down,
     [System.Windows.Input.ModifierKeys]::Control,

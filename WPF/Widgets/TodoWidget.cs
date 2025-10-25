@@ -29,7 +29,7 @@ namespace SuperTUI.Widgets
 
         public TodoWidget(string dataFilePath)
         {
-            Name = "Todo List";
+            WidgetName = "Todo List";
             dataFile = dataFilePath ?? Path.Combine(
                 SuperTUI.Extensions.PortableDataDirectory.GetSuperTUIDataDirectory(), "todos.json");
         }

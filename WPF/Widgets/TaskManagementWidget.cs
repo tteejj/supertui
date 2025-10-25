@@ -45,13 +45,15 @@ namespace SuperTUI.Widgets
         private TextBox detailTagsBox;
         private TextBlock detailCreated;
         private TextBlock detailUpdated;
+        private ListBox notesListBox;
+        private TextBox addNoteBox;
         private StackPanel subtasksPanel;
         private Button saveDescButton;
         private Button saveTagsButton;
 
         public TaskManagementWidget()
         {
-            Name = "Task Manager";
+            WidgetName = "Task Manager";
             WidgetType = "TaskManagement";
         }
 
@@ -389,6 +391,66 @@ namespace SuperTUI.Widgets
             detailUpdated.Foreground = new SolidColorBrush(theme.ForegroundSecondary);
             detailsPanel.Children.Add(detailUpdated);
 
+            // Notes section
+            var notesHeader = new TextBlock
+            {
+                Text = "NOTES",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
+                Margin = new Thickness(0, 15, 0, 10)
+            };
+            detailsPanel.Children.Add(notesHeader);
+
+            notesListBox = new ListBox
+            {
+                Name = "NotesListBox",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11,
+                Background = new SolidColorBrush(theme.Surface),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderThickness = new Thickness(1),
+                MinHeight = 60,
+                MaxHeight = 120,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            detailsPanel.Children.Add(notesListBox);
+
+            var addNoteStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+
+            addNoteBox = new TextBox
+            {
+                Name = "AddNoteBox",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11,
+                Background = new SolidColorBrush(theme.Surface),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(5),
+                Width = 180
+            };
+            addNoteStack.Children.Add(addNoteBox);
+
+            var addNoteButton = new Button
+            {
+                Content = "Add Note",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 10,
+                Background = new SolidColorBrush(theme.Info),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(10, 3, 10, 3),
+                Margin = new Thickness(5, 0, 0, 0),
+                Cursor = Cursors.Hand
+            };
+            addNoteButton.Click += AddNote_Click;
+            addNoteStack.Children.Add(addNoteButton);
+
+            detailsPanel.Children.Add(addNoteStack);
+
             // Subtasks section
             var subtasksHeader = new TextBlock
             {
@@ -444,6 +506,9 @@ namespace SuperTUI.Widgets
                 saveTagsButton.IsEnabled = false;
                 detailCreated.Text = "";
                 detailUpdated.Text = "";
+                notesListBox.Items.Clear();
+                addNoteBox.Text = "";
+                addNoteBox.IsEnabled = false;
                 subtasksPanel.Children.Clear();
                 return;
             }
@@ -481,6 +546,39 @@ namespace SuperTUI.Widgets
 
             detailCreated.Text = $"Created: {selectedTask.CreatedAt:yyyy-MM-dd HH:mm}";
             detailUpdated.Text = $"Updated: {selectedTask.UpdatedAt:yyyy-MM-dd HH:mm}";
+
+            // Refresh notes
+            notesListBox.Items.Clear();
+            addNoteBox.IsEnabled = true;
+
+            if (selectedTask.Notes != null && selectedTask.Notes.Any())
+            {
+                foreach (var note in selectedTask.Notes.OrderByDescending(n => n.CreatedAt))
+                {
+                    var noteText = new TextBlock
+                    {
+                        Text = $"[{note.CreatedAt:MM/dd HH:mm}] {note.Content}",
+                        FontFamily = new FontFamily("Consolas"),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(theme.Foreground),
+                        TextWrapping = TextWrapping.Wrap,
+                        Padding = new Thickness(3)
+                    };
+                    notesListBox.Items.Add(noteText);
+                }
+            }
+            else
+            {
+                var noNotes = new TextBlock
+                {
+                    Text = "No notes",
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(theme.ForegroundDisabled),
+                    Padding = new Thickness(3)
+                };
+                notesListBox.Items.Add(noNotes);
+            }
 
             // Refresh subtasks
             subtasksPanel.Children.Clear();
@@ -541,6 +639,24 @@ namespace SuperTUI.Widgets
             Logger.Instance?.Info("TaskWidget", $"Updated tags for: {selectedTask.Title}");
         }
 
+        private void AddNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedTask == null || string.IsNullOrWhiteSpace(addNoteBox.Text))
+                return;
+
+            var noteContent = addNoteBox.Text.Trim();
+            taskService.AddNote(selectedTask.Id, noteContent);
+
+            // Refresh the selected task
+            selectedTask = taskService.GetTask(selectedTask.Id);
+            RefreshDetailPanel();
+
+            // Clear the input box
+            addNoteBox.Text = "";
+
+            Logger.Instance?.Info("TaskWidget", $"Added note to: {selectedTask.Title}");
+        }
+
         #endregion
 
         #region Widget Lifecycle
@@ -549,6 +665,157 @@ namespace SuperTUI.Widgets
         {
             taskListControl?.Focus();
             Keyboard.Focus(taskListControl);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            // Ctrl+E for export
+            if (e.Key == Key.E && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                ShowExportDialog();
+                e.Handled = true;
+            }
+
+            // Ctrl+M for add note to selected task
+            if (e.Key == Key.M && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                if (selectedTask != null && addNoteBox != null)
+                {
+                    addNoteBox.Focus();
+                    Keyboard.Focus(addNoteBox);
+                }
+                e.Handled = true;
+            }
+        }
+
+        private void ShowExportDialog()
+        {
+            try
+            {
+                // Create a simple dialog to choose export format
+                var dialog = new Window
+                {
+                    Title = "Export Tasks",
+                    Width = 300,
+                    Height = 200,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Owner = Window.GetWindow(this),
+                    Background = new SolidColorBrush(theme.Background)
+                };
+
+                var stack = new StackPanel { Margin = new Thickness(20) };
+
+                var titleText = new TextBlock
+                {
+                    Text = "Choose export format:",
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(theme.Foreground),
+                    Margin = new Thickness(0, 0, 0, 15)
+                };
+                stack.Children.Add(titleText);
+
+                var markdownBtn = new Button
+                {
+                    Content = "Markdown (.md)",
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    Background = new SolidColorBrush(theme.Info),
+                    Foreground = Brushes.White,
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 5, 0, 5),
+                    Cursor = Cursors.Hand
+                };
+                markdownBtn.Click += (s, e) => { dialog.DialogResult = true; dialog.Tag = "md"; dialog.Close(); };
+                stack.Children.Add(markdownBtn);
+
+                var csvBtn = new Button
+                {
+                    Content = "CSV (.csv)",
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    Background = new SolidColorBrush(theme.Success),
+                    Foreground = Brushes.White,
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 5, 0, 5),
+                    Cursor = Cursors.Hand
+                };
+                csvBtn.Click += (s, e) => { dialog.DialogResult = true; dialog.Tag = "csv"; dialog.Close(); };
+                stack.Children.Add(csvBtn);
+
+                var jsonBtn = new Button
+                {
+                    Content = "JSON (.json)",
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    Background = new SolidColorBrush(theme.Warning),
+                    Foreground = Brushes.White,
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 5, 0, 5),
+                    Cursor = Cursors.Hand
+                };
+                jsonBtn.Click += (s, e) => { dialog.DialogResult = true; dialog.Tag = "json"; dialog.Close(); };
+                stack.Children.Add(jsonBtn);
+
+                dialog.Content = stack;
+
+                if (dialog.ShowDialog() == true && dialog.Tag != null)
+                {
+                    var format = dialog.Tag.ToString();
+                    ExportTasks(format);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskWidget", $"Failed to show export dialog: {ex.Message}", ex);
+            }
+        }
+
+        private void ExportTasks(string format)
+        {
+            try
+            {
+                // Use SaveFileDialog
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Export Tasks",
+                    Filter = format switch
+                    {
+                        "md" => "Markdown files (*.md)|*.md",
+                        "csv" => "CSV files (*.csv)|*.csv",
+                        "json" => "JSON files (*.json)|*.json",
+                        _ => "All files (*.*)|*.*"
+                    },
+                    DefaultExt = format,
+                    FileName = $"tasks_{DateTime.Now:yyyyMMdd_HHmmss}.{format}"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    bool success = format switch
+                    {
+                        "md" => taskService.ExportToMarkdown(saveDialog.FileName),
+                        "csv" => taskService.ExportToCSV(saveDialog.FileName),
+                        "json" => taskService.ExportToJson(saveDialog.FileName),
+                        _ => false
+                    };
+
+                    if (success)
+                    {
+                        Logger.Instance?.Info("TaskWidget", $"Successfully exported tasks to {saveDialog.FileName}");
+                    }
+                    else
+                    {
+                        Logger.Instance?.Error("TaskWidget", $"Failed to export tasks");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskWidget", $"Failed to export tasks: {ex.Message}", ex);
+            }
         }
 
         public override Dictionary<string, object> SaveState()

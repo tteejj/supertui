@@ -67,221 +67,8 @@ namespace SuperTUI.Extensions
     // ============================================================================
     // STATE PERSISTENCE SYSTEM
     // ============================================================================
-
-    /// <summary>
-    /// State snapshot for persistence with versioning support
-    /// </summary>
-    public class StateSnapshot
-    {
-        /// <summary>
-        /// Schema version of this state snapshot. Format: "major.minor"
-        /// Breaking changes increment major, compatible changes increment minor.
-        /// </summary>
-        public string Version { get; set; } = StateVersion.Current;
-
-        public DateTime Timestamp { get; set; }
-        public Dictionary<string, object> ApplicationState { get; set; } = new Dictionary<string, object>();
-        public List<WorkspaceState> Workspaces { get; set; } = new List<WorkspaceState>();
-        public Dictionary<string, object> UserData { get; set; } = new Dictionary<string, object>();
-    }
-
-    /// <summary>
-    /// State version constants and comparison utilities
-    /// </summary>
-    public static class StateVersion
-    {
-        public const string Current = "1.0";
-
-        // Historical versions for migration tracking
-        public const string V1_0 = "1.0"; // Initial version
-
-        /// <summary>
-        /// Compare two version strings (format: "major.minor")
-        /// </summary>
-        /// <returns>-1 if v1 < v2, 0 if equal, 1 if v1 > v2</returns>
-        public static int Compare(string v1, string v2)
-        {
-            if (string.IsNullOrEmpty(v1)) v1 = "1.0";
-            if (string.IsNullOrEmpty(v2)) v2 = "1.0";
-
-            var parts1 = v1.Split('.');
-            var parts2 = v2.Split('.');
-
-            int major1 = int.Parse(parts1[0]);
-            int minor1 = parts1.Length > 1 ? int.Parse(parts1[1]) : 0;
-
-            int major2 = int.Parse(parts2[0]);
-            int minor2 = parts2.Length > 1 ? int.Parse(parts2[1]) : 0;
-
-            if (major1 != major2) return major1.CompareTo(major2);
-            return minor1.CompareTo(minor2);
-        }
-
-        /// <summary>
-        /// Check if a version is compatible with the current version
-        /// (same major version, minor version can be lower)
-        /// </summary>
-        public static bool IsCompatible(string version)
-        {
-            if (string.IsNullOrEmpty(version)) return true; // Assume compatible for missing version
-
-            var parts1 = version.Split('.');
-            var parts2 = Current.Split('.');
-
-            int major1 = int.Parse(parts1[0]);
-            int major2 = int.Parse(parts2[0]);
-
-            // Compatible if same major version
-            return major1 == major2;
-        }
-    }
-
-    public class WorkspaceState
-    {
-        public string Name { get; set; }
-        public int Index { get; set; }
-        public List<Dictionary<string, object>> WidgetStates { get; set; } = new List<Dictionary<string, object>>();
-        public Dictionary<string, object> CustomData { get; set; } = new Dictionary<string, object>();
-    }
-
-    /// <summary>
-    /// Interface for state migration from one version to another
-    /// </summary>
-    public interface IStateMigration
-    {
-        /// <summary>
-        /// Version this migration migrates FROM
-        /// </summary>
-        string FromVersion { get; }
-
-        /// <summary>
-        /// Version this migration migrates TO
-        /// </summary>
-        string ToVersion { get; }
-
-        /// <summary>
-        /// Perform the migration
-        /// </summary>
-        StateSnapshot Migrate(StateSnapshot snapshot);
-    }
-
-    /// <summary>
-    /// Manages state migrations across versions
-    /// </summary>
-    public class StateMigrationManager
-    {
-        private readonly List<IStateMigration> migrations = new List<IStateMigration>();
-
-        public StateMigrationManager()
-        {
-            // Register migrations in order
-            // RegisterMigration(new Migration_1_0_to_1_1());
-            // ^ Migration 1.0 to 1.1 adds WidgetId to all widgets
-            // ^ Uncomment when needed (currently at 1.0)
-
-            // Future migrations will be added here:
-            // RegisterMigration(new Migration_1_1_to_2_0());
-        }
-
-        public void RegisterMigration(IStateMigration migration)
-        {
-            migrations.Add(migration);
-            Logger.Instance.Debug("StateMigration", $"Registered migration: {migration.FromVersion} -> {migration.ToVersion}");
-        }
-
-        /// <summary>
-        /// Migrate a state snapshot to the current version
-        /// </summary>
-        public StateSnapshot MigrateToCurrentVersion(StateSnapshot snapshot)
-        {
-            if (snapshot.Version == StateVersion.Current)
-            {
-                Logger.Instance.Debug("StateMigration", "State is already at current version");
-                return snapshot;
-            }
-
-            // Check if version is compatible
-            if (!StateVersion.IsCompatible(snapshot.Version))
-            {
-                Logger.Instance.Warning("StateMigration",
-                    $"State version {snapshot.Version} is not compatible with current version {StateVersion.Current}. " +
-                    "Migration may fail or produce unexpected results.");
-            }
-
-            Logger.Instance.Info("StateMigration", $"Migrating state from {snapshot.Version} to {StateVersion.Current}");
-
-            // Build migration path
-            var migrationPath = BuildMigrationPath(snapshot.Version, StateVersion.Current);
-            if (migrationPath.Count == 0)
-            {
-                Logger.Instance.Warning("StateMigration",
-                    $"No migration path found from {snapshot.Version} to {StateVersion.Current}. " +
-                    "State will be loaded as-is, which may cause errors.");
-                return snapshot;
-            }
-
-            // Execute migrations in sequence
-            var currentSnapshot = snapshot;
-            foreach (var migration in migrationPath)
-            {
-                try
-                {
-                    Logger.Instance.Info("StateMigration", $"Applying migration: {migration.FromVersion} -> {migration.ToVersion}");
-                    currentSnapshot = migration.Migrate(currentSnapshot);
-                    currentSnapshot.Version = migration.ToVersion;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Instance.Error("StateMigration",
-                        $"Migration failed: {migration.FromVersion} -> {migration.ToVersion}", ex);
-                    throw new InvalidOperationException(
-                        $"State migration failed at version {migration.FromVersion}. Cannot proceed.", ex);
-                }
-            }
-
-            Logger.Instance.Info("StateMigration", $"State successfully migrated to {StateVersion.Current}");
-            return currentSnapshot;
-        }
-
-        /// <summary>
-        /// Build a migration path from source version to target version
-        /// </summary>
-        private List<IStateMigration> BuildMigrationPath(string fromVersion, string toVersion)
-        {
-            var path = new List<IStateMigration>();
-            var currentVersion = fromVersion;
-
-            // Simple linear search for migration path
-            // For more complex version graphs, implement a proper pathfinding algorithm (BFS/Dijkstra)
-            while (currentVersion != toVersion)
-            {
-                var nextMigration = migrations.FirstOrDefault(m => m.FromVersion == currentVersion);
-                if (nextMigration == null)
-                {
-                    Logger.Instance.Warning("StateMigration",
-                        $"No migration found from {currentVersion}. Migration path incomplete.");
-                    break;
-                }
-
-                path.Add(nextMigration);
-                currentVersion = nextMigration.ToVersion;
-
-                // Prevent infinite loops
-                if (path.Count > 100)
-                {
-                    Logger.Instance.Error("StateMigration", "Migration path too long (>100 steps). Possible circular dependency.");
-                    throw new InvalidOperationException("Migration path contains circular dependency");
-                }
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// Get all registered migrations
-        /// </summary>
-        public IReadOnlyList<IStateMigration> GetMigrations() => migrations.AsReadOnly();
-    }
+    // Note: StateSnapshot, StateVersion, WorkspaceState, IStateMigration, and StateMigrationManager
+    // are now defined in /Core/Models/StateSnapshot.cs
 
     // Example migration (template for future use)
     /*
@@ -543,10 +330,14 @@ namespace SuperTUI.Extensions
                     await CreateBackupAsync();
                 }
 
+                // PHASE 2 FIX: Calculate checksum before saving
+                snapshot.Timestamp = DateTime.Now;
+                snapshot.CalculateChecksum();
+
                 string json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true });
                 await File.WriteAllTextAsync(currentStateFile, json, Encoding.UTF8);
 
-                Logger.Instance.Info("StatePersistence", $"State saved to {currentStateFile}");
+                Logger.Instance.Info("StatePersistence", $"State saved to {currentStateFile} (checksum: {snapshot.Checksum?.Substring(0, 8)}...)");
             }
             catch (Exception ex)
             {
@@ -574,6 +365,50 @@ namespace SuperTUI.Extensions
                 string json = await File.ReadAllTextAsync(currentStateFile, Encoding.UTF8);
                 var snapshot = JsonSerializer.Deserialize<StateSnapshot>(json);
 
+                // PHASE 2 FIX: Verify checksum
+                if (!snapshot.VerifyChecksum())
+                {
+                    Logger.Instance.Error("StatePersistence",
+                        $"State file checksum mismatch! File may be corrupted or tampered with.\n" +
+                        $"  File: {currentStateFile}\n" +
+                        $"  Expected checksum: {snapshot.Checksum?.Substring(0, 16)}...\n" +
+                        $"  This could indicate:\n" +
+                        $"    - Disk corruption\n" +
+                        $"    - Manual file editing\n" +
+                        $"    - Incomplete write operation\n" +
+                        $"  Attempting to load from backup...");
+
+                    // Try to load most recent backup
+                    var backups = GetAvailableBackups();
+                    if (backups.Count > 0)
+                    {
+                        Logger.Instance.Info("StatePersistence", $"Attempting restore from backup: {backups[0]}");
+                        try
+                        {
+                            string backupJson = await File.ReadAllTextAsync(backups[0], Encoding.UTF8);
+                            var backupSnapshot = JsonSerializer.Deserialize<StateSnapshot>(backupJson);
+
+                            if (backupSnapshot.VerifyChecksum())
+                            {
+                                Logger.Instance.Info("StatePersistence", "Successfully restored from backup");
+                                return backupSnapshot;
+                            }
+                            else
+                            {
+                                Logger.Instance.Warning("StatePersistence", "Backup also has checksum mismatch");
+                            }
+                        }
+                        catch (Exception backupEx)
+                        {
+                            Logger.Instance.Error("StatePersistence", $"Failed to restore from backup: {backupEx.Message}", backupEx);
+                        }
+                    }
+
+                    throw new InvalidOperationException(
+                        "State file checksum verification failed and no valid backups available. " +
+                        "State file may be corrupted.");
+                }
+
                 // Check version and migrate if necessary
                 if (snapshot.Version != StateVersion.Current)
                 {
@@ -590,7 +425,7 @@ namespace SuperTUI.Extensions
                     await SaveStateAsync(snapshot, createBackup: false);
                 }
 
-                Logger.Instance.Info("StatePersistence", $"State loaded successfully (version {snapshot.Version})");
+                Logger.Instance.Info("StatePersistence", $"State loaded successfully (version {snapshot.Version}, checksum OK)");
                 return snapshot;
             }
             catch (Exception ex)
@@ -670,7 +505,10 @@ namespace SuperTUI.Extensions
             Logger.Instance.Debug("StatePersistence", "Undo/redo history cleared");
         }
 
-        private void CreateBackup()
+        /// <summary>
+        /// Create a backup of the current state file
+        /// </summary>
+        public void CreateBackup()
         {
             // Synchronous wrapper for backward compatibility
             // Use Task.Run to avoid WPF UI thread deadlocks
@@ -743,7 +581,53 @@ namespace SuperTUI.Extensions
             }
         }
 
-        public StateSnapshot RestoreFromBackup(string backupPath)
+        /// <summary>
+        /// Restore from a backup file
+        /// </summary>
+        public void RestoreFromBackup(string backupFilePath)
+        {
+            try
+            {
+                string json;
+
+                if (backupFilePath.EndsWith(".gz"))
+                {
+                    using (var input = File.OpenRead(backupFilePath))
+                    using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+                    using (var reader = new StreamReader(gzip))
+                    {
+                        json = reader.ReadToEnd();
+                    }
+                }
+                else
+                {
+                    json = File.ReadAllText(backupFilePath, Encoding.UTF8);
+                }
+
+                var snapshot = JsonSerializer.Deserialize<StateSnapshot>(json);
+
+                // Replace current state file with backup
+                if (snapshot != null)
+                {
+                    currentState = snapshot;
+                    SaveState(snapshot);
+                    Logger.Instance.Info("StatePersistence", $"Restored from backup: {backupFilePath}");
+                }
+                else
+                {
+                    Logger.Instance.Error("StatePersistence", "Backup file contained invalid data");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("StatePersistence", $"Failed to restore from backup: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Load a backup file and return the snapshot (internal helper)
+        /// </summary>
+        private StateSnapshot LoadBackupSnapshot(string backupPath)
         {
             try
             {
@@ -764,60 +648,25 @@ namespace SuperTUI.Extensions
                 }
 
                 var snapshot = JsonSerializer.Deserialize<StateSnapshot>(json);
-                Logger.Instance.Info("StatePersistence", $"Restored from backup: {backupPath}");
+                Logger.Instance.Info("StatePersistence", $"Loaded backup snapshot: {backupPath}");
                 return snapshot;
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("StatePersistence", $"Failed to restore from backup: {ex.Message}", ex);
+                Logger.Instance.Error("StatePersistence", $"Failed to load backup snapshot: {ex.Message}", ex);
                 return null;
             }
         }
     }
 
-    public class StateChangedEventArgs : EventArgs
-    {
-        public StateSnapshot Snapshot { get; set; }
-    }
+    // Note: StateChangedEventArgs is now defined in /Core/Events/StateChangedEventArgs.cs
 
     // ============================================================================
     // PLUGIN / EXTENSION SYSTEM
     // ============================================================================
-
-    /// <summary>
-    /// Plugin metadata
-    /// </summary>
-    public class PluginMetadata
-    {
-        public string Name { get; set; }
-        public string Version { get; set; }
-        public string Author { get; set; }
-        public string Description { get; set; }
-        public List<string> Dependencies { get; set; } = new List<string>();
-        public bool Enabled { get; set; } = true;
-    }
-
-    /// <summary>
-    /// Plugin interface that all plugins must implement
-    /// </summary>
-    public interface IPlugin
-    {
-        PluginMetadata Metadata { get; }
-        void Initialize(PluginContext context);
-        void Shutdown();
-    }
-
-    /// <summary>
-    /// Context provided to plugins
-    /// </summary>
-    public class PluginContext
-    {
-        public Logger Logger { get; set; }
-        public ConfigurationManager Config { get; set; }
-        public ThemeManager Themes { get; set; }
-        public WorkspaceManager Workspaces { get; set; }
-        public Dictionary<string, object> SharedData { get; set; } = new Dictionary<string, object>();
-    }
+    // Note: PluginMetadata, IPlugin, and PluginContext are now defined in:
+    // - /Core/Interfaces/IPlugin.cs
+    // - /Core/Models/PluginContext.cs
 
     /// <summary>
     /// Plugin manager for loading and managing extensions.
@@ -1014,9 +863,59 @@ namespace SuperTUI.Extensions
             return plugins.TryGetValue(name, out var plugin) ? plugin : null;
         }
 
+        /// <summary>
+        /// Get all loaded plugins as a read-only dictionary
+        /// </summary>
+        public IReadOnlyDictionary<string, IPlugin> GetLoadedPlugins()
+        {
+            return new Dictionary<string, IPlugin>(plugins);
+        }
+
+        /// <summary>
+        /// Get all loaded plugins as a list (legacy method)
+        /// </summary>
         public List<IPlugin> GetAllPlugins()
         {
             return plugins.Values.ToList();
+        }
+
+        /// <summary>
+        /// Check if a plugin is loaded
+        /// </summary>
+        public bool IsPluginLoaded(string name)
+        {
+            return plugins.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// Execute a plugin command
+        /// </summary>
+        public void ExecutePluginCommand(string pluginName, string command, params object[] args)
+        {
+            if (!plugins.TryGetValue(pluginName, out var plugin))
+            {
+                Logger.Instance.Warning("PluginManager", $"Plugin not found: {pluginName}");
+                return;
+            }
+
+            try
+            {
+                // Note: This is a stub implementation
+                // Plugins would need to implement a command handler interface for this to work
+                Logger.Instance.Warning("PluginManager",
+                    $"ExecutePluginCommand not fully implemented. Plugin '{pluginName}' needs ICommandHandler interface.");
+
+                // Future: Check if plugin implements ICommandHandler and invoke
+                // if (plugin is ICommandHandler handler)
+                // {
+                //     handler.ExecuteCommand(command, args);
+                // }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("PluginManager",
+                    $"Failed to execute command '{command}' on plugin '{pluginName}': {ex.Message}", ex);
+            }
         }
 
         public void UnloadAll()
@@ -1029,60 +928,12 @@ namespace SuperTUI.Extensions
         }
     }
 
-    public class PluginEventArgs : EventArgs
-    {
-        public IPlugin Plugin { get; set; }
-    }
+    // Note: PluginEventArgs is now defined in /Core/Events/PluginEventArgs.cs
 
     // ============================================================================
     // PERFORMANCE MONITORING
     // ============================================================================
-
-    /// <summary>
-    /// Performance counter for monitoring operations
-    /// </summary>
-    public class PerformanceCounter
-    {
-        private readonly System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        private readonly Queue<TimeSpan> samples = new Queue<TimeSpan>();
-        private readonly int maxSamples;
-
-        public string Name { get; }
-        public TimeSpan LastDuration { get; private set; }
-        public TimeSpan AverageDuration => samples.Count > 0 ? TimeSpan.FromTicks((long)samples.Average(s => s.Ticks)) : TimeSpan.Zero;
-        public TimeSpan MinDuration => samples.Count > 0 ? TimeSpan.FromTicks(samples.Min(s => s.Ticks)) : TimeSpan.Zero;
-        public TimeSpan MaxDuration => samples.Count > 0 ? TimeSpan.FromTicks(samples.Max(s => s.Ticks)) : TimeSpan.Zero;
-        public int SampleCount => samples.Count;
-
-        public PerformanceCounter(string name, int maxSamples = 100)
-        {
-            Name = name;
-            this.maxSamples = maxSamples;
-        }
-
-        public void Start()
-        {
-            stopwatch.Restart();
-        }
-
-        public void Stop()
-        {
-            stopwatch.Stop();
-            LastDuration = stopwatch.Elapsed;
-
-            if (samples.Count >= maxSamples)
-            {
-                samples.Dequeue();
-            }
-            samples.Enqueue(LastDuration);
-        }
-
-        public void Reset()
-        {
-            samples.Clear();
-            LastDuration = TimeSpan.Zero;
-        }
-    }
+    // Note: PerformanceCounter is now defined in /Core/Models/PerformanceCounter.cs
 
     /// <summary>
     /// Performance monitor for tracking various metrics
@@ -1092,13 +943,13 @@ namespace SuperTUI.Extensions
         private static PerformanceMonitor instance;
         public static PerformanceMonitor Instance => instance ??= new PerformanceMonitor();
 
-        private readonly Dictionary<string, PerformanceCounter> counters = new Dictionary<string, PerformanceCounter>();
+        private readonly Dictionary<string, Infrastructure.PerformanceCounter> counters = new Dictionary<string, Infrastructure.PerformanceCounter>();
 
-        public PerformanceCounter GetCounter(string name)
+        public Infrastructure.PerformanceCounter GetCounter(string name)
         {
             if (!counters.TryGetValue(name, out var counter))
             {
-                counter = new PerformanceCounter(name);
+                counter = new Infrastructure.PerformanceCounter(name);
                 counters[name] = counter;
             }
             return counter;
@@ -1121,9 +972,9 @@ namespace SuperTUI.Extensions
             }
         }
 
-        public Dictionary<string, PerformanceCounter> GetAllCounters()
+        public Dictionary<string, Infrastructure.PerformanceCounter> GetAllCounters()
         {
-            return new Dictionary<string, PerformanceCounter>(counters);
+            return new Dictionary<string, Infrastructure.PerformanceCounter>(counters);
         }
 
         public void ResetAll()

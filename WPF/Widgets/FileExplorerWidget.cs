@@ -74,7 +74,7 @@ namespace SuperTUI.Widgets
 
         public FileExplorerWidget(string initialPath)
         {
-            Name = "File Explorer";
+            WidgetName = "File Explorer";
             currentPath = initialPath ?? Directory.GetCurrentDirectory();
             currentItems = new List<FileSystemInfo>();
         }

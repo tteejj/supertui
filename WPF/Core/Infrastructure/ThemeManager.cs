@@ -144,6 +144,12 @@ namespace SuperTUI.Infrastructure
     public class ThemeManager : IThemeManager
     {
         private static ThemeManager instance;
+
+        /// <summary>
+        /// Singleton instance - DEPRECATED in Phase 3
+        /// Use dependency injection: Get IThemeManager from ServiceContainer
+        /// </summary>
+        [Obsolete("Use dependency injection instead. Get IThemeManager from ServiceContainer.", error: false)]
         public static ThemeManager Instance => instance ??= new ThemeManager();
 
         private readonly Dictionary<string, Theme> themes = new Dictionary<string, Theme>();

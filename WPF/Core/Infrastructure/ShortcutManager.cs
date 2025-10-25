@@ -12,20 +12,6 @@ using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
-    public class KeyboardShortcut
-    {
-        public Key Key { get; set; }
-        public ModifierKeys Modifiers { get; set; }
-        public ModifierKeys Modifier => Modifiers; // Alias for consistency
-        public Action Action { get; set; }
-        public string Description { get; set; }
-
-        public bool Matches(Key key, ModifierKeys modifiers)
-        {
-            return Key == key && Modifiers == modifiers;
-        }
-    }
-
     public class ShortcutManager : IShortcutManager
     {
         private static readonly Lazy<ShortcutManager> instance =
@@ -111,16 +97,16 @@ namespace SuperTUI.Core
 
         public IReadOnlyList<KeyboardShortcut> GetGlobalShortcuts()
         {
-            return globalShortcuts.AsReadOnly();
+            return globalShortcuts;
         }
 
         public IReadOnlyList<KeyboardShortcut> GetWorkspaceShortcuts(string workspaceName)
         {
             if (workspaceShortcuts.TryGetValue(workspaceName, out var shortcuts))
             {
-                return shortcuts.AsReadOnly();
+                return shortcuts;
             }
-            return new List<KeyboardShortcut>().AsReadOnly();
+            return new List<KeyboardShortcut>();
         }
 
         public void ClearAll()

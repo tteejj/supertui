@@ -1,3 +1,41 @@
+// ============================================================================
+// WIDGET DISABLED: Security Policy
+// ============================================================================
+//
+// This widget has been removed from the build due to security policy.
+//
+// REASON: Requires System.Management.Automation (PowerShell)
+//   - PowerShell automation provides arbitrary code execution capabilities
+//   - Security policy: No external packages that enable code execution
+//   - Risk: Plugins could execute arbitrary PowerShell commands
+//   - Risk: Uncontrolled access to system resources
+//
+// SECURITY CONCERNS:
+//   1. System.Management.Automation allows unrestricted code execution
+//   2. Runspace provides full PowerShell capabilities
+//   3. No sandboxing or command validation
+//   4. Plugins could bypass SecurityManager via PowerShell
+//
+// ALTERNATIVES:
+//   - Use System.Diagnostics.Process for controlled command execution
+//   - Implement command whitelist/validation
+//   - Use external terminal emulator integration (e.g., Windows Terminal)
+//   - Build restricted DSL instead of full PowerShell
+//
+// TO RE-ENABLE (NOT RECOMMENDED):
+//   1. Review and accept security risks
+//   2. Add System.Management.Automation package reference
+//   3. Implement PowerShell execution policy enforcement
+//   4. Add command sandboxing and validation
+//   5. Update SECURITY.md with PowerShell risks and mitigations
+//   6. Remove from SuperTUI.csproj exclusion list
+//   7. Remove #if ENABLE_POWERSHELL_WIDGETS guard
+//
+// DISABLED: 2025-10-25 (Phase 3 - Maximum DI Migration)
+// ============================================================================
+
+#if ENABLE_POWERSHELL_WIDGETS  // Not defined - widget excluded from build
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +51,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
+using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
@@ -21,6 +60,9 @@ namespace SuperTUI.Widgets
     /// <summary>
     /// Embedded PowerShell terminal widget.
     /// Executes commands in a persistent runspace with command history.
+    ///
+    /// ⚠️ SECURITY WARNING: This widget is DISABLED by default due to
+    /// arbitrary code execution risks via System.Management.Automation.
     /// </summary>
     public class TerminalWidget : WidgetBase, IThemeable
     {
@@ -34,7 +76,7 @@ namespace SuperTUI.Widgets
 
         public TerminalWidget()
         {
-            Name = "Terminal";
+            WidgetName = "Terminal";
             commandHistory = new List<string>();
             historyIndex = -1;
         }
@@ -206,7 +248,6 @@ namespace SuperTUI.Widgets
             EventBus.Instance.Publish(new CommandExecutedEvent
             {
                 Command = command,
-                WorkingDirectory = currentDirectory,
                 ExecutedAt = DateTime.Now
             });
 
@@ -300,7 +341,6 @@ namespace SuperTUI.Widgets
                 EventBus.Instance.Publish(new TerminalOutputEvent
                 {
                     Output = outputText,
-                    Command = command,
                     Timestamp = DateTime.Now
                 });
             }
@@ -378,7 +418,7 @@ namespace SuperTUI.Widgets
             };
         }
 
-        public override void LoadState(Dictionary<string, object> state)
+        public override void RestoreState(Dictionary<string, object> state)
         {
             if (state.TryGetValue("WorkingDirectory", out var dir))
             {
@@ -443,3 +483,5 @@ namespace SuperTUI.Widgets
         }
     }
 }
+
+#endif // ENABLE_POWERSHELL_WIDGETS

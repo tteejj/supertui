@@ -8,76 +8,57 @@ namespace SuperTUI.DI
     /// <summary>
     /// Helper class to configure dependency injection
     /// Call ConfigureServices() at application startup
+    ///
+    /// PHASE 3: Maximum DI Migration (2025-10-25)
     /// </summary>
     public static class ServiceRegistration
     {
         /// <summary>
         /// Configure all services for dependency injection
+        /// PHASE 3: Maximum DI - Register all infrastructure services
         /// </summary>
         public static void ConfigureServices(ServiceContainer container)
         {
-            // Infrastructure services (Singletons)
-            container.RegisterSingleton<ILogger>(Logger.Instance);
-            container.RegisterSingleton<IConfigurationManager>(ConfigurationManager.Instance);
-            container.RegisterSingleton<IThemeManager>(ThemeManager.Instance);
-            container.RegisterSingleton<ISecurityManager>(SecurityManager.Instance);
-            container.RegisterSingleton<IErrorHandler>(ErrorHandler.Instance);
+            Logger.Instance.Info("DI", "🔧 Configuring services for dependency injection...");
 
-            // Event system (Singleton) - registered with interface
-            container.RegisterSingleton<IEventBus>(EventBus.Instance);
+            // PHASE 3: Register existing singletons with their interfaces
+            container.RegisterSingleton<ILogger, Logger>(Logger.Instance);
+            container.RegisterSingleton<IConfigurationManager, ConfigurationManager>(ConfigurationManager.Instance);
+            container.RegisterSingleton<IThemeManager, ThemeManager>(ThemeManager.Instance);
+            container.RegisterSingleton<ISecurityManager, SecurityManager>(SecurityManager.Instance);
+            container.RegisterSingleton<IErrorHandler, ErrorHandler>(ErrorHandler.Instance);
+            container.RegisterSingleton<IStatePersistenceManager, StatePersistenceManager>(StatePersistenceManager.Instance);
+            container.RegisterSingleton<IPerformanceMonitor, PerformanceMonitor>(PerformanceMonitor.Instance);
+            container.RegisterSingleton<IPluginManager, PluginManager>(PluginManager.Instance);
+            container.RegisterSingleton<IEventBus, EventBus>(EventBus.Instance);
+            container.RegisterSingleton<IShortcutManager, ShortcutManager>(ShortcutManager.Instance);
+            // HotReloadManager not yet implemented - skip for now
 
-            // State management (Singleton)
-            container.RegisterSingleton(StatePersistenceManager.Instance);
-            container.RegisterSingleton(PerformanceMonitor.Instance);
-            container.RegisterSingleton(PluginManager.Instance);
-
-            // Workspace management (Transient - multiple workspaces possible)
-            // Note: WorkspaceManager requires ContentControl in constructor, so we use factory
-            container.RegisterTransient<WorkspaceManager>(services =>
-            {
-                throw new InvalidOperationException(
-                    "WorkspaceManager requires a ContentControl parameter. " +
-                    "Create it manually: new WorkspaceManager(contentControl)");
-            });
-
-            // Widgets (Transient - create new instances)
-            // Widgets will be registered dynamically as they're discovered
-            // For now, they can be created with 'new' since they don't have dependencies
+            Logger.Instance.Info("DI", $"✅ Registered {10} infrastructure services");
         }
 
         /// <summary>
         /// Initialize all singleton services
         /// Call this after ConfigureServices()
+        /// PHASE 3: Initialize via DI container
         /// </summary>
-        public static void InitializeServices(ServiceContainer container, string configPath = null, string themesPath = null, string statePath = null, string pluginsPath = null)
+        public static void InitializeServices(ServiceContainer container, string configPath = null, string themesPath = null)
         {
+            Logger.Instance.Info("DI", "🚀 Initializing services...");
+
             // Initialize configuration
-            var config = container.Resolve<IConfigurationManager>() as ConfigurationManager;
+            var config = container.GetRequiredService<IConfigurationManager>() as ConfigurationManager;
             config?.Initialize(configPath ?? GetDefaultConfigPath());
 
             // Initialize theme manager
-            var themes = container.Resolve<IThemeManager>() as ThemeManager;
+            var themes = container.GetRequiredService<IThemeManager>() as ThemeManager;
             themes?.Initialize(themesPath);
 
-            // Initialize security manager
-            var security = container.Resolve<ISecurityManager>() as SecurityManager;
-            security?.Initialize();
+            // Initialize security manager with strict mode (production default)
+            var security = container.GetRequiredService<ISecurityManager>() as SecurityManager;
+            security?.Initialize(SecurityMode.Strict);
 
-            // Initialize state persistence
-            var state = container.Resolve<StatePersistenceManager>();
-            state?.Initialize(statePath);
-
-            // Initialize plugin manager
-            var plugins = container.Resolve<PluginManager>();
-            var pluginContext = new PluginContext
-            {
-                Logger = container.Resolve<ILogger>() as Logger,
-                Config = container.Resolve<IConfigurationManager>() as ConfigurationManager,
-                Themes = container.Resolve<IThemeManager>() as ThemeManager,
-                Workspaces = null, // Set after WorkspaceManager is created
-                SharedData = new System.Collections.Generic.Dictionary<string, object>()
-            };
-            plugins?.Initialize(pluginsPath, pluginContext);
+            Logger.Instance.Info("DI", "✅ All services initialized");
         }
 
         private static string GetDefaultConfigPath()
@@ -86,17 +67,6 @@ namespace SuperTUI.DI
             var configDir = System.IO.Path.Combine(appData, "SuperTUI");
             System.IO.Directory.CreateDirectory(configDir);
             return System.IO.Path.Combine(configDir, "config.json");
-        }
-
-        /// <summary>
-        /// Quick setup for testing/demos
-        /// </summary>
-        public static ServiceContainer QuickSetup()
-        {
-            var container = ServiceContainer.Instance;
-            ConfigureServices(container);
-            InitializeServices(container);
-            return container;
         }
     }
 }

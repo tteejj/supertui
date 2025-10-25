@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using SuperTUI.Core.Models;
 using SuperTUI.Infrastructure;
+
+// Resolve ambiguity between SuperTUI.Core.Models.TaskStatus and System.Threading.Tasks.TaskStatus
+using TaskStatus = SuperTUI.Core.Models.TaskStatus;
 
 namespace SuperTUI.Core.Services
 {
@@ -21,6 +26,11 @@ namespace SuperTUI.Core.Services
         private Dictionary<Guid, List<Guid>> subtaskIndex; // ParentId -> List of ChildIds
         private string dataFilePath;
         private readonly object lockObject = new object();
+
+        // Save debouncing
+        private Timer saveTimer;
+        private bool pendingSave = false;
+        private const int SAVE_DEBOUNCE_MS = 500;
 
         // Events for task changes
         public event Action<TaskItem> TaskAdded;
@@ -53,8 +63,14 @@ namespace SuperTUI.Core.Services
                 Logger.Instance?.Info("TaskService", $"Created data directory: {directory}");
             }
 
+            // Initialize save timer
+            saveTimer = new Timer(SaveTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
+
             // Load existing tasks
             LoadFromFile();
+
+            // Process recurring tasks on startup
+            ProcessRecurringTasks();
         }
 
         /// <summary>
@@ -151,7 +167,7 @@ namespace SuperTUI.Core.Services
                     subtaskIndex[task.ParentTaskId.Value].Add(task.Id);
                 }
 
-                SaveToFile();
+                ScheduleSave();
                 TaskAdded?.Invoke(task);
 
                 Logger.Instance?.Info("TaskService", $"Added task: {task.Title} (ID: {task.Id})");
@@ -195,7 +211,7 @@ namespace SuperTUI.Core.Services
                 }
 
                 tasks[task.Id] = task;
-                SaveToFile();
+                ScheduleSave();
                 TaskUpdated?.Invoke(task);
 
                 Logger.Instance?.Debug("TaskService", $"Updated task: {task.Title} (ID: {task.Id})");
@@ -254,7 +270,7 @@ namespace SuperTUI.Core.Services
                     }
                 }
 
-                SaveToFile();
+                ScheduleSave();
                 TaskDeleted?.Invoke(id);
 
                 Logger.Instance?.Info("TaskService", $"Deleted task: {task.Title} (ID: {id}, Hard: {hardDelete})");
@@ -273,14 +289,21 @@ namespace SuperTUI.Core.Services
                     return false;
 
                 var task = tasks[id];
-                task.Status = task.Status == TaskStatus.Completed ? TaskStatus.Pending : TaskStatus.Completed;
-                task.Progress = task.Status == TaskStatus.Completed ? 100 : 0;
+                task.Status = task.Status == Models.TaskStatus.Completed ? Models.TaskStatus.Pending : Models.TaskStatus.Completed;
+                task.Progress = task.Status == Models.TaskStatus.Completed ? 100 : 0;
                 task.UpdatedAt = DateTime.Now;
 
-                SaveToFile();
+                ScheduleSave();
                 TaskUpdated?.Invoke(task);
 
                 Logger.Instance?.Debug("TaskService", $"Toggled completion for task: {task.Title}");
+
+                // Process recurring tasks if this was marked as completed
+                if (task.Status == Models.TaskStatus.Completed)
+                {
+                    ProcessRecurringTasks();
+                }
+
                 return true;
             }
         }
@@ -305,7 +328,7 @@ namespace SuperTUI.Core.Services
                 };
                 task.UpdatedAt = DateTime.Now;
 
-                SaveToFile();
+                ScheduleSave();
                 TaskUpdated?.Invoke(task);
 
                 Logger.Instance?.Debug("TaskService", $"Cycled priority for task: {task.Title} to {task.Priority}");
@@ -328,9 +351,30 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
-        /// Save tasks to JSON file
+        /// Schedule a debounced save operation
         /// </summary>
-        private void SaveToFile()
+        private void ScheduleSave()
+        {
+            pendingSave = true;
+            saveTimer?.Change(SAVE_DEBOUNCE_MS, Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// Timer callback for debounced save
+        /// </summary>
+        private void SaveTimerCallback(object state)
+        {
+            if (pendingSave)
+            {
+                pendingSave = false;
+                Task.Run(async () => await SaveToFileAsync());
+            }
+        }
+
+        /// <summary>
+        /// Save tasks to JSON file asynchronously
+        /// </summary>
+        private async Task SaveToFileAsync()
         {
             try
             {
@@ -338,7 +382,7 @@ namespace SuperTUI.Core.Services
                 if (File.Exists(dataFilePath))
                 {
                     var backupPath = $"{dataFilePath}.{DateTime.Now:yyyyMMdd_HHmmss}.bak";
-                    File.Copy(dataFilePath, backupPath, overwrite: true);
+                    await Task.Run(() => File.Copy(dataFilePath, backupPath, overwrite: true));
 
                     // Keep only last 5 backups
                     var backupDir = Path.GetDirectoryName(dataFilePath);
@@ -353,13 +397,19 @@ namespace SuperTUI.Core.Services
                     }
                 }
 
-                var json = JsonSerializer.Serialize(tasks.Values.ToList(), new JsonSerializerOptions
+                List<TaskItem> taskList;
+                lock (lockObject)
+                {
+                    taskList = tasks.Values.ToList();
+                }
+
+                var json = await Task.Run(() => JsonSerializer.Serialize(taskList, new JsonSerializerOptions
                 {
                     WriteIndented = true
-                });
+                }));
 
-                File.WriteAllText(dataFilePath, json);
-                Logger.Instance?.Debug("TaskService", $"Saved {tasks.Count} tasks to {dataFilePath}");
+                await Task.Run(() => File.WriteAllText(dataFilePath, json));
+                Logger.Instance?.Debug("TaskService", $"Saved {taskList.Count} tasks to {dataFilePath}");
             }
             catch (Exception ex)
             {
@@ -429,9 +479,525 @@ namespace SuperTUI.Core.Services
             {
                 tasks.Clear();
                 subtaskIndex.Clear();
-                SaveToFile();
+                ScheduleSave();
                 TasksReloaded?.Invoke();
                 Logger.Instance?.Info("TaskService", "Cleared all tasks");
+            }
+        }
+
+        #region Dependencies
+
+        /// <summary>
+        /// Add a dependency: taskId depends on dependsOnTaskId
+        /// </summary>
+        public bool AddDependency(Guid taskId, Guid dependsOnTaskId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId) || !tasks.ContainsKey(dependsOnTaskId))
+                {
+                    Logger.Instance?.Warning("TaskService", $"Cannot add dependency: one or both tasks not found");
+                    return false;
+                }
+
+                var task = tasks[taskId];
+                if (task.DependsOn.Contains(dependsOnTaskId))
+                {
+                    Logger.Instance?.Debug("TaskService", $"Dependency already exists");
+                    return false;
+                }
+
+                // Prevent circular dependencies
+                if (WouldCreateCircularDependency(taskId, dependsOnTaskId))
+                {
+                    Logger.Instance?.Warning("TaskService", $"Cannot add dependency: would create circular dependency");
+                    return false;
+                }
+
+                task.DependsOn.Add(dependsOnTaskId);
+                task.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+
+                Logger.Instance?.Info("TaskService", $"Added dependency: {task.Title} depends on {tasks[dependsOnTaskId].Title}");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Remove a dependency
+        /// </summary>
+        public bool RemoveDependency(Guid taskId, Guid dependsOnTaskId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                {
+                    Logger.Instance?.Warning("TaskService", $"Cannot remove dependency: task not found");
+                    return false;
+                }
+
+                var task = tasks[taskId];
+                if (!task.DependsOn.Contains(dependsOnTaskId))
+                {
+                    Logger.Instance?.Debug("TaskService", $"Dependency does not exist");
+                    return false;
+                }
+
+                task.DependsOn.Remove(dependsOnTaskId);
+                task.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+
+                Logger.Instance?.Info("TaskService", $"Removed dependency from task: {task.Title}");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get list of tasks that this task depends on
+        /// </summary>
+        public List<TaskItem> GetDependencies(Guid taskId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                    return new List<TaskItem>();
+
+                var task = tasks[taskId];
+                return task.DependsOn
+                    .Select(id => tasks.ContainsKey(id) ? tasks[id] : null)
+                    .Where(t => t != null && !t.Deleted)
+                    .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Get list of tasks blocked by this task
+        /// </summary>
+        public List<TaskItem> GetBlockedTasks(Guid taskId)
+        {
+            lock (lockObject)
+            {
+                return tasks.Values
+                    .Where(t => !t.Deleted && t.DependsOn.Contains(taskId))
+                    .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Check if adding a dependency would create a circular dependency
+        /// </summary>
+        private bool WouldCreateCircularDependency(Guid taskId, Guid dependsOnTaskId)
+        {
+            // Check if dependsOnTaskId depends on taskId (directly or indirectly)
+            var visited = new HashSet<Guid>();
+            var toCheck = new Queue<Guid>();
+            toCheck.Enqueue(dependsOnTaskId);
+
+            while (toCheck.Count > 0)
+            {
+                var current = toCheck.Dequeue();
+                if (visited.Contains(current))
+                    continue;
+
+                visited.Add(current);
+
+                if (current == taskId)
+                    return true; // Circular dependency found
+
+                if (tasks.ContainsKey(current))
+                {
+                    foreach (var depId in tasks[current].DependsOn)
+                    {
+                        toCheck.Enqueue(depId);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region Recurrence
+
+        /// <summary>
+        /// Process recurring tasks: check for completed recurring tasks and create new instances
+        /// </summary>
+        public void ProcessRecurringTasks()
+        {
+            lock (lockObject)
+            {
+                var recurringTasks = tasks.Values
+                    .Where(t => !t.Deleted && t.Recurrence != RecurrenceType.None && t.Status == TaskStatus.Completed)
+                    .ToList();
+
+                foreach (var task in recurringTasks)
+                {
+                    // Check if task is due for recurrence
+                    if (!ShouldRecur(task))
+                        continue;
+
+                    // Calculate next due date
+                    var nextDueDate = CalculateNextDueDate(task);
+                    if (!nextDueDate.HasValue)
+                        continue;
+
+                    // Check if past recurrence end date
+                    if (task.RecurrenceEndDate.HasValue && nextDueDate.Value > task.RecurrenceEndDate.Value)
+                    {
+                        Logger.Instance?.Info("TaskService", $"Recurring task '{task.Title}' has reached end date");
+                        continue;
+                    }
+
+                    // Create new task instance
+                    var newTask = new TaskItem
+                    {
+                        Title = task.Title,
+                        Description = task.Description,
+                        Priority = task.Priority,
+                        DueDate = nextDueDate,
+                        Tags = new List<string>(task.Tags),
+                        ParentTaskId = task.ParentTaskId,
+                        DependsOn = new List<Guid>(task.DependsOn),
+                        Recurrence = task.Recurrence,
+                        RecurrenceInterval = task.RecurrenceInterval,
+                        RecurrenceEndDate = task.RecurrenceEndDate,
+                        Status = TaskStatus.Pending,
+                        Progress = 0
+                    };
+
+                    AddTask(newTask);
+
+                    // Update last recurrence date
+                    task.LastRecurrence = DateTime.Now;
+                    ScheduleSave();
+
+                    Logger.Instance?.Info("TaskService", $"Created recurring task instance: {newTask.Title} (Due: {nextDueDate.Value:yyyy-MM-dd})");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check if a task should recur now
+        /// </summary>
+        private bool ShouldRecur(TaskItem task)
+        {
+            if (!task.LastRecurrence.HasValue)
+                return true; // First recurrence
+
+            var timeSinceLastRecurrence = DateTime.Now - task.LastRecurrence.Value;
+
+            return task.Recurrence switch
+            {
+                RecurrenceType.Daily => timeSinceLastRecurrence.TotalDays >= task.RecurrenceInterval,
+                RecurrenceType.Weekly => timeSinceLastRecurrence.TotalDays >= (task.RecurrenceInterval * 7),
+                RecurrenceType.Monthly => timeSinceLastRecurrence.TotalDays >= (task.RecurrenceInterval * 30),
+                RecurrenceType.Yearly => timeSinceLastRecurrence.TotalDays >= (task.RecurrenceInterval * 365),
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// Calculate next due date for recurring task
+        /// </summary>
+        private DateTime? CalculateNextDueDate(TaskItem task)
+        {
+            if (!task.DueDate.HasValue)
+                return null;
+
+            return task.Recurrence switch
+            {
+                RecurrenceType.Daily => task.DueDate.Value.AddDays(task.RecurrenceInterval),
+                RecurrenceType.Weekly => task.DueDate.Value.AddDays(task.RecurrenceInterval * 7),
+                RecurrenceType.Monthly => task.DueDate.Value.AddMonths(task.RecurrenceInterval),
+                RecurrenceType.Yearly => task.DueDate.Value.AddYears(task.RecurrenceInterval),
+                _ => null
+            };
+        }
+
+        #endregion
+
+        #region Notes
+
+        /// <summary>
+        /// Add a note to a task
+        /// </summary>
+        public TaskNote AddNote(Guid taskId, string content)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                {
+                    Logger.Instance?.Warning("TaskService", $"Cannot add note: task not found");
+                    return null;
+                }
+
+                var task = tasks[taskId];
+                var note = new TaskNote
+                {
+                    Content = content,
+                    CreatedAt = DateTime.Now
+                };
+
+                task.Notes.Add(note);
+                task.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+
+                Logger.Instance?.Info("TaskService", $"Added note to task: {task.Title}");
+                return note;
+            }
+        }
+
+        /// <summary>
+        /// Remove a note from a task
+        /// </summary>
+        public bool RemoveNote(Guid taskId, Guid noteId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                {
+                    Logger.Instance?.Warning("TaskService", $"Cannot remove note: task not found");
+                    return false;
+                }
+
+                var task = tasks[taskId];
+                var note = task.Notes.FirstOrDefault(n => n.Id == noteId);
+                if (note == null)
+                {
+                    Logger.Instance?.Debug("TaskService", $"Note not found");
+                    return false;
+                }
+
+                task.Notes.Remove(note);
+                task.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+
+                Logger.Instance?.Info("TaskService", $"Removed note from task: {task.Title}");
+                return true;
+            }
+        }
+
+        #endregion
+
+        #region Project Integration
+
+        /// <summary>
+        /// Get tasks for a specific project
+        /// </summary>
+        public List<TaskItem> GetTasksForProject(Guid projectId)
+        {
+            return GetTasks(t => !t.Deleted && t.ProjectId == projectId);
+        }
+
+        /// <summary>
+        /// Get task statistics for a project
+        /// </summary>
+        public ProjectTaskStats GetProjectStats(Guid projectId)
+        {
+            var tasks = GetTasksForProject(projectId);
+
+            return new ProjectTaskStats
+            {
+                ProjectId = projectId,
+                TotalTasks = tasks.Count,
+                CompletedTasks = tasks.Count(t => t.Status == TaskStatus.Completed),
+                InProgressTasks = tasks.Count(t => t.Status == TaskStatus.InProgress),
+                PendingTasks = tasks.Count(t => t.Status == TaskStatus.Pending),
+                OverdueTasks = tasks.Count(t => t.IsOverdue),
+                HighPriorityTasks = tasks.Count(t => t.Priority == TaskPriority.High && t.Status != TaskStatus.Completed)
+            };
+        }
+
+        #endregion
+
+        #region Export
+
+        /// <summary>
+        /// Export tasks to Markdown format
+        /// </summary>
+        public bool ExportToMarkdown(string filePath)
+        {
+            try
+            {
+                lock (lockObject)
+                {
+                    var lines = new List<string>();
+                    lines.Add("# Task Export");
+                    lines.Add($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    lines.Add("");
+
+                    // Get all non-deleted tasks
+                    var allTasks = tasks.Values.Where(t => !t.Deleted).ToList();
+                    var rootTasks = allTasks.Where(t => !t.ParentTaskId.HasValue).OrderBy(t => t.SortOrder).ToList();
+
+                    foreach (var task in rootTasks)
+                    {
+                        ExportTaskToMarkdown(task, lines, 0);
+                    }
+
+                    File.WriteAllLines(filePath, lines);
+                    Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to Markdown: {filePath}");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskService", $"Failed to export to Markdown: {ex.Message}", ex);
+                return false;
+            }
+        }
+
+        private void ExportTaskToMarkdown(TaskItem task, List<string> lines, int indent)
+        {
+            var indentStr = new string(' ', indent * 2);
+            var checkbox = task.Status == TaskStatus.Completed ? "[x]" : "[ ]";
+            var priorityIcon = task.PriorityIcon;
+            var dueStr = task.DueDate.HasValue ? $" (Due: {task.DueDate.Value:yyyy-MM-dd})" : "";
+            var blockedStr = task.IsBlocked ? " [BLOCKED]" : "";
+
+            lines.Add($"{indentStr}- {checkbox} **{task.Title}** {priorityIcon}{dueStr}{blockedStr}");
+
+            if (!string.IsNullOrWhiteSpace(task.Description))
+            {
+                lines.Add($"{indentStr}  {task.Description}");
+            }
+
+            if (task.Tags.Any())
+            {
+                lines.Add($"{indentStr}  Tags: {string.Join(", ", task.Tags)}");
+            }
+
+            if (task.Notes.Any())
+            {
+                lines.Add($"{indentStr}  Notes:");
+                foreach (var note in task.Notes)
+                {
+                    lines.Add($"{indentStr}    - {note.Content}");
+                }
+            }
+
+            // Add subtasks recursively
+            var subtasks = GetSubtasks(task.Id).OrderBy(t => t.SortOrder).ToList();
+            foreach (var subtask in subtasks)
+            {
+                ExportTaskToMarkdown(subtask, lines, indent + 1);
+            }
+
+            lines.Add("");
+        }
+
+        /// <summary>
+        /// Export tasks to CSV format
+        /// </summary>
+        public bool ExportToCSV(string filePath)
+        {
+            try
+            {
+                lock (lockObject)
+                {
+                    var lines = new List<string>();
+                    lines.Add("Id,Title,Status,Priority,DueDate,Progress,Description,Tags,Created,Updated");
+
+                    var allTasks = tasks.Values.Where(t => !t.Deleted).OrderBy(t => t.CreatedAt).ToList();
+
+                    foreach (var task in allTasks)
+                    {
+                        var fields = new[]
+                        {
+                            task.Id.ToString(),
+                            EscapeCsv(task.Title),
+                            task.Status.ToString(),
+                            task.Priority.ToString(),
+                            task.DueDate?.ToString("yyyy-MM-dd") ?? "",
+                            task.Progress.ToString(),
+                            EscapeCsv(task.Description),
+                            EscapeCsv(string.Join("; ", task.Tags)),
+                            task.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                            task.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                        };
+
+                        lines.Add(string.Join(",", fields));
+                    }
+
+                    File.WriteAllLines(filePath, lines);
+                    Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to CSV: {filePath}");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskService", $"Failed to export to CSV: {ex.Message}", ex);
+                return false;
+            }
+        }
+
+        private string EscapeCsv(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            // Escape quotes and wrap in quotes if contains comma, quote, or newline
+            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+            {
+                return "\"" + value.Replace("\"", "\"\"") + "\"";
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Export tasks to JSON format
+        /// </summary>
+        public bool ExportToJson(string filePath)
+        {
+            try
+            {
+                lock (lockObject)
+                {
+                    var allTasks = tasks.Values.Where(t => !t.Deleted).ToList();
+                    var json = JsonSerializer.Serialize(allTasks, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
+
+                    File.WriteAllText(filePath, json);
+                    Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to JSON: {filePath}");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskService", $"Failed to export to JSON: {ex.Message}", ex);
+                return false;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Dispose resources (timer)
+        /// </summary>
+        public void Dispose()
+        {
+            if (saveTimer != null)
+            {
+                // Ensure any pending save is executed before disposal
+                if (pendingSave)
+                {
+                    SaveToFileAsync().Wait();
+                }
+
+                saveTimer.Dispose();
+                saveTimer = null;
             }
         }
     }

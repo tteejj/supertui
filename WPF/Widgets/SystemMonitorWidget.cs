@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
+using SuperTUI.Core.Events;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
@@ -19,10 +20,10 @@ namespace SuperTUI.Widgets
     public class SystemMonitorWidget : WidgetBase, IThemeable
     {
         private DispatcherTimer updateTimer;
-        private PerformanceCounter cpuCounter;
-        private PerformanceCounter ramCounter;
-        private PerformanceCounter networkSentCounter;
-        private PerformanceCounter networkReceivedCounter;
+        private System.Diagnostics.PerformanceCounter cpuCounter;
+        private System.Diagnostics.PerformanceCounter ramCounter;
+        private System.Diagnostics.PerformanceCounter networkSentCounter;
+        private System.Diagnostics.PerformanceCounter networkReceivedCounter;
 
         private TextBlock cpuLabel;
         private TextBlock cpuValue;
@@ -44,7 +45,7 @@ namespace SuperTUI.Widgets
 
         public SystemMonitorWidget()
         {
-            Name = "System Monitor";
+            WidgetName = "System Monitor";
         }
 
         public override void Initialize()
@@ -52,19 +53,19 @@ namespace SuperTUI.Widgets
             try
             {
                 // Initialize performance counters
-                cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total");
 
                 // Get available RAM counter
-                ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+                ramCounter = new System.Diagnostics.PerformanceCounter("Memory", "Available MBytes");
 
                 // Network counters (first network interface)
-                var category = new PerformanceCounterCategory("Network Interface");
+                var category = new System.Diagnostics.PerformanceCounterCategory("Network Interface");
                 var instanceNames = category.GetInstanceNames();
                 if (instanceNames.Length > 0)
                 {
                     string instanceName = instanceNames[0];
-                    networkSentCounter = new PerformanceCounter("Network Interface", "Bytes Sent/sec", instanceName);
-                    networkReceivedCounter = new PerformanceCounter("Network Interface", "Bytes Received/sec", instanceName);
+                    networkSentCounter = new System.Diagnostics.PerformanceCounter("Network Interface", "Bytes Sent/sec", instanceName);
+                    networkReceivedCounter = new System.Diagnostics.PerformanceCounter("Network Interface", "Bytes Received/sec", instanceName);
                 }
             }
             catch (Exception ex)
@@ -260,14 +261,20 @@ namespace SuperTUI.Widgets
                     networkValue.Text = $"↓ {FormatBytes(received)}/s  ↑ {FormatBytes(sent)}/s";
                 }
 
-                // Publish event
+                // Publish system resources event
                 EventBus.Instance.Publish(new SystemResourcesChangedEvent
                 {
                     CpuUsagePercent = lastCpu,
                     MemoryUsedBytes = (long)(lastRam * GetTotalPhysicalMemory() * 1024 * 1024 / 100),
                     MemoryTotalBytes = (long)(GetTotalPhysicalMemory() * 1024 * 1024),
-                    NetworkBytesSent = lastNetworkSent,
-                    NetworkBytesReceived = lastNetworkReceived,
+                    Timestamp = DateTime.Now
+                });
+
+                // Publish network activity event
+                EventBus.Instance.Publish(new NetworkActivityEvent
+                {
+                    BytesSent = lastNetworkSent,
+                    BytesReceived = lastNetworkReceived,
                     Timestamp = DateTime.Now
                 });
             }
@@ -367,7 +374,7 @@ namespace SuperTUI.Widgets
                 // Restore values
                 lastCpu = cpu;
                 lastRam = ram;
-                UpdateDisplay();
+                UpdateStats();
             }
         }
     }

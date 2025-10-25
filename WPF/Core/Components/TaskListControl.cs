@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core.Models;
@@ -27,7 +29,7 @@ namespace SuperTUI.Core.Components
         private TextBlock statusLabel;
 
         // Display state
-        private List<TaskViewModel> displayTasks;
+        private ObservableCollection<TaskViewModel> displayTasks;
         private TaskViewModel selectedTaskVM;
         private Dictionary<Guid, bool> expandedTasks;
 
@@ -53,7 +55,7 @@ namespace SuperTUI.Core.Components
         {
             theme = ThemeManager.Instance?.CurrentTheme ?? Theme.CreateDarkTheme();
             taskService = TaskService.Instance;
-            displayTasks = new List<TaskViewModel>();
+            displayTasks = new ObservableCollection<TaskViewModel>();
             expandedTasks = new Dictionary<Guid, bool>();
 
             BuildUI();
@@ -119,6 +121,10 @@ namespace SuperTUI.Core.Components
                 HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
 
+            // Enable virtualization for performance
+            VirtualizingPanel.SetIsVirtualizing(listBox, true);
+            VirtualizingPanel.SetVirtualizationMode(listBox, VirtualizationMode.Recycling);
+
             // Custom item container style for better control
             var itemContainerStyle = new Style(typeof(ListBoxItem));
             itemContainerStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(0)));
@@ -128,6 +134,9 @@ namespace SuperTUI.Core.Components
 
             // Custom item template
             listBox.ItemTemplate = CreateItemTemplate();
+
+            // Set ItemsSource once (will auto-update via ObservableCollection)
+            listBox.ItemsSource = displayTasks;
 
             mainPanel.Children.Add(listBox);
 
@@ -262,7 +271,7 @@ namespace SuperTUI.Core.Components
                 .Where(t => !t.IsSubtask)
                 .ToList();
 
-            // Build display list with expanded subtasks
+            // Build display list with expanded subtasks using Clear/Add for ObservableCollection
             displayTasks.Clear();
             foreach (var task in topLevelTasks)
             {
@@ -288,8 +297,7 @@ namespace SuperTUI.Core.Components
         {
             var previousSelection = selectedTaskVM?.Task.Id;
 
-            listBox.ItemsSource = null;
-            listBox.ItemsSource = displayTasks;
+            // No need to reset ItemsSource - ObservableCollection auto-updates UI
 
             // Restore selection
             if (previousSelection.HasValue)
@@ -625,7 +633,7 @@ namespace SuperTUI.Core.Components
             {
                 // Find and remove old edit panel if exists
                 var oldEditPanel = mainPanel.Children.OfType<Panel>()
-                    .FirstOrDefault(p => p != listBox && p.Background != null);
+                    .FirstOrDefault(p => !ReferenceEquals(p, listBox) && p.Background != null);
                 if (oldEditPanel != null)
                 {
                     mainPanel.Children.Remove(oldEditPanel);

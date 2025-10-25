@@ -53,19 +53,19 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
-        /// Enable hot reload and watch specified directories
+        /// Start watching specified directories for changes
         /// </summary>
-        public void Enable(params string[] watchPaths)
+        public void Start(IEnumerable<string> watchDirectories, string filePattern = "*.cs")
         {
             if (isEnabled)
             {
-                Logger.Instance.Warning("HotReload", "Hot reload already enabled");
+                Logger.Instance.Warning("HotReload", "Hot reload already started");
                 return;
             }
 
             try
             {
-                foreach (var path in watchPaths)
+                foreach (var path in watchDirectories)
                 {
                     if (!Directory.Exists(path))
                     {
@@ -76,7 +76,7 @@ namespace SuperTUI.Core.Infrastructure
                     var watcher = new FileSystemWatcher(path)
                     {
                         NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-                        Filter = "*.cs",
+                        Filter = filePattern,
                         IncludeSubdirectories = true,
                         EnableRaisingEvents = true
                     };
@@ -91,19 +91,19 @@ namespace SuperTUI.Core.Infrastructure
                 }
 
                 isEnabled = true;
-                Logger.Instance.Info("HotReload", "Hot reload enabled");
+                Logger.Instance.Info("HotReload", "Hot reload started");
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("HotReload", $"Failed to enable hot reload: {ex.Message}");
-                Disable();
+                Logger.Instance.Error("HotReload", $"Failed to start hot reload: {ex.Message}");
+                Stop();
             }
         }
 
         /// <summary>
-        /// Disable hot reload and stop watching files
+        /// Stop watching for changes
         /// </summary>
-        public void Disable()
+        public void Stop()
         {
             if (!isEnabled)
                 return;
@@ -128,7 +128,57 @@ namespace SuperTUI.Core.Infrastructure
             }
 
             isEnabled = false;
+            Logger.Instance.Info("HotReload", "Hot reload stopped");
+        }
+
+        /// <summary>
+        /// Enable hot reload
+        /// </summary>
+        public void Enable()
+        {
+            if (isEnabled)
+            {
+                Logger.Instance.Warning("HotReload", "Hot reload already enabled");
+                return;
+            }
+
+            // Note: Watchers must be started with Start() method
+            isEnabled = true;
+            Logger.Instance.Info("HotReload", "Hot reload enabled");
+        }
+
+        /// <summary>
+        /// Disable hot reload
+        /// </summary>
+        public void Disable()
+        {
+            if (!isEnabled)
+                return;
+
+            Stop();
             Logger.Instance.Info("HotReload", "Hot reload disabled");
+        }
+
+        /// <summary>
+        /// Set debounce delay in milliseconds
+        /// </summary>
+        public void SetDebounceDelay(int milliseconds)
+        {
+            // Note: Currently using hardcoded 500ms delay in OnFileChanged
+            // This is a stub implementation for interface compliance
+            Logger.Instance.Warning("HotReload", $"SetDebounceDelay not fully implemented (requested: {milliseconds}ms, using hardcoded 500ms)");
+        }
+
+        /// <summary>
+        /// Enable hot reload and watch specified directories (legacy method)
+        /// </summary>
+        public void Enable(params string[] watchPaths)
+        {
+            Enable();
+            if (watchPaths != null && watchPaths.Length > 0)
+            {
+                Start(watchPaths);
+            }
         }
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)

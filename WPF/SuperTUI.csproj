@@ -14,6 +14,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Package dependencies -->
+    <!-- System.Management.Automation REMOVED: Security policy - no external code execution packages (2025-10-25) -->
+    <!-- <PackageReference Include="System.Management.Automation" Version="7.4.0" /> -->
+
+    <!-- Test dependencies (excluded from build) -->
+    <PackageReference Include="xunit" Version="2.6.2" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Exclude debug/temp files from compilation -->
     <Compile Remove="compile_error.cs" />
     <Compile Remove="**/*.ps1" />
@@ -24,11 +34,16 @@
     <!-- Exclude example/documentation files -->
     <Compile Remove="Core/StateMigrationExamples.cs" />
 
-    <!-- Exclude widgets requiring external dependencies -->
+    <!-- SECURITY POLICY: Exclude widgets requiring external code execution packages -->
+    <!-- TerminalWidget requires System.Management.Automation (PowerShell) - arbitrary code execution risk -->
     <Compile Remove="Widgets/TerminalWidget.cs" />
+
+    <!-- SystemMonitorWidget requires System.Management (WMI) - security risk, uses inline without package -->
+    <!-- Note: System.Management is part of .NET Framework but provides WMI access which can be abused -->
     <Compile Remove="Widgets/SystemMonitorWidget.cs" />
 
-    <!-- Exclude DI extensions requiring Microsoft.Extensions.DependencyInjection -->
+    <!-- Exclude old DI implementation (requires Microsoft.Extensions.DependencyInjection) -->
+    <!-- We're building our own zero-dependency DI container for security -->
     <Compile Remove="Core/DependencyInjection/**/*.cs" />
   </ItemGroup>
 

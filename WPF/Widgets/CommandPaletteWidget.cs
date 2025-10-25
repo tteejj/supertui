@@ -28,7 +28,7 @@ namespace SuperTUI.Widgets
 
         public CommandPaletteWidget()
         {
-            Name = "Command Palette";
+            WidgetName = "Command Palette";
             allItems = new List<PaletteItem>();
             filteredItems = new List<PaletteItem>();
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SuperTUI.Core.Models
 {
@@ -22,6 +23,35 @@ namespace SuperTUI.Core.Models
         Low = 0,
         Medium = 1,
         High = 2
+    }
+
+    /// <summary>
+    /// Recurrence type enumeration
+    /// </summary>
+    public enum RecurrenceType
+    {
+        None = 0,
+        Daily = 1,
+        Weekly = 2,
+        Monthly = 3,
+        Yearly = 4
+    }
+
+    /// <summary>
+    /// Task note model
+    /// </summary>
+    public class TaskNote
+    {
+        public Guid Id { get; set; }
+        public string Content { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public TaskNote()
+        {
+            Id = Guid.NewGuid();
+            Content = string.Empty;
+            CreatedAt = DateTime.Now;
+        }
     }
 
     /// <summary>
@@ -50,6 +80,18 @@ namespace SuperTUI.Core.Models
         public Guid? ParentTaskId { get; set; }
         public int SortOrder { get; set; } // For ordering subtasks
 
+        // Dependencies
+        public List<Guid> DependsOn { get; set; } // Tasks that must be completed first
+
+        // Recurrence
+        public RecurrenceType Recurrence { get; set; }
+        public int RecurrenceInterval { get; set; } // Every N days/weeks/months
+        public DateTime? RecurrenceEndDate { get; set; }
+        public DateTime? LastRecurrence { get; set; }
+
+        // Notes
+        public List<TaskNote> Notes { get; set; }
+
         public TaskItem()
         {
             Id = Guid.NewGuid();
@@ -63,12 +105,39 @@ namespace SuperTUI.Core.Models
             Deleted = false;
             Tags = new List<string>();
             SortOrder = 0;
+            DependsOn = new List<Guid>();
+            Recurrence = RecurrenceType.None;
+            RecurrenceInterval = 1;
+            Notes = new List<TaskNote>();
         }
 
         /// <summary>
         /// Check if this task is a subtask
         /// </summary>
         public bool IsSubtask => ParentTaskId.HasValue;
+
+        /// <summary>
+        /// Check if this task is blocked by dependencies
+        /// Note: Requires TaskService to evaluate dependencies
+        /// </summary>
+        public bool IsBlocked
+        {
+            get
+            {
+                if (DependsOn == null || !DependsOn.Any())
+                    return false;
+
+                // Check if any dependencies are not completed
+                var taskService = SuperTUI.Core.Services.TaskService.Instance;
+                foreach (var depId in DependsOn)
+                {
+                    var depTask = taskService.GetTask(depId);
+                    if (depTask != null && depTask.Status != TaskStatus.Completed)
+                        return true;
+                }
+                return false;
+            }
+        }
 
         /// <summary>
         /// Check if task is overdue
@@ -167,7 +236,18 @@ namespace SuperTUI.Core.Models
                 ProjectId = this.ProjectId,
                 Tags = new List<string>(this.Tags),
                 ParentTaskId = this.ParentTaskId,
-                SortOrder = this.SortOrder
+                SortOrder = this.SortOrder,
+                DependsOn = new List<Guid>(this.DependsOn),
+                Recurrence = this.Recurrence,
+                RecurrenceInterval = this.RecurrenceInterval,
+                RecurrenceEndDate = this.RecurrenceEndDate,
+                LastRecurrence = this.LastRecurrence,
+                Notes = this.Notes.Select(n => new TaskNote
+                {
+                    Id = n.Id,
+                    Content = n.Content,
+                    CreatedAt = n.CreatedAt
+                }).ToList()
             };
         }
 
@@ -184,6 +264,10 @@ namespace SuperTUI.Core.Models
 
             // Status icon
             parts.Add(StatusIcon);
+
+            // Blocked indicator
+            if (IsBlocked)
+                parts.Add("⛔");
 
             // Priority icon
             var priorityChar = Priority == TaskPriority.High ? "!" :

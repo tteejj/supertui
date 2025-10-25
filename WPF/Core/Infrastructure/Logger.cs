@@ -48,8 +48,38 @@ namespace SuperTUI.Infrastructure
     }
 
     /// <summary>
+    /// Log drop policy determines behavior when queues are full
+    /// </summary>
+    public enum LogDropPolicy
+    {
+        /// <summary>
+        /// Drop oldest normal-priority logs when queue is full (default)
+        /// Critical/Error logs are NEVER dropped
+        /// </summary>
+        DropOldest,
+
+        /// <summary>
+        /// Block the calling thread until space is available
+        /// May cause UI freezes under extreme load
+        /// </summary>
+        BlockCaller,
+
+        /// <summary>
+        /// Slow down logging by introducing small delays
+        /// Provides backpressure to reduce log rate
+        /// </summary>
+        Throttle
+    }
+
+    /// <summary>
     /// File-based log sink with rotation and async I/O
     /// Uses a background thread to write logs without blocking the UI
+    ///
+    /// RELIABILITY FEATURES (Phase 2):
+    /// - Separate priority queues: Critical/Error logs NEVER dropped
+    /// - Configurable drop policy for normal logs
+    /// - Metrics exposed for monitoring
+    /// - Backpressure mechanism to prevent memory exhaustion
     /// </summary>
     public class FileLogSink : ILogSink, IDisposable
     {
@@ -57,7 +87,12 @@ namespace SuperTUI.Infrastructure
         private readonly string logFilePrefix;
         private readonly long maxFileSizeBytes;
         private readonly int maxFiles;
-        private readonly System.Collections.Concurrent.BlockingCollection<string> logQueue;
+
+        // PHASE 2 FIX: Separate queues by priority
+        private readonly System.Collections.Concurrent.BlockingCollection<string> criticalQueue;  // Error, Critical
+        private readonly System.Collections.Concurrent.BlockingCollection<string> normalQueue;    // Trace, Debug, Info, Warning
+
+        private readonly LogDropPolicy dropPolicy;
         private readonly System.Threading.Thread writerThread;
         private readonly object lockObject = new object();
         private StreamWriter currentWriter;
@@ -65,19 +100,24 @@ namespace SuperTUI.Infrastructure
         private long currentFileSize;
         private bool disposed = false;
 
-        // Track dropped logs
+        // Track dropped logs (normal priority only - critical NEVER dropped)
         private long droppedLogCount = 0;
         private DateTime lastDroppedLogWarning = DateTime.MinValue;
 
-        public FileLogSink(string logDirectory, string logFilePrefix = "supertui", long maxFileSizeMB = 10, int maxFiles = 5)
+        public FileLogSink(string logDirectory, string logFilePrefix = "supertui", long maxFileSizeMB = 10, int maxFiles = 5, LogDropPolicy dropPolicy = LogDropPolicy.DropOldest)
         {
             this.logDirectory = logDirectory;
             this.logFilePrefix = logFilePrefix;
             this.maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
             this.maxFiles = maxFiles;
+            this.dropPolicy = dropPolicy;
 
-            // Create queue for async logging (bounded to prevent memory issues)
-            this.logQueue = new System.Collections.Concurrent.BlockingCollection<string>(boundedCapacity: 10000);
+            // PHASE 2 FIX: Separate queues by priority
+            // Critical queue: smaller but NEVER drops logs (blocking if necessary)
+            this.criticalQueue = new System.Collections.Concurrent.BlockingCollection<string>(boundedCapacity: 1000);
+
+            // Normal queue: larger, can drop logs based on policy
+            this.normalQueue = new System.Collections.Concurrent.BlockingCollection<string>(boundedCapacity: 10000);
 
             Directory.CreateDirectory(logDirectory);
             OpenNewLogFile();
@@ -86,7 +126,8 @@ namespace SuperTUI.Infrastructure
             writerThread = new System.Threading.Thread(WriterThreadProc)
             {
                 IsBackground = true,
-                Name = "FileLogSink Writer"
+                Name = "FileLogSink Writer",
+                Priority = System.Threading.ThreadPriority.BelowNormal  // Don't interfere with UI
             };
             writerThread.Start();
         }
@@ -128,6 +169,8 @@ namespace SuperTUI.Infrastructure
         /// <summary>
         /// Background thread that writes log entries to disk
         /// This prevents blocking the UI thread during log writes
+        ///
+        /// PHASE 2 FIX: Processes critical queue with priority
         /// </summary>
         private void WriterThreadProc()
         {
@@ -138,8 +181,22 @@ namespace SuperTUI.Infrastructure
             {
                 while (!disposed)
                 {
-                    // Try to get a log entry from queue (timeout to allow periodic flush)
-                    if (logQueue.TryTake(out string line, millisecondsTimeout: 100))
+                    string line = null;
+                    bool gotLine = false;
+
+                    // PHASE 2 FIX: Always prioritize critical queue
+                    // Check critical queue first (blocks for up to 10ms)
+                    if (criticalQueue.TryTake(out line, millisecondsTimeout: 10))
+                    {
+                        gotLine = true;
+                    }
+                    // Then check normal queue (blocks for up to 90ms)
+                    else if (normalQueue.TryTake(out line, millisecondsTimeout: 90))
+                    {
+                        gotLine = true;
+                    }
+
+                    if (gotLine)
                     {
                         lock (lockObject)
                         {
@@ -158,8 +215,9 @@ namespace SuperTUI.Infrastructure
                         }
                     }
 
-                    // Periodic flush (every second or when queue is empty)
-                    if ((DateTime.Now - lastFlushTime).TotalMilliseconds >= flushIntervalMs || logQueue.Count == 0)
+                    // Periodic flush (every second or when queues are empty)
+                    if ((DateTime.Now - lastFlushTime).TotalMilliseconds >= flushIntervalMs ||
+                        (criticalQueue.Count == 0 && normalQueue.Count == 0))
                     {
                         lock (lockObject)
                         {
@@ -180,8 +238,20 @@ namespace SuperTUI.Infrastructure
             }
             finally
             {
-                // Drain remaining queue items on shutdown
-                while (logQueue.TryTake(out string line, millisecondsTimeout: 0))
+                // Drain remaining queue items on shutdown - CRITICAL FIRST
+                while (criticalQueue.TryTake(out string line, millisecondsTimeout: 0))
+                {
+                    try
+                    {
+                        lock (lockObject)
+                        {
+                            currentWriter?.Write(line);
+                        }
+                    }
+                    catch { }
+                }
+
+                while (normalQueue.TryTake(out string line, millisecondsTimeout: 0))
                 {
                     try
                     {
@@ -221,21 +291,75 @@ namespace SuperTUI.Infrastructure
 
             line += "\n";
 
-            // Add to queue (non-blocking)
-            // If queue is full, TryAdd will fail and log is dropped (prevents memory issues)
-            if (!logQueue.TryAdd(line, millisecondsTimeout: 0))
-            {
-                // Queue is full - log is dropped
-                // Increment counter and warn periodically
-                System.Threading.Interlocked.Increment(ref droppedLogCount);
+            // PHASE 2 FIX: Route to appropriate queue based on severity
+            bool isCritical = entry.Level >= LogLevel.Error;
 
-                // Warn at most once per minute to avoid console spam
-                if ((DateTime.Now - lastDroppedLogWarning).TotalSeconds >= 60)
+            if (isCritical)
+            {
+                // CRITICAL/ERROR: NEVER drop - block if necessary
+                try
                 {
-                    lastDroppedLogWarning = DateTime.Now;
-                    Console.WriteLine($"[FileLogSink WARNING] Log queue full! {droppedLogCount} logs dropped. " +
-                                    "Disk may be slow or logging rate too high. Consider increasing queue size or reducing log level.");
+                    if (!criticalQueue.TryAdd(line, millisecondsTimeout: 5000))
+                    {
+                        // If even critical queue is full after 5 seconds, this is SERIOUS
+                        // Log to console and throw exception
+                        Console.WriteLine($"[FileLogSink CRITICAL] Critical log queue overflow! Disk may be full or I/O is blocked.");
+                        throw new InvalidOperationException("Critical log queue overflow - disk may be full or I/O blocked");
+                    }
                 }
+                catch (InvalidOperationException)
+                {
+                    // Queue was marked as complete (disposing) - write to console as last resort
+                    Console.WriteLine($"[CRITICAL] {line}");
+                    throw;
+                }
+            }
+            else
+            {
+                // NORMAL: Apply drop policy
+                switch (dropPolicy)
+                {
+                    case LogDropPolicy.DropOldest:
+                        // Try to add, if full drop oldest
+                        if (!normalQueue.TryAdd(line, millisecondsTimeout: 0))
+                        {
+                            System.Threading.Interlocked.Increment(ref droppedLogCount);
+
+                            // Try to remove oldest and add new
+                            if (normalQueue.TryTake(out _))
+                            {
+                                normalQueue.TryAdd(line, millisecondsTimeout: 0);
+                            }
+
+                            WarnAboutDroppedLogs();
+                        }
+                        break;
+
+                    case LogDropPolicy.BlockCaller:
+                        // Block until space available (may freeze UI)
+                        normalQueue.Add(line);
+                        break;
+
+                    case LogDropPolicy.Throttle:
+                        // Try for 100ms, then drop
+                        if (!normalQueue.TryAdd(line, millisecondsTimeout: 100))
+                        {
+                            System.Threading.Interlocked.Increment(ref droppedLogCount);
+                            WarnAboutDroppedLogs();
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void WarnAboutDroppedLogs()
+        {
+            // Warn at most once per minute to avoid console spam
+            if ((DateTime.Now - lastDroppedLogWarning).TotalSeconds >= 60)
+            {
+                lastDroppedLogWarning = DateTime.Now;
+                Console.WriteLine($"[FileLogSink WARNING] Normal log queue full! {droppedLogCount} logs dropped. " +
+                                "Disk may be slow or logging rate too high. Consider increasing queue size or reducing log level.");
             }
         }
 
@@ -248,8 +372,8 @@ namespace SuperTUI.Infrastructure
         {
             if (disposed) return;
 
-            // Wait for queue to drain
-            while (logQueue.Count > 0)
+            // Wait for both queues to drain
+            while (criticalQueue.Count > 0 || normalQueue.Count > 0)
             {
                 System.Threading.Thread.Sleep(10);
             }
@@ -260,12 +384,23 @@ namespace SuperTUI.Infrastructure
             }
         }
 
+        /// <summary>
+        /// Get current queue depths for monitoring
+        /// </summary>
+        public (int critical, int normal) GetQueueDepth()
+        {
+            return (criticalQueue.Count, normalQueue.Count);
+        }
+
         public void Dispose()
         {
             if (disposed) return;
 
             disposed = true;
-            logQueue.CompleteAdding();
+
+            // Mark queues as complete (no more adding)
+            criticalQueue.CompleteAdding();
+            normalQueue.CompleteAdding();
 
             // Wait for writer thread to finish (with timeout)
             if (writerThread != null && writerThread.IsAlive)
@@ -273,7 +408,9 @@ namespace SuperTUI.Infrastructure
                 writerThread.Join(timeout: TimeSpan.FromSeconds(5));
             }
 
-            logQueue.Dispose();
+            // Dispose queues
+            criticalQueue.Dispose();
+            normalQueue.Dispose();
         }
     }
 
@@ -327,10 +464,17 @@ namespace SuperTUI.Infrastructure
 
     /// <summary>
     /// Centralized logging system with multiple sinks
+    /// PHASE 3: Maximum DI - Use dependency injection instead of singleton
     /// </summary>
     public class Logger : ILogger
     {
         private static Logger instance;
+
+        /// <summary>
+        /// Singleton instance - DEPRECATED
+        /// PHASE 3: Use dependency injection instead
+        /// </summary>
+        [Obsolete("Use dependency injection instead of Logger.Instance. Get ILogger from ServiceContainer.", error: false)]
         public static Logger Instance => instance ??= new Logger();
 
         private readonly List<ILogSink> sinks = new List<ILogSink>();
@@ -439,10 +583,12 @@ namespace SuperTUI.Infrastructure
                         ["Type"] = sink.GetType().Name
                     };
 
-                    // Get dropped log count if it's a FileLogSink
+                    // Get diagnostics if it's a FileLogSink
                     if (sink is FileLogSink fileSink)
                     {
                         info["DroppedLogs"] = fileSink.GetDroppedLogCount();
+                        var (critical, normal) = fileSink.GetQueueDepth();
+                        info["QueueDepth"] = $"Critical:{critical}, Normal:{normal}";
                     }
 
                     sinkInfo.Add(info);

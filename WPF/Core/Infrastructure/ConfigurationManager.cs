@@ -29,10 +29,32 @@ namespace SuperTUI.Infrastructure
 
     /// <summary>
     /// Hierarchical configuration system with validation and persistence
+    ///
+    /// PHASE 2 FIX: Improved type conversion with better error handling
+    ///
+    /// SUPPORTED TYPES:
+    /// - Primitives: int, long, bool, double, decimal, float, byte, etc.
+    /// - Strings: string
+    /// - Enums: any enum type
+    /// - Collections: List<T>, Dictionary<K,V>, T[] where T is supported
+    /// - Complex objects: any class with public properties
+    /// - Nullable types: int?, bool?, etc.
+    ///
+    /// UNSUPPORTED TYPES:
+    /// - Delegates, functions
+    /// - Interfaces (without concrete implementation)
+    /// - Abstract classes
+    /// - Generic types with complex constraints
     /// </summary>
     public class ConfigurationManager : IConfigurationManager
     {
         private static ConfigurationManager instance;
+
+        /// <summary>
+        /// Singleton instance - DEPRECATED in Phase 3
+        /// Use dependency injection: Get IConfigurationManager from ServiceContainer
+        /// </summary>
+        [Obsolete("Use dependency injection instead. Get IConfigurationManager from ServiceContainer.", error: false)]
         public static ConfigurationManager Instance => instance ??= new ConfigurationManager();
 
         private Dictionary<string, ConfigValue> config = new Dictionary<string, ConfigValue>();
@@ -165,11 +187,25 @@ namespace SuperTUI.Infrastructure
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.Error("Config", $"Failed to convert config value {key} (type: {configValue.ValueType?.Name ?? "unknown"}): {ex.Message}", ex);
+                    // PHASE 2 FIX: Better error reporting
+                    var targetType = typeof(T);
+                    var sourceType = configValue.Value?.GetType().Name ?? "null";
+
+                    Logger.Instance.Error("Config",
+                        $"CONFIGURATION ERROR: Failed to convert '{key}'\n" +
+                        $"  Expected type: {targetType.Name}\n" +
+                        $"  Actual type: {sourceType}\n" +
+                        $"  Value: {configValue.Value}\n" +
+                        $"  Error: {ex.Message}\n" +
+                        $"  Returning default: {defaultValue}",
+                        ex);
+
                     return defaultValue;
                 }
             }
 
+            // Key not found - log warning
+            Logger.Instance.Debug("Config", $"Configuration key '{key}' not found, using default value: {defaultValue}");
             return defaultValue;
         }
 
@@ -257,8 +293,34 @@ namespace SuperTUI.Infrastructure
                 return (T)Convert.ChangeType(configValue.Value, typeof(T));
             }
 
-            // Fallback - try direct cast
-            return (T)configValue.Value;
+            // PHASE 2 FIX: Fail fast on truly unsupported types
+            if (targetType.IsInterface || targetType.IsAbstract)
+            {
+                throw new NotSupportedException(
+                    $"Configuration does not support interface or abstract types: {targetType.Name}. " +
+                    $"Use a concrete class instead.");
+            }
+
+            if (typeof(Delegate).IsAssignableFrom(targetType))
+            {
+                throw new NotSupportedException(
+                    $"Configuration does not support delegate types: {targetType.Name}");
+            }
+
+            // Last resort - try direct cast
+            try
+            {
+                return (T)configValue.Value;
+            }
+            catch (InvalidCastException ex)
+            {
+                throw new NotSupportedException(
+                    $"Configuration type conversion failed for '{key}'. " +
+                    $"Type {targetType.Name} is not supported or value cannot be converted. " +
+                    $"Supported types: primitives, strings, enums, List<T>, Dictionary<K,V>, arrays, and simple objects. " +
+                    $"See ConfigurationManager documentation for details.",
+                    ex);
+            }
         }
 
         /// <summary>

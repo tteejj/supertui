@@ -42,7 +42,7 @@ namespace SuperTUI.Widgets
 
         public GitStatusWidget(string repoPath = null)
         {
-            Name = "Git Status";
+            WidgetName = "Git Status";
             repositoryPath = repoPath ?? Directory.GetCurrentDirectory();
         }
 
