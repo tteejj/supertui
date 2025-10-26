@@ -182,5 +182,126 @@ namespace SuperTUI.Core
             children.Clear();
             layoutParams.Clear();
         }
+
+        /// <summary>
+        /// Swap the positions of two widgets in the grid
+        /// </summary>
+        public void SwapWidgets(UIElement widget1, UIElement widget2)
+        {
+            if (widget1 == null || widget2 == null)
+                return;
+
+            if (!layoutParams.ContainsKey(widget1) || !layoutParams.ContainsKey(widget2))
+            {
+                Logger.Instance?.Warning("GridLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
+                return;
+            }
+
+            // Get current layout params
+            var params1 = layoutParams[widget1];
+            var params2 = layoutParams[widget2];
+
+            // Swap Row/Column values
+            int? tempRow = params1.Row;
+            int? tempCol = params1.Column;
+            int? tempRowSpan = params1.RowSpan;
+            int? tempColSpan = params1.ColumnSpan;
+
+            params1.Row = params2.Row;
+            params1.Column = params2.Column;
+            params1.RowSpan = params2.RowSpan;
+            params1.ColumnSpan = params2.ColumnSpan;
+
+            params2.Row = tempRow;
+            params2.Column = tempCol;
+            params2.RowSpan = tempRowSpan;
+            params2.ColumnSpan = tempColSpan;
+
+            // Update visual positions
+            if (params1.Row.HasValue)
+                Grid.SetRow(widget1, params1.Row.Value);
+            if (params1.Column.HasValue)
+                Grid.SetColumn(widget1, params1.Column.Value);
+            if (params1.RowSpan.HasValue)
+                Grid.SetRowSpan(widget1, params1.RowSpan.Value);
+            if (params1.ColumnSpan.HasValue)
+                Grid.SetColumnSpan(widget1, params1.ColumnSpan.Value);
+
+            if (params2.Row.HasValue)
+                Grid.SetRow(widget2, params2.Row.Value);
+            if (params2.Column.HasValue)
+                Grid.SetColumn(widget2, params2.Column.Value);
+            if (params2.RowSpan.HasValue)
+                Grid.SetRowSpan(widget2, params2.RowSpan.Value);
+            if (params2.ColumnSpan.HasValue)
+                Grid.SetColumnSpan(widget2, params2.ColumnSpan.Value);
+
+            Logger.Instance?.Debug("GridLayoutEngine",
+                $"Swapped widgets: ({params2.Row},{params2.Column}) <-> ({params1.Row},{params1.Column})");
+        }
+
+        /// <summary>
+        /// Find widget in a specific direction from the given widget
+        /// Returns null if no widget found in that direction
+        /// </summary>
+        public UIElement FindWidgetInDirection(UIElement fromWidget, FocusDirection direction)
+        {
+            if (fromWidget == null || !layoutParams.ContainsKey(fromWidget))
+                return null;
+
+            var fromParams = layoutParams[fromWidget];
+            if (!fromParams.Row.HasValue || !fromParams.Column.HasValue)
+                return null;
+
+            int fromRow = fromParams.Row.Value;
+            int fromCol = fromParams.Column.Value;
+
+            UIElement bestMatch = null;
+            double bestDistance = double.MaxValue;
+
+            foreach (var kvp in layoutParams)
+            {
+                if (kvp.Key == fromWidget)
+                    continue;
+
+                var toParams = kvp.Value;
+                if (!toParams.Row.HasValue || !toParams.Column.HasValue)
+                    continue;
+
+                int toRow = toParams.Row.Value;
+                int toCol = toParams.Column.Value;
+
+                bool isInDirection = false;
+                double distance = 0;
+
+                switch (direction)
+                {
+                    case FocusDirection.Left:
+                        isInDirection = toCol < fromCol;
+                        distance = (fromCol - toCol) + Math.Abs(fromRow - toRow) * 0.5;
+                        break;
+                    case FocusDirection.Right:
+                        isInDirection = toCol > fromCol;
+                        distance = (toCol - fromCol) + Math.Abs(fromRow - toRow) * 0.5;
+                        break;
+                    case FocusDirection.Up:
+                        isInDirection = toRow < fromRow;
+                        distance = (fromRow - toRow) + Math.Abs(fromCol - toCol) * 0.5;
+                        break;
+                    case FocusDirection.Down:
+                        isInDirection = toRow > fromRow;
+                        distance = (toRow - fromRow) + Math.Abs(fromCol - toCol) * 0.5;
+                        break;
+                }
+
+                if (isInDirection && distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestMatch = kvp.Key;
+                }
+            }
+
+            return bestMatch;
+        }
     }
 }

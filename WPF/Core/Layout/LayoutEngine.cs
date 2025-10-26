@@ -6,6 +6,17 @@ using System.Windows.Controls;
 namespace SuperTUI.Core
 {
     /// <summary>
+    /// Directional focus/movement directions (i3-style)
+    /// </summary>
+    public enum FocusDirection
+    {
+        Left,
+        Down,
+        Up,
+        Right
+    }
+
+    /// <summary>
     /// Size constraint types
     /// </summary>
     public enum SizeMode
@@ -64,6 +75,14 @@ namespace SuperTUI.Core
         public abstract void Clear();
 
         public virtual List<UIElement> GetChildren() => new List<UIElement>(children);
+
+        /// <summary>
+        /// Get layout parameters for a specific element
+        /// </summary>
+        public virtual LayoutParams GetLayoutParams(UIElement element)
+        {
+            return layoutParams.TryGetValue(element, out var lp) ? lp : null;
+        }
 
         protected void ApplyCommonParams(UIElement child, LayoutParams lp)
         {

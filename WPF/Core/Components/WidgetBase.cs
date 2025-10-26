@@ -11,6 +11,19 @@ using SuperTUI.Core.Effects;
 namespace SuperTUI.Core
 {
     /// <summary>
+    /// Widget input modes for terminal-like keyboard handling
+    /// </summary>
+    public enum WidgetInputMode
+    {
+        /// <summary>Normal mode - navigation and commands</summary>
+        Normal,
+        /// <summary>Insert/Edit mode - text input active</summary>
+        Insert,
+        /// <summary>Command mode - accepting command input</summary>
+        Command
+    }
+
+    /// <summary>
     /// Base class for all widgets - small, focused, self-contained components
     /// Each widget maintains its own state independently
     /// </summary>
@@ -23,6 +36,22 @@ namespace SuperTUI.Core
         // Infrastructure helpers for easy access
         protected IEventBus EventBus => SuperTUI.Core.EventBus.Instance;
         protected ApplicationContext AppContext => ApplicationContext.Instance;
+
+        // Input mode management (terminal-like)
+        private WidgetInputMode inputMode = WidgetInputMode.Normal;
+        public WidgetInputMode InputMode
+        {
+            get => inputMode;
+            protected set
+            {
+                if (inputMode != value)
+                {
+                    inputMode = value;
+                    OnPropertyChanged(nameof(InputMode));
+                    OnInputModeChanged(value);
+                }
+            }
+        }
 
         // Focus management
         private bool hasFocus;
@@ -221,6 +250,12 @@ namespace SuperTUI.Core
         /// Called when widget loses focus
         /// </summary>
         public virtual void OnWidgetFocusLost() { }
+
+        /// <summary>
+        /// Called when input mode changes (Normal/Insert/Command)
+        /// Override to handle mode-specific behavior
+        /// </summary>
+        protected virtual void OnInputModeChanged(WidgetInputMode newMode) { }
 
         /// <summary>
         /// Save widget state (for persistence)

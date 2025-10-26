@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core
 {
@@ -263,6 +264,75 @@ namespace SuperTUI.Core
                     return i;
             }
             return -1;
+        }
+
+        /// <summary>
+        /// Swap two widgets by UIElement reference
+        /// </summary>
+        public void SwapWidgets(UIElement widget1, UIElement widget2)
+        {
+            if (widget1 == null || widget2 == null)
+                return;
+
+            int slot1 = FindSlotIndex(widget1);
+            int slot2 = FindSlotIndex(widget2);
+
+            if (slot1 < 0 || slot2 < 0)
+            {
+                Logger.Instance?.Warning("DashboardLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
+                return;
+            }
+
+            // Use existing slot-based swap
+            SwapWidgets(slot1, slot2);
+        }
+
+        /// <summary>
+        /// Find widget in a specific direction from the given widget
+        /// Returns null if no widget found in that direction
+        /// Dashboard uses 2x2 grid: [0]=TL, [1]=TR, [2]=BL, [3]=BR
+        /// </summary>
+        public UIElement FindWidgetInDirection(UIElement fromWidget, FocusDirection direction)
+        {
+            if (fromWidget == null)
+                return null;
+
+            int fromSlot = FindSlotIndex(fromWidget);
+            if (fromSlot < 0)
+                return null;
+
+            int targetSlot = -1;
+
+            // Map directions in 2x2 grid
+            switch (direction)
+            {
+                case FocusDirection.Left:
+                    // From right column to left column
+                    if (fromSlot == 1) targetSlot = 0; // TR -> TL
+                    else if (fromSlot == 3) targetSlot = 2; // BR -> BL
+                    break;
+
+                case FocusDirection.Right:
+                    // From left column to right column
+                    if (fromSlot == 0) targetSlot = 1; // TL -> TR
+                    else if (fromSlot == 2) targetSlot = 3; // BL -> BR
+                    break;
+
+                case FocusDirection.Up:
+                    // From bottom row to top row
+                    if (fromSlot == 2) targetSlot = 0; // BL -> TL
+                    else if (fromSlot == 3) targetSlot = 1; // BR -> TR
+                    break;
+
+                case FocusDirection.Down:
+                    // From top row to bottom row
+                    if (fromSlot == 0) targetSlot = 2; // TL -> BL
+                    else if (fromSlot == 1) targetSlot = 3; // TR -> BR
+                    break;
+            }
+
+            // Return widget if slot is occupied, null otherwise
+            return (targetSlot >= 0 && targetSlot < 4) ? widgets[targetSlot] : null;
         }
     }
 }

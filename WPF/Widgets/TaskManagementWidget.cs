@@ -741,8 +741,23 @@ namespace SuperTUI.Widgets
 
         public override void OnWidgetFocusReceived()
         {
-            taskListControl?.Focus();
-            Keyboard.Focus(taskListControl);
+            // Don't steal keyboard focus from workspace!
+            // Just update visual indicators to show this widget is focused
+            if (taskListControl != null)
+            {
+                taskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
+                taskListControl.BorderThickness = new Thickness(2);
+            }
+        }
+
+        public override void OnWidgetFocusLost()
+        {
+            // Reset visual indicators when focus is lost
+            if (taskListControl != null)
+            {
+                taskListControl.BorderBrush = new SolidColorBrush(theme.Border);
+                taskListControl.BorderThickness = new Thickness(1);
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

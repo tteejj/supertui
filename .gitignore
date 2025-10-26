@@ -60,6 +60,10 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 *~
+errors.txt
+build_output.txt
+compile_error.txt
+compile_error.cs
 
 # PowerShell specific
 *.ps1~

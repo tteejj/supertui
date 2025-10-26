@@ -56,6 +56,9 @@ namespace SuperTUI.Core
             var workspace = Workspaces.FirstOrDefault(w => w.Index == index);
             if (workspace != null && workspace != CurrentWorkspace)
             {
+                // Exit fullscreen mode on current workspace before switching
+                CurrentWorkspace?.ExitFullscreen();
+
                 // Deactivate current (preserves state)
                 CurrentWorkspace?.Deactivate();
 
