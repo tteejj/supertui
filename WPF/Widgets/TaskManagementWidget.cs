@@ -157,16 +157,18 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
-            // Main 3-column grid
+            // Main 3-column grid with terminal aesthetic
             mainGrid = new Grid
             {
                 Background = new SolidColorBrush(theme.Background)
             };
 
-            // Define columns: Filters (200) | Tasks (flex) | Details (300)
-            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
+            // Define columns: Filters (250) | Separator (1) | Tasks (flex) | Separator (1) | Details (350)
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(250) });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) }); // Separator
             mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) }); // Separator
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(350) });
 
             // Build each panel
             var filterPanel = BuildFilterPanel();
@@ -174,12 +176,31 @@ namespace SuperTUI.Widgets
             var detailPanel = BuildDetailPanel();
 
             Grid.SetColumn(filterPanel, 0);
-            Grid.SetColumn(taskPanel, 1);
-            Grid.SetColumn(detailPanel, 2);
+            Grid.SetColumn(taskPanel, 2);
+            Grid.SetColumn(detailPanel, 4);
 
             mainGrid.Children.Add(filterPanel);
             mainGrid.Children.Add(taskPanel);
             mainGrid.Children.Add(detailPanel);
+
+            // Add vertical separator lines
+            var separator1 = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Width = 1,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            Grid.SetColumn(separator1, 1);
+            mainGrid.Children.Add(separator1);
+
+            var separator2 = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Width = 1,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            Grid.SetColumn(separator2, 3);
+            mainGrid.Children.Add(separator2);
 
             this.Content = mainGrid;
         }
@@ -190,36 +211,61 @@ namespace SuperTUI.Widgets
         {
             var border = new Border
             {
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                Padding = new Thickness(10)
+                Background = new SolidColorBrush(theme.Background),
+                Padding = new Thickness(15, 10, 15, 10)
             };
 
             var stack = new StackPanel();
 
-            // Header
+            // Header with bottom border
+            var headerPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
             var header = new TextBlock
             {
                 Text = "FILTERS",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 11,
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 12,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                Margin = new Thickness(0, 0, 0, 10)
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 5)
             };
-            stack.Children.Add(header);
+            headerPanel.Children.Add(header);
 
-            // Filter list
+            // Separator line below header
+            var headerLine = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Height = 1,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            headerPanel.Children.Add(headerLine);
+            stack.Children.Add(headerPanel);
+
+            // Filter list with terminal styling
             filterListBox = new ListBox
             {
                 Background = Brushes.Transparent,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderThickness = new Thickness(0),
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 12
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 11,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
 
+            // Style the ListBox items
+            var itemContainerStyle = new Style(typeof(ListBoxItem));
+            itemContainerStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
+            itemContainerStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(8, 4, 8, 4)));
+            itemContainerStyle.Setters.Add(new Setter(ListBoxItem.MarginProperty, new Thickness(0, 1, 0, 1)));
+
+            var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty,
+                new SolidColorBrush(Color.FromArgb(60, theme.Accent.R, theme.Accent.G, theme.Accent.B))));
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.ForegroundProperty,
+                new SolidColorBrush(theme.Accent)));
+            itemContainerStyle.Triggers.Add(selectedTrigger);
+
+            filterListBox.ItemContainerStyle = itemContainerStyle;
             filterListBox.SelectionChanged += FilterListBox_SelectionChanged;
             stack.Children.Add(filterListBox);
 
@@ -291,11 +337,36 @@ namespace SuperTUI.Widgets
             var border = new Border
             {
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                Padding = new Thickness(10)
+                Padding = new Thickness(15, 10, 15, 10)
             };
 
+            var stack = new StackPanel();
+
+            // Header with bottom border
+            var headerPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            var header = new TextBlock
+            {
+                Text = "TASKS",
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            headerPanel.Children.Add(header);
+
+            // Separator line below header
+            var headerLine = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Height = 1,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            headerPanel.Children.Add(headerLine);
+            stack.Children.Add(headerPanel);
+
+            // Task list control
             taskListControl = new TaskListControl();
 
             // Subscribe to events
@@ -304,7 +375,9 @@ namespace SuperTUI.Widgets
             taskListControl.TaskAdded += OnTaskAdded;
             taskListControl.TaskDeleted += OnTaskDeleted;
 
-            border.Child = taskListControl;
+            stack.Children.Add(taskListControl);
+
+            border.Child = stack;
             return border;
         }
 
@@ -351,25 +424,35 @@ namespace SuperTUI.Widgets
         {
             var border = new Border
             {
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(15)
+                Background = new SolidColorBrush(theme.Background),
+                Padding = new Thickness(15, 10, 15, 10)
             };
 
             detailsPanel = new StackPanel();
 
-            // Header
+            // Header with bottom border
+            var headerPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
             var header = new TextBlock
             {
                 Text = "TASK DETAILS",
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 11,
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 12,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                Margin = new Thickness(0, 0, 0, 15)
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 5)
             };
-            detailsPanel.Children.Add(header);
+            headerPanel.Children.Add(header);
+
+            // Separator line below header
+            var headerLine = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Height = 1,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            headerPanel.Children.Add(headerLine);
+            detailsPanel.Children.Add(headerPanel);
 
             // Title (read-only, edit in inline editor)
             detailTitle = CreateDetailLabel("", fontSize: 14, bold: true);
@@ -379,18 +462,18 @@ namespace SuperTUI.Widgets
             var descLabel = new TextBlock
             {
                 Text = "Description:",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Margin = new Thickness(0, 10, 0, 3)
             };
             detailsPanel.Children.Add(descLabel);
 
             detailDescriptionBox = new TextBox
             {
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -406,10 +489,10 @@ namespace SuperTUI.Widgets
             saveDescButton = new Button
             {
                 Content = "Save Description",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Success),
-                Foreground = Brushes.White,
+                Background = new SolidColorBrush(theme.Accent),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
                 Margin = new Thickness(0, 3, 0, 10),
@@ -439,18 +522,18 @@ namespace SuperTUI.Widgets
             var tagsLabel = new TextBlock
             {
                 Text = "Tags (comma-separated):",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(theme.ForegroundSecondary),
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Margin = new Thickness(0, 10, 0, 3)
             };
             detailsPanel.Children.Add(tagsLabel);
 
             detailTagsBox = new TextBox
             {
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -461,10 +544,10 @@ namespace SuperTUI.Widgets
             saveTagsButton = new Button
             {
                 Content = "Save Tags",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Success),
-                Foreground = Brushes.White,
+                Background = new SolidColorBrush(theme.Accent),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
                 Margin = new Thickness(0, 3, 0, 10),
@@ -483,24 +566,33 @@ namespace SuperTUI.Widgets
             detailUpdated.Foreground = new SolidColorBrush(theme.ForegroundSecondary);
             detailsPanel.Children.Add(detailUpdated);
 
-            // Notes section
+            // Notes section with separator
+            var notesSeparator = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Height = 1,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 15, 0, 10)
+            };
+            detailsPanel.Children.Add(notesSeparator);
+
             var notesHeader = new TextBlock
             {
                 Text = "NOTES",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                Margin = new Thickness(0, 15, 0, 10)
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 8)
             };
             detailsPanel.Children.Add(notesHeader);
 
             notesListBox = new ListBox
             {
                 Name = "NotesListBox",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -515,9 +607,9 @@ namespace SuperTUI.Widgets
             addNoteBox = new TextBox
             {
                 Name = "AddNoteBox",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
@@ -529,10 +621,10 @@ namespace SuperTUI.Widgets
             var addNoteButton = new Button
             {
                 Content = "Add Note",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Info),
-                Foreground = Brushes.White,
+                Background = new SolidColorBrush(theme.Accent),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
                 Margin = new Thickness(5, 0, 0, 0),
@@ -543,15 +635,24 @@ namespace SuperTUI.Widgets
 
             detailsPanel.Children.Add(addNoteStack);
 
-            // Subtasks section
+            // Subtasks section with separator
+            var subtasksSeparator = new System.Windows.Shapes.Rectangle
+            {
+                Fill = new SolidColorBrush(theme.Border),
+                Height = 1,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 15, 0, 10)
+            };
+            detailsPanel.Children.Add(subtasksSeparator);
+
             var subtasksHeader = new TextBlock
             {
                 Text = "SUBTASKS",
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.ForegroundDisabled),
-                Margin = new Thickness(0, 15, 0, 10)
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 8)
             };
             detailsPanel.Children.Add(subtasksHeader);
 
@@ -572,7 +673,7 @@ namespace SuperTUI.Widgets
             return new TextBlock
             {
                 Text = text,
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = fontSize,
                 FontWeight = bold ? FontWeights.Bold : FontWeights.Normal,
                 Foreground = new SolidColorBrush(theme.Foreground),
@@ -650,7 +751,7 @@ namespace SuperTUI.Widgets
                     var noteText = new TextBlock
                     {
                         Text = $"[{note.CreatedAt:MM/dd HH:mm}] {note.Content}",
-                        FontFamily = new FontFamily("Consolas"),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                         FontSize = 11,
                         Foreground = new SolidColorBrush(theme.Foreground),
                         TextWrapping = TextWrapping.Wrap,
@@ -664,7 +765,7 @@ namespace SuperTUI.Widgets
                 var noNotes = new TextBlock
                 {
                     Text = "No notes",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 11,
                     Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                     Padding = new Thickness(3)
@@ -683,7 +784,7 @@ namespace SuperTUI.Widgets
                     var subtaskText = new TextBlock
                     {
                         Text = $"{subtask.StatusIcon} {subtask.Title}",
-                        FontFamily = new FontFamily("Consolas"),
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                         FontSize = 11,
                         Foreground = new SolidColorBrush(subtask.Status == TaskStatus.Completed ?
                             theme.ForegroundDisabled : theme.Foreground),
@@ -697,7 +798,7 @@ namespace SuperTUI.Widgets
                 var noSubtasks = new TextBlock
                 {
                     Text = "No subtasks",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 11,
                     Foreground = new SolidColorBrush(theme.ForegroundDisabled)
                 };
@@ -802,7 +903,7 @@ namespace SuperTUI.Widgets
                 var titleText = new TextBlock
                 {
                     Text = "Choose export format:",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
                     Foreground = new SolidColorBrush(theme.Foreground),
                     Margin = new Thickness(0, 0, 0, 15)
@@ -812,10 +913,10 @@ namespace SuperTUI.Widgets
                 var markdownBtn = new Button
                 {
                     Content = "Markdown (.md)",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Info),
-                    Foreground = Brushes.White,
+                    Background = new SolidColorBrush(theme.Accent),
+                    Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
                     Cursor = Cursors.Hand
@@ -826,10 +927,10 @@ namespace SuperTUI.Widgets
                 var csvBtn = new Button
                 {
                     Content = "CSV (.csv)",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Success),
-                    Foreground = Brushes.White,
+                    Background = new SolidColorBrush(theme.Accent),
+                    Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
                     Cursor = Cursors.Hand
@@ -840,10 +941,10 @@ namespace SuperTUI.Widgets
                 var jsonBtn = new Button
                 {
                     Content = "JSON (.json)",
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Warning),
-                    Foreground = Brushes.White,
+                    Background = new SolidColorBrush(theme.Accent),
+                    Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
                     Cursor = Cursors.Hand
