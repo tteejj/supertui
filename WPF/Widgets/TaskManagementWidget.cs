@@ -221,11 +221,11 @@ namespace SuperTUI.Widgets
             var headerPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
             var header = new TextBlock
             {
-                Text = "FILTERS",
+                Text = ">>> TERMINAL MODE ACTIVE <<<",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
-                FontSize = 12,
+                FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Foreground),
+                Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 0)),  // BRIGHT GREEN
                 Margin = new Thickness(0, 0, 0, 5)
             };
             headerPanel.Children.Add(header);
