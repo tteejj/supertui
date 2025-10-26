@@ -43,6 +43,16 @@ try {
     exit 1
 }
 
+# Initialize infrastructure (required for widgets)
+Write-Host "Initializing infrastructure..." -ForegroundColor Cyan
+$logger = [SuperTUI.Infrastructure.Logger]::Instance
+$logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Error)
+
+$themeManager = [SuperTUI.Infrastructure.ThemeManager]::Instance
+$themeManager.Initialize($null)
+$themeManager.ApplyTheme("Dark")
+Write-Host "Infrastructure ready" -ForegroundColor Green
+
 # Create main window - NO WPF CHROME
 [xml]$xaml = @"
 <Window
