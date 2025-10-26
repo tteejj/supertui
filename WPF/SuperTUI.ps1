@@ -268,7 +268,7 @@ $appContext = [SuperTUI.Infrastructure.ApplicationContext]::Instance
 Write-Host "ApplicationContext initialized" -ForegroundColor Green
 
 # Initialize StatePersistenceManager
-$stateManager = [SuperTUI.Infrastructure.StatePersistenceManager]::Instance
+$stateManager = [SuperTUI.Extensions.StatePersistenceManager]::Instance
 $stateManager.Initialize("$env:TEMP\SuperTUI-state.json")
 Write-Host "StatePersistenceManager initialized" -ForegroundColor Green
 
@@ -281,7 +281,7 @@ Write-Host "Infrastructure initialized" -ForegroundColor Green
 # Create and initialize the shortcut overlay
 $shortcutOverlay = New-Object SuperTUI.Core.Components.ShortcutOverlay(
     $themeManager,
-    [SuperTUI.Infrastructure.ShortcutManager]::Instance,
+    [SuperTUI.Core.ShortcutManager]::Instance,
     $logger
 )
 $shortcutOverlayContainer.Child = $shortcutOverlay
@@ -359,7 +359,7 @@ if ($currentTheme.Opacity -ne $null) {
 }
 
 # Subscribe to theme changes to update CRT overlay and opacity
-$themeManager.ThemeChanged += {
+$themeManager.add_ThemeChanged({
     param($sender, $args)
     $newTheme = $args.NewTheme
 
@@ -379,7 +379,7 @@ $themeManager.ThemeChanged += {
     if ($newTheme.Opacity -ne $null) {
         $window.Opacity = $newTheme.Opacity.WindowOpacity
     }
-}
+})
 
 Write-Host "CRT Effects Overlay initialized" -ForegroundColor Green
 
@@ -953,7 +953,7 @@ $window.Add_Closing({
 })
 
 # Auto-save on workspace switch
-$workspaceManager.WorkspaceChanged += {
+$workspaceManager.add_WorkspaceChanged({
     param($workspace)
 
     # Update ApplicationContext
@@ -970,7 +970,7 @@ $workspaceManager.WorkspaceChanged += {
             }
         }
     }
-}
+})
 
 Write-Host "State persistence hooks registered" -ForegroundColor Green
 
