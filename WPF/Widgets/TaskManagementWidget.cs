@@ -260,9 +260,9 @@ namespace SuperTUI.Widgets
 
             var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
             selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty,
-                new SolidColorBrush(Color.FromArgb(60, theme.Accent.R, theme.Accent.G, theme.Accent.B))));
+                new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B))));
             selectedTrigger.Setters.Add(new Setter(ListBoxItem.ForegroundProperty,
-                new SolidColorBrush(theme.Accent)));
+                new SolidColorBrush(theme.Primary)));
             itemContainerStyle.Triggers.Add(selectedTrigger);
 
             filterListBox.ItemContainerStyle = itemContainerStyle;
@@ -491,7 +491,7 @@ namespace SuperTUI.Widgets
                 Content = "Save Description",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Accent),
+                Background = new SolidColorBrush(theme.Primary),
                 Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
@@ -546,7 +546,7 @@ namespace SuperTUI.Widgets
                 Content = "Save Tags",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Accent),
+                Background = new SolidColorBrush(theme.Primary),
                 Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
@@ -623,7 +623,7 @@ namespace SuperTUI.Widgets
                 Content = "Add Note",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Background = new SolidColorBrush(theme.Accent),
+                Background = new SolidColorBrush(theme.Primary),
                 Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 3, 10, 3),
@@ -915,7 +915,7 @@ namespace SuperTUI.Widgets
                     Content = "Markdown (.md)",
                     FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Accent),
+                    Background = new SolidColorBrush(theme.Primary),
                     Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
@@ -929,7 +929,7 @@ namespace SuperTUI.Widgets
                     Content = "CSV (.csv)",
                     FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Accent),
+                    Background = new SolidColorBrush(theme.Primary),
                     Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
@@ -943,7 +943,7 @@ namespace SuperTUI.Widgets
                     Content = "JSON (.json)",
                     FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 12,
-                    Background = new SolidColorBrush(theme.Accent),
+                    Background = new SolidColorBrush(theme.Primary),
                     Foreground = new SolidColorBrush(theme.Background),
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
