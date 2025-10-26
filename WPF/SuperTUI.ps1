@@ -521,6 +521,8 @@ $workspace5.Widgets.Add($statsWidget)
 $workspaceManager.AddWorkspace($workspace5)
 
 # Workspace 6: Excel Integration (Import/Export/Automation)
+# DISABLED: Excel widgets have initialization errors - need ExcelMappingService
+<#
 $workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(3, 2)
 $workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout)
 
@@ -556,6 +558,7 @@ $workspace6Layout.AddChild($automationWidget, $ws6Params3)
 $workspace6.Widgets.Add($automationWidget)
 
 $workspaceManager.AddWorkspace($workspace6)
+#>
 
 Write-Host "Workspaces created!" -ForegroundColor Green
 
@@ -948,7 +951,7 @@ $window.Add_Closing({
     }
 
     # Flush to disk
-    $stateManager.Flush()
+    # $stateManager.Flush() # Not needed - SaveState already writes to disk
     Write-Host "Workspace states saved" -ForegroundColor Green
 })
 
