@@ -35,6 +35,7 @@ namespace SuperTUI.Widgets
         // Filter state
         private List<TaskFilter> filters;
         private TaskFilter currentFilter;
+        private bool isRefreshingFilters; // Prevent infinite loop in SelectionChanged
 
         // Selection state
         private TaskItem selectedTask;
@@ -228,29 +229,42 @@ namespace SuperTUI.Widgets
 
         private void RefreshFilterList()
         {
-            filterListBox.Items.Clear();
-
-            foreach (var filter in filters)
+            // Prevent infinite loop: RefreshFilterList -> SelectedItem set -> SelectionChanged -> LoadCurrentFilter -> RefreshFilterList
+            isRefreshingFilters = true;
+            try
             {
-                var count = taskService.GetTaskCount(filter.Predicate);
-                var item = new TextBlock
-                {
-                    Text = $"{filter.Name} ({count})",
-                    Padding = new Thickness(5, 3, 5, 3),
-                    Tag = filter
-                };
+                filterListBox.Items.Clear();
 
-                filterListBox.Items.Add(item);
-
-                if (filter.Name == currentFilter.Name)
+                foreach (var filter in filters)
                 {
-                    filterListBox.SelectedItem = item;
+                    var count = taskService.GetTaskCount(filter.Predicate);
+                    var item = new TextBlock
+                    {
+                        Text = $"{filter.Name} ({count})",
+                        Padding = new Thickness(5, 3, 5, 3),
+                        Tag = filter
+                    };
+
+                    filterListBox.Items.Add(item);
+
+                    if (filter.Name == currentFilter.Name)
+                    {
+                        filterListBox.SelectedItem = item;
+                    }
                 }
+            }
+            finally
+            {
+                isRefreshingFilters = false;
             }
         }
 
         private void FilterListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Ignore selection changes during refresh to prevent infinite loop
+            if (isRefreshingFilters)
+                return;
+
             if (filterListBox.SelectedItem is TextBlock item && item.Tag is TaskFilter filter)
             {
                 currentFilter = filter;

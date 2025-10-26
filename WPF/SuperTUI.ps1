@@ -6,6 +6,21 @@ if ($PSVersionTable.Platform -eq 'Unix') {
     exit 1
 }
 
+# Load WPF assemblies (required for PowerShell Core / pwsh)
+# Windows PowerShell 5.1 loads these automatically, but PowerShell 7+ does not
+Write-Host "Loading WPF assemblies..." -ForegroundColor Cyan
+try {
+    Add-Type -AssemblyName PresentationFramework
+    Add-Type -AssemblyName PresentationCore
+    Add-Type -AssemblyName WindowsBase
+    Add-Type -AssemblyName System.Xaml
+    Write-Host "WPF assemblies loaded" -ForegroundColor Green
+} catch {
+    Write-Error "Failed to load WPF assemblies. Ensure you're running on Windows with .NET Desktop Runtime installed."
+    Write-Error "Error: $_"
+    exit 1
+}
+
 # Load SuperTUI.dll
 $dllPath = Join-Path $PSScriptRoot "bin/Release/net8.0-windows/SuperTUI.dll"
 
