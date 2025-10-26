@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -306,7 +307,7 @@ namespace SuperTUI.Widgets
             };
         }
 
-        public override void LoadState(Dictionary<string, object> state)
+        public override void RestoreState(Dictionary<string, object> state)
         {
             if (state.TryGetValue("SelectedIndex", out var idx) && idx is int index)
             {
