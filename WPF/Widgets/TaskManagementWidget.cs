@@ -14,7 +14,7 @@ namespace SuperTUI.Widgets
 {
     /// <summary>
     /// KEYBOARD-CENTRIC task management widget with terminal aesthetic
-    /// Arrow keys for navigation, number keys for filters, Enter for actions
+    /// Tab/Shift-Tab to cycle filter dropdowns, Arrow keys for task navigation
     /// </summary>
     public class TaskManagementWidget : WidgetBase, IThemeable
     {
@@ -25,19 +25,21 @@ namespace SuperTUI.Widgets
         private Theme theme;
         private TaskService taskService;
 
-        // Terminal colors
-        private Color terminalGreen = Color.FromRgb(0, 255, 0);
-        private Color terminalBg = Color.FromRgb(0, 0, 0);
-
         // UI Components
         private Grid mainGrid;
+        private List<FilterDropdown> filterDropdowns = new List<FilterDropdown>();
+        private int currentFocusedFilterIndex = -1; // -1 means task list has focus
 
         // State
-        private List<TaskFilter> filters;
-        private TaskFilter currentFilter;
         private List<TaskItem> currentTasks = new List<TaskItem>();
         private int selectedTaskIndex = 0;
         private TaskItem selectedTask;
+
+        // Filter state
+        private string timeFilter = "ALL";
+        private string statusFilter = "ALL";
+        private string priorityFilter = "ALL";
+        private string tagFilter = "ALL";
 
         public TaskManagementWidget(
             ILogger logger,
@@ -62,14 +64,11 @@ namespace SuperTUI.Widgets
             taskService = TaskService.Instance;
             taskService.Initialize();
 
-            filters = TaskFilter.GetDefaultFilters();
-            currentFilter = TaskFilter.All;
-
             LoadCurrentFilter();
             BuildUI();
 
             this.Focusable = true;
-            this.KeyDown += OnKeyDown;
+            this.PreviewKeyDown += OnPreviewKeyDown;
             this.Focus();
 
             logger?.Info("TaskWidget", "Keyboard-centric Task Management widget initialized");
@@ -77,7 +76,36 @@ namespace SuperTUI.Widgets
 
         private void LoadCurrentFilter()
         {
-            currentTasks = taskService.GetTasks(currentFilter.Predicate).ToList();
+            // Apply combined filters
+            currentTasks = taskService.GetTasks(task =>
+            {
+                // Time filter
+                bool timeMatch = timeFilter == "ALL" ||
+                    (timeFilter == "TODAY" && task.DueDate.HasValue && task.DueDate.Value.Date == DateTime.Today) ||
+                    (timeFilter == "WEEK" && task.DueDate.HasValue && task.DueDate.Value.Date <= DateTime.Today.AddDays(7)) ||
+                    (timeFilter == "MONTH" && task.DueDate.HasValue && task.DueDate.Value.Date <= DateTime.Today.AddMonths(1)) ||
+                    (timeFilter == "OVERDUE" && task.IsOverdue);
+
+                // Status filter
+                bool statusMatch = statusFilter == "ALL" ||
+                    (statusFilter == "ACTIVE" && task.Status == TaskStatus.InProgress) ||
+                    (statusFilter == "PENDING" && task.Status == TaskStatus.Pending) ||
+                    (statusFilter == "COMPLETED" && task.Status == TaskStatus.Completed) ||
+                    (statusFilter == "BLOCKED" && task.Status == TaskStatus.Cancelled);
+
+                // Priority filter
+                bool priorityMatch = priorityFilter == "ALL" ||
+                    (priorityFilter == "HIGH" && task.Priority == TaskPriority.High) ||
+                    (priorityFilter == "MEDIUM" && task.Priority == TaskPriority.Medium) ||
+                    (priorityFilter == "LOW" && task.Priority == TaskPriority.Low);
+
+                // Tag filter (simplified - just check if any tag matches)
+                bool tagMatch = tagFilter == "ALL" ||
+                    (task.Tags != null && task.Tags.Contains(tagFilter));
+
+                return timeMatch && statusMatch && priorityMatch && tagMatch;
+            }).ToList();
+
             if (selectedTaskIndex >= currentTasks.Count)
                 selectedTaskIndex = Math.Max(0, currentTasks.Count - 1);
 
@@ -88,72 +116,60 @@ namespace SuperTUI.Widgets
         {
             mainGrid = new Grid
             {
-                Background = new SolidColorBrush(terminalBg)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             // Outer border
             var outerBorder = new Border
             {
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(2),
                 Margin = new Thickness(10),
                 Padding = new Thickness(15)
             };
 
             var contentGrid = new Grid();
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(2) }); // Line
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(2) }); // Line
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Main content (3 panes)
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(2) }); // Line
+            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) }); // Line
+            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Main content
+            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) }); // Line
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Stats
-            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(2) }); // Line
+            contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) }); // Line
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Shortcuts
-
-            // Header
-            var header = CreateText("TASK MANAGEMENT SYSTEM v2.0", 16, FontWeights.Bold);
-            header.HorizontalAlignment = HorizontalAlignment.Center;
-            Grid.SetRow(header, 0);
-            contentGrid.Children.Add(header);
-
-            // Separator
-            Grid.SetRow(CreateHorizontalLine(), 1);
-            contentGrid.Children.Add(CreateHorizontalLine());
 
             // Filter bar
             var filterBar = CreateFilterBar();
-            Grid.SetRow(filterBar, 2);
+            Grid.SetRow(filterBar, 0);
             contentGrid.Children.Add(filterBar);
 
-            // Separator
+            // Line after filter
+            var line1 = CreateHorizontalLine();
+            Grid.SetRow(line1, 1);
+            contentGrid.Children.Add(line1);
+
+            // Main content (Tasks | Details)
+            var mainContent = CreateMainContent();
+            Grid.SetRow(mainContent, 2);
+            contentGrid.Children.Add(mainContent);
+
+            // Line after main content
             var line2 = CreateHorizontalLine();
             Grid.SetRow(line2, 3);
             contentGrid.Children.Add(line2);
 
-            // Main 3-pane content
-            var mainContent = CreateMainContent();
-            Grid.SetRow(mainContent, 4);
-            contentGrid.Children.Add(mainContent);
+            // Stats
+            var stats = CreateStats();
+            Grid.SetRow(stats, 4);
+            contentGrid.Children.Add(stats);
 
-            // Separator
+            // Line after stats
             var line3 = CreateHorizontalLine();
             Grid.SetRow(line3, 5);
             contentGrid.Children.Add(line3);
 
-            // Stats
-            var stats = CreateStats();
-            Grid.SetRow(stats, 6);
-            contentGrid.Children.Add(stats);
-
-            // Separator
-            var line4 = CreateHorizontalLine();
-            Grid.SetRow(line4, 7);
-            contentGrid.Children.Add(line4);
-
             // Shortcuts
             var shortcuts = CreateShortcuts();
-            Grid.SetRow(shortcuts, 8);
+            Grid.SetRow(shortcuts, 6);
             contentGrid.Children.Add(shortcuts);
 
             outerBorder.Child = contentGrid;
@@ -165,7 +181,7 @@ namespace SuperTUI.Widgets
         {
             return new System.Windows.Shapes.Rectangle
             {
-                Fill = new SolidColorBrush(terminalGreen),
+                Fill = new SolidColorBrush(theme.Primary),
                 Height = 1,
                 HorizontalAlignment = HorizontalAlignment.Stretch
             };
@@ -175,7 +191,7 @@ namespace SuperTUI.Widgets
         {
             return new System.Windows.Shapes.Rectangle
             {
-                Fill = new SolidColorBrush(terminalGreen),
+                Fill = new SolidColorBrush(theme.Primary),
                 Width = 1,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -189,44 +205,43 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = size,
                 FontWeight = weight ?? FontWeights.Normal,
-                Foreground = new SolidColorBrush(terminalGreen),
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Margin = new Thickness(0, 3, 0, 3)
             };
         }
 
         private StackPanel CreateFilterBar()
         {
-            var panel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 5) };
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
 
             panel.Children.Add(CreateText("FILTER: ", 12, FontWeights.Bold));
 
-            var filterNames = new[] { "ALL", "ACTIVE", "PENDING", "BLOCKED" };
-            for (int i = 0; i < filterNames.Length; i++)
-            {
-                var filterName = filterNames[i];
-                var isSelected = currentFilter.Name == filterName;
+            // Create filter dropdowns
+            filterDropdowns.Clear();
 
-                var border = new Border
-                {
-                    BorderBrush = new SolidColorBrush(terminalGreen),
-                    BorderThickness = new Thickness(1),
-                    Background = isSelected ? new SolidColorBrush(Color.FromArgb(60, 0, 255, 0)) : Brushes.Transparent,
-                    Padding = new Thickness(8, 2, 8, 2),
-                    Margin = new Thickness(5, 0, 5, 0)
-                };
+            var timeDropdown = new FilterDropdown("TIME", 1, new[] { "ALL", "TODAY", "WEEK", "MONTH", "OVERDUE" }, theme);
+            timeDropdown.SelectionChanged += (selected) => { timeFilter = selected; LoadCurrentFilter(); BuildUI(); };
+            filterDropdowns.Add(timeDropdown);
+            panel.Children.Add(timeDropdown.GetControl());
 
-                var text = new TextBlock
-                {
-                    Text = $"[{i + 1}] {filterName}",
-                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
-                    FontSize = 11,
-                    FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
-                    Foreground = new SolidColorBrush(terminalGreen)
-                };
+            var statusDropdown = new FilterDropdown("STATUS", 2, new[] { "ALL", "ACTIVE", "PENDING", "COMPLETED", "BLOCKED" }, theme);
+            statusDropdown.SelectionChanged += (selected) => { statusFilter = selected; LoadCurrentFilter(); BuildUI(); };
+            filterDropdowns.Add(statusDropdown);
+            panel.Children.Add(statusDropdown.GetControl());
 
-                border.Child = text;
-                panel.Children.Add(border);
-            }
+            var priorityDropdown = new FilterDropdown("PRIORITY", 3, new[] { "ALL", "HIGH", "MEDIUM", "LOW" }, theme);
+            priorityDropdown.SelectionChanged += (selected) => { priorityFilter = selected; LoadCurrentFilter(); BuildUI(); };
+            filterDropdowns.Add(priorityDropdown);
+            panel.Children.Add(priorityDropdown.GetControl());
+
+            var tagDropdown = new FilterDropdown("TAGS", 4, new[] { "ALL", "urgent", "bug", "feature", "docs" }, theme);
+            tagDropdown.SelectionChanged += (selected) => { tagFilter = selected; LoadCurrentFilter(); BuildUI(); };
+            filterDropdowns.Add(tagDropdown);
+            panel.Children.Add(tagDropdown.GetControl());
 
             return panel;
         }
@@ -234,201 +249,166 @@ namespace SuperTUI.Widgets
         private Grid CreateMainContent()
         {
             var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Tasks
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) }); // Separator
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) }); // Details
 
-            // Define columns: Filters (200) | Sep | Tasks (flex) | Sep | Details (300)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
+            // Tasks area
+            var tasksArea = CreateTasksArea();
+            Grid.SetColumn(tasksArea, 0);
+            grid.Children.Add(tasksArea);
 
-            // Filter list
-            var filterPanel = CreateFilterListPanel();
-            Grid.SetColumn(filterPanel, 0);
-            grid.Children.Add(filterPanel);
+            // Vertical separator
+            var sep = CreateVerticalLine();
+            Grid.SetColumn(sep, 1);
+            grid.Children.Add(sep);
 
-            // Separator
-            var sep1 = CreateVerticalLine();
-            Grid.SetColumn(sep1, 1);
-            grid.Children.Add(sep1);
-
-            // Task list
-            var taskPanel = CreateTaskListPanel();
-            Grid.SetColumn(taskPanel, 2);
-            grid.Children.Add(taskPanel);
-
-            // Separator
-            var sep2 = CreateVerticalLine();
-            Grid.SetColumn(sep2, 3);
-            grid.Children.Add(sep2);
-
-            // Details
-            var detailPanel = CreateDetailPanel();
-            Grid.SetColumn(detailPanel, 4);
-            grid.Children.Add(detailPanel);
+            // Details area
+            var detailsArea = CreateDetailPanel();
+            Grid.SetColumn(detailsArea, 2);
+            grid.Children.Add(detailsArea);
 
             return grid;
         }
 
-        private Border CreateFilterListPanel()
+        private Grid CreateTasksArea()
         {
-            var border = new Border { Padding = new Thickness(10) };
-            var stack = new StackPanel();
-
-            var header = CreateText("FILTERS", 11, FontWeights.Bold);
-            stack.Children.Add(header);
-
-            var headerLine = CreateHorizontalLine();
-            headerLine.Margin = new Thickness(0, 3, 0, 8);
-            stack.Children.Add(headerLine);
-
-            foreach (var filter in filters)
-            {
-                var count = taskService.GetTaskCount(filter.Predicate);
-                var isSelected = filter.Name == currentFilter.Name;
-
-                var text = new TextBlock
-                {
-                    Text = $"{(isSelected ? "► " : "  ")}{filter.Name} ({count})",
-                    FontFamily = new FontFamily("Consolas,Courier New,monospace"),
-                    FontSize = 10,
-                    FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
-                    Foreground = new SolidColorBrush(terminalGreen),
-                    Background = isSelected ? new SolidColorBrush(Color.FromArgb(40, 0, 255, 0)) : Brushes.Transparent,
-                    Padding = new Thickness(3, 2, 3, 2),
-                    Margin = new Thickness(0, 1, 0, 1)
-                };
-                stack.Children.Add(text);
-            }
-
-            border.Child = stack;
-            return border;
-        }
-
-        private ScrollViewer CreateTaskListPanel()
-        {
-            var stack = new StackPanel();
-
-            var header = CreateText("TASKS", 11, FontWeights.Bold);
-            header.Margin = new Thickness(10, 10, 10, 5);
-            stack.Children.Add(header);
-
-            var headerLine = CreateHorizontalLine();
-            headerLine.Margin = new Thickness(10, 0, 10, 10);
-            stack.Children.Add(headerLine);
+            var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) }); // Line
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Rows
 
             // Table header
-            var tableHeader = CreateTaskTableHeader();
-            tableHeader.Margin = new Thickness(10, 0, 10, 5);
-            stack.Children.Add(tableHeader);
+            var header = CreateTaskTableHeader();
+            Grid.SetRow(header, 0);
+            grid.Children.Add(header);
 
-            var headerSep = CreateHorizontalLine();
-            headerSep.Margin = new Thickness(10, 0, 10, 5);
-            stack.Children.Add(headerSep);
+            // Horizontal line after header
+            var line = CreateHorizontalLine();
+            Grid.SetRow(line, 1);
+            grid.Children.Add(line);
 
-            // Task rows
+            // Task rows in ScrollViewer
+            var scrollViewer = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Background = Brushes.Transparent
+            };
+
+            var stack = new StackPanel();
             for (int i = 0; i < currentTasks.Count; i++)
             {
                 var task = currentTasks[i];
                 var isSelected = (i == selectedTaskIndex);
-                var taskRow = CreateTaskRow(task, isSelected);
-                taskRow.Margin = new Thickness(10, 0, 10, 0);
+                var taskRow = CreateTaskRow(task, i + 1, isSelected);
                 stack.Children.Add(taskRow);
             }
 
             if (currentTasks.Count == 0)
             {
-                var noTasks = CreateText("No tasks", 11);
-                noTasks.Foreground = new SolidColorBrush(Color.FromArgb(128, 0, 255, 0));
+                var noTasks = CreateText("No tasks match current filters", 11);
+                noTasks.Foreground = new SolidColorBrush(theme.ForegroundDisabled);
                 noTasks.Margin = new Thickness(10);
                 stack.Children.Add(noTasks);
             }
 
-            return new ScrollViewer
-            {
-                Content = stack,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Background = Brushes.Transparent
-            };
+            scrollViewer.Content = stack;
+            Grid.SetRow(scrollViewer, 2);
+            grid.Children.Add(scrollViewer);
+
+            return grid;
         }
 
         private Grid CreateTaskTableHeader()
         {
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });  // ID
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
+            var grid = new Grid { Margin = new Thickness(5, 5, 5, 5) };
+
+            // Column definitions MUST match task row exactly
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });   // #
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });    // Line
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Title
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) }); // Status
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) }); // Priority
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });    // Line
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });  // Status
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });    // Line
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });   // Priority
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });    // Line
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });  // Due Date
 
             AddHeaderCell(grid, "#", 0);
-            Grid.SetColumn(CreateVerticalLine(), 1);
-            grid.Children.Add(CreateVerticalLine());
-
+            AddVerticalLine(grid, 1);
             AddHeaderCell(grid, "TITLE", 2);
-            var line2 = CreateVerticalLine();
-            Grid.SetColumn(line2, 3);
-            grid.Children.Add(line2);
-
+            AddVerticalLine(grid, 3);
             AddHeaderCell(grid, "STATUS", 4);
-            var line3 = CreateVerticalLine();
-            Grid.SetColumn(line3, 5);
-            grid.Children.Add(line3);
-
+            AddVerticalLine(grid, 5);
             AddHeaderCell(grid, "PRIORITY", 6);
+            AddVerticalLine(grid, 7);
+            AddHeaderCell(grid, "DUE DATE", 8);
 
             return grid;
         }
 
         private void AddHeaderCell(Grid grid, string text, int column)
         {
-            var tb = CreateText(text, 10, FontWeights.Bold);
-            tb.Margin = new Thickness(5, 0, 5, 0);
+            var tb = new TextBlock
+            {
+                Text = text,
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(5, 0, 5, 0)
+            };
             Grid.SetColumn(tb, column);
             grid.Children.Add(tb);
         }
 
-        private Grid CreateTaskRow(TaskItem task, bool isSelected)
+        private void AddVerticalLine(Grid grid, int column)
+        {
+            var line = CreateVerticalLine();
+            Grid.SetColumn(line, column);
+            grid.Children.Add(line);
+        }
+
+        private Grid CreateTaskRow(TaskItem task, int rowNumber, bool isSelected)
         {
             var grid = new Grid
             {
-                Background = isSelected ? new SolidColorBrush(Color.FromArgb(40, 0, 255, 0)) : Brushes.Transparent,
-                Margin = new Thickness(0, 1, 0, 1)
+                Background = isSelected ? new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B)) : Brushes.Transparent,
+                Margin = new Thickness(5, 0, 5, 0)
             };
 
+            // EXACT same column definitions as header
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
 
-            // ID with selection marker
-            var idText = (isSelected ? "► " : "  ") + (currentTasks.IndexOf(task) + 1).ToString();
-            AddCell(grid, idText, 0);
-
-            Grid.SetColumn(CreateVerticalLine(), 1);
-            grid.Children.Add(CreateVerticalLine());
+            // # with selection marker
+            AddCell(grid, (isSelected ? "►" : "") + rowNumber, 0);
+            AddVerticalLine(grid, 1);
 
             // Title
-            var title = task.Title.Length > 40 ? task.Title.Substring(0, 37) + "..." : task.Title;
+            var title = task.Title.Length > 50 ? task.Title.Substring(0, 47) + "..." : task.Title;
             AddCell(grid, title, 2);
-            var line2 = CreateVerticalLine();
-            Grid.SetColumn(line2, 3);
-            grid.Children.Add(line2);
+            AddVerticalLine(grid, 3);
 
             // Status
             AddCell(grid, task.Status.ToString().ToUpper(), 4);
-            var line3 = CreateVerticalLine();
-            Grid.SetColumn(line3, 5);
-            grid.Children.Add(line3);
+            AddVerticalLine(grid, 5);
 
             // Priority
             AddCell(grid, task.Priority.ToString().ToUpper(), 6);
+            AddVerticalLine(grid, 7);
+
+            // Due Date
+            var dueText = task.DueDate.HasValue ? task.DueDate.Value.ToString("yyyy-MM-dd") : "-";
+            AddCell(grid, dueText, 8);
 
             return grid;
         }
@@ -440,8 +420,9 @@ namespace SuperTUI.Widgets
                 Text = text,
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 10,
-                Foreground = new SolidColorBrush(terminalGreen),
-                Margin = new Thickness(5, 2, 5, 2)
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(5, 3, 5, 3),
+                TextTrimming = TextTrimming.CharacterEllipsis
             };
             Grid.SetColumn(tb, column);
             grid.Children.Add(tb);
@@ -470,7 +451,7 @@ namespace SuperTUI.Widgets
                         Text = selectedTask.Description,
                         FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                         FontSize = 10,
-                        Foreground = new SolidColorBrush(terminalGreen),
+                        Foreground = new SolidColorBrush(theme.Foreground),
                         TextWrapping = TextWrapping.Wrap,
                         Margin = new Thickness(0, 5, 0, 5)
                     };
@@ -494,7 +475,6 @@ namespace SuperTUI.Widgets
                     stack.Children.Add(CreateText(string.Join(", ", selectedTask.Tags), 9));
                 }
 
-                // Notes
                 if (selectedTask.Notes != null && selectedTask.Notes.Any())
                 {
                     var notesSep = CreateHorizontalLine();
@@ -502,14 +482,14 @@ namespace SuperTUI.Widgets
                     stack.Children.Add(notesSep);
                     stack.Children.Add(CreateText($"NOTES ({selectedTask.Notes.Count}):", 10, FontWeights.Bold));
 
-                    foreach (var note in selectedTask.Notes.OrderByDescending(n => n.CreatedAt).Take(3))
+                    foreach (var note in selectedTask.Notes.OrderByDescending(n => n.CreatedAt).Take(5))
                     {
                         var noteText = new TextBlock
                         {
                             Text = $"[{note.CreatedAt:MM/dd}] {note.Content}",
                             FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                             FontSize = 9,
-                            Foreground = new SolidColorBrush(terminalGreen),
+                            Foreground = new SolidColorBrush(theme.Foreground),
                             TextWrapping = TextWrapping.Wrap,
                             Margin = new Thickness(0, 2, 0, 2)
                         };
@@ -517,7 +497,6 @@ namespace SuperTUI.Widgets
                     }
                 }
 
-                // Timestamps
                 var timeSep = CreateHorizontalLine();
                 timeSep.Margin = new Thickness(0, 8, 0, 5);
                 stack.Children.Add(timeSep);
@@ -527,7 +506,7 @@ namespace SuperTUI.Widgets
                     Text = $"Created: {selectedTask.CreatedAt:yyyy-MM-dd HH:mm}\nUpdated: {selectedTask.UpdatedAt:yyyy-MM-dd HH:mm}",
                     FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                     FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromArgb(128, 0, 255, 0)),
+                    Foreground = new SolidColorBrush(theme.ForegroundDisabled),
                     Margin = new Thickness(0, 2, 0, 2)
                 };
                 stack.Children.Add(timestamps);
@@ -550,11 +529,13 @@ namespace SuperTUI.Widgets
         {
             var panel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 5) };
 
-            panel.Children.Add(CreateText($"SHOWING: {currentTasks.Count} TASKS", 11));
-            panel.Children.Add(CreateText("  │  ", 11));
-            panel.Children.Add(CreateText($"FILTER: {currentFilter.Name}", 11));
-            panel.Children.Add(CreateText("  │  ", 11));
-            panel.Children.Add(CreateText($"TOTAL: {taskService.GetTaskCount(_ => true)} TASKS", 11));
+            panel.Children.Add(CreateText($"SHOWING: {currentTasks.Count} TASKS", 10));
+            panel.Children.Add(CreateText("  │  ", 10));
+            panel.Children.Add(CreateText($"TIME: {timeFilter}", 10));
+            panel.Children.Add(CreateText("  │  ", 10));
+            panel.Children.Add(CreateText($"STATUS: {statusFilter}", 10));
+            panel.Children.Add(CreateText("  │  ", 10));
+            panel.Children.Add(CreateText($"PRIORITY: {priorityFilter}", 10));
 
             return panel;
         }
@@ -564,127 +545,155 @@ namespace SuperTUI.Widgets
             var panel = new StackPanel { Margin = new Thickness(0, 5, 0, 0) };
 
             var line1 = new StackPanel { Orientation = Orientation.Horizontal };
-            line1.Children.Add(CreateText("SHORTCUTS: [↑↓] NAVIGATE │ [1-4] FILTER │ [ENTER] EDIT │ [N] NEW │ [D] DELETE", 10));
+            line1.Children.Add(CreateText("SHORTCUTS: [TAB] CYCLE FILTERS │ [1-4] OPEN FILTER │ [↑↓] IN DROPDOWN OR TASKS │ [ENTER] SELECT/EDIT", 9));
             panel.Children.Add(line1);
 
             var line2 = new StackPanel { Orientation = Orientation.Horizontal };
-            line2.Children.Add(CreateText("           [P] SET PRIORITY │ [S] SET STATUS │ [M] ADD NOTE │ [TAB] NEXT WIDGET", 10));
+            line2.Children.Add(CreateText("           [N] NEW TASK │ [D] DELETE │ [P] CYCLE PRIORITY │ [S] CYCLE STATUS │ [M] ADD NOTE", 9));
             panel.Children.Add(line2);
 
             return panel;
         }
 
-        private void OnKeyDown(object sender, KeyEventArgs e)
+        private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
             bool handled = true;
 
-            switch (e.Key)
+            // Check if any dropdown is open
+            var openDropdown = filterDropdowns.FirstOrDefault(d => d.IsOpen);
+
+            if (openDropdown != null)
             {
-                case Key.Up:
-                    if (currentTasks.Count > 0)
-                    {
-                        if (selectedTaskIndex > 0)
-                            selectedTaskIndex--;
-                        else
-                            selectedTaskIndex = currentTasks.Count - 1;
+                // Dropdown is open - let it handle keys
+                handled = openDropdown.HandleKey(e.Key);
+                if (handled)
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
 
-                        selectedTask = currentTasks[selectedTaskIndex];
-                    }
-                    break;
+            // Handle Tab/Shift+Tab for filter focus cycling
+            if (e.Key == Key.Tab)
+            {
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    // Shift+Tab: Previous filter
+                    currentFocusedFilterIndex--;
+                    if (currentFocusedFilterIndex < 0)
+                        currentFocusedFilterIndex = filterDropdowns.Count - 1;
+                }
+                else
+                {
+                    // Tab: Next filter
+                    currentFocusedFilterIndex++;
+                    if (currentFocusedFilterIndex >= filterDropdowns.Count)
+                        currentFocusedFilterIndex = 0;
+                }
 
-                case Key.Down:
-                    if (currentTasks.Count > 0)
-                    {
-                        if (selectedTaskIndex < currentTasks.Count - 1)
-                            selectedTaskIndex++;
-                        else
-                            selectedTaskIndex = 0;
+                for (int i = 0; i < filterDropdowns.Count; i++)
+                    filterDropdowns[i].SetFocused(i == currentFocusedFilterIndex);
 
-                        selectedTask = currentTasks[selectedTaskIndex];
-                    }
-                    break;
+                e.Handled = true;
+                return;
+            }
 
-                case Key.D1:
-                case Key.NumPad1:
-                    currentFilter = filters[0]; // ALL
-                    LoadCurrentFilter();
-                    break;
+            // Handle number keys 1-4 to open filter dropdowns
+            if (e.Key >= Key.D1 && e.Key <= Key.D4)
+            {
+                int index = e.Key - Key.D1;
+                if (index < filterDropdowns.Count)
+                {
+                    currentFocusedFilterIndex = index;
+                    for (int i = 0; i < filterDropdowns.Count; i++)
+                        filterDropdowns[i].SetFocused(i == currentFocusedFilterIndex);
+                    filterDropdowns[index].Open();
+                    e.Handled = true;
+                    return;
+                }
+            }
 
-                case Key.D2:
-                case Key.NumPad2:
-                    currentFilter = filters[1]; // ACTIVE
-                    LoadCurrentFilter();
-                    break;
+            // Arrow keys: Navigate tasks (when no dropdown open and not focused on filter)
+            if (currentFocusedFilterIndex < 0 || currentFocusedFilterIndex >= filterDropdowns.Count)
+            {
+                switch (e.Key)
+                {
+                    case Key.Up:
+                        if (currentTasks.Count > 0)
+                        {
+                            if (selectedTaskIndex > 0)
+                                selectedTaskIndex--;
+                            else
+                                selectedTaskIndex = currentTasks.Count - 1;
+                            selectedTask = currentTasks[selectedTaskIndex];
+                            BuildUI();
+                        }
+                        break;
 
-                case Key.D3:
-                case Key.NumPad3:
-                    currentFilter = filters[2]; // PENDING
-                    LoadCurrentFilter();
-                    break;
+                    case Key.Down:
+                        if (currentTasks.Count > 0)
+                        {
+                            if (selectedTaskIndex < currentTasks.Count - 1)
+                                selectedTaskIndex++;
+                            else
+                                selectedTaskIndex = 0;
+                            selectedTask = currentTasks[selectedTaskIndex];
+                            BuildUI();
+                        }
+                        break;
 
-                case Key.D4:
-                case Key.NumPad4:
-                    currentFilter = filters[3]; // BLOCKED
-                    LoadCurrentFilter();
-                    break;
+                    case Key.Enter:
+                        if (selectedTask != null)
+                            ShowEditDialog();
+                        break;
 
-                case Key.Enter:
-                    if (selectedTask != null)
-                    {
-                        ShowEditDialog();
-                    }
-                    break;
+                    case Key.N:
+                        ShowNewTaskDialog();
+                        break;
 
-                case Key.N:
-                    ShowNewTaskDialog();
-                    break;
+                    case Key.D:
+                        if (selectedTask != null && MessageBox.Show($"Delete '{selectedTask.Title}'?", "Confirm", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                        {
+                            taskService.DeleteTask(selectedTask.Id);
+                            LoadCurrentFilter();
+                            BuildUI();
+                        }
+                        break;
 
-                case Key.D:
-                    if (selectedTask != null && MessageBox.Show($"Delete task '{selectedTask.Title}'?", "Confirm Delete", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                    {
-                        taskService.DeleteTask(selectedTask.Id);
-                        LoadCurrentFilter();
-                        BuildUI();
-                    }
-                    break;
+                    case Key.P:
+                        if (selectedTask != null)
+                        {
+                            CyclePriority();
+                            BuildUI();
+                        }
+                        break;
 
-                case Key.P:
-                    if (selectedTask != null)
-                    {
-                        CyclePriority();
-                    }
-                    break;
+                    case Key.S:
+                        if (selectedTask != null)
+                        {
+                            CycleStatus();
+                            BuildUI();
+                        }
+                        break;
 
-                case Key.S:
-                    if (selectedTask != null)
-                    {
-                        CycleStatus();
-                    }
-                    break;
+                    case Key.M:
+                        if (selectedTask != null)
+                            ShowAddNoteDialog();
+                        break;
 
-                case Key.M:
-                    if (selectedTask != null)
-                    {
-                        ShowAddNoteDialog();
-                    }
-                    break;
-
-                default:
-                    handled = false;
-                    break;
+                    default:
+                        handled = false;
+                        break;
+                }
             }
 
             if (handled)
-            {
-                BuildUI(); // Rebuild UI to show changes
                 e.Handled = true;
-            }
         }
 
         private void CyclePriority()
         {
             if (selectedTask == null) return;
-
             selectedTask.Priority = selectedTask.Priority switch
             {
                 TaskPriority.Low => TaskPriority.Medium,
@@ -700,7 +709,6 @@ namespace SuperTUI.Widgets
         private void CycleStatus()
         {
             if (selectedTask == null) return;
-
             selectedTask.Status = selectedTask.Status switch
             {
                 TaskStatus.Pending => TaskStatus.InProgress,
@@ -724,11 +732,10 @@ namespace SuperTUI.Widgets
                 Height = 400,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
-                Background = new SolidColorBrush(terminalBg)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             var stack = new StackPanel { Margin = new Thickness(20) };
-
             stack.Children.Add(CreateText("EDIT TASK", 14, FontWeights.Bold));
 
             var sep = CreateHorizontalLine();
@@ -741,9 +748,9 @@ namespace SuperTUI.Widgets
                 Text = selectedTask.Title,
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalBg),
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Background = new SolidColorBrush(theme.Background),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(5),
                 Margin = new Thickness(0, 3, 0, 10)
@@ -756,9 +763,9 @@ namespace SuperTUI.Widgets
                 Text = selectedTask.Description ?? "",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalBg),
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Background = new SolidColorBrush(theme.Background),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
@@ -775,8 +782,8 @@ namespace SuperTUI.Widgets
                 Content = "SAVE",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalGreen),
-                Foreground = new SolidColorBrush(terminalBg),
+                Background = new SolidColorBrush(theme.Primary),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(15, 5, 15, 5),
                 Margin = new Thickness(5, 0, 5, 0),
@@ -800,8 +807,8 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
                 Background = Brushes.Transparent,
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(15, 5, 15, 5),
                 Cursor = Cursors.Hand
@@ -811,6 +818,7 @@ namespace SuperTUI.Widgets
 
             stack.Children.Add(buttonStack);
             dialog.Content = stack;
+            titleBox.Focus();
             dialog.ShowDialog();
         }
 
@@ -823,11 +831,10 @@ namespace SuperTUI.Widgets
                 Height = 350,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
-                Background = new SolidColorBrush(terminalBg)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             var stack = new StackPanel { Margin = new Thickness(20) };
-
             stack.Children.Add(CreateText("NEW TASK", 14, FontWeights.Bold));
 
             var sep = CreateHorizontalLine();
@@ -839,9 +846,9 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalBg),
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Background = new SolidColorBrush(theme.Background),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(5),
                 Margin = new Thickness(0, 3, 0, 10)
@@ -853,9 +860,9 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalBg),
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Background = new SolidColorBrush(theme.Background),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
@@ -872,8 +879,8 @@ namespace SuperTUI.Widgets
                 Content = "CREATE",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalGreen),
-                Foreground = new SolidColorBrush(terminalBg),
+                Background = new SolidColorBrush(theme.Primary),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(15, 5, 15, 5),
                 Margin = new Thickness(5, 0, 5, 0),
@@ -911,8 +918,8 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
                 Background = Brushes.Transparent,
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(15, 5, 15, 5),
                 Cursor = Cursors.Hand
@@ -937,11 +944,10 @@ namespace SuperTUI.Widgets
                 Height = 250,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
-                Background = new SolidColorBrush(terminalBg)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             var stack = new StackPanel { Margin = new Thickness(20) };
-
             stack.Children.Add(CreateText($"ADD NOTE TO: {selectedTask.Title}", 12, FontWeights.Bold));
 
             var sep = CreateHorizontalLine();
@@ -952,9 +958,9 @@ namespace SuperTUI.Widgets
             {
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalBg),
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Background = new SolidColorBrush(theme.Background),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
@@ -971,8 +977,8 @@ namespace SuperTUI.Widgets
                 Content = "ADD",
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
-                Background = new SolidColorBrush(terminalGreen),
-                Foreground = new SolidColorBrush(terminalBg),
+                Background = new SolidColorBrush(theme.Primary),
+                Foreground = new SolidColorBrush(theme.Background),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(15, 5, 15, 5),
                 Margin = new Thickness(5, 0, 5, 0),
@@ -1001,8 +1007,8 @@ namespace SuperTUI.Widgets
                 FontFamily = new FontFamily("Consolas,Courier New,monospace"),
                 FontSize = 11,
                 Background = Brushes.Transparent,
-                Foreground = new SolidColorBrush(terminalGreen),
-                BorderBrush = new SolidColorBrush(terminalGreen),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(15, 5, 15, 5),
                 Cursor = Cursors.Hand
@@ -1021,7 +1027,10 @@ namespace SuperTUI.Widgets
             return new Dictionary<string, object>
             {
                 ["SelectedTaskId"] = selectedTask?.Id.ToString(),
-                ["CurrentFilter"] = currentFilter?.Name,
+                ["TimeFilter"] = timeFilter,
+                ["StatusFilter"] = statusFilter,
+                ["PriorityFilter"] = priorityFilter,
+                ["TagFilter"] = tagFilter,
                 ["SelectedTaskIndex"] = selectedTaskIndex
             };
         }
@@ -1030,10 +1039,14 @@ namespace SuperTUI.Widgets
         {
             if (state == null) return;
 
-            if (state.ContainsKey("CurrentFilter") && state["CurrentFilter"] is string filterName)
-            {
-                currentFilter = filters?.FirstOrDefault(f => f.Name == filterName) ?? TaskFilter.All;
-            }
+            if (state.ContainsKey("TimeFilter") && state["TimeFilter"] is string tf)
+                timeFilter = tf;
+            if (state.ContainsKey("StatusFilter") && state["StatusFilter"] is string sf)
+                statusFilter = sf;
+            if (state.ContainsKey("PriorityFilter") && state["PriorityFilter"] is string pf)
+                priorityFilter = pf;
+            if (state.ContainsKey("TagFilter") && state["TagFilter"] is string tgf)
+                tagFilter = tgf;
 
             LoadCurrentFilter();
 
@@ -1053,8 +1066,8 @@ namespace SuperTUI.Widgets
 
         protected override void OnDispose()
         {
-            this.KeyDown -= OnKeyDown;
-            logger?.Info("TaskWidget", "Keyboard-centric Task Management widget disposed");
+            this.PreviewKeyDown -= OnPreviewKeyDown;
+            logger?.Info("TaskWidget", "Task Management widget disposed");
             base.OnDispose();
         }
 
@@ -1063,6 +1076,129 @@ namespace SuperTUI.Widgets
             theme = themeManager.CurrentTheme;
             BuildUI();
             logger?.Debug("TaskWidget", "Applied theme update");
+        }
+    }
+
+    // Helper class for filter dropdowns
+    internal class FilterDropdown
+    {
+        private string name;
+        private int number;
+        private string[] options;
+        private int selectedIndex = 0;
+        private bool isOpen = false;
+        private bool isFocused = false;
+        private Theme theme;
+        private Border control;
+        private StackPanel dropdownPanel;
+
+        public event Action<string> SelectionChanged;
+        public bool IsOpen => isOpen;
+
+        public FilterDropdown(string name, int number, string[] options, Theme theme)
+        {
+            this.name = name;
+            this.number = number;
+            this.options = options;
+            this.theme = theme;
+            BuildControl();
+        }
+
+        private void BuildControl()
+        {
+            control = new Border
+            {
+                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderThickness = new Thickness(1),
+                Background = isFocused ? new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B)) : Brushes.Transparent,
+                Padding = new Thickness(8, 2, 8, 2),
+                Margin = new Thickness(5, 0, 5, 0)
+            };
+
+            dropdownPanel = new StackPanel();
+
+            var headerText = new TextBlock
+            {
+                Text = $"[{number}] {name}: {options[selectedIndex]} {(isOpen ? "▲" : "▼")}",
+                FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(theme.Foreground)
+            };
+            dropdownPanel.Children.Add(headerText);
+
+            if (isOpen)
+            {
+                for (int i = 0; i < options.Length; i++)
+                {
+                    var optionText = new TextBlock
+                    {
+                        Text = (i == selectedIndex ? "  ► " : "    ") + options[i],
+                        FontFamily = new FontFamily("Consolas,Courier New,monospace"),
+                        FontSize = 10,
+                        Foreground = new SolidColorBrush(theme.Foreground),
+                        Background = i == selectedIndex ? new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B)) : Brushes.Transparent
+                    };
+                    dropdownPanel.Children.Add(optionText);
+                }
+            }
+
+            control.Child = dropdownPanel;
+        }
+
+        public UIElement GetControl() => control;
+
+        public void SetFocused(bool focused)
+        {
+            isFocused = focused;
+            BuildControl();
+        }
+
+        public void Open()
+        {
+            isOpen = true;
+            BuildControl();
+        }
+
+        public void Close()
+        {
+            isOpen = false;
+            BuildControl();
+        }
+
+        public bool HandleKey(Key key)
+        {
+            if (!isOpen) return false;
+
+            switch (key)
+            {
+                case Key.Up:
+                    if (selectedIndex > 0)
+                    {
+                        selectedIndex--;
+                        BuildControl();
+                    }
+                    return true;
+
+                case Key.Down:
+                    if (selectedIndex < options.Length - 1)
+                    {
+                        selectedIndex++;
+                        BuildControl();
+                    }
+                    return true;
+
+                case Key.Enter:
+                    SelectionChanged?.Invoke(options[selectedIndex]);
+                    Close();
+                    return true;
+
+                case Key.Escape:
+                    Close();
+                    return true;
+
+                default:
+                    return false;
+            }
         }
     }
 }
