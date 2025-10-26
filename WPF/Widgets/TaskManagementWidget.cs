@@ -65,15 +65,10 @@ namespace SuperTUI.Widgets
             taskService.Initialize();
 
             LoadCurrentFilter();
-
-            this.Focusable = true;
-            this.PreviewKeyDown += OnPreviewKeyDown;
-
             BuildUI();
 
-            // Force focus after UI is built
+            this.Focusable = true;
             this.Focus();
-            Keyboard.Focus(this);
 
             logger?.Info("TaskWidget", "Keyboard-centric Task Management widget initialized");
         }
@@ -120,17 +115,15 @@ namespace SuperTUI.Widgets
         {
             mainGrid = new Grid
             {
-                Background = new SolidColorBrush(theme.Background),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                Background = new SolidColorBrush(theme.Background)
             };
 
-            // Outer border - NO MARGIN to fill screen
+            // Outer border
             var outerBorder = new Border
             {
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(2),
-                Margin = new Thickness(0),
+                Margin = new Thickness(10),
                 Padding = new Thickness(15)
             };
 
@@ -181,6 +174,8 @@ namespace SuperTUI.Widgets
             outerBorder.Child = contentGrid;
             mainGrid.Children.Add(outerBorder);
             this.Content = mainGrid;
+
+            this.KeyDown += OnKeyDown;
         }
 
         private System.Windows.Shapes.Rectangle CreateHorizontalLine()
@@ -561,9 +556,8 @@ namespace SuperTUI.Widgets
             return panel;
         }
 
-        private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+        private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            logger?.Debug("TaskWidget", $"Key pressed: {e.Key}");
             bool handled = true;
 
             // Check if any dropdown is open
@@ -1071,17 +1065,9 @@ namespace SuperTUI.Widgets
             BuildUI();
         }
 
-        public override void OnWidgetFocusReceived()
-        {
-            // Force focus when workspace switches to this widget
-            this.Focus();
-            Keyboard.Focus(this);
-            logger?.Debug("TaskWidget", "Focus received, widget now focused");
-        }
-
         protected override void OnDispose()
         {
-            this.PreviewKeyDown -= OnPreviewKeyDown;
+            this.KeyDown -= OnKeyDown;
             logger?.Info("TaskWidget", "Task Management widget disposed");
             base.OnDispose();
         }
