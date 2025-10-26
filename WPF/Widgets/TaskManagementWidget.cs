@@ -65,11 +65,15 @@ namespace SuperTUI.Widgets
             taskService.Initialize();
 
             LoadCurrentFilter();
-            BuildUI();
 
             this.Focusable = true;
             this.PreviewKeyDown += OnPreviewKeyDown;
+
+            BuildUI();
+
+            // Force focus after UI is built
             this.Focus();
+            Keyboard.Focus(this);
 
             logger?.Info("TaskWidget", "Keyboard-centric Task Management widget initialized");
         }
@@ -116,15 +120,17 @@ namespace SuperTUI.Widgets
         {
             mainGrid = new Grid
             {
-                Background = new SolidColorBrush(theme.Background)
+                Background = new SolidColorBrush(theme.Background),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Outer border
+            // Outer border - NO MARGIN to fill screen
             var outerBorder = new Border
             {
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(2),
-                Margin = new Thickness(10),
+                Margin = new Thickness(0),
                 Padding = new Thickness(15)
             };
 
@@ -557,6 +563,7 @@ namespace SuperTUI.Widgets
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
+            logger?.Debug("TaskWidget", $"Key pressed: {e.Key}");
             bool handled = true;
 
             // Check if any dropdown is open
@@ -1062,6 +1069,14 @@ namespace SuperTUI.Widgets
             }
 
             BuildUI();
+        }
+
+        public override void OnWidgetFocusReceived()
+        {
+            // Force focus when workspace switches to this widget
+            this.Focus();
+            Keyboard.Focus(this);
+            logger?.Debug("TaskWidget", "Focus received, widget now focused");
         }
 
         protected override void OnDispose()
