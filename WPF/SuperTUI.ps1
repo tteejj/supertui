@@ -277,10 +277,6 @@ $errorHandler = [SuperTUI.Infrastructure.ErrorHandler]::Instance
 $securityManager = [SuperTUI.Infrastructure.SecurityManager]::Instance
 $securityManager.Initialize()
 
-# Initialize ExcelMappingService (will create default profiles if none exist)
-$excelMappingService = [SuperTUI.Core.Services.ExcelMappingService]::Instance
-$excelMappingService.Initialize()
-
 # Initialize EventBus
 $eventBus = [SuperTUI.Core.EventBus]::Instance
 Write-Host "EventBus initialized" -ForegroundColor Green
@@ -293,6 +289,28 @@ Write-Host "ApplicationContext initialized" -ForegroundColor Green
 $stateManager = [SuperTUI.Extensions.StatePersistenceManager]::Instance
 $stateManager.Initialize("$env:TEMP\SuperTUI-state.json")
 Write-Host "StatePersistenceManager initialized" -ForegroundColor Green
+
+# ============================================================================
+# DEPENDENCY INJECTION SETUP
+# ============================================================================
+
+# Create ServiceContainer and register all infrastructure services
+$serviceContainer = New-Object SuperTUI.DI.ServiceContainer
+
+# Register infrastructure services as singletons (using existing instances)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.ILogger], $logger)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IConfigurationManager], $configManager)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IThemeManager], $themeManager)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IErrorHandler], $errorHandler)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.ISecurityManager], $securityManager)
+$serviceContainer.RegisterSingleton([SuperTUI.Core.IEventBus], $eventBus)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IStatePersistenceManager], $stateManager)
+$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IApplicationContext], $appContext)
+
+# Create WidgetFactory for creating widgets with DI
+$widgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
+
+Write-Host "Dependency injection container initialized" -ForegroundColor Green
 
 Write-Host "Infrastructure initialized" -ForegroundColor Green
 
@@ -469,14 +487,14 @@ $workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine
 $workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout)
 
 # Add Clock widget to slot 0 (top-left)
-$clockWidget = New-Object SuperTUI.Widgets.ClockWidget
+$clockWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ClockWidget])
 $clockWidget.WidgetName = "Clock"
 $clockWidget.Initialize()
 $workspace1Layout.SetWidget(0, $clockWidget)
 $workspace1.Widgets.Add($clockWidget)
 
 # Add TaskSummary widget to slot 1 (top-right)
-$taskSummary = New-Object SuperTUI.Widgets.TaskSummaryWidget
+$taskSummary = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskSummaryWidget])
 $taskSummary.WidgetName = "TaskSummary"
 $taskSummary.Initialize()
 $workspace1Layout.SetWidget(1, $taskSummary)
@@ -491,7 +509,7 @@ $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout)
 
 # Add TaskManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = New-Object SuperTUI.Widgets.TaskManagementWidget
+$projectManagementWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskManagementWidget])
 $projectManagementWidget.WidgetName = "TaskManagement"
 $projectManagementWidget.Initialize()
 $ws2Params = New-Object SuperTUI.Core.LayoutParams
@@ -505,7 +523,7 @@ $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout)
 
 # Add KanbanBoardWidget (Todo, In Progress, Done columns)
-$kanbanWidget = New-Object SuperTUI.Widgets.KanbanBoardWidget
+$kanbanWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.KanbanBoardWidget])
 $kanbanWidget.WidgetName = "KanbanBoard"
 $kanbanWidget.Initialize()
 $ws3Params = New-Object SuperTUI.Core.LayoutParams
@@ -519,7 +537,7 @@ $workspace4Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout)
 
 # Add AgendaWidget (Overdue, Today, Tomorrow, This Week, Later, No Due Date)
-$agendaWidget = New-Object SuperTUI.Widgets.AgendaWidget
+$agendaWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.AgendaWidget])
 $agendaWidget.WidgetName = "Agenda"
 $agendaWidget.Initialize()
 $ws4Params = New-Object SuperTUI.Core.LayoutParams
@@ -533,7 +551,7 @@ $workspace5Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout)
 
 # Add ProjectStatsWidget (Metrics, charts, recent activity)
-$statsWidget = New-Object SuperTUI.Widgets.ProjectStatsWidget
+$statsWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ProjectStatsWidget])
 $statsWidget.WidgetName = "ProjectStats"
 $statsWidget.Initialize()
 $ws5Params = New-Object SuperTUI.Core.LayoutParams
@@ -541,43 +559,6 @@ $workspace5Layout.AddChild($statsWidget, $ws5Params)
 $workspace5.Widgets.Add($statsWidget)
 
 $workspaceManager.AddWorkspace($workspace5)
-
-# Workspace 6: Excel Integration (Import/Export/Automation)
-$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(3, 2)
-$workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout)
-
-# Row 0: Import widget (left) and Export widget (right)
-$importWidget = New-Object SuperTUI.Widgets.ExcelImportWidget
-$importWidget.WidgetName = "ExcelImport"
-$importWidget.Initialize()
-$ws6Params1 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params1.Row = 0
-$ws6Params1.Column = 0
-$workspace6Layout.AddChild($importWidget, $ws6Params1)
-$workspace6.Widgets.Add($importWidget)
-
-$exportWidget = New-Object SuperTUI.Widgets.ExcelExportWidget
-$exportWidget.WidgetName = "ExcelExport"
-$exportWidget.Initialize()
-$ws6Params2 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params2.Row = 0
-$ws6Params2.Column = 1
-$workspace6Layout.AddChild($exportWidget, $ws6Params2)
-$workspace6.Widgets.Add($exportWidget)
-
-# Row 1-2: Automation widget (spans both columns and 2 rows for more space)
-$automationWidget = New-Object SuperTUI.Widgets.ExcelAutomationWidget
-$automationWidget.WidgetName = "ExcelAutomation"
-$automationWidget.Initialize()
-$ws6Params3 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params3.Row = 1
-$ws6Params3.Column = 0
-$ws6Params3.ColumnSpan = 2
-$ws6Params3.RowSpan = 2
-$workspace6Layout.AddChild($automationWidget, $ws6Params3)
-$workspace6.Widgets.Add($automationWidget)
-
-$workspaceManager.AddWorkspace($workspace6)
 
 Write-Host "Workspaces created!" -ForegroundColor Green
 
@@ -777,8 +758,10 @@ $widgetPickerAction = {
                     throw "Widget type '$($picker.SelectedWidget.TypeName)' not found"
                 }
 
-                $widget = [Activator]::CreateInstance($widgetType)
+                # Create widget using WidgetFactory for proper DI
+                $widget = $widgetFactory.CreateWidget($widgetType)
                 $widget.WidgetName = $picker.SelectedWidget.Name
+                $widget.Initialize()
 
                 # Find first empty slot
                 $layout = [SuperTUI.Core.DashboardLayoutEngine]$current.Layout
@@ -1230,19 +1213,17 @@ $window.Add_KeyDown({
 $window.Add_Closing({
     Write-Host "Saving workspace states..." -ForegroundColor Yellow
 
-    foreach ($ws in $workspaceManager.Workspaces) {
-        try {
-            $state = $ws.SaveState()
-            $stateManager.SaveState("workspace_$($ws.Index)", $state)
-            $logger.Debug("StateManagement", "Saved state for workspace: $($ws.Name)")
-        } catch {
-            $logger.Error("StateManagement", "Failed to save workspace $($ws.Name): $_")
-        }
+    try {
+        # Capture state from workspace manager
+        $snapshot = $stateManager.CaptureState($workspaceManager, $null)
+        # Save state to disk
+        $stateManager.SaveState($snapshot, $true)  # Create backup on close
+        $logger.Debug("StateManagement", "Saved all workspace states")
+        Write-Host "Workspace states saved" -ForegroundColor Green
+    } catch {
+        $logger.Error("StateManagement", "Failed to save workspace states: $_")
+        Write-Host "Error saving workspace states: $_" -ForegroundColor Red
     }
-
-    # Flush to disk
-    $stateManager.Flush()
-    Write-Host "Workspace states saved" -ForegroundColor Green
 })
 
 # Auto-save on workspace switch
@@ -1252,16 +1233,13 @@ $workspaceManager.add_WorkspaceChanged({
     # Update ApplicationContext
     $appContext.CurrentWorkspace = $workspace
 
-    # Save previous workspace state (if any)
-    foreach ($ws in $workspaceManager.Workspaces) {
-        if ($ws -ne $workspace) {
-            try {
-                $state = $ws.SaveState()
-                $stateManager.SaveState("workspace_$($ws.Index)", $state)
-            } catch {
-                $logger.Error("StateManagement", "Failed to auto-save workspace: $_")
-            }
-        }
+    # Auto-save all workspace states
+    try {
+        $snapshot = $stateManager.CaptureState($workspaceManager, $null)
+        $stateManager.SaveStateAsync($snapshot, $false)  # Async save, no backup
+        $logger.Debug("StateManagement", "Auto-saved workspace states on switch")
+    } catch {
+        $logger.Error("StateManagement", "Failed to auto-save workspace: $_")
     }
 })
 
