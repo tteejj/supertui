@@ -18,7 +18,7 @@ namespace SuperTUI.Core.Services
     /// Project service for managing projects with JSON persistence
     /// Thread-safe singleton service with nickname and ID1 indexes
     /// </summary>
-    public class ProjectService : IDisposable
+    public class ProjectService : IProjectService, IDisposable
     {
         private static ProjectService instance;
         public static ProjectService Instance => instance ??= new ProjectService();

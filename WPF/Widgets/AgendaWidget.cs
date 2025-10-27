@@ -24,9 +24,9 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private readonly ITaskService taskService;
 
         private Theme theme;
-        private TaskService taskService;
 
         // UI Components
         private StandardWidgetFrame frame;
@@ -63,28 +63,26 @@ namespace SuperTUI.Widgets
         public AgendaWidget(
             ILogger logger,
             IThemeManager themeManager,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            ITaskService taskService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
 
             WidgetName = "Agenda";
             WidgetType = "Agenda";
         }
 
         public AgendaWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance)
         {
         }
 
         public override void Initialize()
         {
             theme = themeManager.CurrentTheme;
-            taskService = TaskService.Instance;
-
-            // Initialize service
-            taskService.Initialize();
 
             // Initialize collections
             overdueTasks = new ObservableCollection<TaskItem>();

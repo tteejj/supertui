@@ -22,10 +22,10 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private readonly ITaskService taskService;
+        private readonly ITagService tagService;
 
         private Theme theme;
-        private TaskService taskService;
-        private TagService tagService;
 
         // UI Components
         private Grid mainGrid;
@@ -62,28 +62,27 @@ namespace SuperTUI.Widgets
         public TaskManagementWidget(
             ILogger logger,
             IThemeManager themeManager,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            ITaskService taskService,
+            ITagService tagService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
+            this.tagService = tagService ?? throw new ArgumentNullException(nameof(tagService));
 
             WidgetName = "Task Manager";
             WidgetType = "TaskManagement";
         }
 
-        public TaskManagementWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        public TaskManagementWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance, TagService.Instance)
         {
         }
 
         public override void Initialize()
         {
             theme = themeManager.CurrentTheme;
-            taskService = TaskService.Instance;
-            tagService = TagService.Instance;
-
-            // Initialize service
-            taskService.Initialize();
 
             // Setup filters
             filters = TaskFilter.GetDefaultFilters();

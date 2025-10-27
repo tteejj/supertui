@@ -14,7 +14,7 @@ namespace SuperTUI.Core.Services
     /// Time tracking service for managing project time entries with JSON persistence
     /// Thread-safe singleton service with week-based indexing
     /// </summary>
-    public class TimeTrackingService : IDisposable
+    public class TimeTrackingService : ITimeTrackingService, IDisposable
     {
         private static TimeTrackingService instance;
         public static TimeTrackingService Instance => instance ??= new TimeTrackingService();

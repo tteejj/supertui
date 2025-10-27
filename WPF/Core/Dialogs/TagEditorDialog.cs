@@ -18,7 +18,7 @@ namespace SuperTUI.Core.Dialogs
     {
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
-        private readonly TagService tagService;
+        private readonly ITagService tagService;
         private Theme theme;
 
         // UI Controls
@@ -38,7 +38,7 @@ namespace SuperTUI.Core.Dialogs
 
         public List<string> Tags { get; private set; }
 
-        public TagEditorDialog(List<string> initialTags, ILogger logger, IThemeManager themeManager, TagService tagService)
+        public TagEditorDialog(List<string> initialTags, ILogger logger, IThemeManager themeManager, ITagService tagService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));

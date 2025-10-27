@@ -15,9 +15,9 @@ namespace SuperTUI.Core.Services
 {
     /// <summary>
     /// Task service for managing tasks with JSON persistence
-    /// Thread-safe singleton service
+    /// Thread-safe service with singleton pattern for backward compatibility
     /// </summary>
-    public class TaskService
+    public class TaskService : ITaskService
     {
         private static TaskService instance;
         public static TaskService Instance => instance ??= new TaskService();

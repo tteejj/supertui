@@ -25,11 +25,11 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private readonly ITaskService taskService;
+        private readonly IProjectService projectService;
+        private readonly ITimeTrackingService timeService;
 
         private Theme theme;
-        private TaskService taskService;
-        private ProjectService projectService;
-        private TimeTrackingService timeService;
 
         // UI Components
         private Grid mainGrid;
@@ -51,32 +51,30 @@ namespace SuperTUI.Widgets
         public ProjectStatsWidget(
             ILogger logger,
             IThemeManager themeManager,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            ITaskService taskService,
+            IProjectService projectService,
+            ITimeTrackingService timeService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
+            this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+            this.timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
 
             WidgetName = "Project Stats";
             WidgetType = "ProjectStats";
         }
 
         public ProjectStatsWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance, ProjectService.Instance, TimeTrackingService.Instance)
         {
         }
 
         public override void Initialize()
         {
             theme = themeManager.CurrentTheme;
-            taskService = TaskService.Instance;
-            projectService = ProjectService.Instance;
-            timeService = TimeTrackingService.Instance;
-
-            // Initialize services
-            taskService.Initialize();
-            projectService.Initialize();
-            timeService.Initialize();
 
             BuildUI();
             RefreshMetrics();

@@ -23,9 +23,9 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private readonly ITaskService taskService;
 
         private Theme theme;
-        private TaskService taskService;
 
         // UI Components
         private Grid mainGrid;
@@ -55,27 +55,25 @@ namespace SuperTUI.Widgets
         public TimeTrackingWidget(
             ILogger logger,
             IThemeManager themeManager,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            ITaskService taskService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
 
             WidgetName = "Time Tracker";
             WidgetType = "TimeTracking";
         }
 
-        public TimeTrackingWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+        public TimeTrackingWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance)
         {
         }
 
         public override void Initialize()
         {
             theme = themeManager.CurrentTheme;
-            taskService = TaskService.Instance;
-
-            // Initialize services
-            taskService.Initialize();
 
             // Load Pomodoro settings from config
             pomodoroWorkMinutes = config.Get<int>("Pomodoro.WorkMinutes", 25);

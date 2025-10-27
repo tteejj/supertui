@@ -9,7 +9,7 @@ namespace SuperTUI.Core.Services
     /// <summary>
     /// Service for managing tags with autocomplete, usage tracking, and validation
     /// </summary>
-    public class TagService
+    public class TagService : ITagService
     {
         private static TagService instance;
         public static TagService Instance => instance ??= new TagService(

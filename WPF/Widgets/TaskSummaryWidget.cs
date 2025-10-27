@@ -18,7 +18,7 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
-        private readonly Core.Services.TaskService taskService;
+        private readonly ITaskService taskService;
 
         // This would normally come from a service
         // For demo purposes, we'll create a simple data structure
@@ -52,7 +52,7 @@ namespace SuperTUI.Widgets
             ILogger logger,
             IThemeManager themeManager,
             IConfigurationManager config,
-            Core.Services.TaskService taskService)
+            ITaskService taskService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
