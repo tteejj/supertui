@@ -125,10 +125,15 @@ namespace SuperTUI.DI
                 bool allResolvable = true;
                 foreach (var param in parameters)
                 {
-                    if (!param.ParameterType.IsInterface && !serviceProvider.GetService(param.ParameterType).GetType().IsAssignableFrom(param.ParameterType))
+                    // Check if parameter is interface (always resolvable) or registered concrete type
+                    if (!param.ParameterType.IsInterface)
                     {
-                        allResolvable = false;
-                        break;
+                        var service = serviceProvider.GetService(param.ParameterType);
+                        if (service == null || !service.GetType().IsAssignableFrom(param.ParameterType))
+                        {
+                            allResolvable = false;
+                            break;
+                        }
                     }
                 }
 

@@ -71,46 +71,57 @@ namespace SuperTUI.Widgets
             WidgetType = "KanbanBoard";
         }
 
-        public KanbanBoardWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance)
-        {
-        }
-
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-
-            // Initialize collections
-            todoTasks = new ObservableCollection<TaskItem>();
-            inProgressTasks = new ObservableCollection<TaskItem>();
-            doneTasks = new ObservableCollection<TaskItem>();
-
-            BuildUI();
-            LoadTasks();
-
-            // Subscribe to task service events
-            taskService.TaskAdded += OnTaskChanged;
-            taskService.TaskUpdated += OnTaskChanged;
-            taskService.TaskDeleted += (id) => LoadTasks();
-            taskService.TasksReloaded += LoadTasks;
-
-            // Setup refresh timer (every 10 seconds)
-            refreshTimer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromSeconds(10)
-            };
-            refreshTimer.Tick += (s, e) => LoadTasks();
-            refreshTimer.Start();
+                theme = themeManager.CurrentTheme;
 
-            // Subscribe to EventBus for inter-widget communication
-            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
-            EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+                // Initialize collections
+                todoTasks = new ObservableCollection<TaskItem>();
+                inProgressTasks = new ObservableCollection<TaskItem>();
+                doneTasks = new ObservableCollection<TaskItem>();
 
-            logger.Info("KanbanWidget", "Kanban board widget initialized");
+                BuildUI();
+                LoadTasks();
+
+                // Subscribe to task service events
+                taskService.TaskAdded += OnTaskChanged;
+                taskService.TaskUpdated += OnTaskChanged;
+                taskService.TaskDeleted += (id) => LoadTasks();
+                taskService.TasksReloaded += LoadTasks;
+
+                // Setup refresh timer (every 10 seconds)
+                refreshTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(10)
+                };
+                refreshTimer.Tick += (s, e) => LoadTasks();
+                refreshTimer.Start();
+
+                // Subscribe to EventBus for inter-widget communication
+                EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+                EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskSelectedFromOtherWidget(evt));
+                return;
+            }
+
             // If task was selected from another widget, select it here too
             if (evt.SourceWidget == WidgetType) return; // Ignore our own events
 
@@ -148,6 +159,14 @@ namespace SuperTUI.Widgets
 
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnRefreshRequested(evt));
+                return;
+            }
+
             if (evt.TargetWidget == null || evt.TargetWidget == WidgetType)
             {
                 LoadTasks();
@@ -380,6 +399,14 @@ namespace SuperTUI.Widgets
 
         private void OnTaskChanged(TaskItem task)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskChanged(task));
+                return;
+            }
+
             // Reload all tasks when any task changes
             LoadTasks();
         }
@@ -416,47 +443,61 @@ namespace SuperTUI.Widgets
                 {
                     EditTask(task);
                     e.Handled = true;
+                    return;
                 }
                 // E to navigate to TaskManagement widget with this task
                 else if (e.Key == Key.E)
                 {
                     AppContext.RequestNavigation("TaskManagement", task);
                     e.Handled = true;
+                    return;
                 }
                 // Delete to remove task
                 else if (e.Key == Key.Delete)
                 {
                     taskService.DeleteTask(task.Id);
                     e.Handled = true;
+                    return;
                 }
                 // 1, 2, 3 to move between columns
                 else if (e.Key == Key.D1 || e.Key == Key.NumPad1)
                 {
                     MoveTaskToColumn(task, TaskStatus.Pending);
                     e.Handled = true;
+                    return;
                 }
                 else if (e.Key == Key.D2 || e.Key == Key.NumPad2)
                 {
                     MoveTaskToColumn(task, TaskStatus.InProgress);
                     e.Handled = true;
+                    return;
                 }
                 else if (e.Key == Key.D3 || e.Key == Key.NumPad3)
                 {
                     MoveTaskToColumn(task, TaskStatus.Completed);
                     e.Handled = true;
+                    return;
                 }
                 // P to cycle priority
                 else if (e.Key == Key.P)
                 {
                     taskService.CyclePriority(task.Id);
                     e.Handled = true;
+                    return;
                 }
             }
+
+            // Let Up/Down arrows bubble to ListBox for navigation (don't set e.Handled)
+            // Let Left/Right arrows bubble to widget level for column switching
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
+
+            // Only handle keys at widget level if they haven't been handled by ListBox
+            if (e.Handled)
+                return;
 
             // Arrow keys for column navigation
             if (e.Key == Key.Left && currentColumn > 0)
@@ -581,7 +622,8 @@ namespace SuperTUI.Widgets
                     Foreground = Brushes.White,
                     Padding = new Thickness(15, 5, 15, 5),
                     Margin = new Thickness(0, 0, 10, 0),
-                    Cursor = Cursors.Hand
+                    Cursor = Cursors.Hand,
+                    IsDefault = true // Enter key activates this button
                 };
                 saveBtn.Click += (s, e) =>
                 {
@@ -600,7 +642,8 @@ namespace SuperTUI.Widgets
                     Background = new SolidColorBrush(theme.ForegroundDisabled),
                     Foreground = Brushes.White,
                     Padding = new Thickness(15, 5, 15, 5),
-                    Cursor = Cursors.Hand
+                    Cursor = Cursors.Hand,
+                    IsCancel = true // Escape key activates this button
                 };
                 cancelBtn.Click += (s, e) => dialog.Close();
                 buttonStack.Children.Add(cancelBtn);

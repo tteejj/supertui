@@ -19,6 +19,7 @@ namespace SuperTUI.Widgets
     /// <summary>
     /// Text editor widget for .txt files.
     /// Features: Multiple files (tabs), atomic saves, auto-save on exit, 5MB limit.
+    /// FILE I/O SECURITY: Comprehensive error handling for IOException, UnauthorizedAccessException
     /// </summary>
     public class NotesWidget : WidgetBase, IThemeable
     {
@@ -34,7 +35,6 @@ namespace SuperTUI.Widgets
         private StackPanel tabPanel;
         private Grid contentGrid;
         private TextBlock statusLabel;
-        private TextBlock helpLabel;
 
         private List<NoteFile> openFiles;
         private int activeFileIndex;
@@ -218,7 +218,7 @@ namespace SuperTUI.Widgets
             tabPanel.Children.Add(tabButton);
 
             SwitchToFile(openFiles.Count - 1);
-            logger.Info("NotesWidget", $"Created new file: {fileName}");
+            logger.Info(WidgetType, $"Created new file: {fileName}");
         }
 
         private Button CreateTabButton(string fileName)
@@ -283,7 +283,7 @@ namespace SuperTUI.Widgets
             activeFile.TextBox.Focus();
             UpdateStatusBar(null, null);
 
-            logger.Debug("NotesWidget", $"Switched to file: {activeFile.FileName}");
+            logger.Debug(WidgetType, $"Switched to file: {activeFile.FileName}");
         }
 
         private void SwitchToNextTab()
@@ -329,12 +329,20 @@ namespace SuperTUI.Widgets
                     return;
                 }
 
+                // Check file existence
+                if (!File.Exists(filePath))
+                {
+                    ShowToast("File not found", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"File not found: {filePath}");
+                    return;
+                }
+
                 // Check file size (5MB limit)
                 var fileInfo = new FileInfo(filePath);
                 if (fileInfo.Length > MaxFileSize)
                 {
                     ShowToast($"File too large (max {MaxFileSize / 1024 / 1024} MB)", themeManager.CurrentTheme.Error);
-                    logger.Warning("NotesWidget", $"File too large: {filePath} ({fileInfo.Length} bytes)");
+                    logger.Warning(WidgetType, $"File too large: {filePath} ({fileInfo.Length} bytes)");
                     return;
                 }
 
@@ -345,8 +353,25 @@ namespace SuperTUI.Widgets
                     return;
                 }
 
-                // Read file
-                var content = File.ReadAllText(filePath);
+                // Read file with proper error handling
+                string content;
+                try
+                {
+                    content = File.ReadAllText(filePath);
+                }
+                catch (IOException ex)
+                {
+                    ShowToast($"File read error: {ex.Message}", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"File read failed: {filePath}", ex);
+                    return;
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    ShowToast("Access denied", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"Access denied: {filePath}", ex);
+                    return;
+                }
+
                 var fileName = Path.GetFileName(filePath);
 
                 var theme = themeManager.CurrentTheme;
@@ -386,12 +411,12 @@ namespace SuperTUI.Widgets
                 tabPanel.Children.Add(tabButton);
                 SwitchToFile(openFiles.Count - 1);
 
-                logger.Info("NotesWidget", $"Opened file: {filePath}");
+                logger.Info(WidgetType, $"Opened file: {filePath}");
             }
             catch (Exception ex)
             {
-                ShowToast($"Error opening file: {ex.Message}", themeManager.CurrentTheme.Error);
-                logger.Error("NotesWidget", $"Error opening file: {ex.Message}");
+                ShowToast($"Unexpected error: {ex.Message}", themeManager.CurrentTheme.Error);
+                logger.Error(WidgetType, $"Unexpected error opening file: {filePath}", ex);
             }
         }
 
@@ -416,12 +441,22 @@ namespace SuperTUI.Widgets
                 UpdateTabLabel();
                 UpdateStatusBar(null, null);
                 ShowToast("Saved", themeManager.CurrentTheme.Success);
-                logger.Info("NotesWidget", $"Saved file: {noteFile.FilePath}");
+                logger.Info(WidgetType, $"Saved file: {noteFile.FilePath}");
+            }
+            catch (IOException ex)
+            {
+                ShowToast($"File write error: {ex.Message}", themeManager.CurrentTheme.Error);
+                logger.Error(WidgetType, $"File write failed: {noteFile.FilePath}", ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                ShowToast("Access denied", themeManager.CurrentTheme.Error);
+                logger.Error(WidgetType, $"Access denied: {noteFile.FilePath}", ex);
             }
             catch (Exception ex)
             {
-                ShowToast($"Error saving: {ex.Message}", themeManager.CurrentTheme.Error);
-                logger.Error("NotesWidget", $"Error saving file: {ex.Message}");
+                ShowToast($"Unexpected error: {ex.Message}", themeManager.CurrentTheme.Error);
+                logger.Error(WidgetType, $"Unexpected error saving file: {noteFile.FilePath}", ex);
             }
         }
 
@@ -450,24 +485,59 @@ namespace SuperTUI.Widgets
                     UpdateTabLabel();
                     UpdateStatusBar(null, null);
                     ShowToast("Saved", themeManager.CurrentTheme.Success);
-                    logger.Info("NotesWidget", $"Saved file as: {picker.SelectedPath}");
+                    logger.Info(WidgetType, $"Saved file as: {picker.SelectedPath}");
+                }
+                catch (IOException ex)
+                {
+                    ShowToast($"File write error: {ex.Message}", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"File write failed: {picker.SelectedPath}", ex);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    ShowToast("Access denied", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"Access denied: {picker.SelectedPath}", ex);
                 }
                 catch (Exception ex)
                 {
-                    ShowToast($"Error saving: {ex.Message}", themeManager.CurrentTheme.Error);
-                    logger.Error("NotesWidget", $"Error saving file: {ex.Message}");
+                    ShowToast($"Unexpected error: {ex.Message}", themeManager.CurrentTheme.Error);
+                    logger.Error(WidgetType, $"Unexpected error saving file: {picker.SelectedPath}", ex);
                 }
             }
         }
 
         /// <summary>
         /// Atomic save: Write to temp file, then rename (crash-safe)
+        /// Throws IOException or UnauthorizedAccessException on failure
         /// </summary>
         private void AtomicSave(string path, string content)
         {
             var tempPath = path + ".tmp";
-            File.WriteAllText(tempPath, content);
-            File.Move(tempPath, path, overwrite: true);
+
+            try
+            {
+                // Write to temp file
+                File.WriteAllText(tempPath, content);
+
+                // Atomic rename
+                File.Move(tempPath, path, overwrite: true);
+            }
+            catch
+            {
+                // Clean up temp file if it exists
+                try
+                {
+                    if (File.Exists(tempPath))
+                    {
+                        File.Delete(tempPath);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+
+                throw; // Re-throw original exception
+            }
         }
 
         private void CloseFile(int index)
@@ -495,7 +565,7 @@ namespace SuperTUI.Widgets
                 SwitchToFile(Math.Max(0, activeFileIndex));
             }
 
-            logger.Info("NotesWidget", $"Closed file: {noteFile.FileName}");
+            logger.Info(WidgetType, $"Closed file: {noteFile.FileName}");
         }
 
         private void MarkDirty()
@@ -615,9 +685,21 @@ namespace SuperTUI.Widgets
                 {
                     foreach (var filePath in filePaths)
                     {
-                        if (File.Exists(filePath))
+                        try
                         {
-                            LoadFile(filePath);
+                            if (File.Exists(filePath))
+                            {
+                                LoadFile(filePath);
+                            }
+                            else
+                            {
+                                logger.Warning(WidgetType, $"Skipping missing file during restore: {filePath}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error(WidgetType, $"Failed to restore file: {filePath}", ex);
+                            // Continue with other files
                         }
                     }
 
@@ -631,9 +713,11 @@ namespace SuperTUI.Widgets
                         }
                     }
                 }
-                else
+
+                // Always ensure at least one file is open
+                if (openFiles.Count == 0)
                 {
-                    CreateNewFile();  // Fallback to new file
+                    CreateNewFile();
                 }
             }
         }
@@ -648,11 +732,19 @@ namespace SuperTUI.Widgets
                     try
                     {
                         AtomicSave(noteFile.FilePath, noteFile.Content);
-                        logger.Info("NotesWidget", $"Auto-saved on exit: {noteFile.FilePath}");
+                        logger.Info(WidgetType, $"Auto-saved on exit: {noteFile.FilePath}");
+                    }
+                    catch (IOException ex)
+                    {
+                        logger.Error(WidgetType, $"Failed to auto-save on exit (I/O error): {noteFile.FilePath}", ex);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        logger.Error(WidgetType, $"Failed to auto-save on exit (access denied): {noteFile.FilePath}", ex);
                     }
                     catch (Exception ex)
                     {
-                        logger.Error("NotesWidget", $"Error auto-saving on exit: {ex.Message}");
+                        logger.Error(WidgetType, $"Failed to auto-save on exit (unexpected error): {noteFile.FilePath}", ex);
                     }
                 }
             }

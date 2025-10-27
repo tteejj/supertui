@@ -514,7 +514,14 @@ namespace SuperTUI.Core.Services
 
                     foreach (var oldBackup in backupFiles)
                     {
-                        try { File.Delete(oldBackup); } catch { }
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("TimeTrackingService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
                     }
                 }
 
@@ -529,7 +536,66 @@ namespace SuperTUI.Core.Services
                     WriteIndented = true
                 }));
 
-                await Task.Run(() => File.WriteAllText(dataFilePath, json));
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                await Task.Run(() => File.WriteAllText(tempFile, json));
+                await Task.Run(() => File.Replace(tempFile, dataFilePath, dataFilePath + ".bak"));
+                Logger.Instance?.Debug("TimeTrackingService", $"Saved {entryList.Count} time entries to {dataFilePath}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TimeTrackingService", $"Failed to save time entries: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Save time entries to JSON file synchronously (for Dispose)
+        /// </summary>
+        private void SaveToFileSync()
+        {
+            try
+            {
+                // Create backup before saving
+                if (File.Exists(dataFilePath))
+                {
+                    var backupPath = $"{dataFilePath}.{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                    File.Copy(dataFilePath, backupPath, overwrite: true);
+
+                    // Keep only last 5 backups
+                    var backupDir = Path.GetDirectoryName(dataFilePath);
+                    var backupFiles = Directory.GetFiles(backupDir, "timetracking.json.*.bak")
+                        .OrderByDescending(f => File.GetCreationTime(f))
+                        .Skip(5)
+                        .ToList();
+
+                    foreach (var oldBackup in backupFiles)
+                    {
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("TimeTrackingService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
+                    }
+                }
+
+                List<TimeEntry> entryList;
+                lock (lockObject)
+                {
+                    entryList = entries.Values.ToList();
+                }
+
+                var json = JsonSerializer.Serialize(entryList, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                File.WriteAllText(tempFile, json);
+                File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
                 Logger.Instance?.Debug("TimeTrackingService", $"Saved {entryList.Count} time entries to {dataFilePath}");
             }
             catch (Exception ex)
@@ -622,7 +688,10 @@ namespace SuperTUI.Core.Services
                         WriteIndented = true
                     });
 
-                    File.WriteAllText(filePath, json);
+                    // Atomic write: temp → rename pattern
+                    string tempFile = filePath + ".tmp";
+                    File.WriteAllText(tempFile, json);
+                    File.Replace(tempFile, filePath, filePath + ".bak");
                     Logger.Instance?.Info("TimeTrackingService", $"Exported {allEntries.Count} time entries to JSON: {filePath}");
                     return true;
                 }
@@ -646,7 +715,7 @@ namespace SuperTUI.Core.Services
                 // Ensure any pending save is executed before disposal
                 if (pendingSave)
                 {
-                    SaveToFileAsync().Wait();
+                    SaveToFileSync();  // Use synchronous save to avoid deadlock
                 }
 
                 saveTimer.Dispose();

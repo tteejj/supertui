@@ -15,6 +15,129 @@ using SuperTUI.Infrastructure;
 namespace SuperTUI.Extensions
 {
     /// <summary>
+    /// Helper for creating directories with automatic fallback to alternative locations
+    /// </summary>
+    public static class DirectoryHelper
+    {
+        /// <summary>
+        /// Creates a directory with fallback chain if primary path fails.
+        /// Fallback order:
+        /// 1. Primary path (user-specified)
+        /// 2. User's LocalAppData\SuperTUI\{purpose}
+        /// 3. User's Temp\SuperTUI\{purpose}
+        /// 4. Current directory\.supertui\{purpose}
+        /// 5. Temp directory with unique name
+        /// </summary>
+        /// <param name="primaryPath">Primary directory path to create</param>
+        /// <param name="purpose">Purpose/subdirectory name for fallback paths (e.g., "Logs", "Config", "State")</param>
+        /// <returns>Successfully created directory path</returns>
+        /// <exception cref="IOException">If all fallback attempts fail</exception>
+        public static string CreateDirectoryWithFallback(string primaryPath, string purpose)
+        {
+            var logger = Infrastructure.Logger.Instance;
+
+            // Try primary path first
+            try
+            {
+                Directory.CreateDirectory(primaryPath);
+                logger.Debug("DirectoryHelper", $"Created directory: {primaryPath}");
+                return primaryPath;
+            }
+            catch (Exception primaryEx)
+            {
+                logger.Warning("DirectoryHelper",
+                    $"Failed to create primary directory '{primaryPath}': {primaryEx.Message}. Trying fallbacks...");
+            }
+
+            // Define fallback paths
+            var fallbacks = new List<(string path, string description)>();
+
+            // Fallback 1: LocalAppData\SuperTUI\{purpose}
+            try
+            {
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrEmpty(localAppData))
+                {
+                    var fallback1 = Path.Combine(localAppData, "SuperTUI", purpose ?? "Data");
+                    fallbacks.Add((fallback1, "User's LocalAppData"));
+                }
+            }
+            catch { }
+
+            // Fallback 2: Temp\SuperTUI\{purpose}
+            try
+            {
+                var tempPath = Path.GetTempPath();
+                if (!string.IsNullOrEmpty(tempPath))
+                {
+                    var fallback2 = Path.Combine(tempPath, "SuperTUI", purpose ?? "Data");
+                    fallbacks.Add((fallback2, "User's Temp directory"));
+                }
+            }
+            catch { }
+
+            // Fallback 3: Current directory\.supertui\{purpose}
+            try
+            {
+                var currentDir = Directory.GetCurrentDirectory();
+                if (!string.IsNullOrEmpty(currentDir))
+                {
+                    var fallback3 = Path.Combine(currentDir, ".supertui", purpose ?? "Data");
+                    fallbacks.Add((fallback3, "Current directory"));
+                }
+            }
+            catch { }
+
+            // Fallback 4: Temp with unique name
+            try
+            {
+                var tempPath = Path.GetTempPath();
+                if (!string.IsNullOrEmpty(tempPath))
+                {
+                    var uniqueName = $"SuperTUI_{purpose}_{Guid.NewGuid():N}";
+                    var fallback4 = Path.Combine(tempPath, uniqueName);
+                    fallbacks.Add((fallback4, "Temp directory with unique name"));
+                }
+            }
+            catch { }
+
+            // Try each fallback
+            foreach (var (fallbackPath, description) in fallbacks)
+            {
+                try
+                {
+                    Directory.CreateDirectory(fallbackPath);
+                    logger.Warning("DirectoryHelper",
+                        $"Using fallback directory: {fallbackPath} ({description})");
+                    logger.Warning("DirectoryHelper",
+                        $"Original path '{primaryPath}' was not accessible.");
+                    return fallbackPath;
+                }
+                catch (Exception fallbackEx)
+                {
+                    logger.Debug("DirectoryHelper",
+                        $"Fallback '{description}' at '{fallbackPath}' failed: {fallbackEx.Message}");
+                }
+            }
+
+            // All fallbacks failed - this is critical
+            var errorMessage =
+                $"CRITICAL: Unable to create directory for '{purpose}'.\n" +
+                $"Primary path: {primaryPath}\n" +
+                $"All {fallbacks.Count} fallback locations also failed.\n" +
+                $"Please check:\n" +
+                $"  1. Disk space availability\n" +
+                $"  2. File system permissions\n" +
+                $"  3. Disk health (run chkdsk)\n" +
+                $"  4. Antivirus/security software blocking writes\n" +
+                $"Application cannot continue without writable storage.";
+
+            logger.Critical("DirectoryHelper", errorMessage);
+            throw new IOException(errorMessage);
+        }
+    }
+
+    /// <summary>
     /// Helper for portable data directory paths
     /// </summary>
     public static class PortableDataDirectory
@@ -36,7 +159,7 @@ namespace SuperTUI.Extensions
 
                 if (!Directory.Exists(dataDirectory))
                 {
-                    Directory.CreateDirectory(dataDirectory);
+                    dataDirectory = DirectoryHelper.CreateDirectoryWithFallback(dataDirectory, "Data");
                 }
 
                 return dataDirectory;
@@ -46,7 +169,7 @@ namespace SuperTUI.Extensions
                 dataDirectory = value;
                 if (!Directory.Exists(dataDirectory))
                 {
-                    Directory.CreateDirectory(dataDirectory);
+                    dataDirectory = DirectoryHelper.CreateDirectoryWithFallback(dataDirectory, "Data");
                 }
             }
         }
@@ -59,7 +182,7 @@ namespace SuperTUI.Extensions
             var path = Path.Combine(DataDirectory, "SuperTUI");
             if (!Directory.Exists(path))
             {
-                Directory.CreateDirectory(path);
+                path = DirectoryHelper.CreateDirectoryWithFallback(path, "SuperTUI");
             }
             return path;
         }
@@ -147,7 +270,7 @@ namespace SuperTUI.Extensions
             stateDirectory = stateDir ?? Path.Combine(
                 PortableDataDirectory.GetSuperTUIDataDirectory(), "State");
 
-            Directory.CreateDirectory(stateDirectory);
+            stateDirectory = DirectoryHelper.CreateDirectoryWithFallback(stateDirectory, "State");
             currentStateFile = Path.Combine(stateDirectory, "current_state.json");
 
             Logger.Instance.Info("StatePersistence", $"Initialized state persistence at {stateDirectory}");
@@ -315,10 +438,23 @@ namespace SuperTUI.Extensions
             }
         }
 
+        /// <summary>
+        /// Synchronous wrapper for SaveStateAsync - AVOID CALLING FROM UI THREAD
+        /// </summary>
+        /// <remarks>
+        /// ⚠️ DEADLOCK WARNING: This method uses Task.Run().Wait() which can deadlock
+        /// when called from WPF UI thread or other SynchronizationContext.
+        ///
+        /// RECOMMENDED: Use SaveStateAsync() instead and await it.
+        ///
+        /// This wrapper exists only for backward compatibility with synchronous code paths.
+        /// Consider making your call site async to avoid potential deadlocks.
+        /// </remarks>
+        [Obsolete("Use SaveStateAsync to avoid potential deadlocks on UI thread")]
         public void SaveState(StateSnapshot snapshot = null, bool createBackup = false)
         {
-            // Synchronous wrapper for backward compatibility
-            // Use Task.Run to avoid WPF UI thread deadlocks
+            // DEADLOCK RISK: Task.Run().Wait() blocks calling thread
+            // If called from UI thread with .ConfigureAwait(true), this WILL deadlock
             Task.Run(async () => await SaveStateAsync(snapshot, createBackup)).Wait();
         }
 
@@ -357,10 +493,23 @@ namespace SuperTUI.Extensions
             }
         }
 
+        /// <summary>
+        /// Synchronous wrapper for LoadStateAsync - AVOID CALLING FROM UI THREAD
+        /// </summary>
+        /// <remarks>
+        /// ⚠️ DEADLOCK WARNING: This method uses Task.Run().Result which can deadlock
+        /// when called from WPF UI thread or other SynchronizationContext.
+        ///
+        /// RECOMMENDED: Use LoadStateAsync() instead and await it.
+        ///
+        /// This wrapper exists only for backward compatibility with synchronous code paths.
+        /// Consider making your call site async to avoid potential deadlocks.
+        /// </remarks>
+        [Obsolete("Use LoadStateAsync to avoid potential deadlocks on UI thread")]
         public StateSnapshot LoadState()
         {
-            // Synchronous wrapper for backward compatibility
-            // Use Task.Run to avoid WPF UI thread deadlocks
+            // DEADLOCK RISK: Task.Run().Result blocks calling thread
+            // If called from UI thread with .ConfigureAwait(true), this WILL deadlock
             return Task.Run(async () => await LoadStateAsync()).Result;
         }
 
@@ -521,12 +670,22 @@ namespace SuperTUI.Extensions
         }
 
         /// <summary>
-        /// Create a backup of the current state file
+        /// Create a backup of the current state file - AVOID CALLING FROM UI THREAD
         /// </summary>
+        /// <remarks>
+        /// ⚠️ DEADLOCK WARNING: This method uses Task.Run().Wait() which can deadlock
+        /// when called from WPF UI thread or other SynchronizationContext.
+        ///
+        /// RECOMMENDED: Use CreateBackupAsync() instead and await it.
+        ///
+        /// This wrapper exists only for backward compatibility with synchronous code paths.
+        /// Consider making your call site async to avoid potential deadlocks.
+        /// </remarks>
+        [Obsolete("Use CreateBackupAsync to avoid potential deadlocks on UI thread")]
         public void CreateBackup()
         {
-            // Synchronous wrapper for backward compatibility
-            // Use Task.Run to avoid WPF UI thread deadlocks
+            // DEADLOCK RISK: Task.Run().Wait() blocks calling thread
+            // If called from UI thread with .ConfigureAwait(true), this WILL deadlock
             Task.Run(async () => await CreateBackupAsync()).Wait();
         }
 
@@ -538,7 +697,7 @@ namespace SuperTUI.Extensions
             try
             {
                 string backupDir = ConfigurationManager.Instance.Get<string>("Backup.Directory");
-                Directory.CreateDirectory(backupDir);
+                backupDir = DirectoryHelper.CreateDirectoryWithFallback(backupDir, "Backups");
 
                 string backupFile = Path.Combine(backupDir, $"state_backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
                 File.Copy(currentStateFile, backupFile);
@@ -566,7 +725,14 @@ namespace SuperTUI.Extensions
 
                 foreach (var old in backups)
                 {
-                    try { File.Delete(old); } catch { }
+                    try
+                    {
+                        File.Delete(old);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance?.Warning("StatePersistence", $"Failed to delete old backup {old}: {ex.Message}");
+                    }
                 }
 
                 Logger.Instance.Info("StatePersistence", $"Backup created: {backupFile}");
@@ -751,7 +917,7 @@ namespace SuperTUI.Extensions
 
             pluginContext = context;
 
-            Directory.CreateDirectory(pluginsDirectory);
+            pluginsDirectory = DirectoryHelper.CreateDirectoryWithFallback(pluginsDirectory, "Plugins");
 
             Logger.Instance.Info("PluginManager", $"Initialized plugin system at {pluginsDirectory}");
         }

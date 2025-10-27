@@ -175,6 +175,24 @@ namespace SuperTUI.Core.Components
                     Name = "Task Management",
                     Description = "Full task manager with subtasks, filters, and priorities",
                     TypeName = "SuperTUI.Widgets.TaskManagementWidget"
+                },
+                new WidgetOption
+                {
+                    Name = "Excel Import",
+                    Description = "Import projects from Excel clipboard data (TSV format)",
+                    TypeName = "SuperTUI.Widgets.ExcelImportWidget"
+                },
+                new WidgetOption
+                {
+                    Name = "Excel Export",
+                    Description = "Export projects to various formats (CSV, TSV, JSON, XML)",
+                    TypeName = "SuperTUI.Widgets.ExcelExportWidget"
+                },
+                new WidgetOption
+                {
+                    Name = "Excel Mapping Editor",
+                    Description = "Create and edit Excel field mapping profiles",
+                    TypeName = "SuperTUI.Widgets.ExcelMappingEditorWidget"
                 }
             };
 

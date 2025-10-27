@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <OutputType>Library</OutputType>
+    <OutputType>WinExe</OutputType>
     <AssemblyName>SuperTUI</AssemblyName>
     <RootNamespace>SuperTUI</RootNamespace>
     <Nullable>disable</Nullable>

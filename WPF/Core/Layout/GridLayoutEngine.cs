@@ -58,6 +58,7 @@ namespace SuperTUI.Core
         {
             var theme = themeManager.CurrentTheme;
             var splitterBrush = new SolidColorBrush(theme.Border);
+            var splitterHoverBrush = new SolidColorBrush(theme.Hover);
 
             // Add vertical splitters between columns
             for (int col = 0; col < columns - 1; col++)
@@ -68,7 +69,40 @@ namespace SuperTUI.Core
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                     VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
                     Background = splitterBrush,
-                    ResizeDirection = GridResizeDirection.Columns
+                    ResizeDirection = GridResizeDirection.Columns,
+                    ShowsPreview = false,
+                    Cursor = Cursors.SizeWE,
+                    ToolTip = "Drag to resize columns (minimum width: 100px)"
+                };
+
+                // Store column index for event handler
+                int columnIndex = col;
+
+                // Add drag completed handler to enforce minimum constraints
+                splitter.DragCompleted += (sender, e) =>
+                {
+                    EnforceColumnConstraints(columnIndex);
+                };
+
+                // Add mouse enter/leave for visual feedback
+                splitter.MouseEnter += (sender, e) =>
+                {
+                    if (CanResizeColumn(columnIndex))
+                    {
+                        splitter.Background = splitterHoverBrush;
+                    }
+                    else
+                    {
+                        splitter.Cursor = Cursors.No;
+                        splitter.ToolTip = "Column at minimum width (100px)";
+                    }
+                };
+
+                splitter.MouseLeave += (sender, e) =>
+                {
+                    splitter.Background = splitterBrush;
+                    splitter.Cursor = Cursors.SizeWE;
+                    splitter.ToolTip = "Drag to resize columns (minimum width: 100px)";
                 };
 
                 Grid.SetColumn(splitter, col);
@@ -85,13 +119,188 @@ namespace SuperTUI.Core
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
                     VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
                     Background = splitterBrush,
-                    ResizeDirection = GridResizeDirection.Rows
+                    ResizeDirection = GridResizeDirection.Rows,
+                    ShowsPreview = false,
+                    Cursor = Cursors.SizeNS,
+                    ToolTip = "Drag to resize rows (minimum height: 50px)"
+                };
+
+                // Store row index for event handler
+                int rowIndex = row;
+
+                // Add drag completed handler to enforce minimum constraints
+                splitter.DragCompleted += (sender, e) =>
+                {
+                    EnforceRowConstraints(rowIndex);
+                };
+
+                // Add mouse enter/leave for visual feedback
+                splitter.MouseEnter += (sender, e) =>
+                {
+                    if (CanResizeRow(rowIndex))
+                    {
+                        splitter.Background = splitterHoverBrush;
+                    }
+                    else
+                    {
+                        splitter.Cursor = Cursors.No;
+                        splitter.ToolTip = "Row at minimum height (50px)";
+                    }
+                };
+
+                splitter.MouseLeave += (sender, e) =>
+                {
+                    splitter.Background = splitterBrush;
+                    splitter.Cursor = Cursors.SizeNS;
+                    splitter.ToolTip = "Drag to resize rows (minimum height: 50px)";
                 };
 
                 Grid.SetRow(splitter, row);
                 Grid.SetColumnSpan(splitter, columns);
                 grid.Children.Add(splitter);
             }
+        }
+
+        private void EnforceColumnConstraints(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= grid.ColumnDefinitions.Count)
+                return;
+
+            var column = grid.ColumnDefinitions[columnIndex];
+            var nextColumn = columnIndex + 1 < grid.ColumnDefinitions.Count
+                ? grid.ColumnDefinitions[columnIndex + 1]
+                : null;
+
+            // Ensure current column doesn't go below minimum
+            if (column.ActualWidth < column.MinWidth)
+            {
+                logger?.Debug("GridLayoutEngine",
+                    $"Column {columnIndex} below minimum ({column.ActualWidth:F0}px < {column.MinWidth}px), snapping to minimum");
+
+                // Calculate deficit
+                double deficit = column.MinWidth - column.ActualWidth;
+
+                // Set to minimum
+                column.Width = new GridLength(column.MinWidth, GridUnitType.Pixel);
+
+                // Compensate next column if possible
+                if (nextColumn != null && nextColumn.ActualWidth > nextColumn.MinWidth)
+                {
+                    double available = nextColumn.ActualWidth - nextColumn.MinWidth;
+                    double compensation = Math.Min(deficit, available);
+                    nextColumn.Width = new GridLength(nextColumn.ActualWidth - compensation, GridUnitType.Pixel);
+                }
+
+                // After adjustment, reset to star sizing to maintain proportions
+                grid.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    column.Width = new GridLength(1, GridUnitType.Star);
+                    if (nextColumn != null)
+                    {
+                        nextColumn.Width = new GridLength(1, GridUnitType.Star);
+                    }
+                }), DispatcherPriority.Background);
+            }
+
+            // Check next column as well
+            if (nextColumn != null && nextColumn.ActualWidth < nextColumn.MinWidth)
+            {
+                logger?.Debug("GridLayoutEngine",
+                    $"Column {columnIndex + 1} below minimum ({nextColumn.ActualWidth:F0}px < {nextColumn.MinWidth}px), snapping to minimum");
+
+                nextColumn.Width = new GridLength(nextColumn.MinWidth, GridUnitType.Pixel);
+
+                grid.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    nextColumn.Width = new GridLength(1, GridUnitType.Star);
+                }), DispatcherPriority.Background);
+            }
+        }
+
+        private void EnforceRowConstraints(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= grid.RowDefinitions.Count)
+                return;
+
+            var row = grid.RowDefinitions[rowIndex];
+            var nextRow = rowIndex + 1 < grid.RowDefinitions.Count
+                ? grid.RowDefinitions[rowIndex + 1]
+                : null;
+
+            // Ensure current row doesn't go below minimum
+            if (row.ActualHeight < row.MinHeight)
+            {
+                logger?.Debug("GridLayoutEngine",
+                    $"Row {rowIndex} below minimum ({row.ActualHeight:F0}px < {row.MinHeight}px), snapping to minimum");
+
+                // Calculate deficit
+                double deficit = row.MinHeight - row.ActualHeight;
+
+                // Set to minimum
+                row.Height = new GridLength(row.MinHeight, GridUnitType.Pixel);
+
+                // Compensate next row if possible
+                if (nextRow != null && nextRow.ActualHeight > nextRow.MinHeight)
+                {
+                    double available = nextRow.ActualHeight - nextRow.MinHeight;
+                    double compensation = Math.Min(deficit, available);
+                    nextRow.Height = new GridLength(nextRow.ActualHeight - compensation, GridUnitType.Pixel);
+                }
+
+                // After adjustment, reset to star sizing to maintain proportions
+                grid.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    row.Height = new GridLength(1, GridUnitType.Star);
+                    if (nextRow != null)
+                    {
+                        nextRow.Height = new GridLength(1, GridUnitType.Star);
+                    }
+                }), DispatcherPriority.Background);
+            }
+
+            // Check next row as well
+            if (nextRow != null && nextRow.ActualHeight < nextRow.MinHeight)
+            {
+                logger?.Debug("GridLayoutEngine",
+                    $"Row {rowIndex + 1} below minimum ({nextRow.ActualHeight:F0}px < {nextRow.MinHeight}px), snapping to minimum");
+
+                nextRow.Height = new GridLength(nextRow.MinHeight, GridUnitType.Pixel);
+
+                grid.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    nextRow.Height = new GridLength(1, GridUnitType.Star);
+                }), DispatcherPriority.Background);
+            }
+        }
+
+        private bool CanResizeColumn(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= grid.ColumnDefinitions.Count)
+                return false;
+
+            var column = grid.ColumnDefinitions[columnIndex];
+            var nextColumn = columnIndex + 1 < grid.ColumnDefinitions.Count
+                ? grid.ColumnDefinitions[columnIndex + 1]
+                : null;
+
+            // Can resize if current column is above minimum OR next column is above minimum
+            return column.ActualWidth > column.MinWidth ||
+                   (nextColumn != null && nextColumn.ActualWidth > nextColumn.MinWidth);
+        }
+
+        private bool CanResizeRow(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= grid.RowDefinitions.Count)
+                return false;
+
+            var row = grid.RowDefinitions[rowIndex];
+            var nextRow = rowIndex + 1 < grid.RowDefinitions.Count
+                ? grid.RowDefinitions[rowIndex + 1]
+                : null;
+
+            // Can resize if current row is above minimum OR next row is above minimum
+            return row.ActualHeight > row.MinHeight ||
+                   (nextRow != null && nextRow.ActualHeight > nextRow.MinHeight);
         }
 
         public void SetColumnWidth(int column, GridLength width)

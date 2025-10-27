@@ -17,11 +17,74 @@ namespace SuperTUI.Core.Effects
     }
 
     /// <summary>
+    /// Event handlers for glow effects - stored to prevent lambda capture memory leaks
+    /// </summary>
+    internal class GlowEventHandlers
+    {
+        private readonly WeakReference<FrameworkElement> elementRef;
+        private readonly IThemeManager themeManager;
+
+        public GlowEventHandlers(FrameworkElement element, IThemeManager themeManager)
+        {
+            this.elementRef = new WeakReference<FrameworkElement>(element);
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+        }
+
+        public void OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            if (elementRef.TryGetTarget(out var element))
+            {
+                GlowEffectHelper.OnElementGotFocus(element, themeManager);
+            }
+        }
+
+        public void OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (elementRef.TryGetTarget(out var element))
+            {
+                GlowEffectHelper.OnElementLostFocus(element, themeManager);
+            }
+        }
+
+        public void OnMouseEnter(object sender, MouseEventArgs e)
+        {
+            if (elementRef.TryGetTarget(out var element))
+            {
+                GlowEffectHelper.OnElementMouseEnter(element, themeManager);
+            }
+        }
+
+        public void OnMouseLeave(object sender, MouseEventArgs e)
+        {
+            if (elementRef.TryGetTarget(out var element))
+            {
+                GlowEffectHelper.OnElementMouseLeave(element, themeManager);
+            }
+        }
+
+        public void OnThemeChanged(object sender, ThemeChangedEventArgs e)
+        {
+            if (elementRef.TryGetTarget(out var element))
+            {
+                GlowEffectHelper.OnThemeChanged(element, themeManager);
+            }
+        }
+    }
+
+    /// <summary>
     /// Helper class for applying neon glow effects to UI elements
     /// Provides consistent glow styling across the application
     /// </summary>
     public static class GlowEffectHelper
     {
+        // Attached property to store glow handlers for proper cleanup
+        private static readonly DependencyProperty GlowHandlersProperty =
+            DependencyProperty.RegisterAttached(
+                "GlowHandlers",
+                typeof(GlowEventHandlers),
+                typeof(GlowEffectHelper),
+                new PropertyMetadata(null));
+
         /// <summary>
         /// Apply glow effect to a UI element based on settings and state
         /// </summary>
@@ -89,6 +152,17 @@ namespace SuperTUI.Core.Effects
         /// </summary>
         /// <param name="element">The element to attach handlers to</param>
         /// <param name="themeManager">Theme manager to get current settings</param>
+        /// <remarks>
+        /// WARNING: This method creates event handler subscriptions that can cause memory leaks
+        /// if not properly cleaned up. The element will be held in memory by the event handlers
+        /// until DetachGlowHandlers is called. For widgets, prefer using WidgetBase's built-in
+        /// theme change handling which uses WeakEventManager to prevent leaks.
+        ///
+        /// MEMORY LEAK PREVENTION:
+        /// - Always call DetachGlowHandlers before element is disposed
+        /// - Use weak references for long-lived elements
+        /// - Consider using WidgetBase's built-in theme handling instead
+        /// </remarks>
         public static void AttachGlowHandlers(FrameworkElement element, IThemeManager themeManager)
         {
             if (element == null || themeManager == null)
@@ -101,6 +175,11 @@ namespace SuperTUI.Core.Effects
             // Detach existing handlers first (prevent double-registration)
             DetachGlowHandlers(element, themeManager);
 
+            // Store handlers as attached properties so we can remove them later
+            // This prevents lambda capture memory leaks
+            var glowHandlers = new GlowEventHandlers(element, themeManager);
+            element.SetValue(GlowHandlersProperty, glowHandlers);
+
             // Apply initial glow if in Always mode
             if (settings.Mode == GlowMode.Always)
             {
@@ -110,19 +189,19 @@ namespace SuperTUI.Core.Effects
             // Attach focus handlers if needed
             if (settings.Mode == GlowMode.OnFocus || settings.Mode == GlowMode.OnHover)
             {
-                element.GotFocus += (s, e) => OnElementGotFocus(element, themeManager);
-                element.LostFocus += (s, e) => OnElementLostFocus(element, themeManager);
+                element.GotFocus += glowHandlers.OnGotFocus;
+                element.LostFocus += glowHandlers.OnLostFocus;
             }
 
             // Attach hover handlers if needed
             if (settings.Mode == GlowMode.OnHover)
             {
-                element.MouseEnter += (s, e) => OnElementMouseEnter(element, themeManager);
-                element.MouseLeave += (s, e) => OnElementMouseLeave(element, themeManager);
+                element.MouseEnter += glowHandlers.OnMouseEnter;
+                element.MouseLeave += glowHandlers.OnMouseLeave;
             }
 
-            // Attach theme change handler
-            themeManager.ThemeChanged += (s, e) => OnThemeChanged(element, themeManager);
+            // Use WeakEventManager for theme changes to prevent memory leaks
+            ThemeChangedWeakEventManager.AddHandler(themeManager, glowHandlers.OnThemeChanged);
         }
 
         /// <summary>
@@ -135,12 +214,28 @@ namespace SuperTUI.Core.Effects
             if (element == null || themeManager == null)
                 return;
 
-            // Note: We can't directly remove anonymous lambdas, so we just clear the effect
-            // In a production scenario, you'd want to store the EventHandlers and remove them
+            // Retrieve stored handlers
+            var handlers = element.GetValue(GlowHandlersProperty) as GlowEventHandlers;
+            if (handlers != null)
+            {
+                // Remove all event handlers
+                element.GotFocus -= handlers.OnGotFocus;
+                element.LostFocus -= handlers.OnLostFocus;
+                element.MouseEnter -= handlers.OnMouseEnter;
+                element.MouseLeave -= handlers.OnMouseLeave;
+
+                // Remove theme change handler using WeakEventManager
+                ThemeChangedWeakEventManager.RemoveHandler(themeManager, handlers.OnThemeChanged);
+
+                // Clear the attached property
+                element.ClearValue(GlowHandlersProperty);
+            }
+
+            // Remove the glow effect
             RemoveGlow(element);
         }
 
-        private static void OnElementGotFocus(FrameworkElement element, IThemeManager themeManager)
+        internal static void OnElementGotFocus(FrameworkElement element, IThemeManager themeManager)
         {
             var settings = themeManager.CurrentTheme?.Glow;
             if (settings != null)
@@ -149,7 +244,7 @@ namespace SuperTUI.Core.Effects
             }
         }
 
-        private static void OnElementLostFocus(FrameworkElement element, IThemeManager themeManager)
+        internal static void OnElementLostFocus(FrameworkElement element, IThemeManager themeManager)
         {
             var settings = themeManager.CurrentTheme?.Glow;
             if (settings != null)
@@ -166,7 +261,7 @@ namespace SuperTUI.Core.Effects
             }
         }
 
-        private static void OnElementMouseEnter(FrameworkElement element, IThemeManager themeManager)
+        internal static void OnElementMouseEnter(FrameworkElement element, IThemeManager themeManager)
         {
             // Only apply hover glow if element doesn't have focus
             if (!element.IsFocused)
@@ -179,7 +274,7 @@ namespace SuperTUI.Core.Effects
             }
         }
 
-        private static void OnElementMouseLeave(FrameworkElement element, IThemeManager themeManager)
+        internal static void OnElementMouseLeave(FrameworkElement element, IThemeManager themeManager)
         {
             // Only remove hover glow if element doesn't have focus
             if (!element.IsFocused)
@@ -199,7 +294,7 @@ namespace SuperTUI.Core.Effects
             }
         }
 
-        private static void OnThemeChanged(FrameworkElement element, IThemeManager themeManager)
+        internal static void OnThemeChanged(FrameworkElement element, IThemeManager themeManager)
         {
             var settings = themeManager.CurrentTheme?.Glow;
             if (settings != null)

@@ -82,23 +82,49 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            // Load real data from TaskService
-            RefreshData();
+            try
+            {
+                // Load real data from TaskService
+                RefreshData();
 
-            // Subscribe to task events for real-time updates
-            taskService.TaskAdded += OnTaskChanged;
-            taskService.TaskUpdated += OnTaskChanged;
-            taskService.TaskDeleted += (id) => RefreshData();
-            taskService.TasksReloaded += RefreshData;
+                // Subscribe to task events for real-time updates
+                taskService.TaskAdded += OnTaskChanged;
+                taskService.TaskUpdated += OnTaskChanged;
+                taskService.TaskDeleted += (id) => RefreshData();
+                taskService.TasksReloaded += RefreshData;
+
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void OnTaskChanged(Core.Models.TaskItem task)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskChanged(task));
+                return;
+            }
+
             RefreshData();
         }
 
         private void RefreshData()
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => RefreshData());
+                return;
+            }
+
             var allTasks = taskService.GetAllTasks();
 
             Data = new TaskData

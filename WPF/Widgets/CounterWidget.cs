@@ -104,7 +104,16 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            Count = 0;
+            try
+            {
+                Count = 0;
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         public override void OnWidgetKeyDown(KeyEventArgs e)

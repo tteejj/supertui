@@ -154,10 +154,11 @@ workspace.AddWidget(replyArea, new LayoutParams { Row = 2 });    // Compose
 ```csharp
 var workspace = new Workspace("Monitor", 4, new MonitoringDashboardLayoutEngine());
 
-var cpuMonitor = new SystemMonitorWidget();
-var clockWidget = new ClockWidget();
-var agendaWidget = new AgendaWidget();
-var logViewer = new TaskSummaryWidget();  // Or custom log viewer
+// Note: Use WidgetFactory for proper dependency injection
+var cpuMonitor = widgetFactory.CreateWidget<SystemMonitorWidget>();
+var clockWidget = widgetFactory.CreateWidget<ClockWidget>();
+var agendaWidget = widgetFactory.CreateWidget<AgendaWidget>();
+var logViewer = widgetFactory.CreateWidget<TaskSummaryWidget>();  // Or custom log viewer
 
 workspace.AddWidget(cpuMonitor, new LayoutParams { Row = 0 });   // Top-left
 workspace.AddWidget(clockWidget, new LayoutParams { Row = 1 });  // Top-center

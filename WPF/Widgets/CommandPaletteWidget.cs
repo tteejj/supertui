@@ -40,10 +40,19 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-            BuildUI();
-            PopulateCommands();
-            RefreshResults();
+            try
+            {
+                theme = themeManager.CurrentTheme;
+                BuildUI();
+                PopulateCommands();
+                RefreshResults();
+                logger.Info("Palette", "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Palette", $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()
@@ -305,6 +314,10 @@ namespace SuperTUI.Widgets
         private void RefreshResults()
         {
             var searchText = searchBox.Text.Trim().ToLower();
+
+            // Save focus state before clearing ListBox
+            var hadFocus = searchBox.IsFocused;
+
             resultsBox.Items.Clear();
 
             if (string.IsNullOrEmpty(searchText))
@@ -331,6 +344,14 @@ namespace SuperTUI.Widgets
                 resultsBox.SelectedIndex = 0;
 
             statusLabel.Text = $"{filteredItems.Count} results";
+
+            // Restore focus to search box if it had focus before
+            // This prevents ListBox rebuild from stealing focus
+            if (hadFocus)
+            {
+                searchBox.Focus();
+                Keyboard.Focus(searchBox);
+            }
         }
 
         private bool FuzzyMatch(PaletteItem item, string search)

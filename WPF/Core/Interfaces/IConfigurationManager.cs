@@ -8,6 +8,12 @@ namespace SuperTUI.Infrastructure
     /// </summary>
     public interface IConfigurationManager
     {
+        /// <summary>
+        /// Gets whether the configuration manager has been initialized.
+        /// Services should check this before accessing configuration values.
+        /// </summary>
+        bool IsInitialized { get; }
+
         void Initialize(string configFilePath);
         void Register(string key, object defaultValue, string description, string category = "General", Func<object, bool> validator = null);
 

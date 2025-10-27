@@ -65,17 +65,25 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
+            try
+            {
+                theme = themeManager.CurrentTheme;
 
-            // Setup filters
-            filters = TaskFilter.GetDefaultFilters();
-            currentFilter = TaskFilter.All;
+                // Setup filters
+                filters = TaskFilter.GetDefaultFilters();
+                currentFilter = TaskFilter.All;
 
-            BuildUI();
-            RefreshFilterList();
-            LoadCurrentFilter();
+                BuildUI();
+                RefreshFilterList();
+                LoadCurrentFilter();
 
-            logger?.Info("RetroTaskWidget", "Retro Task Management widget initialized");
+                logger?.Info("RetroTaskWidget", "Retro Task Management widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger?.Error("RetroTaskWidget", $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()

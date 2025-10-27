@@ -75,49 +75,60 @@ namespace SuperTUI.Widgets
             WidgetType = "Agenda";
         }
 
-        public AgendaWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance)
-        {
-        }
-
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-
-            // Initialize collections
-            overdueTasks = new ObservableCollection<TaskItem>();
-            todayTasks = new ObservableCollection<TaskItem>();
-            tomorrowTasks = new ObservableCollection<TaskItem>();
-            thisWeekTasks = new ObservableCollection<TaskItem>();
-            laterTasks = new ObservableCollection<TaskItem>();
-            noDueDateTasks = new ObservableCollection<TaskItem>();
-
-            BuildUI();
-            LoadTasks();
-
-            // Subscribe to task service events
-            taskService.TaskAdded += OnTaskChanged;
-            taskService.TaskUpdated += OnTaskChanged;
-            taskService.TaskDeleted += (id) => LoadTasks();
-            taskService.TasksReloaded += LoadTasks;
-
-            // Setup refresh timer (every 30 seconds)
-            refreshTimer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromSeconds(30)
-            };
-            refreshTimer.Tick += (s, e) => LoadTasks();
-            refreshTimer.Start();
+                theme = themeManager.CurrentTheme;
 
-            // Subscribe to EventBus for inter-widget communication
-            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
-            EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+                // Initialize collections
+                overdueTasks = new ObservableCollection<TaskItem>();
+                todayTasks = new ObservableCollection<TaskItem>();
+                tomorrowTasks = new ObservableCollection<TaskItem>();
+                thisWeekTasks = new ObservableCollection<TaskItem>();
+                laterTasks = new ObservableCollection<TaskItem>();
+                noDueDateTasks = new ObservableCollection<TaskItem>();
 
-            logger.Info("AgendaWidget", "Agenda widget initialized");
+                BuildUI();
+                LoadTasks();
+
+                // Subscribe to task service events
+                taskService.TaskAdded += OnTaskChanged;
+                taskService.TaskUpdated += OnTaskChanged;
+                taskService.TaskDeleted += (id) => LoadTasks();
+                taskService.TasksReloaded += LoadTasks;
+
+                // Setup refresh timer (every 30 seconds)
+                refreshTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(30)
+                };
+                refreshTimer.Tick += (s, e) => LoadTasks();
+                refreshTimer.Start();
+
+                // Subscribe to EventBus for inter-widget communication
+                EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+                EventBus.Subscribe<Core.Events.RefreshRequestedEvent>(OnRefreshRequested);
+
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskSelectedFromOtherWidget(evt));
+                return;
+            }
+
             if (evt.SourceWidget == WidgetType) return; // Ignore our own events
 
             var task = evt.Task;
@@ -141,6 +152,14 @@ namespace SuperTUI.Widgets
 
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnRefreshRequested(evt));
+                return;
+            }
+
             if (evt.TargetWidget == null || evt.TargetWidget == WidgetType)
             {
                 LoadTasks();
@@ -358,6 +377,14 @@ namespace SuperTUI.Widgets
 
         private void OnTaskChanged(TaskItem task)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskChanged(task));
+                return;
+            }
+
             // Reload all tasks when any task changes
             LoadTasks();
         }

@@ -54,56 +54,129 @@ namespace SuperTUI.DI
             container.RegisterSingleton<ITaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);
             container.RegisterSingleton<IProjectService, Core.Services.ProjectService>(Core.Services.ProjectService.Instance);
             container.RegisterSingleton<ITimeTrackingService, Core.Services.TimeTrackingService>(Core.Services.TimeTrackingService.Instance);
-            // Excel services removed - were causing build errors
+            container.RegisterSingleton<IExcelMappingService, Core.Services.ExcelMappingService>(Core.Services.ExcelMappingService.Instance);
             container.RegisterSingleton<ITagService, Core.Services.TagService>(Core.Services.TagService.Instance);
 
-            Logger.Instance.Info("DI", $"✅ Registered {4} domain services");
+            Logger.Instance.Info("DI", $"✅ Registered {5} domain services");
         }
 
         /// <summary>
-        /// Initialize all singleton services
+        /// Initialize all singleton services with proper dependency order
         /// Call this after ConfigureServices()
-        /// PHASE 3: Initialize via DI container
+        /// PHASE 3: Initialize via DI container with dependency order enforcement
+        ///
+        /// INITIALIZATION ORDER:
+        /// 1. Logger (no dependencies - already initialized via singleton)
+        /// 2. ConfigurationManager (depends on Logger only)
+        /// 3. SecurityManager (validates paths from config)
+        /// 4. ThemeManager (uses config for theme settings)
+        /// 5. Domain services (depend on config for data paths)
         /// </summary>
         public static void InitializeServices(ServiceContainer container, string configPath = null, string themesPath = null)
         {
-            Logger.Instance.Info("DI", "🚀 Initializing services...");
+            Logger.Instance.Info("DI", "🚀 Initializing services in dependency order...");
 
-            // Initialize configuration
+            // STEP 1: Logger is already initialized (singleton pattern)
+            // No action needed - Logger.Instance is ready
+            Logger.Instance.Info("DI", "✅ Logger ready (singleton)");
+
+            // STEP 2: Initialize ConfigurationManager FIRST
+            // Other services depend on configuration being available
             var config = container.GetRequiredService<IConfigurationManager>() as ConfigurationManager;
-            config?.Initialize(configPath ?? GetDefaultConfigPath());
+            if (config == null)
+            {
+                throw new InvalidOperationException(
+                    "ConfigurationManager not registered in service container. " +
+                    "Ensure ConfigureServices() was called before InitializeServices().");
+            }
 
-            // Initialize theme manager
-            var themes = container.GetRequiredService<IThemeManager>() as ThemeManager;
-            themes?.Initialize(themesPath);
+            config.Initialize(configPath ?? GetDefaultConfigPath());
 
-            // Initialize security manager with strict mode (production default)
+            // CRITICAL CHECK: Verify ConfigurationManager is actually initialized
+            if (!config.IsInitialized)
+            {
+                throw new InvalidOperationException(
+                    "ConfigurationManager.Initialize() completed but IsInitialized is false. " +
+                    "This indicates a critical initialization failure. Check logs for errors.");
+            }
+            Logger.Instance.Info("DI", "✅ ConfigurationManager initialized and verified");
+
+            // STEP 3: Initialize SecurityManager SECOND
+            // SecurityManager validates paths that may come from configuration
             var security = container.GetRequiredService<ISecurityManager>() as SecurityManager;
-            security?.Initialize(SecurityMode.Strict);
+            if (security == null)
+            {
+                throw new InvalidOperationException("SecurityManager not registered in service container.");
+            }
 
-            // Initialize domain services via interfaces
+            security.Initialize(SecurityMode.Strict);
+            Logger.Instance.Info("DI", "✅ SecurityManager initialized (Strict mode)");
+
+            // STEP 4: Initialize ThemeManager THIRD
+            // ThemeManager may use configuration for theme settings
+            var themes = container.GetRequiredService<IThemeManager>() as ThemeManager;
+            if (themes == null)
+            {
+                throw new InvalidOperationException("ThemeManager not registered in service container.");
+            }
+
+            themes.Initialize(themesPath);
+            Logger.Instance.Info("DI", "✅ ThemeManager initialized");
+
+            // STEP 5: Initialize domain services LAST
+            // Domain services use GetSuperTUIDataDirectory() which may be influenced by config
+            // All domain services depend on ConfigurationManager being fully initialized
+
+            Logger.Instance.Info("DI", "Initializing domain services (depend on ConfigurationManager)...");
+
             var taskService = container.GetRequiredService<ITaskService>();
-            taskService?.Initialize();
+            if (taskService == null)
+            {
+                throw new InvalidOperationException("ITaskService not registered in service container.");
+            }
+            taskService.Initialize();
+            Logger.Instance.Info("DI", "✅ TaskService initialized");
 
             var projectService = container.GetRequiredService<IProjectService>();
-            projectService?.Initialize();
+            if (projectService == null)
+            {
+                throw new InvalidOperationException("IProjectService not registered in service container.");
+            }
+            projectService.Initialize();
+            Logger.Instance.Info("DI", "✅ ProjectService initialized");
 
             var timeTrackingService = container.GetRequiredService<ITimeTrackingService>();
-            timeTrackingService?.Initialize();
+            if (timeTrackingService == null)
+            {
+                throw new InvalidOperationException("ITimeTrackingService not registered in service container.");
+            }
+            timeTrackingService.Initialize();
+            Logger.Instance.Info("DI", "✅ TimeTrackingService initialized");
 
-            // ExcelMappingService removed - was causing build errors
+            var excelMappingService = container.GetRequiredService<IExcelMappingService>();
+            if (excelMappingService == null)
+            {
+                throw new InvalidOperationException("IExcelMappingService not registered in service container.");
+            }
+            excelMappingService.Initialize();
+            Logger.Instance.Info("DI", "✅ ExcelMappingService initialized");
 
             var tagService = container.GetRequiredService<ITagService>();
-            // TagService doesn't have Initialize method
+            if (tagService == null)
+            {
+                throw new InvalidOperationException("ITagService not registered in service container.");
+            }
+            // TagService doesn't have Initialize method - it's ready to use immediately
+            Logger.Instance.Info("DI", "✅ TagService ready (no initialization needed)");
 
-            Logger.Instance.Info("DI", "✅ All services initialized");
+            Logger.Instance.Info("DI", "✅ All services initialized successfully in proper dependency order");
         }
 
         private static string GetDefaultConfigPath()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var configDir = System.IO.Path.Combine(appData, "SuperTUI");
-            System.IO.Directory.CreateDirectory(configDir);
+            configDir = Extensions.DirectoryHelper.CreateDirectoryWithFallback(configDir, "Config");
             return System.IO.Path.Combine(configDir, "config.json");
         }
     }

@@ -117,16 +117,26 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            // Update immediately
-            UpdateTime();
-
-            // Set up timer to update every second
-            timer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            timer.Tick += Timer_Tick;
-            timer.Start();
+                // Update immediately
+                UpdateTime();
+
+                // Set up timer to update every second
+                timer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                timer.Tick += Timer_Tick;
+                timer.Start();
+
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void Timer_Tick(object sender, EventArgs e)

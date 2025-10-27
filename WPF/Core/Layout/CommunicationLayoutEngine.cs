@@ -334,7 +334,6 @@ namespace SuperTUI.Core
             grid.Children.Remove(widget2);
 
             // Swap references
-            UIElement temp;
             if (pos1 == 0) listWidget = widget2;
             else if (pos1 == 1) detailWidget = widget2;
             else if (pos1 == 2) composeWidget = widget2;

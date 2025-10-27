@@ -67,36 +67,39 @@ namespace SuperTUI.Widgets
             WidgetType = "ProjectStats";
         }
 
-        public ProjectStatsWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance, ProjectService.Instance, TimeTrackingService.Instance)
-        {
-        }
-
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-
-            BuildUI();
-            RefreshMetrics();
-
-            // Subscribe to service events
-            taskService.TaskAdded += (t) => RefreshMetrics();
-            taskService.TaskUpdated += (t) => RefreshMetrics();
-            taskService.TaskDeleted += (id) => RefreshMetrics();
-            projectService.ProjectAdded += (p) => RefreshMetrics();
-            projectService.ProjectUpdated += (p) => RefreshMetrics();
-            timeService.EntryAdded += (e) => RefreshMetrics();
-            timeService.EntryUpdated += (e) => RefreshMetrics();
-
-            // Setup refresh timer (every 30 seconds)
-            refreshTimer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromSeconds(30)
-            };
-            refreshTimer.Tick += (s, e) => RefreshMetrics();
-            refreshTimer.Start();
+                theme = themeManager.CurrentTheme;
 
-            logger.Info("ProjectStatsWidget", "Project stats widget initialized");
+                BuildUI();
+                RefreshMetrics();
+
+                // Subscribe to service events
+                taskService.TaskAdded += (t) => RefreshMetrics();
+                taskService.TaskUpdated += (t) => RefreshMetrics();
+                taskService.TaskDeleted += (id) => RefreshMetrics();
+                projectService.ProjectAdded += (p) => RefreshMetrics();
+                projectService.ProjectUpdated += (p) => RefreshMetrics();
+                timeService.EntryAdded += (e) => RefreshMetrics();
+                timeService.EntryUpdated += (e) => RefreshMetrics();
+
+                // Setup refresh timer (every 30 seconds)
+                refreshTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(30)
+                };
+                refreshTimer.Tick += (s, e) => RefreshMetrics();
+                refreshTimer.Start();
+
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()
@@ -370,6 +373,14 @@ namespace SuperTUI.Widgets
 
         private void RefreshMetrics()
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => RefreshMetrics());
+                return;
+            }
+
             try
             {
                 // Get all data

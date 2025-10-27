@@ -442,7 +442,8 @@ namespace SuperTUI.Core
                 screen.OnScreenKeyDown(e);
             }
 
-            // Handle Tab for focus switching (if not handled by widget/screen)
+            // Handle Tab for focus switching (ONLY if not already handled by widget/screen)
+            // This prevents widgets from consuming Tab and blocking workspace-level focus cycling
             if (!e.Handled && e.Key == Key.Tab)
             {
                 if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)

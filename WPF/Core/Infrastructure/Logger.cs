@@ -119,7 +119,7 @@ namespace SuperTUI.Infrastructure
             // Normal queue: larger, can drop logs based on policy
             this.normalQueue = new System.Collections.Concurrent.BlockingCollection<string>(boundedCapacity: 10000);
 
-            Directory.CreateDirectory(logDirectory);
+            this.logDirectory = SuperTUI.Extensions.DirectoryHelper.CreateDirectoryWithFallback(logDirectory, "Logs");
             OpenNewLogFile();
 
             // Start background writer thread
@@ -162,7 +162,15 @@ namespace SuperTUI.Infrastructure
 
             foreach (var file in logFiles)
             {
-                try { File.Delete(file); } catch { }
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    // Log to console since we can't use Logger here (would be recursive)
+                    Console.WriteLine($"[FileLogSink] Failed to delete old log file {file}: {ex.Message}");
+                }
             }
         }
 
@@ -250,7 +258,11 @@ namespace SuperTUI.Infrastructure
                             currentWriter?.Write(line);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        // Log to console as last resort - can't use Logger here (recursive)
+                        Console.WriteLine($"[FileLogSink] Error writing critical log during shutdown: {ex.Message}");
+                    }
                 }
 
                 while (normalQueue.TryTake(out string line, millisecondsTimeout: 0))
@@ -262,7 +274,11 @@ namespace SuperTUI.Infrastructure
                             currentWriter?.Write(line);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        // Log to console as last resort - can't use Logger here (recursive)
+                        Console.WriteLine($"[FileLogSink] Error writing normal log during shutdown: {ex.Message}");
+                    }
                 }
 
                 lock (lockObject)

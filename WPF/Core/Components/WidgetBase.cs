@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Infrastructure;
 using SuperTUI.Core.Effects;
+using System.Windows.Threading;
 
 namespace SuperTUI.Core
 {
@@ -92,10 +93,11 @@ namespace SuperTUI.Core
             this.GotFocus += (s, e) => HasFocus = true;
             this.LostFocus += (s, e) => HasFocus = false;
 
-            // Subscribe to theme changes if widget implements IThemeable
+            // Subscribe to theme changes using WeakEventManager to prevent memory leaks
+            // This prevents the static ThemeManager from holding strong references to widget instances
             if (this is IThemeable)
             {
-                ThemeManager.Instance.ThemeChanged += OnThemeChanged;
+                ThemeChangedWeakEventManager.AddHandler(ThemeManager.Instance, OnThemeChanged);
             }
         }
 
@@ -309,10 +311,12 @@ namespace SuperTUI.Core
         /// </summary>
         protected virtual void OnDispose()
         {
-            // Unsubscribe from theme changes
+            // Unsubscribe from theme changes using WeakEventManager
+            // Note: With weak references, this is technically optional (GC will clean up)
+            // but we do it anyway for completeness and to free resources immediately
             if (this is IThemeable)
             {
-                ThemeManager.Instance.ThemeChanged -= OnThemeChanged;
+                ThemeChangedWeakEventManager.RemoveHandler(ThemeManager.Instance, OnThemeChanged);
             }
 
             // Override in derived classes

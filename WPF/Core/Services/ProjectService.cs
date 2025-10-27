@@ -584,7 +584,14 @@ namespace SuperTUI.Core.Services
 
                     foreach (var oldBackup in backupFiles)
                     {
-                        try { File.Delete(oldBackup); } catch { }
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("ProjectService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
                     }
                 }
 
@@ -599,7 +606,66 @@ namespace SuperTUI.Core.Services
                     WriteIndented = true
                 }));
 
-                await Task.Run(() => File.WriteAllText(dataFilePath, json));
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                await Task.Run(() => File.WriteAllText(tempFile, json));
+                await Task.Run(() => File.Replace(tempFile, dataFilePath, dataFilePath + ".bak"));
+                Logger.Instance?.Debug("ProjectService", $"Saved {projectList.Count} projects to {dataFilePath}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("ProjectService", $"Failed to save projects: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Save projects to JSON file synchronously (for Dispose)
+        /// </summary>
+        private void SaveToFileSync()
+        {
+            try
+            {
+                // Create backup before saving
+                if (File.Exists(dataFilePath))
+                {
+                    var backupPath = $"{dataFilePath}.{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                    File.Copy(dataFilePath, backupPath, overwrite: true);
+
+                    // Keep only last 5 backups
+                    var backupDir = Path.GetDirectoryName(dataFilePath);
+                    var backupFiles = Directory.GetFiles(backupDir, "projects.json.*.bak")
+                        .OrderByDescending(f => File.GetCreationTime(f))
+                        .Skip(5)
+                        .ToList();
+
+                    foreach (var oldBackup in backupFiles)
+                    {
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("ProjectService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
+                    }
+                }
+
+                List<Project> projectList;
+                lock (lockObject)
+                {
+                    projectList = projects.Values.ToList();
+                }
+
+                var json = JsonSerializer.Serialize(projectList, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                File.WriteAllText(tempFile, json);
+                File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
                 Logger.Instance?.Debug("ProjectService", $"Saved {projectList.Count} projects to {dataFilePath}");
             }
             catch (Exception ex)
@@ -694,7 +760,10 @@ namespace SuperTUI.Core.Services
                         WriteIndented = true
                     });
 
-                    File.WriteAllText(filePath, json);
+                    // Atomic write: temp → rename pattern
+                    string tempFile = filePath + ".tmp";
+                    File.WriteAllText(tempFile, json);
+                    File.Replace(tempFile, filePath, filePath + ".bak");
                     Logger.Instance?.Info("ProjectService", $"Exported {allProjects.Count} projects to JSON: {filePath}");
                     return true;
                 }
@@ -718,7 +787,7 @@ namespace SuperTUI.Core.Services
                 // Ensure any pending save is executed before disposal
                 if (pendingSave)
                 {
-                    SaveToFileAsync().Wait();
+                    SaveToFileSync();  // Use synchronous save to avoid deadlock
                 }
 
                 saveTimer.Dispose();

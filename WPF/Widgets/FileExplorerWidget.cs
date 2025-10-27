@@ -94,9 +94,18 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-            BuildUI();
-            LoadDirectory(currentPath);
+            try
+            {
+                theme = themeManager.CurrentTheme;
+                BuildUI();
+                LoadDirectory(currentPath);
+                logger.Info("FileExplorer", "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error("FileExplorer", $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()
@@ -340,22 +349,23 @@ namespace SuperTUI.Widgets
 
                 string extension = file.Extension.ToLowerInvariant();
 
-                // Step 2: Check if file type is dangerous
+                // Step 2: Check if file type is dangerous - BLOCK EXECUTION (security hardening)
                 if (DangerousFileExtensions.Contains(extension))
                 {
-                    // Show security warning for dangerous files
-                    var result = ShowDangerousFileWarning(file);
-                    if (result != MessageBoxResult.Yes)
-                    {
-                        UpdateStatus($"Cancelled: {file.Name}", theme.ForegroundSecondary);
-                        logger.Info("FileExplorer",
-                            $"User cancelled opening dangerous file: {file.FullName}");
-                        return;
-                    }
+                    // SECURITY POLICY: Block dangerous file execution entirely
+                    MessageBox.Show(
+                        $"Execution of {extension} files is blocked for security.\n\n" +
+                        $"File: {file.Name}\n\n" +
+                        "This file type can run code on your computer and is not allowed to be opened from the file explorer. " +
+                        "If you need to access this file, use Windows Explorer or another trusted application.",
+                        "Security Policy - Execution Blocked",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Stop);
 
-                    // User confirmed - log for security audit
+                    UpdateStatus($"BLOCKED: {file.Name} (dangerous file type)", theme.Error);
                     logger.Warning("FileExplorer",
-                        $"User confirmed opening dangerous file: {file.FullName} (extension: {extension})");
+                        $"SECURITY: Blocked execution attempt on dangerous file: {file.FullName} (extension: {extension})");
+                    return;
                 }
 
                 // Step 3: Check if file type is recognized as safe

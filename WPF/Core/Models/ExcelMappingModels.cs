@@ -429,6 +429,71 @@ namespace SuperTUI.Core.Models
         }
 
         /// <summary>
+        /// Set project property value from string (for import)
+        /// </summary>
+        public static void SetProjectValue(Project project, string propertyName, string value)
+        {
+            if (project == null || string.IsNullOrEmpty(propertyName))
+                return;
+
+            var prop = typeof(Project).GetProperty(propertyName);
+            if (prop == null || !prop.CanWrite)
+                return;
+
+            try
+            {
+                // Handle null/empty values
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    prop.SetValue(project, null);
+                    return;
+                }
+
+                // Convert based on property type
+                var propType = prop.PropertyType;
+
+                if (propType == typeof(string))
+                {
+                    prop.SetValue(project, value);
+                }
+                else if (propType == typeof(DateTime) || propType == typeof(DateTime?))
+                {
+                    if (DateTime.TryParse(value, out var dt))
+                        prop.SetValue(project, dt);
+                }
+                else if (propType == typeof(int) || propType == typeof(int?))
+                {
+                    if (int.TryParse(value, out var i))
+                        prop.SetValue(project, i);
+                }
+                else if (propType == typeof(decimal) || propType == typeof(decimal?))
+                {
+                    if (decimal.TryParse(value, out var d))
+                        prop.SetValue(project, d);
+                }
+                else if (propType == typeof(bool) || propType == typeof(bool?))
+                {
+                    if (bool.TryParse(value, out var b))
+                        prop.SetValue(project, b);
+                }
+                else if (propType == typeof(Guid) || propType == typeof(Guid?))
+                {
+                    if (Guid.TryParse(value, out var g))
+                        prop.SetValue(project, g);
+                }
+                else
+                {
+                    // Default: try to set as string
+                    prop.SetValue(project, value);
+                }
+            }
+            catch
+            {
+                // Silently ignore conversion errors
+            }
+        }
+
+        /// <summary>
         /// Escape CSV value (handle commas, quotes, newlines)
         /// </summary>
         private static string EscapeCsv(string value)

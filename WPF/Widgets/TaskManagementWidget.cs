@@ -79,25 +79,41 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
+            try
+            {
+                theme = themeManager.CurrentTheme;
 
-            // Setup filters
-            filters = TaskFilter.GetDefaultFilters();
-            currentFilter = TaskFilter.All;
+                // Setup filters
+                filters = TaskFilter.GetDefaultFilters();
+                currentFilter = TaskFilter.All;
 
-            BuildUI();
-            RefreshFilterList();
-            LoadCurrentFilter();
+                BuildUI();
+                RefreshFilterList();
+                LoadCurrentFilter();
 
-            // Subscribe to EventBus for inter-widget communication
-            EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
-            EventBus.Subscribe<Core.Events.NavigationRequestedEvent>(OnNavigationRequested);
+                // Subscribe to EventBus for inter-widget communication
+                EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
+                EventBus.Subscribe<Core.Events.NavigationRequestedEvent>(OnNavigationRequested);
 
-            logger?.Info("TaskWidget", "Task Management widget initialized");
+                logger?.Info("TaskWidget", "Task Management widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger?.Error("TaskWidget", $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void OnTaskSelectedFromOtherWidget(Core.Events.TaskSelectedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnTaskSelectedFromOtherWidget(evt));
+                return;
+            }
+
             if (evt.SourceWidget == WidgetType) return; // Ignore our own events
             if (evt.Task == null || treeTaskListControl == null) return;
 
@@ -107,6 +123,14 @@ namespace SuperTUI.Widgets
 
         private void OnNavigationRequested(Core.Events.NavigationRequestedEvent evt)
         {
+            // Check if we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                // Marshal to UI thread
+                Dispatcher.BeginInvoke(() => OnNavigationRequested(evt));
+                return;
+            }
+
             // Handle navigation to this widget
             if (evt.TargetWidgetType != WidgetType) return;
             if (!(evt.Context is TaskItem task)) return;
@@ -1082,7 +1106,8 @@ namespace SuperTUI.Widgets
                     Foreground = Brushes.White,
                     Padding = new Thickness(10, 5, 10, 5),
                     Margin = new Thickness(0, 5, 0, 5),
-                    Cursor = Cursors.Hand
+                    Cursor = Cursors.Hand,
+                    IsDefault = true // Enter key activates this button
                 };
                 markdownBtn.Click += (s, e) => { dialog.DialogResult = true; dialog.Tag = "md"; dialog.Close(); };
                 stack.Children.Add(markdownBtn);

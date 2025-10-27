@@ -43,9 +43,18 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            BuildUI();
-            UpdateCategoryList();
-            DisplayCategory(currentCategory);
+            try
+            {
+                BuildUI();
+                UpdateCategoryList();
+                DisplayCategory(currentCategory);
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()
@@ -92,14 +101,7 @@ namespace SuperTUI.Widgets
                 MinWidth = 200
             };
 
-            categoryCombo.SelectionChanged += (s, e) =>
-            {
-                if (categoryCombo.SelectedItem != null)
-                {
-                    currentCategory = categoryCombo.SelectedItem.ToString();
-                    DisplayCategory(currentCategory);
-                }
-            };
+            categoryCombo.SelectionChanged += CategoryCombo_SelectionChanged;
 
             categoryPanel.Children.Add(categoryLabel);
             categoryPanel.Children.Add(categoryCombo);
@@ -534,8 +536,37 @@ namespace SuperTUI.Widgets
 
         protected override void OnDispose()
         {
-            pendingChanges.Clear();
+            // Unsubscribe from UI event handlers
+            if (categoryCombo != null)
+            {
+                categoryCombo.SelectionChanged -= CategoryCombo_SelectionChanged;
+            }
+
+            if (saveButton != null)
+            {
+                saveButton.Click -= SaveButton_Click;
+            }
+
+            if (resetButton != null)
+            {
+                resetButton.Click -= ResetButton_Click;
+            }
+
+            // Clear pending changes
+            pendingChanges?.Clear();
+
+            logger?.Debug("Settings", "SettingsWidget disposed - all event handlers unsubscribed");
             base.OnDispose();
+        }
+
+        // Helper method for categoryCombo event handler (needed for unsubscription)
+        private void CategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (categoryCombo.SelectedItem != null)
+            {
+                currentCategory = categoryCombo.SelectedItem.ToString();
+                DisplayCategory(currentCategory);
+            }
         }
 
         /// <summary>

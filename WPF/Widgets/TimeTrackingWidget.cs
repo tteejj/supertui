@@ -70,26 +70,34 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            theme = themeManager.CurrentTheme;
-
-            // Load Pomodoro settings from config
-            pomodoroWorkMinutes = config.Get<int>("Pomodoro.WorkMinutes", 25);
-            pomodoroShortBreakMinutes = config.Get<int>("Pomodoro.ShortBreakMinutes", 5);
-            pomodoroLongBreakMinutes = config.Get<int>("Pomodoro.LongBreakMinutes", 15);
-            pomodorosUntilLongBreak = config.Get<int>("Pomodoro.PomodorosUntilLongBreak", 4);
-
-            BuildUI();
-            LoadTasks();
-
-            // Start update timer (1 second interval)
-            updateTimer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            updateTimer.Tick += UpdateTimer_Tick;
-            updateTimer.Start();
+                theme = themeManager.CurrentTheme;
 
-            logger?.Info("TimeTracking", "Time Tracking widget initialized");
+                // Load Pomodoro settings from config
+                pomodoroWorkMinutes = config.Get<int>("Pomodoro.WorkMinutes", 25);
+                pomodoroShortBreakMinutes = config.Get<int>("Pomodoro.ShortBreakMinutes", 5);
+                pomodoroLongBreakMinutes = config.Get<int>("Pomodoro.LongBreakMinutes", 15);
+                pomodorosUntilLongBreak = config.Get<int>("Pomodoro.PomodorosUntilLongBreak", 4);
+
+                BuildUI();
+                LoadTasks();
+
+                // Start update timer (1 second interval)
+                updateTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                updateTimer.Tick += UpdateTimer_Tick;
+                updateTimer.Start();
+
+                logger?.Info("TimeTracking", "Time Tracking widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger?.Error("TimeTracking", $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void BuildUI()
@@ -641,12 +649,36 @@ namespace SuperTUI.Widgets
 
         protected override void OnDispose()
         {
+            // Stop and dispose timer
             if (updateTimer != null)
             {
                 updateTimer.Stop();
                 updateTimer.Tick -= UpdateTimer_Tick;
+                updateTimer = null;
             }
 
+            // Unsubscribe from UI event handlers
+            if (modeComboBox != null)
+            {
+                modeComboBox.SelectionChanged -= ModeComboBox_SelectionChanged;
+            }
+
+            if (taskListBox != null)
+            {
+                taskListBox.SelectionChanged -= TaskListBox_SelectionChanged;
+            }
+
+            if (startStopButton != null)
+            {
+                startStopButton.Click -= StartStopButton_Click;
+            }
+
+            if (resetButton != null)
+            {
+                resetButton.Click -= ResetButton_Click;
+            }
+
+            // Stop active sessions
             if (currentSession != null && currentSession.IsActive)
             {
                 StopCurrentSession();
@@ -657,7 +689,8 @@ namespace SuperTUI.Widgets
                 StopPomodoro();
             }
 
-            logger?.Info("TimeTracking", "Time Tracking widget disposed");
+            logger?.Info("TimeTracking", "Time Tracking widget disposed - all event handlers unsubscribed");
+            base.OnDispose();
         }
 
         #endregion

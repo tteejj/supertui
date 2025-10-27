@@ -62,6 +62,12 @@ namespace SuperTUI.Infrastructure
         private string configFilePath;
         private bool isInitialized = false;
 
+        /// <summary>
+        /// Gets whether the configuration manager has been initialized.
+        /// Services should check this before accessing configuration values.
+        /// </summary>
+        public bool IsInitialized => isInitialized;
+
         public event EventHandler<ConfigChangedEventArgs> ConfigChanged;
 
         public void Initialize(string configPath)
@@ -446,8 +452,32 @@ namespace SuperTUI.Infrastructure
 
         public void SaveToFile(string path)
         {
-            // Synchronous wrapper - use GetAwaiter().GetResult() to avoid deadlocks
-            SaveToFileAsync(path).ConfigureAwait(false).GetAwaiter().GetResult();
+            // Truly synchronous implementation - avoids Task.Wait() deadlock issues
+            // Note: This is safe because it doesn't use Dispatcher or WPF threading
+            try
+            {
+                var configData = config.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Value
+                );
+
+                string json = JsonSerializer.Serialize(configData, new JsonSerializerOptions { WriteIndented = true });
+
+                var directory = Path.GetDirectoryName(path);
+                directory = SuperTUI.Extensions.DirectoryHelper.CreateDirectoryWithFallback(directory, "Config");
+                // Update path with potentially changed directory
+                path = Path.Combine(directory, Path.GetFileName(path));
+                File.WriteAllText(path, json, Encoding.UTF8);
+
+                Logger.Instance.Info("Config", $"Configuration saved to {path}");
+            }
+            catch (Exception ex)
+            {
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Configuration,
+                    ex,
+                    $"Saving configuration to {path}");
+            }
         }
 
         public async Task SaveToFileAsync(string path)
@@ -461,7 +491,10 @@ namespace SuperTUI.Infrastructure
 
                 string json = JsonSerializer.Serialize(configData, new JsonSerializerOptions { WriteIndented = true });
 
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                var directory = Path.GetDirectoryName(path);
+                directory = SuperTUI.Extensions.DirectoryHelper.CreateDirectoryWithFallback(directory, "Config");
+                // Update path with potentially changed directory
+                path = Path.Combine(directory, Path.GetFileName(path));
                 await File.WriteAllTextAsync(path, json, Encoding.UTF8);
 
                 Logger.Instance.Info("Config", $"Configuration saved to {path}");
@@ -477,8 +510,38 @@ namespace SuperTUI.Infrastructure
 
         public void LoadFromFile(string path)
         {
-            // Synchronous wrapper - use GetAwaiter().GetResult() to avoid deadlocks
-            LoadFromFileAsync(path).ConfigureAwait(false).GetAwaiter().GetResult();
+            // Truly synchronous implementation - avoids Task.Wait() deadlock issues
+            // Note: This is safe because it doesn't use Dispatcher or WPF threading
+            try
+            {
+                string json = File.ReadAllText(path, Encoding.UTF8);
+                var configData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+
+                foreach (var kvp in configData)
+                {
+                    if (config.TryGetValue(kvp.Key, out var configValue))
+                    {
+                        ErrorHandlingPolicy.SafeExecute(
+                            ErrorCategory.Configuration,
+                            () =>
+                            {
+                                // Deserialize based on the registered type
+                                object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
+                                configValue.Value = value;
+                            },
+                            context: $"Loading config value {kvp.Key}");
+                    }
+                }
+
+                Logger.Instance.Info("Config", $"Configuration loaded from {path}");
+            }
+            catch (Exception ex)
+            {
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Configuration,
+                    ex,
+                    $"Loading configuration from {path}");
+            }
         }
 
         public async Task LoadFromFileAsync(string path)

@@ -167,7 +167,7 @@ $shortcutManager.RegisterGlobal([Key]::Right, [ModifierKeys]::Control,
 **Observed from code:**
 
 1. **No confirmation for destructive actions**
-   - Ctrl+C closes focused widget immediately (Line 390-408)
+   - Ctrl+W closes focused widget immediately (Line 390-408)
    - No "Are you sure?" prompt
    - No undo capability despite `StatePersistenceManager` claiming to support it
 

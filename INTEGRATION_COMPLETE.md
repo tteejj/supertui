@@ -80,7 +80,7 @@ All keyboard shortcuts were already configured to support workspaces 1-9:
 - **Ctrl+Q**: Quit SuperTUI
 - **Tab**: Cycle focus forward
 - **Shift+Tab**: Cycle focus backward
-- **Ctrl+C**: Close focused widget
+- **Ctrl+W**: Close focused widget
 
 ## Architecture Integration
 

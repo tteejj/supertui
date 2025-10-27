@@ -1,7 +1,7 @@
 # SuperTUI Plugin Development Guide
 
-**Version:** 1.0
-**Last Updated:** 2025-10-24
+**Version:** 1.1
+**Last Updated:** 2025-10-27
 **Audience:** Plugin developers, system integrators
 
 ---
@@ -11,6 +11,53 @@
 SuperTUI supports plugins to extend functionality beyond the core framework. This guide covers plugin development best practices, security considerations, and the plugin API.
 
 **⚠️ READ SECURITY SECTION BEFORE DEVELOPING PLUGINS ⚠️**
+
+---
+
+## ⚠️ BREAKING CHANGES (2025-10-27)
+
+### Parameterless Constructor Removal
+
+As of October 27, 2025, the following widgets **NO LONGER** have parameterless constructors:
+- `AgendaWidget`
+- `KanbanBoardWidget`
+- `ProjectStatsWidget`
+
+**Impact:**
+- ❌ `new AgendaWidget()` will fail with compile error
+- ❌ Plugins that subclass these widgets must add DI constructors
+- ✅ Use `WidgetFactory.CreateWidget<T>()` for proper dependency injection
+
+**Migration Example:**
+
+```csharp
+// OLD (BROKEN):
+var agenda = new AgendaWidget();
+
+// NEW (CORRECT):
+var agenda = context.WidgetFactory.CreateWidget<AgendaWidget>();
+```
+
+**Subclassing Example:**
+
+```csharp
+// If extending AgendaWidget, KanbanBoardWidget, or ProjectStatsWidget
+public class MyCustomAgenda : AgendaWidget
+{
+    // REQUIRED: DI constructor matching base class
+    public MyCustomAgenda(
+        ILogger logger,
+        IThemeManager themeManager,
+        IConfigurationManager config,
+        ITaskService taskService)
+        : base(logger, themeManager, config, taskService)
+    {
+        // Your custom initialization
+    }
+}
+```
+
+**Note:** PluginContext now exposes `WidgetFactory` for creating widgets with proper dependency injection.
 
 ---
 
@@ -418,11 +465,15 @@ public class CustomWidgetPlugin : IPlugin
 {
     public void Initialize(PluginContext context)
     {
-        // Register custom widget type
-        WidgetRegistry.Register<MyCustomWidget>("MyCustomWidget");
+        // Note: As of 2025-10-27, use WidgetFactory for proper dependency injection
+        // Direct instantiation with new() is deprecated for widgets requiring services
 
-        // Add to current workspace
         var currentWorkspace = context.Workspaces.CurrentWorkspace;
+
+        // If your widget has dependencies (ILogger, IThemeManager, etc.):
+        // var widget = context.WidgetFactory.CreateWidget<MyCustomWidget>();
+
+        // If your widget has no dependencies (simple widget):
         var widget = new MyCustomWidget();
         widget.Initialize();
 

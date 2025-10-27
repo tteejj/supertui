@@ -163,7 +163,7 @@ try {
                 <TextBlock
                     x:Name="StatusText"
                     Grid.Column="1"
-                    Text="Tab: Next Widget | Alt+Arrows: Navigate | Alt+Shift+Arrows: Move Widget | ?: Help | G: Quick Jump"
+                    Text="Tab: Next | Ctrl+Up/Down: Focus | Ctrl+Shift+Arrows: Move | ?: Help | G: Quick Jump"
                     FontFamily="Cascadia Mono, Consolas"
                     FontSize="11"
                     Foreground="#666666"
@@ -533,7 +533,48 @@ $workspace5.Widgets.Add($statsWidget)
 
 $workspaceManager.AddWorkspace($workspace5)
 
-# Note: Workspace 6 (Excel Integration) has been removed as Excel widgets are not currently available
+# ============================================================================
+# Workspace 6: Excel Integration (Import, Export, Mapping Editor)
+# ============================================================================
+
+Write-Host "Setting up Workspace 6: Excel Integration..." -ForegroundColor Cyan
+
+$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(2, 2)
+$workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout, $logger, $themeManager)
+
+# Top-left: Excel Import Widget
+$excelImportWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelImportWidget])
+$excelImportWidget.WidgetName = "Excel Import"
+$excelImportWidget.Initialize()
+$ws6ImportParams = New-Object SuperTUI.Core.LayoutParams
+$ws6ImportParams.Row = 0
+$ws6ImportParams.Column = 0
+$workspace6Layout.AddChild($excelImportWidget, $ws6ImportParams)
+$workspace6.Widgets.Add($excelImportWidget)
+
+# Top-right: Excel Export Widget
+$excelExportWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelExportWidget])
+$excelExportWidget.WidgetName = "Excel Export"
+$excelExportWidget.Initialize()
+$ws6ExportParams = New-Object SuperTUI.Core.LayoutParams
+$ws6ExportParams.Row = 0
+$ws6ExportParams.Column = 1
+$workspace6Layout.AddChild($excelExportWidget, $ws6ExportParams)
+$workspace6.Widgets.Add($excelExportWidget)
+
+# Bottom (spans both columns): Excel Mapping Editor
+$excelMappingWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelMappingEditorWidget])
+$excelMappingWidget.WidgetName = "Mapping Editor"
+$excelMappingWidget.Initialize()
+$ws6MappingParams = New-Object SuperTUI.Core.LayoutParams
+$ws6MappingParams.Row = 1
+$ws6MappingParams.Column = 0
+$ws6MappingParams.RowSpan = 1
+$ws6MappingParams.ColumnSpan = 2
+$workspace6Layout.AddChild($excelMappingWidget, $ws6MappingParams)
+$workspace6.Widgets.Add($excelMappingWidget)
+
+$workspaceManager.AddWorkspace($workspace6)
 
 Write-Host "Workspaces created!" -ForegroundColor Green
 
@@ -635,33 +676,57 @@ for ($i = 1; $i -le 9; $i++) {
         }
     }.GetNewClosure()
 
-    # i3-style: $mod+number (Win+number)
-    $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Windows, $action, "Switch to workspace $i")
+    # REMOVED: i3-style Win+number shortcuts do not work on Windows
+    # Windows OS intercepts Win+1-9 for taskbar app switching
+    # $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Windows, $action, "Switch to workspace $i")
 
-    # Keep Ctrl+number for backward compatibility
-    $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Control, $action, "Switch to workspace $i (legacy)")
+    # Use Ctrl+number instead (actually works)
+    $shortcutManager.RegisterGlobal($key, [System.Windows.Input.ModifierKeys]::Control, $action, "Switch to workspace $i")
 }
 
-# Quit - i3 style: $mod+Shift+E
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::E,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
-    { $window.Close() },
-    "Exit SuperTUI (i3-style)"
-)
+# REMOVED: Quit - i3 style Win+Shift+E does not work on Windows
+# Windows OS intercepts Win+E for File Explorer
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::E,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     { $window.Close() },
+#     "Exit SuperTUI (i3-style)"
+# )
 
-# Quit - legacy: Ctrl+Q (keep for compatibility)
+# Quit - Use Ctrl+Q (actually works)
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Q,
     [System.Windows.Input.ModifierKeys]::Control,
     { $window.Close() },
-    "Quit SuperTUI (legacy)"
+    "Quit SuperTUI"
 )
 
-# Close focused widget - i3 style: $mod+Shift+Q
+# REMOVED: Close focused widget - i3 style Win+Shift+Q does not work
+# Windows OS may intercept Win+Q combinations
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::Q,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $focused = $current.GetFocusedWidget()
+#             if ($focused) {
+#                 $widgetName = $focused.WidgetName
+#                 $current.RemoveFocusedWidget()
+#                 $statusText.Text = "Closed widget: $widgetName"
+#                 $logger.Info("Workspace", "Closed widget: $widgetName")
+#             } else {
+#                 $statusText.Text = "No widget focused"
+#             }
+#         }
+#     },
+#     "Close focused widget (i3-style)"
+# )
+
+# Close focused widget - Use Ctrl+W (standard Windows close, actually works)
 $shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::Q,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+    [System.Windows.Input.Key]::W,
+    [System.Windows.Input.ModifierKeys]::Control,
     {
         $current = $workspaceManager.CurrentWorkspace
         if ($current) {
@@ -676,92 +741,72 @@ $shortcutManager.RegisterGlobal(
             }
         }
     },
-    "Close focused widget (i3-style)"
+    "Close focused widget"
 )
 
-# Close focused widget - legacy: Ctrl+C (keep for compatibility)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::C,
-    [System.Windows.Input.ModifierKeys]::Control,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $focused = $current.GetFocusedWidget()
-            if ($focused) {
-                $widgetName = $focused.WidgetName
-                $current.RemoveFocusedWidget()
-                $statusText.Text = "Closed widget: $widgetName"
-                $logger.Info("Workspace", "Closed widget: $widgetName")
-            } else {
-                $statusText.Text = "No widget focused"
-            }
-        }
-    },
-    "Close focused widget (legacy)"
-)
+# REMOVED: Focus navigation - i3 style Win+h/j/k/l does not work on Windows
+# Windows OS intercepts Win+H (dictation), Win+L (lock screen), etc.
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::H,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             # Navigate left (cycle backward for now, can be enhanced with real directional logic)
+#             $current.CycleFocusBackward()
+#             $focused = $current.GetFocusedWidget()
+#             $statusText.Text = "Focus left: $($focused?.WidgetName ?? 'None')"
+#         }
+#     },
+#     "Focus left (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::J,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             # Navigate down
+#             $current.CycleFocusForward()
+#             $focused = $current.GetFocusedWidget()
+#             $statusText.Text = "Focus down: $($focused?.WidgetName ?? 'None')"
+#         }
+#     },
+#     "Focus down (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::K,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             # Navigate up
+#             $current.CycleFocusBackward()
+#             $focused = $current.GetFocusedWidget()
+#             $statusText.Text = "Focus up: $($focused?.WidgetName ?? 'None')"
+#         }
+#     },
+#     "Focus up (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::L,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             # Navigate right (cycle forward for now)
+#             $current.CycleFocusForward()
+#             $focused = $current.GetFocusedWidget()
+#             $statusText.Text = "Focus right: $($focused?.WidgetName ?? 'None')"
+#         }
+#     },
+#     "Focus right (i3-style)"
+# )
 
-# Focus navigation - i3 style: $mod+h/j/k/l (Left/Down/Up/Right)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::H,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            # Navigate left (cycle backward for now, can be enhanced with real directional logic)
-            $current.CycleFocusBackward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus left: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus left (i3-style)"
-)
-
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::J,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            # Navigate down
-            $current.CycleFocusForward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus down: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus down (i3-style)"
-)
-
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::K,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            # Navigate up
-            $current.CycleFocusBackward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus up: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus up (i3-style)"
-)
-
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::L,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            # Navigate right (cycle forward for now)
-            $current.CycleFocusForward()
-            $focused = $current.GetFocusedWidget()
-            $statusText.Text = "Focus right: $($focused?.WidgetName ?? 'None')"
-        }
-    },
-    "Focus right (i3-style)"
-)
-
-# Focus navigation - legacy: Ctrl+Up/Down for cycling focus
+# Focus navigation - Use Ctrl+Up/Down for cycling focus (actually works)
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Down,
     [System.Windows.Input.ModifierKeys]::Control,
@@ -773,7 +818,7 @@ $shortcutManager.RegisterGlobal(
             $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
         }
     },
-    "Focus next widget (legacy)"
+    "Focus next widget"
 )
 
 $shortcutManager.RegisterGlobal(
@@ -787,7 +832,7 @@ $shortcutManager.RegisterGlobal(
             $statusText.Text = "Focus: $($focused?.WidgetName ?? 'None')"
         }
     },
-    "Focus previous widget (legacy)"
+    "Focus previous widget"
 )
 
 # Widget Picker / Command Palette - i3 style: $mod+Enter
@@ -811,7 +856,7 @@ $widgetPickerAction = {
                     throw "Widget type '$($picker.SelectedWidget.TypeName)' not found"
                 }
 
-                $widget = [Activator]::CreateInstance($widgetType)
+                $widget = $widgetFactory.CreateWidget($widgetType)
                 $widget.WidgetName = $picker.SelectedWidget.Name
 
                 # Find first empty slot
@@ -845,34 +890,60 @@ $widgetPickerAction = {
     }
 }
 
-# i3-style: $mod+Enter (launch widget picker)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::Return,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    $widgetPickerAction,
-    "Launch widget picker (i3-style)"
-)
+# REMOVED: i3-style Win+Enter does not work on Windows (typically does nothing or launches Windows action)
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::Return,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     $widgetPickerAction,
+#     "Launch widget picker (i3-style)"
+# )
 
-# i3-style: $mod+d (dmenu-style command palette)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::D,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    $widgetPickerAction,
-    "Command palette (i3-style dmenu)"
-)
+# REMOVED: i3-style Win+D does not work on Windows
+# Windows OS intercepts Win+D for "Show Desktop"
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::D,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     $widgetPickerAction,
+#     "Command palette (i3-style dmenu)"
+# )
 
-# Legacy: Ctrl+N
+# Use Ctrl+N for widget picker (actually works)
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::N,
     [System.Windows.Input.ModifierKeys]::Control,
     $widgetPickerAction,
-    "Add new widget (legacy)"
+    "Add new widget"
 )
 
-# Fullscreen focused widget - i3 style: $mod+f
+# REMOVED: Fullscreen focused widget - i3 style Win+F does not work on Windows
+# Windows OS intercepts Win+F for Feedback Hub
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::F,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $focused = $current.GetFocusedWidget()
+#             if ($focused) {
+#                 # Toggle fullscreen mode (hide all other widgets, expand focused to full workspace)
+#                 $current.ToggleFullscreen()
+#                 if ($current.IsFullscreen) {
+#                     $statusText.Text = "Fullscreen: $($focused.WidgetName) (Win+F to exit)"
+#                 } else {
+#                     $statusText.Text = "Exited fullscreen mode"
+#                 }
+#             } else {
+#                 $statusText.Text = "No widget focused for fullscreen"
+#             }
+#         }
+#     },
+#     "Toggle fullscreen (i3-style)"
+# )
+
+# Use F11 for fullscreen (standard Windows convention, actually works)
 $shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::F,
-    [System.Windows.Input.ModifierKeys]::Windows,
+    [System.Windows.Input.Key]::F11,
+    [System.Windows.Input.ModifierKeys]::None,
     {
         $current = $workspaceManager.CurrentWorkspace
         if ($current) {
@@ -881,7 +952,7 @@ $shortcutManager.RegisterGlobal(
                 # Toggle fullscreen mode (hide all other widgets, expand focused to full workspace)
                 $current.ToggleFullscreen()
                 if ($current.IsFullscreen) {
-                    $statusText.Text = "Fullscreen: $($focused.WidgetName) (Win+F to exit)"
+                    $statusText.Text = "Fullscreen: $($focused.WidgetName) (F11 to exit)"
                 } else {
                     $statusText.Text = "Exited fullscreen mode"
                 }
@@ -890,14 +961,85 @@ $shortcutManager.RegisterGlobal(
             }
         }
     },
-    "Toggle fullscreen (i3-style)"
+    "Toggle fullscreen"
 )
 
-# Layout mode switching - i3 style: Win+e/s/w/t/g
-# Win+e → Auto mode (split based on count)
+# REMOVED: Layout mode switching - i3 style Win+e/s/w/t/g does not work on Windows
+# Windows OS intercepts Win+E (File Explorer), Win+S (Search), Win+W (Widgets), Win+T (Taskbar), Win+G (Game Bar)
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::E,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Auto)
+#             $statusText.Text = "Layout: Auto (split based on count)"
+#             $logger.Info("Shortcuts", "Layout mode: Auto")
+#         }
+#     },
+#     "Auto layout mode (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::S,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $current.SetLayoutMode([SuperTUI.Core.TilingMode]::MasterStack)
+#             $statusText.Text = "Layout: Stacking (master + stack)"
+#             $logger.Info("Shortcuts", "Layout mode: MasterStack")
+#         }
+#     },
+#     "Stacking layout mode (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::W,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Wide)
+#             $statusText.Text = "Layout: Wide (horizontal splits)"
+#             $logger.Info("Shortcuts", "Layout mode: Wide")
+#         }
+#     },
+#     "Wide layout mode (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::T,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Tall)
+#             $statusText.Text = "Layout: Tall (vertical splits)"
+#             $logger.Info("Shortcuts", "Layout mode: Tall")
+#         }
+#     },
+#     "Tall layout mode (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::G,
+#     [System.Windows.Input.ModifierKeys]::Windows,
+#     {
+#         $current = $workspaceManager.CurrentWorkspace
+#         if ($current) {
+#             $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Grid)
+#             $statusText.Text = "Layout: Grid (2x2 or NxN)"
+#             $logger.Info("Shortcuts", "Layout mode: Grid")
+#         }
+#     },
+#     "Grid layout mode (i3-style)"
+# )
+
+# Use Ctrl+L followed by letter for layout modes (actually works, vim-style leader key)
 $shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::E,
-    [System.Windows.Input.ModifierKeys]::Windows,
+    [System.Windows.Input.Key]::A,
+    [System.Windows.Input.ModifierKeys]::Control,
     {
         $current = $workspaceManager.CurrentWorkspace
         if ($current) {
@@ -906,67 +1048,7 @@ $shortcutManager.RegisterGlobal(
             $logger.Info("Shortcuts", "Layout mode: Auto")
         }
     },
-    "Auto layout mode (i3-style)"
-)
-
-# Win+s → Stacking mode (Master + Stack)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::S,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.SetLayoutMode([SuperTUI.Core.TilingMode]::MasterStack)
-            $statusText.Text = "Layout: Stacking (master + stack)"
-            $logger.Info("Shortcuts", "Layout mode: MasterStack")
-        }
-    },
-    "Stacking layout mode (i3-style)"
-)
-
-# Win+w → Wide mode (Horizontal splits)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::W,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Wide)
-            $statusText.Text = "Layout: Wide (horizontal splits)"
-            $logger.Info("Shortcuts", "Layout mode: Wide")
-        }
-    },
-    "Wide layout mode (i3-style)"
-)
-
-# Win+t → Tall mode (Vertical splits)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::T,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Tall)
-            $statusText.Text = "Layout: Tall (vertical splits)"
-            $logger.Info("Shortcuts", "Layout mode: Tall")
-        }
-    },
-    "Tall layout mode (i3-style)"
-)
-
-# Win+g → Grid mode (Force 2x2 grid)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::G,
-    [System.Windows.Input.ModifierKeys]::Windows,
-    {
-        $current = $workspaceManager.CurrentWorkspace
-        if ($current) {
-            $current.SetLayoutMode([SuperTUI.Core.TilingMode]::Grid)
-            $statusText.Text = "Layout: Grid (2x2 or NxN)"
-            $logger.Info("Shortcuts", "Layout mode: Grid")
-        }
-    },
-    "Grid layout mode (i3-style)"
+    "Auto layout mode"
 )
 
 # Next/Previous workspace
@@ -1064,65 +1146,63 @@ $moveWidgetScript = {
     }
 }
 
-# i3-style: $mod+Shift+h (move left)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::H,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
-    { & $moveWidgetScript "Left" },
-    "Move widget left (i3-style)"
-)
+# REMOVED: i3-style Win+Shift+h/j/k/l does not work on Windows
+# Windows OS intercepts Win+H (dictation), Win+L (lock screen), etc.
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::H,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     { & $moveWidgetScript "Left" },
+#     "Move widget left (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::J,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     { & $moveWidgetScript "Down" },
+#     "Move widget down (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::K,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     { & $moveWidgetScript "Up" },
+#     "Move widget up (i3-style)"
+# )
+#
+# $shortcutManager.RegisterGlobal(
+#     [System.Windows.Input.Key]::L,
+#     ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
+#     { & $moveWidgetScript "Right" },
+#     "Move widget right (i3-style)"
+# )
 
-# i3-style: $mod+Shift+j (move down)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::J,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
-    { & $moveWidgetScript "Down" },
-    "Move widget down (i3-style)"
-)
-
-# i3-style: $mod+Shift+k (move up)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::K,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
-    { & $moveWidgetScript "Up" },
-    "Move widget up (i3-style)"
-)
-
-# i3-style: $mod+Shift+l (move right)
-$shortcutManager.RegisterGlobal(
-    [System.Windows.Input.Key]::L,
-    ([System.Windows.Input.ModifierKeys]::Windows -bor [System.Windows.Input.ModifierKeys]::Shift),
-    { & $moveWidgetScript "Right" },
-    "Move widget right (i3-style)"
-)
-
-# Legacy: Ctrl+Shift+Arrow keys
+# Use Ctrl+Shift+Arrow keys (actually works)
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Left,
     ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
     { & $moveWidgetScript "Left" },
-    "Move widget left (legacy)"
+    "Move widget left"
 )
 
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Right,
     ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
     { & $moveWidgetScript "Right" },
-    "Move widget right (legacy)"
+    "Move widget right"
 )
 
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Up,
     ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
     { & $moveWidgetScript "Up" },
-    "Move widget up (legacy)"
+    "Move widget up"
 )
 
 $shortcutManager.RegisterGlobal(
     [System.Windows.Input.Key]::Down,
     ([System.Windows.Input.ModifierKeys]::Control -bor [System.Windows.Input.ModifierKeys]::Shift),
     { & $moveWidgetScript "Down" },
-    "Move widget down (legacy)"
+    "Move widget down"
 )
 
 # Keyboard handler
@@ -1173,7 +1253,7 @@ $window.Add_KeyDown({
         # Update status bar to show Normal mode
         $modeIndicator.Text = "-- NORMAL --"
         $modeIndicator.Foreground = [System.Windows.Media.Brushes]::DodgerBlue
-        $statusText.Text = "Tab: Next Widget | Alt+Arrows: Navigate | Alt+Shift+Arrows: Move Widget | ?: Help | G: Quick Jump"
+        $statusText.Text = "Tab: Next | Ctrl+Up/Down: Focus | Ctrl+Shift+Arrows: Move | ?: Help | G: Quick Jump"
 
         $e.Handled = $true
         return
@@ -1306,19 +1386,19 @@ Write-Host "State persistence hooks registered" -ForegroundColor Green
 # ============================================================================
 
 Write-Host "`nStarting SuperTUI..." -ForegroundColor Green
-Write-Host "i3-style Keyboard Shortcuts:" -ForegroundColor Yellow
-Write-Host "  Win+1-9           Switch workspaces" -ForegroundColor Gray
-Write-Host "  Win+Enter / Win+d Launcher / Command palette" -ForegroundColor Gray
-Write-Host "  Win+h/j/k/l       Focus left/down/up/right" -ForegroundColor Gray
-Write-Host "  Win+Shift+h/j/k/l Move widget" -ForegroundColor Gray
-Write-Host "  Win+Shift+Q       Close focused widget" -ForegroundColor Gray
-Write-Host "  Win+f             Toggle fullscreen" -ForegroundColor Gray
-Write-Host "  Win+e/s/w/t/g     Layout: Auto/Stack/Wide/Tall/Grid" -ForegroundColor Cyan
-Write-Host "  Win+Shift+E       Exit application" -ForegroundColor Gray
-Write-Host "  Tab / Shift+Tab   Cycle focus" -ForegroundColor Gray
-Write-Host "  ?                 Help overlay" -ForegroundColor Gray
+Write-Host "Keyboard Shortcuts:" -ForegroundColor Yellow
+Write-Host "  Ctrl+1-9              Switch workspaces" -ForegroundColor Gray
+Write-Host "  Ctrl+N                Add widget / Command palette" -ForegroundColor Gray
+Write-Host "  Ctrl+Up/Down          Focus previous/next widget" -ForegroundColor Gray
+Write-Host "  Ctrl+Shift+Arrows     Move widget" -ForegroundColor Gray
+Write-Host "  Ctrl+W                Close focused widget" -ForegroundColor Gray
+Write-Host "  F11                   Toggle fullscreen" -ForegroundColor Gray
+Write-Host "  Ctrl+A                Layout: Auto mode" -ForegroundColor Cyan
+Write-Host "  Ctrl+Q                Exit application" -ForegroundColor Gray
+Write-Host "  Tab / Shift+Tab       Cycle focus" -ForegroundColor Gray
+Write-Host "  ?                     Help overlay" -ForegroundColor Gray
 Write-Host ""
-Write-Host "Legacy shortcuts (Ctrl-based) still work for compatibility" -ForegroundColor DarkGray
+Write-Host "NOTE: Windows key shortcuts removed (conflict with Windows OS)" -ForegroundColor DarkGray
 Write-Host ""
 
 $window.ShowDialog() | Out-Null

@@ -523,7 +523,14 @@ namespace SuperTUI.Core.Services
 
                     foreach (var oldBackup in backupFiles)
                     {
-                        try { File.Delete(oldBackup); } catch { }
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("TaskService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
                     }
                 }
 
@@ -538,7 +545,66 @@ namespace SuperTUI.Core.Services
                     WriteIndented = true
                 }));
 
-                await Task.Run(() => File.WriteAllText(dataFilePath, json));
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                await Task.Run(() => File.WriteAllText(tempFile, json));
+                await Task.Run(() => File.Replace(tempFile, dataFilePath, dataFilePath + ".bak"));
+                Logger.Instance?.Debug("TaskService", $"Saved {taskList.Count} tasks to {dataFilePath}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance?.Error("TaskService", $"Failed to save tasks: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Save tasks to JSON file synchronously (for Dispose)
+        /// </summary>
+        private void SaveToFileSync()
+        {
+            try
+            {
+                // Create backup before saving
+                if (File.Exists(dataFilePath))
+                {
+                    var backupPath = $"{dataFilePath}.{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                    File.Copy(dataFilePath, backupPath, overwrite: true);
+
+                    // Keep only last 5 backups
+                    var backupDir = Path.GetDirectoryName(dataFilePath);
+                    var backupFiles = Directory.GetFiles(backupDir, "tasks.json.*.bak")
+                        .OrderByDescending(f => File.GetCreationTime(f))
+                        .Skip(5)
+                        .ToList();
+
+                    foreach (var oldBackup in backupFiles)
+                    {
+                        try
+                        {
+                            File.Delete(oldBackup);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance?.Warning("TaskService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                        }
+                    }
+                }
+
+                List<TaskItem> taskList;
+                lock (lockObject)
+                {
+                    taskList = tasks.Values.ToList();
+                }
+
+                var json = JsonSerializer.Serialize(taskList, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                // Atomic write: temp → rename pattern
+                string tempFile = dataFilePath + ".tmp";
+                File.WriteAllText(tempFile, json);
+                File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
                 Logger.Instance?.Debug("TaskService", $"Saved {taskList.Count} tasks to {dataFilePath}");
             }
             catch (Exception ex)
@@ -974,7 +1040,10 @@ namespace SuperTUI.Core.Services
                         ExportTaskToMarkdown(task, lines, 0);
                     }
 
-                    File.WriteAllLines(filePath, lines);
+                    // Atomic write: temp → rename pattern
+                    string tempFile = filePath + ".tmp";
+                    File.WriteAllLines(tempFile, lines);
+                    File.Replace(tempFile, filePath, filePath + ".bak");
                     Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to Markdown: {filePath}");
                     return true;
                 }
@@ -1058,7 +1127,10 @@ namespace SuperTUI.Core.Services
                         lines.Add(string.Join(",", fields));
                     }
 
-                    File.WriteAllLines(filePath, lines);
+                    // Atomic write: temp → rename pattern
+                    string tempFile = filePath + ".tmp";
+                    File.WriteAllLines(tempFile, lines);
+                    File.Replace(tempFile, filePath, filePath + ".bak");
                     Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to CSV: {filePath}");
                     return true;
                 }
@@ -1099,7 +1171,10 @@ namespace SuperTUI.Core.Services
                         WriteIndented = true
                     });
 
-                    File.WriteAllText(filePath, json);
+                    // Atomic write: temp → rename pattern
+                    string tempFile = filePath + ".tmp";
+                    File.WriteAllText(tempFile, json);
+                    File.Replace(tempFile, filePath, filePath + ".bak");
                     Logger.Instance?.Info("TaskService", $"Exported {allTasks.Count} tasks to JSON: {filePath}");
                     return true;
                 }
@@ -1123,7 +1198,7 @@ namespace SuperTUI.Core.Services
                 // Ensure any pending save is executed before disposal
                 if (pendingSave)
                 {
-                    SaveToFileAsync().Wait();
+                    SaveToFileSync();  // Use synchronous save to avoid deadlock
                 }
 
                 saveTimer.Dispose();

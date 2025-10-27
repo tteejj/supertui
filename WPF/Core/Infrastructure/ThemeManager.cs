@@ -638,8 +638,22 @@ namespace SuperTUI.Infrastructure
 
         public void SaveTheme(Theme theme, string filename = null)
         {
-            // Synchronous wrapper for backward compatibility
-            SaveThemeAsync(theme, filename).GetAwaiter().GetResult();
+            // Truly synchronous implementation - avoids Task.Wait() deadlock issues
+            // Note: This is safe because it doesn't use Dispatcher or WPF threading
+            try
+            {
+                filename = filename ?? Path.Combine(themesDirectory, $"{theme.Name}.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(filename));
+
+                string json = JsonSerializer.Serialize(theme, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(filename, json, Encoding.UTF8);
+
+                Logger.Instance.Info("Theme", $"Saved theme {theme.Name} to {filename}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("Theme", $"Failed to save theme: {ex.Message}", ex);
+            }
         }
 
         public async Task SaveThemeAsync(Theme theme, string filename = null)
@@ -662,8 +676,32 @@ namespace SuperTUI.Infrastructure
 
         private void LoadCustomThemes()
         {
-            // Synchronous wrapper for backward compatibility
-            LoadCustomThemesAsync().GetAwaiter().GetResult();
+            // Truly synchronous implementation - avoids Task.Wait() deadlock issues
+            // Note: This is safe because it doesn't use Dispatcher or WPF threading
+            if (!Directory.Exists(themesDirectory))
+                return;
+
+            try
+            {
+                foreach (var file in Directory.GetFiles(themesDirectory, "*.json"))
+                {
+                    try
+                    {
+                        string json = File.ReadAllText(file, Encoding.UTF8);
+                        var theme = JsonSerializer.Deserialize<Theme>(json);
+                        RegisterTheme(theme);
+                        Logger.Instance.Info("Theme", $"Loaded custom theme: {theme.Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Warning("Theme", $"Failed to load theme from {file}: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("Theme", $"Failed to load custom themes: {ex.Message}", ex);
+            }
         }
 
         private async Task LoadCustomThemesAsync()

@@ -1,7 +1,8 @@
 # SuperTUI Quick Reference Card
 
-**Version:** 2025-10-26
+**Version:** 2025-10-27
 **Features:** Hierarchical Tasks | Tags | Time Tracking | Color Themes
+**Note:** All shortcuts use Ctrl (not Win key) for Windows compatibility
 
 ---
 
@@ -31,15 +32,21 @@ Ctrl+M      Focus note input
 Ctrl+E      Export tasks
 ```
 
-### Workspace (i3-style)
+### Workspace & Navigation
 ```
-Win+h/j/k/l Navigate workspaces (left/down/up/right)
-Win+1-9     Switch to workspace 1-9
-Win+Shift+h Focus left widget
-Win+Shift+j Focus down widget
-Win+Shift+k Focus up widget
-Win+Shift+l Focus right widget
+Ctrl+1-9              Switch to workspace 1-9
+Ctrl+N                Add widget / Command palette
+Ctrl+Up/Down          Focus previous/next widget
+Ctrl+Left/Right       Previous/next workspace
+Ctrl+Shift+Arrows     Move widget
+Ctrl+W                Close focused widget
+F11                   Toggle fullscreen
+Ctrl+A                Layout: Auto mode
+Ctrl+Q                Exit application
+Tab / Shift+Tab       Cycle focus between widgets
 ```
+
+**Note:** Windows key (Win+) shortcuts not used due to OS conflicts.
 
 ---
 

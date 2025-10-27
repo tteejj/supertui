@@ -45,9 +45,18 @@ namespace SuperTUI.Widgets
 
         public override void Initialize()
         {
-            LoadShortcuts();
-            BuildUI();
-            UpdateDisplay();
+            try
+            {
+                LoadShortcuts();
+                BuildUI();
+                UpdateDisplay();
+                logger.Info(WidgetType, "Widget initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(WidgetType, $"Initialization failed: {ex.Message}", ex);
+                throw; // Re-throw to let ErrorBoundary handle it
+            }
         }
 
         private void LoadShortcuts()

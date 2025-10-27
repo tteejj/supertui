@@ -116,7 +116,7 @@ The SuperTUI WPF project has been successfully remediated from a **non-functiona
 | Tab / Shift+Tab | Next/Previous widget focus | Focus navigation |
 | Ctrl+Up/Down | Cycle focus forward/backward | Focus navigation |
 | Ctrl+N | Add new widget | Widget management |
-| Ctrl+C | Close focused widget | Widget management |
+| Ctrl+W | Close focused widget | Widget management |
 | Ctrl+Shift+Arrows | Move widget in direction | Widget management |
 | Ctrl+Q | Quit application | Application control |
 

@@ -243,15 +243,19 @@ namespace SuperTUI.DI
         /// </summary>
         public object GetService(Type serviceType)
         {
+            ServiceDescriptor descriptor;
+
+            // Only lock for descriptor lookup (minimal lock scope)
             lock (lockObject)
             {
-                if (!services.TryGetValue(serviceType, out var descriptor))
+                if (!services.TryGetValue(serviceType, out descriptor))
                 {
                     return null;
                 }
-
-                return ResolveService(descriptor, this);
             }
+
+            // Resolve outside of lock - ResolveService handles its own locking for singletons
+            return ResolveService(descriptor, this);
         }
 
         /// <summary>
@@ -290,29 +294,41 @@ namespace SuperTUI.DI
             switch (descriptor.Lifetime)
             {
                 case ServiceLifetime.Singleton:
-                    // Check if already instantiated
+                    // THREAD-SAFE DOUBLE-CHECKED LOCKING PATTERN
+                    // First check (fast path - no lock required)
                     if (singletonInstances.TryGetValue(descriptor.ServiceType, out var existingInstance))
                     {
                         return existingInstance;
                     }
 
-                    // Create new singleton
-                    object instance;
-                    if (descriptor.Instance != null)
+                    // Acquire lock for singleton creation
+                    lock (lockObject)
                     {
-                        instance = descriptor.Instance;
-                    }
-                    else if (descriptor.Factory != null)
-                    {
-                        instance = descriptor.Factory(provider);
-                    }
-                    else
-                    {
-                        instance = Activator.CreateInstance(descriptor.ImplementationType);
-                    }
+                        // Second check (another thread may have created it while we waited for lock)
+                        if (singletonInstances.TryGetValue(descriptor.ServiceType, out existingInstance))
+                        {
+                            return existingInstance;
+                        }
 
-                    singletonInstances[descriptor.ServiceType] = instance;
-                    return instance;
+                        // Create new singleton (only one thread reaches here)
+                        object instance;
+                        if (descriptor.Instance != null)
+                        {
+                            instance = descriptor.Instance;
+                        }
+                        else if (descriptor.Factory != null)
+                        {
+                            instance = descriptor.Factory(provider);
+                        }
+                        else
+                        {
+                            instance = Activator.CreateInstance(descriptor.ImplementationType);
+                        }
+
+                        // Add to dictionary inside lock (thread-safe)
+                        singletonInstances[descriptor.ServiceType] = instance;
+                        return instance;
+                    }
 
                 case ServiceLifetime.Transient:
                     // Always create new instance
@@ -464,31 +480,34 @@ namespace SuperTUI.DI
 
                 public object GetService(Type serviceType)
                 {
+                    ServiceDescriptor descriptor;
+
+                    // Only lock for descriptor lookup (minimal lock scope)
                     lock (scope.rootContainer.lockObject)
                     {
-                        if (!scope.rootContainer.services.TryGetValue(serviceType, out var descriptor))
+                        if (!scope.rootContainer.services.TryGetValue(serviceType, out descriptor))
                         {
                             return null;
                         }
+                    }
 
-                        // Handle based on lifetime
-                        switch (descriptor.Lifetime)
-                        {
-                            case ServiceLifetime.Singleton:
-                                // Singletons come from root container
-                                return scope.rootContainer.ResolveService(descriptor, this);
+                    // Resolve outside of lock - each resolver handles its own locking
+                    switch (descriptor.Lifetime)
+                    {
+                        case ServiceLifetime.Singleton:
+                            // Singletons come from root container
+                            return scope.rootContainer.ResolveService(descriptor, this);
 
-                            case ServiceLifetime.Transient:
-                                // Transients always create new
-                                return scope.rootContainer.ResolveService(descriptor, this);
+                        case ServiceLifetime.Transient:
+                            // Transients always create new
+                            return scope.rootContainer.ResolveService(descriptor, this);
 
-                            case ServiceLifetime.Scoped:
-                                // Scoped come from this scope
-                                return scope.ResolveScopedService(descriptor);
+                        case ServiceLifetime.Scoped:
+                            // Scoped come from this scope
+                            return scope.ResolveScopedService(descriptor);
 
-                            default:
-                                throw new NotSupportedException($"Unsupported lifetime: {descriptor.Lifetime}");
-                        }
+                        default:
+                            throw new NotSupportedException($"Unsupported lifetime: {descriptor.Lifetime}");
                     }
                 }
 
