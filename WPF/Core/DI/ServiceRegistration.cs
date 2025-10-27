@@ -15,13 +15,13 @@ namespace SuperTUI.DI
     {
         /// <summary>
         /// Configure all services for dependency injection
-        /// PHASE 3: Maximum DI - Register all infrastructure services
+        /// PHASE 3: Maximum DI - Register all infrastructure and domain services
         /// </summary>
         public static void ConfigureServices(ServiceContainer container)
         {
             Logger.Instance.Info("DI", "🔧 Configuring services for dependency injection...");
 
-            // PHASE 3: Register existing singletons with their interfaces
+            // PHASE 3: Register existing infrastructure singletons with their interfaces
             container.RegisterSingleton<ILogger, Logger>(Logger.Instance);
             container.RegisterSingleton<IConfigurationManager, ConfigurationManager>(ConfigurationManager.Instance);
             container.RegisterSingleton<IThemeManager, ThemeManager>(ThemeManager.Instance);
@@ -35,6 +35,15 @@ namespace SuperTUI.DI
             // HotReloadManager not yet implemented - skip for now
 
             Logger.Instance.Info("DI", $"✅ Registered {10} infrastructure services");
+
+            // PHASE 4: Register domain services (no interfaces yet, register concrete types)
+            container.RegisterSingleton<Core.Services.TaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);
+            container.RegisterSingleton<Core.Services.ProjectService, Core.Services.ProjectService>(Core.Services.ProjectService.Instance);
+            container.RegisterSingleton<Core.Services.TimeTrackingService, Core.Services.TimeTrackingService>(Core.Services.TimeTrackingService.Instance);
+            container.RegisterSingleton<Core.Services.ExcelMappingService, Core.Services.ExcelMappingService>(Core.Services.ExcelMappingService.Instance);
+            container.RegisterSingleton<Core.Services.ExcelAutomationService, Core.Services.ExcelAutomationService>(Core.Services.ExcelAutomationService.Instance);
+
+            Logger.Instance.Info("DI", $"✅ Registered {5} domain services");
         }
 
         /// <summary>
@@ -57,6 +66,19 @@ namespace SuperTUI.DI
             // Initialize security manager with strict mode (production default)
             var security = container.GetRequiredService<ISecurityManager>() as SecurityManager;
             security?.Initialize(SecurityMode.Strict);
+
+            // Initialize domain services
+            var taskService = container.GetRequiredService<Core.Services.TaskService>();
+            taskService?.Initialize();
+
+            var projectService = container.GetRequiredService<Core.Services.ProjectService>();
+            projectService?.Initialize();
+
+            var timeTrackingService = container.GetRequiredService<Core.Services.TimeTrackingService>();
+            timeTrackingService?.Initialize();
+
+            var excelMappingService = container.GetRequiredService<Core.Services.ExcelMappingService>();
+            excelMappingService?.Initialize();
 
             Logger.Instance.Info("DI", "✅ All services initialized");
         }

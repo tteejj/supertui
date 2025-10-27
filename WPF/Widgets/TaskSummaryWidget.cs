@@ -18,6 +18,7 @@ namespace SuperTUI.Widgets
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
+        private readonly Core.Services.TaskService taskService;
 
         // This would normally come from a service
         // For demo purposes, we'll create a simple data structure
@@ -50,11 +51,13 @@ namespace SuperTUI.Widgets
         public TaskSummaryWidget(
             ILogger logger,
             IThemeManager themeManager,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            Core.Services.TaskService taskService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
 
             WidgetType = "TaskSummary";
             BuildUI();
@@ -64,7 +67,7 @@ namespace SuperTUI.Widgets
         /// Parameterless constructor for backward compatibility
         /// </summary>
         public TaskSummaryWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
+            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, Core.Services.TaskService.Instance)
         {
         }
 
@@ -94,7 +97,6 @@ namespace SuperTUI.Widgets
             RefreshData();
 
             // Subscribe to task events for real-time updates
-            var taskService = Core.Services.TaskService.Instance;
             taskService.TaskAdded += OnTaskChanged;
             taskService.TaskUpdated += OnTaskChanged;
             taskService.TaskDeleted += (id) => RefreshData();
@@ -108,7 +110,6 @@ namespace SuperTUI.Widgets
 
         private void RefreshData()
         {
-            var taskService = Core.Services.TaskService.Instance;
             var allTasks = taskService.GetAllTasks();
 
             Data = new TaskData
@@ -180,7 +181,6 @@ namespace SuperTUI.Widgets
         protected override void OnDispose()
         {
             // Unsubscribe from task events
-            var taskService = Core.Services.TaskService.Instance;
             if (taskService != null)
             {
                 taskService.TaskAdded -= OnTaskChanged;

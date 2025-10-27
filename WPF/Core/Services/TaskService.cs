@@ -351,6 +351,136 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
+        /// Get all subtasks recursively
+        /// </summary>
+        public List<Guid> GetAllSubtasksRecursive(Guid parentId)
+        {
+            var result = new List<Guid>();
+
+            lock (lockObject)
+            {
+                if (!subtaskIndex.ContainsKey(parentId))
+                    return result;
+
+                foreach (var childId in subtaskIndex[parentId])
+                {
+                    if (tasks.ContainsKey(childId) && !tasks[childId].Deleted)
+                    {
+                        result.Add(childId);
+                        result.AddRange(GetAllSubtasksRecursive(childId));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Move task up in sort order (swap with previous sibling)
+        /// </summary>
+        public void MoveTaskUp(Guid taskId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                    return;
+
+                var task = tasks[taskId];
+                var siblingTasks = GetSiblingTasks(task);
+
+                int currentIndex = siblingTasks.FindIndex(t => t.Id == taskId);
+                if (currentIndex <= 0)
+                    return; // Already at top
+
+                var previousTask = siblingTasks[currentIndex - 1];
+                int tempOrder = task.SortOrder;
+                task.SortOrder = previousTask.SortOrder;
+                previousTask.SortOrder = tempOrder;
+
+                task.UpdatedAt = DateTime.Now;
+                previousTask.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+                TaskUpdated?.Invoke(previousTask);
+
+                Logger.Instance?.Info("TaskService", $"Moved task up: {task.Title}");
+            }
+        }
+
+        /// <summary>
+        /// Move task down in sort order (swap with next sibling)
+        /// </summary>
+        public void MoveTaskDown(Guid taskId)
+        {
+            lock (lockObject)
+            {
+                if (!tasks.ContainsKey(taskId))
+                    return;
+
+                var task = tasks[taskId];
+                var siblingTasks = GetSiblingTasks(task);
+
+                int currentIndex = siblingTasks.FindIndex(t => t.Id == taskId);
+                if (currentIndex < 0 || currentIndex >= siblingTasks.Count - 1)
+                    return; // Already at bottom
+
+                var nextTask = siblingTasks[currentIndex + 1];
+                int tempOrder = task.SortOrder;
+                task.SortOrder = nextTask.SortOrder;
+                nextTask.SortOrder = tempOrder;
+
+                task.UpdatedAt = DateTime.Now;
+                nextTask.UpdatedAt = DateTime.Now;
+
+                ScheduleSave();
+                TaskUpdated?.Invoke(task);
+                TaskUpdated?.Invoke(nextTask);
+
+                Logger.Instance?.Info("TaskService", $"Moved task down: {task.Title}");
+            }
+        }
+
+        /// <summary>
+        /// Get sibling tasks (tasks with same parent)
+        /// </summary>
+        private List<TaskItem> GetSiblingTasks(TaskItem task)
+        {
+            Func<TaskItem, bool> siblingFilter = t =>
+                t.ParentTaskId == task.ParentTaskId &&
+                !t.Deleted;
+
+            return tasks.Values
+                .Where(siblingFilter)
+                .OrderBy(t => t.SortOrder)
+                .ThenBy(t => t.CreatedAt)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Normalize sort orders to sequential values (0, 100, 200, ...)
+        /// </summary>
+        public void NormalizeSortOrders(Guid? parentTaskId = null)
+        {
+            lock (lockObject)
+            {
+                var tasksToNormalize = tasks.Values
+                    .Where(t => t.ParentTaskId == parentTaskId && !t.Deleted)
+                    .OrderBy(t => t.SortOrder)
+                    .ThenBy(t => t.CreatedAt)
+                    .ToList();
+
+                for (int i = 0; i < tasksToNormalize.Count; i++)
+                {
+                    tasksToNormalize[i].SortOrder = i * 100;
+                }
+
+                ScheduleSave();
+                Logger.Instance?.Info("TaskService", $"Normalized sort orders for {tasksToNormalize.Count} tasks");
+            }
+        }
+
+        /// <summary>
         /// Schedule a debounced save operation
         /// </summary>
         private void ScheduleSave()

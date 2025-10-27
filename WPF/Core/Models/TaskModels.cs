@@ -38,6 +38,20 @@ namespace SuperTUI.Core.Models
     }
 
     /// <summary>
+    /// Task color theme for visual organization
+    /// </summary>
+    public enum TaskColorTheme
+    {
+        None = 0,      // Default theme
+        Red = 1,       // Urgent/Critical
+        Blue = 2,      // Work/Professional
+        Green = 3,     // Personal/Health
+        Yellow = 4,    // Learning/Development
+        Purple = 5,    // Creative/Projects
+        Orange = 6     // Social/Events
+    }
+
+    /// <summary>
     /// Task note model
     /// </summary>
     public class TaskNote
@@ -76,9 +90,14 @@ namespace SuperTUI.Core.Models
         // Tags
         public List<string> Tags { get; set; }
 
+        // Color theme
+        public TaskColorTheme ColorTheme { get; set; }
+
         // Subtask support
         public Guid? ParentTaskId { get; set; }
         public int SortOrder { get; set; } // For ordering subtasks
+        public int IndentLevel { get; set; } = 0; // For tree display
+        public bool IsExpanded { get; set; } = true; // For tree collapse/expand
 
         // Dependencies
         public List<Guid> DependsOn { get; set; } // Tasks that must be completed first
@@ -104,6 +123,7 @@ namespace SuperTUI.Core.Models
             UpdatedAt = DateTime.Now;
             Deleted = false;
             Tags = new List<string>();
+            ColorTheme = TaskColorTheme.None;
             SortOrder = 0;
             DependsOn = new List<Guid>();
             Recurrence = RecurrenceType.None;
@@ -235,6 +255,7 @@ namespace SuperTUI.Core.Models
                 Deleted = this.Deleted,
                 ProjectId = this.ProjectId,
                 Tags = new List<string>(this.Tags),
+                ColorTheme = this.ColorTheme,
                 ParentTaskId = this.ParentTaskId,
                 SortOrder = this.SortOrder,
                 DependsOn = new List<Guid>(this.DependsOn),

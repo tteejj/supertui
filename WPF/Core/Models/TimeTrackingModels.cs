@@ -262,6 +262,107 @@ namespace SuperTUI.Core.Models
     }
 
     /// <summary>
+    /// Task time session for real-time tracking
+    /// </summary>
+    public class TaskTimeSession
+    {
+        public Guid Id { get; set; }
+        public Guid TaskId { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public TimeSpan Duration => EndTime.HasValue ? EndTime.Value - StartTime : DateTime.Now - StartTime;
+        public bool IsActive => !EndTime.HasValue;
+        public string Notes { get; set; }
+
+        public TaskTimeSession()
+        {
+            Id = Guid.NewGuid();
+            TaskId = Guid.Empty;
+            StartTime = DateTime.Now;
+            Notes = string.Empty;
+        }
+
+        public void Stop()
+        {
+            if (!EndTime.HasValue)
+                EndTime = DateTime.Now;
+        }
+
+        public override string ToString()
+        {
+            var durationStr = EndTime.HasValue
+                ? $"{Duration.TotalMinutes:F1}m"
+                : $"{Duration.TotalMinutes:F1}m (active)";
+            return $"{StartTime:HH:mm} - {durationStr}";
+        }
+    }
+
+    /// <summary>
+    /// Pomodoro session state
+    /// </summary>
+    public enum PomodoroPhase
+    {
+        Idle,
+        Work,
+        ShortBreak,
+        LongBreak
+    }
+
+    /// <summary>
+    /// Pomodoro session tracking
+    /// </summary>
+    public class PomodoroSession
+    {
+        public Guid Id { get; set; }
+        public Guid TaskId { get; set; }
+        public PomodoroPhase Phase { get; set; }
+        public DateTime StartTime { get; set; }
+        public int WorkMinutes { get; set; }
+        public int ShortBreakMinutes { get; set; }
+        public int LongBreakMinutes { get; set; }
+        public int CompletedPomodoros { get; set; }
+        public bool IsActive { get; set; }
+
+        public PomodoroSession()
+        {
+            Id = Guid.NewGuid();
+            TaskId = Guid.Empty;
+            Phase = PomodoroPhase.Idle;
+            StartTime = DateTime.Now;
+            WorkMinutes = 25;
+            ShortBreakMinutes = 5;
+            LongBreakMinutes = 15;
+            CompletedPomodoros = 0;
+            IsActive = false;
+        }
+
+        public TimeSpan TimeRemaining
+        {
+            get
+            {
+                var elapsed = DateTime.Now - StartTime;
+                var phaseDuration = Phase switch
+                {
+                    PomodoroPhase.Work => TimeSpan.FromMinutes(WorkMinutes),
+                    PomodoroPhase.ShortBreak => TimeSpan.FromMinutes(ShortBreakMinutes),
+                    PomodoroPhase.LongBreak => TimeSpan.FromMinutes(LongBreakMinutes),
+                    _ => TimeSpan.Zero
+                };
+
+                var remaining = phaseDuration - elapsed;
+                return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+            }
+        }
+
+        public bool IsPhaseComplete => TimeRemaining == TimeSpan.Zero;
+
+        public override string ToString()
+        {
+            return $"{Phase}: {TimeRemaining.Minutes:D2}:{TimeRemaining.Seconds:D2} ({CompletedPomodoros} completed)";
+        }
+    }
+
+    /// <summary>
     /// Fiscal year time summary
     /// </summary>
     public class FiscalYearSummary
