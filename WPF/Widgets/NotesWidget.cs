@@ -77,13 +77,6 @@ namespace SuperTUI.Widgets
             CreateNewFile();  // Start with one untitled file
         }
 
-        /// <summary>
-        /// Parameterless constructor for backward compatibility
-        /// </summary>
-        public NotesWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
-        {
-        }
 
         private void BuildUI()
         {

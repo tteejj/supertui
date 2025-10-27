@@ -45,9 +45,6 @@ namespace SuperTUI.Widgets
         private StandardWidgetFrame frame;
         private StackPanel contentPanel;
 
-        /// <summary>
-        /// DI constructor - preferred for new code
-        /// </summary>
         public TaskSummaryWidget(
             ILogger logger,
             IThemeManager themeManager,
@@ -61,14 +58,6 @@ namespace SuperTUI.Widgets
 
             WidgetType = "TaskSummary";
             BuildUI();
-        }
-
-        /// <summary>
-        /// Parameterless constructor for backward compatibility
-        /// </summary>
-        public TaskSummaryWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, Core.Services.TaskService.Instance)
-        {
         }
 
         private void BuildUI()

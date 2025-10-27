@@ -38,11 +38,6 @@ namespace SuperTUI.Widgets
             filteredItems = new List<PaletteItem>();
         }
 
-        // Backward compatibility constructor
-        public CommandPaletteWidget() : this(Logger.Instance, ThemeManager.Instance)
-        {
-        }
-
         public override void Initialize()
         {
             theme = themeManager.CurrentTheme;

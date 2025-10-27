@@ -76,9 +76,6 @@ namespace SuperTUI.Widgets
             WidgetType = "TaskManagement";
         }
 
-        public TaskManagementWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance, TagService.Instance)
-        {
-        }
 
         public override void Initialize()
         {

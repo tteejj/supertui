@@ -43,10 +43,6 @@ namespace SuperTUI.Widgets
             WidgetType = "ThemeEditor";
         }
 
-        // Parameterless constructor for backward compatibility
-        public ThemeEditorWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
-        {
-        }
 
         public override void Initialize()
         {

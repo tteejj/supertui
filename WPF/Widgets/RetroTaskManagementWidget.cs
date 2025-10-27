@@ -62,9 +62,6 @@ namespace SuperTUI.Widgets
             WidgetType = "RetroTaskManagement";
         }
 
-        public RetroTaskManagementWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance, TagService.Instance)
-        {
-        }
 
         public override void Initialize()
         {

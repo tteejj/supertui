@@ -43,11 +43,6 @@ namespace SuperTUI.Widgets
             WidgetName = "Keyboard Shortcuts";
         }
 
-        // Backward compatibility constructor
-        public ShortcutHelpWidget() : this(Logger.Instance, ThemeManager.Instance)
-        {
-        }
-
         public override void Initialize()
         {
             LoadShortcuts();

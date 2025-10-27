@@ -26,30 +26,13 @@ namespace SuperTUI.Widgets
         private EditableListControl<TodoItem> todoList;
         private string dataFile;
 
-        public TodoWidget(ILogger logger, IThemeManager themeManager) : this(logger, themeManager, null)
-        {
-        }
-
-        public TodoWidget(ILogger logger, IThemeManager themeManager, string dataFilePath)
+        public TodoWidget(ILogger logger, IThemeManager themeManager, string dataFilePath = null)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.themeManager = themeManager ?? ThemeManager.Instance;
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             WidgetName = "Todo List";
             dataFile = dataFilePath ?? Path.Combine(
                 SuperTUI.Extensions.PortableDataDirectory.GetSuperTUIDataDirectory(), "todos.json");
-        }
-
-        // Backward compatibility constructors
-        public TodoWidget() : this(Logger.Instance, ThemeManager.Instance, null)
-        {
-        }
-
-        public TodoWidget(ILogger logger) : this(logger, ThemeManager.Instance, null)
-        {
-        }
-
-        public TodoWidget(string dataFilePath) : this(Logger.Instance, ThemeManager.Instance, dataFilePath)
-        {
         }
 
         public override void Initialize()

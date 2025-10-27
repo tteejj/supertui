@@ -59,9 +59,6 @@ namespace SuperTUI.Widgets
             WidgetName = "System Monitor";
         }
 
-        public SystemMonitorWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
-        {
-        }
 
         public override void Initialize()
         {

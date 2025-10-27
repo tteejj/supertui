@@ -67,9 +67,6 @@ namespace SuperTUI.Widgets
             WidgetType = "TimeTracking";
         }
 
-        public TimeTrackingWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, TaskService.Instance)
-        {
-        }
 
         public override void Initialize()
         {

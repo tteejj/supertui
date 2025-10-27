@@ -91,13 +91,6 @@ namespace SuperTUI.Widgets
             currentItems = new List<FileSystemInfo>();
         }
 
-        public FileExplorerWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, SecurityManager.Instance, null)
-        {
-        }
-
-        public FileExplorerWidget(string initialPath) : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance, SecurityManager.Instance, initialPath)
-        {
-        }
 
         public override void Initialize()
         {

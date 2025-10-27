@@ -36,9 +36,6 @@ namespace SuperTUI.Widgets
             }
         }
 
-        /// <summary>
-        /// DI constructor - preferred for new code
-        /// </summary>
         public CounterWidget(
             ILogger logger,
             IThemeManager themeManager,
@@ -50,14 +47,6 @@ namespace SuperTUI.Widgets
 
             WidgetType = "Counter";
             BuildUI();
-        }
-
-        /// <summary>
-        /// Parameterless constructor for backward compatibility
-        /// </summary>
-        public CounterWidget()
-            : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
-        {
         }
 
         private void BuildUI()

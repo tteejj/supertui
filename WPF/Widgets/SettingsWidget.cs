@@ -41,11 +41,6 @@ namespace SuperTUI.Widgets
             WidgetName = "Settings";
         }
 
-        // Backward compatibility constructor
-        public SettingsWidget() : this(Logger.Instance, ThemeManager.Instance, ConfigurationManager.Instance)
-        {
-        }
-
         public override void Initialize()
         {
             BuildUI();
