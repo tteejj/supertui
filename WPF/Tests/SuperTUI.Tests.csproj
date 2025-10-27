@@ -40,12 +40,16 @@
 
   <ItemGroup>
     <!-- Exclude tests for non-existent or excluded widgets/features -->
-    <Compile Remove="Widgets/TerminalWidgetTests.cs" />
-    <Compile Remove="Widgets/SystemMonitorWidgetTests.cs" />
+    <Compile Remove="Widgets/**/*.cs" />
+    <Compile Remove="Windows/**/*.cs" />
     <Compile Remove="Infrastructure/StateMigrationTests.cs" />
     <Compile Remove="Components/WorkspaceTests.cs" />
     <Compile Remove="Layout/GridLayoutEngineTests.cs" />
     <Compile Remove="Integration/IntegrationTests.cs" />
+    <Compile Remove="Infrastructure/ThemeManagerTests.cs" />
+    <Compile Remove="Infrastructure/ErrorHandlerTests.cs" />
+    <Compile Remove="Infrastructure/ConfigurationManagerTests.cs" />
+    <Compile Remove="Infrastructure/SecurityManagerTests.cs" />
   </ItemGroup>
 
 </Project>

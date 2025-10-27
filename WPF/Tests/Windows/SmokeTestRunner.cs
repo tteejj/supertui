@@ -62,11 +62,11 @@ namespace SuperTUI.Tests.Windows
             {
                 // Initialize infrastructure
                 var container = new DI.ServiceContainer();
-                DI.ServiceRegistration.RegisterServices(container);
+                container = DI.ServiceRegistration.RegisterAllServices();
 
-                var logger = container.Resolve<ILogger>();
-                var configManager = container.Resolve<IConfigurationManager>();
-                var themeManager = container.Resolve<IThemeManager>();
+                var logger = container.GetService<ILogger>();
+                var configManager = container.GetService<IConfigurationManager>();
+                var themeManager = container.GetService<IThemeManager>();
 
                 // Assert
                 logger.Should().NotBeNull();
@@ -92,8 +92,8 @@ namespace SuperTUI.Tests.Windows
             output.WriteLine("TEST: Widget Instantiation");
 
             var container = new DI.ServiceContainer();
-            DI.ServiceRegistration.RegisterServices(container);
-            var factory = container.Resolve<DI.WidgetFactory>();
+            container = DI.ServiceRegistration.RegisterAllServices();
+            var factory = container.GetService<DI.WidgetFactory>();
 
             var widgetTypes = new[]
             {
@@ -151,8 +151,8 @@ namespace SuperTUI.Tests.Windows
 
                 // Add widgets
                 var container = new DI.ServiceContainer();
-                DI.ServiceRegistration.RegisterServices(container);
-                var factory = container.Resolve<DI.WidgetFactory>();
+                container = DI.ServiceRegistration.RegisterAllServices();
+                var factory = container.GetService<DI.WidgetFactory>();
 
                 var widget1 = factory.CreateWidget("ClockWidget");
                 var widget2 = factory.CreateWidget("CounterWidget");
@@ -344,8 +344,8 @@ namespace SuperTUI.Tests.Windows
             try
             {
                 var container = new DI.ServiceContainer();
-                DI.ServiceRegistration.RegisterServices(container);
-                var factory = container.Resolve<DI.WidgetFactory>();
+                container = DI.ServiceRegistration.RegisterAllServices();
+                var factory = container.GetService<DI.WidgetFactory>();
 
                 // Create and dispose many widgets
                 var iterations = 100;
@@ -389,8 +389,8 @@ namespace SuperTUI.Tests.Windows
             try
             {
                 var container = new DI.ServiceContainer();
-                DI.ServiceRegistration.RegisterServices(container);
-                var factory = container.Resolve<DI.WidgetFactory>();
+                container = DI.ServiceRegistration.RegisterAllServices();
+                var factory = container.GetService<DI.WidgetFactory>();
 
                 var sw = Stopwatch.StartNew();
                 var iterations = 1000;

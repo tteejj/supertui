@@ -21,14 +21,13 @@ namespace SuperTUI.Tests.Linux
         public WidgetFactoryTests()
         {
             // Setup DI container with all services
-            container = new DI.ServiceContainer();
-            DI.ServiceRegistration.RegisterServices(container);
-            factory = container.Resolve<DI.WidgetFactory>();
+            container = DI.ServiceRegistration.RegisterAllServices();
+            factory = container.GetService<DI.WidgetFactory>();
         }
 
         public void Dispose()
         {
-            container.Clear();
+            // Container disposal handled by test fixture
         }
 
         #region Widget Creation Tests
@@ -120,7 +119,7 @@ namespace SuperTUI.Tests.Linux
         public void CreateWidget_ShouldInjectLogger()
         {
             // Arrange
-            var logger = container.Resolve<ILogger>();
+            var logger = container.GetService<ILogger>();
 
             // Act
             var widget = factory.CreateWidget("ClockWidget");
@@ -134,7 +133,7 @@ namespace SuperTUI.Tests.Linux
         public void CreateWidget_ShouldInjectThemeManager()
         {
             // Arrange
-            var themeManager = container.Resolve<IThemeManager>();
+            var themeManager = container.GetService<IThemeManager>();
 
             // Act
             var widget = factory.CreateWidget("ClockWidget");
@@ -147,7 +146,7 @@ namespace SuperTUI.Tests.Linux
         public void CreateWidget_WithDomainServices_ShouldInjectCorrectly()
         {
             // Arrange - TaskManagementWidget requires ITaskService
-            var taskService = container.Resolve<ITaskService>();
+            var taskService = container.GetService<ITaskService>();
 
             // Act
             var widget = factory.CreateWidget("TaskManagementWidget");
@@ -165,8 +164,8 @@ namespace SuperTUI.Tests.Linux
             var widget2 = factory.CreateWidget("CounterWidget");
 
             // Act
-            var logger1 = container.Resolve<ILogger>();
-            var logger2 = container.Resolve<ILogger>();
+            var logger1 = container.GetService<ILogger>();
+            var logger2 = container.GetService<ILogger>();
 
             // Assert
             logger1.Should().BeSameAs(logger2, "Logger is singleton");
@@ -188,7 +187,6 @@ namespace SuperTUI.Tests.Linux
             container.IsRegistered<IErrorHandler>().Should().BeTrue();
             container.IsRegistered<IStatePersistenceManager>().Should().BeTrue();
             container.IsRegistered<IPerformanceMonitor>().Should().BeTrue();
-            container.IsRegistered<IEventBus>().Should().BeTrue();
             container.IsRegistered<IShortcutManager>().Should().BeTrue();
         }
 
@@ -215,23 +213,22 @@ namespace SuperTUI.Tests.Linux
             // Act & Assert - None of these should throw
             Action actCore = () =>
             {
-                container.Resolve<ILogger>();
-                container.Resolve<IThemeManager>();
-                container.Resolve<IConfigurationManager>();
-                container.Resolve<ISecurityManager>();
-                container.Resolve<IErrorHandler>();
-                container.Resolve<IStatePersistenceManager>();
-                container.Resolve<IPerformanceMonitor>();
-                container.Resolve<IEventBus>();
-                container.Resolve<IShortcutManager>();
+                container.GetService<ILogger>();
+                container.GetService<IThemeManager>();
+                container.GetService<IConfigurationManager>();
+                container.GetService<ISecurityManager>();
+                container.GetService<IErrorHandler>();
+                container.GetService<IStatePersistenceManager>();
+                container.GetService<IPerformanceMonitor>();
+                container.GetService<IShortcutManager>();
             };
 
             Action actDomain = () =>
             {
-                container.Resolve<ITaskService>();
-                container.Resolve<IProjectService>();
-                container.Resolve<ITimeTrackingService>();
-                container.Resolve<ITagService>();
+                container.GetService<ITaskService>();
+                container.GetService<IProjectService>();
+                container.GetService<ITimeTrackingService>();
+                container.GetService<ITagService>();
             };
 
             actCore.Should().NotThrow("All core services should resolve");

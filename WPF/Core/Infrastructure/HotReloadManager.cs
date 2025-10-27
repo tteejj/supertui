@@ -57,6 +57,7 @@ namespace SuperTUI.Core.Infrastructure
         /// </summary>
         public void Start(IEnumerable<string> watchDirectories, string filePattern = "*.cs")
         {
+#if DEBUG
             if (isEnabled)
             {
                 Logger.Instance.Warning("HotReload", "Hot reload already started");
@@ -98,6 +99,10 @@ namespace SuperTUI.Core.Infrastructure
                 Logger.Instance.Error("HotReload", $"Failed to start hot reload: {ex.Message}");
                 Stop();
             }
+#else
+            // Hot reload is disabled in Release builds for security
+            Logger.Instance.Info("HotReload", "Hot reload is disabled in Release builds (development feature only)");
+#endif
         }
 
         /// <summary>
@@ -136,6 +141,7 @@ namespace SuperTUI.Core.Infrastructure
         /// </summary>
         public void Enable()
         {
+#if DEBUG
             if (isEnabled)
             {
                 Logger.Instance.Warning("HotReload", "Hot reload already enabled");
@@ -144,7 +150,11 @@ namespace SuperTUI.Core.Infrastructure
 
             // Note: Watchers must be started with Start() method
             isEnabled = true;
-            Logger.Instance.Info("HotReload", "Hot reload enabled");
+            Logger.Instance.Info("HotReload", "Hot reload enabled (DEBUG mode)");
+#else
+            // Hot reload is disabled in Release builds for security
+            Logger.Instance.Info("HotReload", "Hot reload is disabled in Release builds (development feature only)");
+#endif
         }
 
         /// <summary>
@@ -174,11 +184,16 @@ namespace SuperTUI.Core.Infrastructure
         /// </summary>
         public void Enable(params string[] watchPaths)
         {
+#if DEBUG
             Enable();
             if (watchPaths != null && watchPaths.Length > 0)
             {
                 Start(watchPaths);
             }
+#else
+            // Hot reload is disabled in Release builds for security
+            Logger.Instance.Info("HotReload", "Hot reload is disabled in Release builds (development feature only)");
+#endif
         }
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)

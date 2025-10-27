@@ -24,17 +24,16 @@ namespace SuperTUI.Tests.Linux
 
         public DomainServicesTests()
         {
-            container = new DI.ServiceContainer();
-            DI.ServiceRegistration.RegisterServices(container);
+            container = DI.ServiceRegistration.RegisterAllServices();
 
-            taskService = container.Resolve<ITaskService>();
-            projectService = container.Resolve<IProjectService>();
-            timeTrackingService = container.Resolve<ITimeTrackingService>();
+            taskService = container.GetService<ITaskService>();
+            projectService = container.GetService<IProjectService>();
+            timeTrackingService = container.GetService<ITimeTrackingService>();
         }
 
         public void Dispose()
         {
-            container.Clear();
+            // Container disposal handled by test fixture;
         }
 
         #region TaskService Tests
@@ -271,7 +270,7 @@ namespace SuperTUI.Tests.Linux
         }
 
         [Fact]
-        public void ProjectService_RemoveProject_ShouldDelete()
+        public void ProjectService_DeleteProject_ShouldDelete()
         {
             // Arrange
             var project = new Project
@@ -282,7 +281,7 @@ namespace SuperTUI.Tests.Linux
             projectService.AddProject(project);
 
             // Act
-            projectService.RemoveProject(project.Id);
+            projectService.DeleteProject(project.Id);
             var retrieved = projectService.GetProject(project.Id);
 
             // Assert
@@ -294,70 +293,23 @@ namespace SuperTUI.Tests.Linux
         #region TimeTrackingService Tests
 
         [Fact]
-        public void TimeTrackingService_Start_ShouldSucceed()
+        public void TimeTrackingService_AddEntry_ShouldSucceed()
         {
             // Arrange
-            var taskId = Guid.NewGuid();
-            var description = "Testing time tracking";
+            var entry = new TimeEntry
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = Guid.NewGuid(),
+                WeekEnding = DateTime.Now,
+                Hours = 8.5m
+            };
 
             // Act
-            Action act = () => timeTrackingService.Start(taskId, description);
+            var result = timeTrackingService.AddEntry(entry);
 
             // Assert
-            act.Should().NotThrow();
-        }
-
-        [Fact]
-        public void TimeTrackingService_Stop_ShouldSucceed()
-        {
-            // Arrange
-            var taskId = Guid.NewGuid();
-            timeTrackingService.Start(taskId, "Test");
-
-            // Act
-            Action act = () => timeTrackingService.Stop();
-
-            // Assert
-            act.Should().NotThrow();
-        }
-
-        [Fact]
-        public void TimeTrackingService_GetCurrent_ShouldReturnNullWhenNotTracking()
-        {
-            // Act
-            var active = timeTrackingService.GetCurrent();
-
-            // Assert
-            active.Should().BeNull();
-        }
-
-        [Fact]
-        public void TimeTrackingService_GetCurrent_ShouldReturnEntryWhenTracking()
-        {
-            // Arrange
-            var taskId = Guid.NewGuid();
-            timeTrackingService.Start(taskId, "Test tracking");
-
-            // Act
-            var active = timeTrackingService.GetCurrent();
-
-            // Assert
-            active.Should().NotBeNull();
-            active.TaskId.Should().Be(taskId);
-        }
-
-        [Fact]
-        public void TimeTrackingService_GetEntriesForTask_ShouldReturnList()
-        {
-            // Arrange
-            var taskId = Guid.NewGuid();
-
-            // Act
-            var entries = timeTrackingService.GetEntriesForTask(taskId);
-
-            // Assert
-            entries.Should().NotBeNull();
-            entries.Should().BeOfType<System.Collections.Generic.List<TimeEntry>>();
+            result.Should().NotBeNull();
+            result.Id.Should().Be(entry.Id);
         }
 
         [Fact]
@@ -368,6 +320,48 @@ namespace SuperTUI.Tests.Linux
 
             // Assert
             entries.Should().NotBeNull();
+            entries.Should().BeOfType<System.Collections.Generic.List<TimeEntry>>();
+        }
+
+        [Fact]
+        public void TimeTrackingService_AddAndRetrieve_ShouldPersist()
+        {
+            // Arrange
+            var entry = new TimeEntry
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = Guid.NewGuid(),
+                WeekEnding = DateTime.Now,
+                Hours = 5.0m
+            };
+
+            // Act
+            timeTrackingService.AddEntry(entry);
+            var retrieved = timeTrackingService.GetEntry(entry.Id);
+
+            // Assert
+            retrieved.Should().NotBeNull();
+            retrieved.Id.Should().Be(entry.Id);
+            retrieved.Hours.Should().Be(5.0m);
+        }
+
+        [Fact]
+        public void TimeTrackingService_GetEntriesForProject_ShouldFilter()
+        {
+            // Arrange
+            var projectId = Guid.NewGuid();
+            var entry1 = new TimeEntry { Id = Guid.NewGuid(), ProjectId = projectId, Hours = 8.0m };
+            var entry2 = new TimeEntry { Id = Guid.NewGuid(), ProjectId = Guid.NewGuid(), Hours = 4.0m };
+
+            timeTrackingService.AddEntry(entry1);
+            timeTrackingService.AddEntry(entry2);
+
+            // Act
+            var projectEntries = timeTrackingService.GetEntriesForProject(projectId);
+
+            // Assert
+            projectEntries.Should().Contain(e => e.Id == entry1.Id);
+            projectEntries.Should().NotContain(e => e.Id == entry2.Id);
         }
 
         #endregion
@@ -404,20 +398,31 @@ namespace SuperTUI.Tests.Linux
         public void TaskAndTimeTracking_Integration_ShouldWork()
         {
             // Arrange
+            var project = new Project { Id = Guid.NewGuid(), Name = "Test Project" };
+            projectService.AddProject(project);
+
             var task = new TaskItem
             {
                 Id = Guid.NewGuid(),
-                Title = "Tracked Task"
+                Title = "Tracked Task",
+                ProjectId = project.Id
             };
             taskService.AddTask(task);
 
             // Act
-            timeTrackingService.Start(task.Id, "Working on task");
-            var active = timeTrackingService.GetCurrent();
+            var entry = new TimeEntry
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = project.Id,
+                Hours = 8.0m,
+                WeekEnding = DateTime.Now
+            };
+            timeTrackingService.AddEntry(entry);
+
+            var projectEntries = timeTrackingService.GetEntriesForProject(project.Id);
 
             // Assert
-            active.Should().NotBeNull();
-            active.TaskId.Should().Be(task.Id);
+            projectEntries.Should().Contain(e => e.Id == entry.Id);
         }
 
         #endregion
