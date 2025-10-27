@@ -8,12 +8,25 @@ namespace SuperTUI.DI
 {
     /// <summary>
     /// Helper class to configure dependency injection
-    /// Call ConfigureServices() at application startup
+    /// Call RegisterAllServices() at application startup
     ///
     /// PHASE 3: Maximum DI Migration (2025-10-25)
     /// </summary>
     public static class ServiceRegistration
     {
+        /// <summary>
+        /// One-shot method to register and initialize all services
+        /// This is the main entry point for DI setup
+        /// Returns the configured ServiceContainer
+        /// </summary>
+        public static ServiceContainer RegisterAllServices(string configPath = null, string themesPath = null)
+        {
+            var container = new ServiceContainer();
+            ConfigureServices(container);
+            InitializeServices(container, configPath, themesPath);
+            return container;
+        }
+
         /// <summary>
         /// Configure all services for dependency injection
         /// PHASE 3: Maximum DI - Register all infrastructure and domain services

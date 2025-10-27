@@ -26,9 +26,13 @@ namespace SuperTUI.Core
         private Grid grid;
         private UIElement[] widgets = new UIElement[4]; // [0]=left, [1]=center-top, [2]=center-bottom, [3]=right
         private bool[] hasWidget = new bool[4];
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
-        public CodingLayoutEngine()
+        public CodingLayoutEngine(ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             grid = new Grid();
             Container = grid;
 
@@ -67,7 +71,7 @@ namespace SuperTUI.Core
 
         private void AddGridSplitters()
         {
-            var theme = ThemeManager.Instance?.CurrentTheme ?? Theme.CreateDarkTheme();
+            var theme = themeManager.CurrentTheme;
             var splitterBrush = new SolidColorBrush(theme.Border);
 
             // Vertical splitter between left and center (col 0|1)
@@ -211,7 +215,7 @@ namespace SuperTUI.Core
             }
             else
             {
-                Logger.Instance?.Warning("CodingLayoutEngine", $"All positions full, cannot add widget");
+                logger?.Warning("CodingLayoutEngine", $"All positions full, cannot add widget");
             }
         }
 
@@ -278,7 +282,7 @@ namespace SuperTUI.Core
 
             if (pos1 < 0 || pos2 < 0)
             {
-                Logger.Instance?.Warning("CodingLayoutEngine", "Cannot swap: one or both widgets not found");
+                logger?.Warning("CodingLayoutEngine", "Cannot swap: one or both widgets not found");
                 return;
             }
 

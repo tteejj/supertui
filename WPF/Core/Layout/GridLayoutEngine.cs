@@ -16,9 +16,13 @@ namespace SuperTUI.Core
     {
         private Grid grid;
         private bool enableSplitters;
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
-        public GridLayoutEngine(int rows, int columns, bool enableSplitters = false)
+        public GridLayoutEngine(int rows, int columns, bool enableSplitters, ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             grid = new Grid();
             Container = grid;
             this.enableSplitters = enableSplitters;
@@ -52,7 +56,7 @@ namespace SuperTUI.Core
 
         private void AddGridSplitters(int rows, int columns)
         {
-            var theme = ThemeManager.Instance.CurrentTheme;
+            var theme = themeManager.CurrentTheme;
             var splitterBrush = new SolidColorBrush(theme.Border);
 
             // Add vertical splitters between columns
@@ -193,7 +197,7 @@ namespace SuperTUI.Core
 
             if (!layoutParams.ContainsKey(widget1) || !layoutParams.ContainsKey(widget2))
             {
-                Logger.Instance?.Warning("GridLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
+                logger?.Warning("GridLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
                 return;
             }
 
@@ -236,7 +240,7 @@ namespace SuperTUI.Core
             if (params2.ColumnSpan.HasValue)
                 Grid.SetColumnSpan(widget2, params2.ColumnSpan.Value);
 
-            Logger.Instance?.Debug("GridLayoutEngine",
+            logger?.Debug("GridLayoutEngine",
                 $"Swapped widgets: ({params2.Row},{params2.Column}) <-> ({params1.Row},{params1.Column})");
         }
 

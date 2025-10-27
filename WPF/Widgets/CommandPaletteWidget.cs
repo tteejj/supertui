@@ -239,7 +239,7 @@ namespace SuperTUI.Widgets
                 Icon = "📊",
                 Action = () =>
                 {
-                    var stats = SuperTUI.Core.EventBus.Instance.GetStatistics();
+                    var stats = EventBus.GetStatistics();
                     logger.Info("Palette", $"Events: {stats.Published} published, {stats.Delivered} delivered");
                 }
             });

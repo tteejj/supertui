@@ -247,54 +247,45 @@ $statusClockTimer.Add_Tick({
 $statusClockTimer.Start()
 
 # ============================================================================
-# INITIALIZE INFRASTRUCTURE
+# INITIALIZE INFRASTRUCTURE WITH DEPENDENCY INJECTION
 # ============================================================================
 
-Write-Host "Initializing SuperTUI infrastructure..." -ForegroundColor Cyan
+Write-Host "Initializing SuperTUI infrastructure with DI..." -ForegroundColor Cyan
 
-# Initialize Logger
-$logger = [SuperTUI.Infrastructure.Logger]::Instance
+# Initialize ServiceContainer and register all services
+Write-Host "Setting up ServiceContainer..." -ForegroundColor Cyan
+$serviceContainer = [SuperTUI.DI.ServiceRegistration]::RegisterAllServices("$env:TEMP\SuperTUI-config.json", $null)
+Write-Host "ServiceContainer initialized and services registered" -ForegroundColor Green
+
+# Get services from container (already initialized by RegisterAllServices)
+$logger = $serviceContainer.GetService([SuperTUI.Infrastructure.ILogger])
+$configManager = $serviceContainer.GetService([SuperTUI.Infrastructure.IConfigurationManager])
+$themeManager = $serviceContainer.GetService([SuperTUI.Infrastructure.IThemeManager])
+$securityManager = $serviceContainer.GetService([SuperTUI.Infrastructure.ISecurityManager])
+$errorHandler = $serviceContainer.GetService([SuperTUI.Infrastructure.IErrorHandler])
+$eventBus = $serviceContainer.GetService([SuperTUI.Core.IEventBus])
+$stateManager = $serviceContainer.GetService([SuperTUI.Extensions.IStatePersistenceManager])
+Write-Host "Core services resolved from container" -ForegroundColor Green
+
+# Add additional log sink for console output
 $fileLogSink = New-Object SuperTUI.Infrastructure.FileLogSink("$env:TEMP", "SuperTUI")
 $logger.AddSink($fileLogSink)
-$logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Debug)
-Write-Host "Logger initialized with Debug level" -ForegroundColor Green
-
-# Initialize ConfigurationManager
-$configManager = [SuperTUI.Infrastructure.ConfigurationManager]::Instance
-$configManager.Initialize("$env:TEMP\SuperTUI-config.json")
-
-# Initialize ThemeManager
-$themeManager = [SuperTUI.Infrastructure.ThemeManager]::Instance
-$themeManager.Initialize($null)  # Uses default built-in themes
+Write-Host "File log sink added" -ForegroundColor Green
 
 # Apply saved theme (or default to "Cyberpunk" to showcase new effects)
 $savedThemeName = $configManager.Get("UI.Theme", "Cyberpunk")
 $themeManager.ApplyTheme($savedThemeName)
 Write-Host "Applied theme: $savedThemeName" -ForegroundColor Green
 
-# Initialize other infrastructure
-$errorHandler = [SuperTUI.Infrastructure.ErrorHandler]::Instance
-$securityManager = [SuperTUI.Infrastructure.SecurityManager]::Instance
-$securityManager.Initialize()
-
-# Initialize ExcelMappingService (will create default profiles if none exist)
-$excelMappingService = [SuperTUI.Core.Services.ExcelMappingService]::Instance
-$excelMappingService.Initialize()
-
-# Initialize EventBus
-$eventBus = [SuperTUI.Core.EventBus]::Instance
-Write-Host "EventBus initialized" -ForegroundColor Green
-
-# Initialize ApplicationContext
+# Get ApplicationContext (singleton, not in DI container)
 $appContext = [SuperTUI.Infrastructure.ApplicationContext]::Instance
 Write-Host "ApplicationContext initialized" -ForegroundColor Green
 
-# Initialize StatePersistenceManager
-$stateManager = [SuperTUI.Extensions.StatePersistenceManager]::Instance
-$stateManager.Initialize("$env:TEMP\SuperTUI-state.json")
-Write-Host "StatePersistenceManager initialized" -ForegroundColor Green
+# Create WidgetFactory for dependency injection
+$widgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
+Write-Host "WidgetFactory created" -ForegroundColor Green
 
-Write-Host "Infrastructure initialized" -ForegroundColor Green
+Write-Host "Infrastructure initialized with DI" -ForegroundColor Green
 
 # ============================================================================
 # SHORTCUT OVERLAY
@@ -465,18 +456,18 @@ $shortcutManager = New-Object SuperTUI.Core.ShortcutManager
 Write-Host "Setting up workspaces..." -ForegroundColor Cyan
 
 # Workspace 1: Dashboard (Flexible i3-like layout)
-$workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine
-$workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout)
+$workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine($logger, $themeManager)
+$workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout, $logger, $themeManager)
 
 # Add Clock widget to slot 0 (top-left)
-$clockWidget = New-Object SuperTUI.Widgets.ClockWidget
+$clockWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ClockWidget])
 $clockWidget.WidgetName = "Clock"
 $clockWidget.Initialize()
 $workspace1Layout.SetWidget(0, $clockWidget)
 $workspace1.Widgets.Add($clockWidget)
 
 # Add TaskSummary widget to slot 1 (top-right)
-$taskSummary = New-Object SuperTUI.Widgets.TaskSummaryWidget
+$taskSummary = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskSummaryWidget])
 $taskSummary.WidgetName = "TaskSummary"
 $taskSummary.Initialize()
 $workspace1Layout.SetWidget(1, $taskSummary)
@@ -488,10 +479,10 @@ $workspaceManager.AddWorkspace($workspace1)
 
 # Workspace 2: Projects (Full Project Management)
 $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
-$workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout)
+$workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout, $logger, $themeManager)
 
 # Add TaskManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = New-Object SuperTUI.Widgets.TaskManagementWidget
+$projectManagementWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskManagementWidget])
 $projectManagementWidget.WidgetName = "TaskManagement"
 $projectManagementWidget.Initialize()
 $ws2Params = New-Object SuperTUI.Core.LayoutParams
@@ -502,10 +493,10 @@ $workspaceManager.AddWorkspace($workspace2)
 
 # Workspace 3: Kanban Board (3-column task board)
 $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
-$workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout)
+$workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout, $logger, $themeManager)
 
 # Add KanbanBoardWidget (Todo, In Progress, Done columns)
-$kanbanWidget = New-Object SuperTUI.Widgets.KanbanBoardWidget
+$kanbanWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.KanbanBoardWidget])
 $kanbanWidget.WidgetName = "KanbanBoard"
 $kanbanWidget.Initialize()
 $ws3Params = New-Object SuperTUI.Core.LayoutParams
@@ -516,10 +507,10 @@ $workspaceManager.AddWorkspace($workspace3)
 
 # Workspace 4: Agenda (Time-grouped task view)
 $workspace4Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
-$workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout)
+$workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout, $logger, $themeManager)
 
 # Add AgendaWidget (Overdue, Today, Tomorrow, This Week, Later, No Due Date)
-$agendaWidget = New-Object SuperTUI.Widgets.AgendaWidget
+$agendaWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.AgendaWidget])
 $agendaWidget.WidgetName = "Agenda"
 $agendaWidget.Initialize()
 $ws4Params = New-Object SuperTUI.Core.LayoutParams
@@ -530,10 +521,10 @@ $workspaceManager.AddWorkspace($workspace4)
 
 # Workspace 5: Project Analytics (Stats and metrics)
 $workspace5Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
-$workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout)
+$workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout, $logger, $themeManager)
 
 # Add ProjectStatsWidget (Metrics, charts, recent activity)
-$statsWidget = New-Object SuperTUI.Widgets.ProjectStatsWidget
+$statsWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ProjectStatsWidget])
 $statsWidget.WidgetName = "ProjectStats"
 $statsWidget.Initialize()
 $ws5Params = New-Object SuperTUI.Core.LayoutParams
@@ -542,44 +533,87 @@ $workspace5.Widgets.Add($statsWidget)
 
 $workspaceManager.AddWorkspace($workspace5)
 
-# Workspace 6: Excel Integration (Import/Export/Automation)
-$workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(3, 2)
-$workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout)
-
-# Row 0: Import widget (left) and Export widget (right)
-$importWidget = New-Object SuperTUI.Widgets.ExcelImportWidget
-$importWidget.WidgetName = "ExcelImport"
-$importWidget.Initialize()
-$ws6Params1 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params1.Row = 0
-$ws6Params1.Column = 0
-$workspace6Layout.AddChild($importWidget, $ws6Params1)
-$workspace6.Widgets.Add($importWidget)
-
-$exportWidget = New-Object SuperTUI.Widgets.ExcelExportWidget
-$exportWidget.WidgetName = "ExcelExport"
-$exportWidget.Initialize()
-$ws6Params2 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params2.Row = 0
-$ws6Params2.Column = 1
-$workspace6Layout.AddChild($exportWidget, $ws6Params2)
-$workspace6.Widgets.Add($exportWidget)
-
-# Row 1-2: Automation widget (spans both columns and 2 rows for more space)
-$automationWidget = New-Object SuperTUI.Widgets.ExcelAutomationWidget
-$automationWidget.WidgetName = "ExcelAutomation"
-$automationWidget.Initialize()
-$ws6Params3 = New-Object SuperTUI.Core.LayoutParams
-$ws6Params3.Row = 1
-$ws6Params3.Column = 0
-$ws6Params3.ColumnSpan = 2
-$ws6Params3.RowSpan = 2
-$workspace6Layout.AddChild($automationWidget, $ws6Params3)
-$workspace6.Widgets.Add($automationWidget)
-
-$workspaceManager.AddWorkspace($workspace6)
+# Note: Workspace 6 (Excel Integration) has been removed as Excel widgets are not currently available
 
 Write-Host "Workspaces created!" -ForegroundColor Green
+
+# ============================================================================
+# STATE RESTORATION
+# ============================================================================
+
+Write-Host "`nRestoring workspace states..." -ForegroundColor Cyan
+
+foreach ($ws in $workspaceManager.Workspaces) {
+    try {
+        # Try to load saved state for this workspace
+        $stateKey = "workspace_$($ws.Index)"
+        $savedState = $null
+
+        # StatePersistenceManager doesn't have a simple Get method, so check file directly
+        $stateFile = Join-Path $env:LOCALAPPDATA "SuperTUI\state\$stateKey.json"
+
+        if (Test-Path $stateFile) {
+            $savedState = Get-Content $stateFile -Raw | ConvertFrom-Json
+            $logger.Debug("StateManagement", "Found saved state for workspace: $($ws.Name)")
+
+            # Level 1: Restore widget presence (recreate widgets)
+            if ($savedState.Widgets -and $savedState.Widgets.Count -gt 0) {
+                Write-Host "  Restoring $($savedState.Widgets.Count) widgets to workspace: $($ws.Name)" -ForegroundColor Gray
+
+                foreach ($widgetState in $savedState.Widgets) {
+                    try {
+                        # Get widget type
+                        $widgetTypeName = $widgetState.WidgetType
+                        if (-not $widgetTypeName) {
+                            $logger.Warn("StateManagement", "Widget state missing WidgetType, skipping")
+                            continue
+                        }
+
+                        # Try to get the Type
+                        $widgetType = [Type]::GetType($widgetTypeName)
+                        if (-not $widgetType) {
+                            $logger.Warn("StateManagement", "Widget type not found: $widgetTypeName (widget may have been removed)")
+                            continue
+                        }
+
+                        # Create widget via WidgetFactory (DI)
+                        $widget = $widgetFactory.CreateWidget($widgetType)
+
+                        if ($widget) {
+                            # Initialize widget
+                            $widget.Initialize()
+
+                            # Level 2: Restore widget position (if layout supports it)
+                            # For now, just add to workspace - layout engines will position automatically
+                            # TODO: Restore specific grid slots for DashboardLayoutEngine
+
+                            # Add to workspace
+                            $ws.AddWidget($widget)
+
+                            $logger.Debug("StateManagement", "Restored widget: $($widget.WidgetName)")
+                        }
+                    }
+                    catch {
+                        $logger.Error("StateManagement", "Failed to restore widget: $($widgetState.WidgetType) - $_")
+                    }
+                }
+
+                Write-Host "    Restored widgets successfully" -ForegroundColor Green
+            }
+            else {
+                $logger.Debug("StateManagement", "No widgets in saved state for workspace: $($ws.Name)")
+            }
+        }
+        else {
+            $logger.Debug("StateManagement", "No saved state found for workspace: $($ws.Name)")
+        }
+    }
+    catch {
+        $logger.Error("StateManagement", "Failed to restore workspace $($ws.Name): $_")
+    }
+}
+
+Write-Host "State restoration complete`n" -ForegroundColor Green
 
 # ============================================================================
 # KEYBOARD SHORTCUTS (i3-style with Windows key as $mod)

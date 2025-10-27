@@ -208,7 +208,7 @@ namespace SuperTUI.Widgets
                 UpdateStatus($"{dirs.Count} directories, {files.Count} files", theme.ForegroundSecondary);
 
                 // Publish directory changed event
-                SuperTUI.Core.EventBus.Instance.Publish(new DirectoryChangedEvent
+                EventBus.Publish(new DirectoryChangedEvent
                 {
                     OldPath = null,
                     NewPath = currentPath,
@@ -374,7 +374,7 @@ namespace SuperTUI.Widgets
                 }
 
                 // Step 4: Publish file selected event (other widgets can listen)
-                SuperTUI.Core.EventBus.Instance.Publish(new FileSelectedEvent
+                EventBus.Publish(new FileSelectedEvent
                 {
                     FilePath = file.FullName,
                     FileName = file.Name,

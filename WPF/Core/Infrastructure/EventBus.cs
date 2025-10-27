@@ -47,12 +47,37 @@ namespace SuperTUI.Core
     }
 
     /// <summary>
-    /// Enhanced event bus for inter-widget communication
-    /// Supports strong typing, weak references, priorities, and filtering
+    /// Enhanced event bus for inter-widget communication.
+    /// Supports strong typing, weak references, priorities, and filtering.
+    ///
+    /// ARCHITECTURE NOTE: EventBus uses a hybrid singleton/DI pattern.
+    ///
+    /// Why Singleton?
+    /// - Event bus is conceptually a single global message channel
+    /// - Multiple instances would create communication islands (bad)
+    /// - Subscribers on EventBus1 wouldn't see events from EventBus2
+    /// - This defeats the purpose of having a centralized event system
+    ///
+    /// Why Also Registered in DI?
+    /// - Provides IEventBus interface for testing/mocking
+    /// - ServiceContainer returns the singleton instance
+    /// - Services can inject IEventBus when needed
+    ///
+    /// Widget Usage:
+    /// - Widgets should use the inherited EventBus property from WidgetBase
+    /// - DO: EventBus.Publish(event)
+    /// - DON'T: EventBus.Instance.Publish(event) (verbose, breaks encapsulation)
+    ///
+    /// This pattern is standard for event aggregators (see: Prism EventAggregator, MediatR).
     /// </summary>
     public class EventBus : IEventBus
     {
         private static EventBus instance;
+
+        /// <summary>
+        /// Singleton instance for infrastructure use.
+        /// Widgets should use EventBus property from WidgetBase.
+        /// </summary>
         public static EventBus Instance => instance ??= new EventBus();
 
         private readonly Dictionary<Type, List<Subscription>> typedSubscriptions = new Dictionary<Type, List<Subscription>>();

@@ -154,18 +154,6 @@ namespace SuperTUI.Core.Components
                 },
                 new WidgetOption
                 {
-                    Name = "Todo List",
-                    Description = "Task list with add/edit/delete and persistence",
-                    TypeName = "SuperTUI.Widgets.TodoWidget"
-                },
-                new WidgetOption
-                {
-                    Name = "Git Status",
-                    Description = "Git repository status - branch, changes, commits",
-                    TypeName = "SuperTUI.Widgets.GitStatusWidget"
-                },
-                new WidgetOption
-                {
                     Name = "File Explorer",
                     Description = "Browse directories and files",
                     TypeName = "SuperTUI.Widgets.FileExplorerWidget"

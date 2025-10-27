@@ -13,12 +13,16 @@ namespace SuperTUI.Core
     public class ErrorBoundary : ContentControl
     {
         private readonly WidgetBase widget;
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
         private bool hasError = false;
         private Exception lastException;
 
-        public ErrorBoundary(WidgetBase widget)
+        public ErrorBoundary(WidgetBase widget, ILogger logger, IThemeManager themeManager)
         {
             this.widget = widget;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
 
             try
             {
@@ -93,7 +97,7 @@ namespace SuperTUI.Core
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ErrorBoundary",
+                logger?.Error("ErrorBoundary",
                     $"Error disposing widget {widget?.WidgetName ?? "Unknown"}: {ex.Message}", ex);
             }
         }
@@ -126,7 +130,7 @@ namespace SuperTUI.Core
                 // Try to reinitialize
                 widget.Initialize();
 
-                Logger.Instance?.Info("ErrorBoundary", $"Successfully recovered widget: {widget.WidgetName}");
+                logger?.Info("ErrorBoundary", $"Successfully recovered widget: {widget.WidgetName}");
                 return true;
             }
             catch (Exception ex)
@@ -142,7 +146,7 @@ namespace SuperTUI.Core
             lastException = ex;
 
             // Log the error
-            Logger.Instance?.Error("ErrorBoundary",
+            logger?.Error("ErrorBoundary",
                 $"Widget error in {phase}: {widget?.WidgetName ?? "Unknown"} - {ex.Message}", ex);
 
             // Replace content with error UI
@@ -151,7 +155,7 @@ namespace SuperTUI.Core
 
         private UIElement CreateErrorUI(string phase, Exception ex)
         {
-            var theme = ThemeManager.Instance?.CurrentTheme ?? Theme.CreateDarkTheme();
+            var theme = themeManager.CurrentTheme;
 
             var border = new Border
             {

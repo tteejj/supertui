@@ -274,7 +274,7 @@ namespace SuperTUI.Widgets
                 }
 
                 // Publish system resources event
-                EventBus.Instance.Publish(new SystemResourcesChangedEvent
+                EventBus.Publish(new SystemResourcesChangedEvent
                 {
                     CpuUsagePercent = lastCpu,
                     MemoryUsedBytes = (long)(lastRam * GetTotalPhysicalMemory() * 1024 * 1024 / 100),
@@ -283,7 +283,7 @@ namespace SuperTUI.Widgets
                 });
 
                 // Publish network activity event
-                EventBus.Instance.Publish(new NetworkActivityEvent
+                EventBus.Publish(new NetworkActivityEvent
                 {
                     BytesSent = lastNetworkSent,
                     BytesReceived = lastNetworkReceived,

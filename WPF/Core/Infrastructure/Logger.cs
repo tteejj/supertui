@@ -473,10 +473,10 @@ namespace SuperTUI.Infrastructure
         private static Logger instance;
 
         /// <summary>
-        /// Singleton instance - DEPRECATED
-        /// PHASE 3: Use dependency injection instead
+        /// Singleton instance for infrastructure use.
+        /// Widgets should use injected ILogger. Infrastructure (DI container,
+        /// error handlers, bootstrap) may use Instance when DI is unavailable.
         /// </summary>
-        [Obsolete("Use dependency injection instead of Logger.Instance. Get ILogger from ServiceContainer.", error: false)]
         public static Logger Instance => instance ??= new Logger();
 
         private readonly List<ILogSink> sinks = new List<ILogSink>();

@@ -25,9 +25,13 @@ namespace SuperTUI.Core
         private Grid grid;
         private UIElement mainWidget = null;
         private UIElement sidebarWidget = null;
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
-        public FocusLayoutEngine()
+        public FocusLayoutEngine(ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             grid = new Grid();
             Container = grid;
 
@@ -56,7 +60,7 @@ namespace SuperTUI.Core
 
         private void AddGridSplitter()
         {
-            var theme = ThemeManager.Instance?.CurrentTheme ?? Theme.CreateDarkTheme();
+            var theme = themeManager.CurrentTheme;
             var splitterBrush = new SolidColorBrush(theme.Border);
 
             var splitter = new GridSplitter
@@ -160,7 +164,7 @@ namespace SuperTUI.Core
             }
             else
             {
-                Logger.Instance?.Warning("FocusLayoutEngine", $"Invalid position {position}, using sidebar");
+                logger?.Warning("FocusLayoutEngine", $"Invalid position {position}, using sidebar");
                 SetSidebarWidget(child);
             }
 
@@ -225,7 +229,7 @@ namespace SuperTUI.Core
             if ((widget1 != mainWidget && widget1 != sidebarWidget) ||
                 (widget2 != mainWidget && widget2 != sidebarWidget))
             {
-                Logger.Instance?.Warning("FocusLayoutEngine", "Cannot swap: one or both widgets not found");
+                logger?.Warning("FocusLayoutEngine", "Cannot swap: one or both widgets not found");
                 return;
             }
 

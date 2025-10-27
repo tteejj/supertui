@@ -20,6 +20,8 @@ namespace SuperTUI.Core
         public List<WidgetBase> Widgets { get; set; } = new List<WidgetBase>();
         public List<ScreenBase> Screens { get; set; } = new List<ScreenBase>();
         private List<ErrorBoundary> errorBoundaries = new List<ErrorBoundary>();
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
         private bool isActive = false;
         private UIElement focusedElement;
@@ -32,11 +34,13 @@ namespace SuperTUI.Core
         private LayoutParams savedLayoutParams = null;
         private Grid fullscreenContainer = null;
 
-        public Workspace(string name, int index, LayoutEngine layout)
+        public Workspace(string name, int index, LayoutEngine layout, ILogger logger, IThemeManager themeManager)
         {
             Name = name;
             Index = index;
             Layout = layout;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
         }
 
         public void AddWidget(WidgetBase widget, LayoutParams layoutParams)
@@ -44,7 +48,7 @@ namespace SuperTUI.Core
             Widgets.Add(widget);
 
             // Wrap widget in error boundary
-            var errorBoundary = new ErrorBoundary(widget);
+            var errorBoundary = new ErrorBoundary(widget, logger, themeManager);
             errorBoundaries.Add(errorBoundary);
 
             // Add error boundary to layout instead of widget directly
@@ -86,7 +90,7 @@ namespace SuperTUI.Core
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance?.Error("Workspace", $"Error activating screen: {ex.Message}", ex);
+                    logger?.Error("Workspace", $"Error activating screen: {ex.Message}", ex);
                 }
             }
 
@@ -115,7 +119,7 @@ namespace SuperTUI.Core
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance?.Error("Workspace", $"Error deactivating screen: {ex.Message}", ex);
+                    logger?.Error("Workspace", $"Error deactivating screen: {ex.Message}", ex);
                 }
             }
 
@@ -188,7 +192,7 @@ namespace SuperTUI.Core
             if (!currentPosition.HasValue)
             {
                 // No position info, fall back to cycling
-                Logger.Instance?.Debug("Workspace", "No position info for focused element, falling back to cycle");
+                logger?.Debug("Workspace", "No position info for focused element, falling back to cycle");
                 if (direction == FocusDirection.Right || direction == FocusDirection.Down)
                     FocusNext();
                 else
@@ -269,11 +273,11 @@ namespace SuperTUI.Core
             if (bestCandidate != null)
             {
                 FocusElement(bestCandidate);
-                Logger.Instance?.Debug("Workspace", $"Focused element in direction {direction}");
+                logger?.Debug("Workspace", $"Focused element in direction {direction}");
             }
             else
             {
-                Logger.Instance?.Debug("Workspace", $"No element found in direction {direction}");
+                logger?.Debug("Workspace", $"No element found in direction {direction}");
             }
         }
 
@@ -534,7 +538,7 @@ namespace SuperTUI.Core
                 FocusElement(focusableElements[0]);
             }
 
-            Logger.Instance?.Info("Workspace", $"Removed widget: {focused.WidgetName}");
+            logger?.Info("Workspace", $"Removed widget: {focused.WidgetName}");
         }
 
         /// <summary>
@@ -546,7 +550,7 @@ namespace SuperTUI.Core
             var focusedWidget = GetFocusedWidget();
             if (focusedWidget == null)
             {
-                Logger.Instance?.Debug("Workspace", "Cannot move widget: no widget focused");
+                logger?.Debug("Workspace", "Cannot move widget: no widget focused");
                 return;
             }
 
@@ -554,7 +558,7 @@ namespace SuperTUI.Core
             var focusedBoundary = errorBoundaries.FirstOrDefault(eb => eb.Content == focusedWidget);
             if (focusedBoundary == null)
             {
-                Logger.Instance?.Warning("Workspace", "Cannot move widget: error boundary not found");
+                logger?.Warning("Workspace", "Cannot move widget: error boundary not found");
                 return;
             }
 
@@ -571,14 +575,14 @@ namespace SuperTUI.Core
             }
             else
             {
-                Logger.Instance?.Warning("Workspace", $"Widget movement not supported for layout type: {Layout?.GetType().Name}");
+                logger?.Warning("Workspace", $"Widget movement not supported for layout type: {Layout?.GetType().Name}");
                 return;
             }
 
             // If no target found, log and return
             if (targetElement == null)
             {
-                Logger.Instance?.Debug("Workspace", $"No widget found in direction {direction} to swap with");
+                logger?.Debug("Workspace", $"No widget found in direction {direction} to swap with");
                 return;
             }
 
@@ -592,7 +596,7 @@ namespace SuperTUI.Core
                 dashboardLayout2.SwapWidgets(focusedBoundary, targetElement);
             }
 
-            Logger.Instance?.Info("Workspace", $"Moved widget '{focusedWidget.WidgetName}' {direction}");
+            logger?.Info("Workspace", $"Moved widget '{focusedWidget.WidgetName}' {direction}");
         }
 
         /// <summary>
@@ -627,7 +631,7 @@ namespace SuperTUI.Core
                 // Enter fullscreen mode
                 if (focused == null)
                 {
-                    Logger.Instance?.Debug("Workspace", "No widget focused - cannot enter fullscreen");
+                    logger?.Debug("Workspace", "No widget focused - cannot enter fullscreen");
                     return;
                 }
 
@@ -635,7 +639,7 @@ namespace SuperTUI.Core
                 var boundary = errorBoundaries.FirstOrDefault(eb => eb.GetWidget() == focused);
                 if (boundary == null)
                 {
-                    Logger.Instance?.Error("Workspace", $"Could not find error boundary for widget: {focused.WidgetName}");
+                    logger?.Error("Workspace", $"Could not find error boundary for widget: {focused.WidgetName}");
                     return;
                 }
 
@@ -643,7 +647,7 @@ namespace SuperTUI.Core
                 savedLayoutParams = Layout.GetLayoutParams(boundary);
                 if (savedLayoutParams == null)
                 {
-                    Logger.Instance?.Warning("Workspace", $"No layout params found for widget: {focused.WidgetName}");
+                    logger?.Warning("Workspace", $"No layout params found for widget: {focused.WidgetName}");
                 }
 
                 // Remove widget from current layout
@@ -654,7 +658,7 @@ namespace SuperTUI.Core
                 fullscreenContainer.Children.Add(boundary);
 
                 // Add visual indicator border
-                var theme = ThemeManager.Instance?.CurrentTheme ?? Theme.CreateDarkTheme();
+                var theme = themeManager.CurrentTheme;
                 var border = new Border
                 {
                     BorderBrush = new SolidColorBrush(theme.Primary),
@@ -672,14 +676,14 @@ namespace SuperTUI.Core
                 fullscreenWidget = focused;
                 fullscreenBoundary = boundary;
 
-                Logger.Instance?.Info("Workspace", $"Entered fullscreen mode for widget: {focused.WidgetName}");
+                logger?.Info("Workspace", $"Entered fullscreen mode for widget: {focused.WidgetName}");
             }
             else
             {
                 // Exit fullscreen mode
                 if (fullscreenWidget == null || fullscreenBoundary == null)
                 {
-                    Logger.Instance?.Error("Workspace", "Fullscreen state corrupted - resetting");
+                    logger?.Error("Workspace", "Fullscreen state corrupted - resetting");
                     isFullscreen = false;
                     return;
                 }
@@ -733,7 +737,7 @@ namespace SuperTUI.Core
                     FocusElement(focused);
                 }
 
-                Logger.Instance?.Info("Workspace", "Exited fullscreen mode");
+                logger?.Info("Workspace", "Exited fullscreen mode");
             }
         }
 
@@ -762,11 +766,11 @@ namespace SuperTUI.Core
             if (Layout is TilingLayoutEngine tilingLayout)
             {
                 tilingLayout.SetMode(mode);
-                Logger.Instance?.Info("Workspace", $"Layout mode changed to: {mode}");
+                logger?.Info("Workspace", $"Layout mode changed to: {mode}");
             }
             else
             {
-                Logger.Instance?.Warning("Workspace", $"Cannot set layout mode: Layout is {Layout?.GetType().Name ?? "null"}, not TilingLayoutEngine");
+                logger?.Warning("Workspace", $"Cannot set layout mode: Layout is {Layout?.GetType().Name ?? "null"}, not TilingLayoutEngine");
             }
         }
 
@@ -812,7 +816,7 @@ namespace SuperTUI.Core
         /// </summary>
         public void Dispose()
         {
-            Logger.Instance?.Info("Workspace", $"Disposing workspace: {Name}");
+            logger?.Info("Workspace", $"Disposing workspace: {Name}");
 
             // Safely dispose all widgets through error boundaries
             foreach (var errorBoundary in errorBoundaries.ToList())
@@ -832,7 +836,7 @@ namespace SuperTUI.Core
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance?.Error("Workspace", $"Error disposing screen: {ex.Message}", ex);
+                    logger?.Error("Workspace", $"Error disposing screen: {ex.Message}", ex);
                 }
             }
 

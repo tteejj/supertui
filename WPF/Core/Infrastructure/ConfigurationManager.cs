@@ -52,10 +52,9 @@ namespace SuperTUI.Infrastructure
         private static ConfigurationManager instance;
 
         /// <summary>
-        /// Singleton instance - DEPRECATED in Phase 3
-        /// Use dependency injection: Get IConfigurationManager from ServiceContainer
+        /// Singleton instance for infrastructure use.
+        /// Widgets should use injected IConfigurationManager. Infrastructure may use Instance when DI is unavailable.
         /// </summary>
-        [Obsolete("Use dependency injection instead. Get IConfigurationManager from ServiceContainer.", error: false)]
         public static ConfigurationManager Instance => instance ??= new ConfigurationManager();
 
         private Dictionary<string, ConfigValue> config = new Dictionary<string, ConfigValue>();

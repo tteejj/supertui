@@ -978,6 +978,72 @@ namespace SuperTUI.Widgets
                 }
                 e.Handled = true;
             }
+
+            // F2 to edit selected task (Windows standard)
+            if (e.Key == Key.F2)
+            {
+                if (selectedTask != null && treeTaskListControl != null)
+                {
+                    // Focus the tree control to enable inline editing
+                    treeTaskListControl.Focus();
+                    // Note: TreeTaskListControl should implement F2 inline edit internally
+                }
+                e.Handled = true;
+            }
+
+            // Delete key to remove selected task
+            if (e.Key == Key.Delete)
+            {
+                if (selectedTask != null)
+                {
+                    try
+                    {
+                        var result = MessageBox.Show(
+                            $"Delete task '{selectedTask.Title}'?",
+                            "Confirm Delete",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            taskService.DeleteTask(selectedTask.Id);
+                            LoadCurrentFilter();
+                            logger?.Info("TaskWidget", $"Deleted task: {selectedTask.Title}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.Error("TaskWidget", $"Error deleting task: {ex.Message}", ex);
+                    }
+                }
+                e.Handled = true;
+            }
+
+            // Ctrl+N to create new task
+            if (e.Key == Key.N && isCtrl)
+            {
+                try
+                {
+                    var newTask = new TaskItem
+                    {
+                        Title = "New Task",
+                        Status = TaskStatus.Pending,
+                        Priority = TaskPriority.Medium,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    taskService.AddTask(newTask);
+                    LoadCurrentFilter();
+                    treeTaskListControl?.SelectTask(newTask.Id);
+                    logger?.Info("TaskWidget", "Created new task");
+                }
+                catch (Exception ex)
+                {
+                    logger?.Error("TaskWidget", $"Error creating task: {ex.Message}", ex);
+                }
+                e.Handled = true;
+            }
         }
 
         private void ShowExportDialog()

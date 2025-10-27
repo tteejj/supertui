@@ -17,9 +17,13 @@ namespace SuperTUI.Core
         private Grid grid;
         private Border[] slots = new Border[4]; // 4 slots: [0]=TL, [1]=TR, [2]=BL, [3]=BR
         private UIElement[] widgets = new UIElement[4]; // Current widget in each slot
+        private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
-        public DashboardLayoutEngine()
+        public DashboardLayoutEngine(ILogger logger, IThemeManager themeManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             grid = new Grid();
             Container = grid; // Set base class Container property
 
@@ -279,7 +283,7 @@ namespace SuperTUI.Core
 
             if (slot1 < 0 || slot2 < 0)
             {
-                Logger.Instance?.Warning("DashboardLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
+                logger?.Warning("DashboardLayoutEngine", "Cannot swap widgets: one or both widgets not found in layout");
                 return;
             }
 

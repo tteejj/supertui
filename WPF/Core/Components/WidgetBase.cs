@@ -126,9 +126,9 @@ namespace SuperTUI.Core
 
                 if (HasFocus)
                 {
-                    // 2px colored border
+                    // 3px colored border for better visibility
                     containerBorder.BorderBrush = new SolidColorBrush(theme.Focus);
-                    containerBorder.BorderThickness = new Thickness(2);
+                    containerBorder.BorderThickness = new Thickness(3);
 
                     // Apply glow effect from theme settings
                     if (theme.Glow != null)

@@ -244,10 +244,9 @@ namespace SuperTUI.Infrastructure
         private static SecurityManager instance;
 
         /// <summary>
-        /// Singleton instance - DEPRECATED in Phase 3
-        /// Use dependency injection: Get ISecurityManager from ServiceContainer
+        /// Singleton instance for infrastructure use.
+        /// Widgets should use injected ISecurityManager. Infrastructure may use Instance when DI is unavailable.
         /// </summary>
-        [Obsolete("Use dependency injection instead. Get ISecurityManager from ServiceContainer.", error: false)]
         public static SecurityManager Instance => instance ??= new SecurityManager();
 
         private HashSet<string> allowedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

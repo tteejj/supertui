@@ -48,6 +48,7 @@ namespace SuperTUI.Core
         private Grid grid;
         private TilingMode currentMode = TilingMode.Auto;
         private readonly ILogger logger;
+        private readonly IThemeManager themeManager;
 
         // Track widget grid positions for directional navigation
         private Dictionary<UIElement, GridPosition> widgetPositions = new Dictionary<UIElement, GridPosition>();
@@ -70,19 +71,14 @@ namespace SuperTUI.Core
         }
 
         /// <summary>
-        /// Initializes a new TilingLayoutEngine
-        /// </summary>
-        public TilingLayoutEngine() : this(Logger.Instance)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new TilingLayoutEngine with dependency injection
         /// </summary>
         /// <param name="logger">Logger instance for debug output</param>
-        public TilingLayoutEngine(ILogger logger)
+        /// <param name="themeManager">Theme manager for styling</param>
+        public TilingLayoutEngine(ILogger logger, IThemeManager themeManager)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             grid = new Grid();
             Container = grid;
 

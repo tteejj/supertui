@@ -573,10 +573,9 @@ namespace SuperTUI.Infrastructure
         private static ThemeManager instance;
 
         /// <summary>
-        /// Singleton instance - DEPRECATED in Phase 3
-        /// Use dependency injection: Get IThemeManager from ServiceContainer
+        /// Singleton instance for infrastructure use.
+        /// Widgets should use injected IThemeManager. Infrastructure may use Instance when DI is unavailable.
         /// </summary>
-        [Obsolete("Use dependency injection instead. Get IThemeManager from ServiceContainer.", error: false)]
         public static ThemeManager Instance => instance ??= new ThemeManager();
 
         private readonly Dictionary<string, Theme> themes = new Dictionary<string, Theme>();
