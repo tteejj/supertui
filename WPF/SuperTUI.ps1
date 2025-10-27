@@ -297,18 +297,47 @@ Write-Host "StatePersistenceManager initialized" -ForegroundColor Green
 # Create ServiceContainer and register all infrastructure services
 $serviceContainer = New-Object SuperTUI.DI.ServiceContainer
 
+# Helper function to call generic RegisterSingleton method from PowerShell
+function Register-Singleton {
+    param($Container, $ServiceType, $ImplementationType, $Instance)
+
+    $method = $Container.GetType().GetMethods() | Where-Object {
+        $_.Name -eq "RegisterSingleton" -and
+        $_.GetParameters().Count -eq 1 -and
+        $_.GetGenericArguments().Count -eq 2
+    } | Select-Object -First 1
+
+    $genericMethod = $method.MakeGenericMethod($ServiceType, $ImplementationType)
+    $genericMethod.Invoke($Container, @($Instance))
+}
+
 # Register infrastructure services as singletons (using existing instances)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.ILogger], $logger)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IConfigurationManager], $configManager)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IThemeManager], $themeManager)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IErrorHandler], $errorHandler)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.ISecurityManager], $securityManager)
-$serviceContainer.RegisterSingleton([SuperTUI.Core.IEventBus], $eventBus)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IStatePersistenceManager], $stateManager)
-$serviceContainer.RegisterSingleton([SuperTUI.Infrastructure.IApplicationContext], $appContext)
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.ILogger]) ([SuperTUI.Infrastructure.Logger]) $logger
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.IConfigurationManager]) ([SuperTUI.Infrastructure.ConfigurationManager]) $configManager
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.IThemeManager]) ([SuperTUI.Infrastructure.ThemeManager]) $themeManager
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.IErrorHandler]) ([SuperTUI.Infrastructure.ErrorHandler]) $errorHandler
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.ISecurityManager]) ([SuperTUI.Infrastructure.SecurityManager]) $securityManager
+Register-Singleton $serviceContainer ([SuperTUI.Core.IEventBus]) ([SuperTUI.Core.EventBus]) $eventBus
+Register-Singleton $serviceContainer ([SuperTUI.Infrastructure.IStatePersistenceManager]) ([SuperTUI.Extensions.StatePersistenceManager]) $stateManager
+
+# ApplicationContext doesn't have an interface, so we'll skip it for now
 
 # Create WidgetFactory for creating widgets with DI
 $widgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
+
+# Helper function to call generic CreateWidget method from PowerShell
+function Create-Widget {
+    param($Factory, $WidgetType)
+
+    $method = $Factory.GetType().GetMethods() | Where-Object {
+        $_.Name -eq "CreateWidget" -and
+        $_.GetParameters().Count -eq 0 -and
+        $_.IsGenericMethod
+    } | Select-Object -First 1
+
+    $genericMethod = $method.MakeGenericMethod($WidgetType)
+    return $genericMethod.Invoke($Factory, $null)
+}
 
 Write-Host "Dependency injection container initialized" -ForegroundColor Green
 
@@ -487,14 +516,14 @@ $workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine
 $workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout)
 
 # Add Clock widget to slot 0 (top-left)
-$clockWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ClockWidget])
+$clockWidget = Create-Widget $widgetFactory ([SuperTUI.Widgets.ClockWidget])
 $clockWidget.WidgetName = "Clock"
 $clockWidget.Initialize()
 $workspace1Layout.SetWidget(0, $clockWidget)
 $workspace1.Widgets.Add($clockWidget)
 
 # Add TaskSummary widget to slot 1 (top-right)
-$taskSummary = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskSummaryWidget])
+$taskSummary = Create-Widget $widgetFactory ([SuperTUI.Widgets.TaskSummaryWidget])
 $taskSummary.WidgetName = "TaskSummary"
 $taskSummary.Initialize()
 $workspace1Layout.SetWidget(1, $taskSummary)
@@ -509,7 +538,7 @@ $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout)
 
 # Add TaskManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskManagementWidget])
+$projectManagementWidget = Create-Widget $widgetFactory ([SuperTUI.Widgets.TaskManagementWidget])
 $projectManagementWidget.WidgetName = "TaskManagement"
 $projectManagementWidget.Initialize()
 $ws2Params = New-Object SuperTUI.Core.LayoutParams
@@ -523,7 +552,7 @@ $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout)
 
 # Add KanbanBoardWidget (Todo, In Progress, Done columns)
-$kanbanWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.KanbanBoardWidget])
+$kanbanWidget = Create-Widget $widgetFactory ([SuperTUI.Widgets.KanbanBoardWidget])
 $kanbanWidget.WidgetName = "KanbanBoard"
 $kanbanWidget.Initialize()
 $ws3Params = New-Object SuperTUI.Core.LayoutParams
@@ -537,7 +566,7 @@ $workspace4Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout)
 
 # Add AgendaWidget (Overdue, Today, Tomorrow, This Week, Later, No Due Date)
-$agendaWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.AgendaWidget])
+$agendaWidget = Create-Widget $widgetFactory ([SuperTUI.Widgets.AgendaWidget])
 $agendaWidget.WidgetName = "Agenda"
 $agendaWidget.Initialize()
 $ws4Params = New-Object SuperTUI.Core.LayoutParams
@@ -551,7 +580,7 @@ $workspace5Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout)
 
 # Add ProjectStatsWidget (Metrics, charts, recent activity)
-$statsWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ProjectStatsWidget])
+$statsWidget = Create-Widget $widgetFactory ([SuperTUI.Widgets.ProjectStatsWidget])
 $statsWidget.WidgetName = "ProjectStats"
 $statsWidget.Initialize()
 $ws5Params = New-Object SuperTUI.Core.LayoutParams
@@ -759,7 +788,7 @@ $widgetPickerAction = {
                 }
 
                 # Create widget using WidgetFactory for proper DI
-                $widget = $widgetFactory.CreateWidget($widgetType)
+                $widget = Create-Widget $widgetFactory $widgetType
                 $widget.WidgetName = $picker.SelectedWidget.Name
                 $widget.Initialize()
 
