@@ -286,26 +286,32 @@ $widgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
 Write-Host "WidgetFactory created" -ForegroundColor Green
 
 # Register all available widgets in WidgetFactory
-# Note: PowerShell syntax for generic method calls
-$registerMethod = $widgetFactory.GetType().GetMethod("RegisterWidget")
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ClockWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ClockWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.CounterWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.CounterWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TaskSummaryWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TaskSummaryWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TaskManagementWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TaskManagementWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.KanbanBoardWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.KanbanBoardWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.AgendaWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.AgendaWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ProjectStatsWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ProjectStatsWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.NotesWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.NotesWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.FileExplorerWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.FileExplorerWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelImportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelImportWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelExportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelExportWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelMappingEditorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelMappingEditorWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.CommandPaletteWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.CommandPaletteWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.SettingsWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.SettingsWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ShortcutHelpWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ShortcutHelpWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TimeTrackingWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TimeTrackingWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.RetroTaskManagementWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.RetroTaskManagementWidget"))
-Write-Host "Widgets registered in factory" -ForegroundColor Green
+# Using the non-generic RegisterWidget(Type, string) method for PowerShell compatibility
+Write-Host "Registering widgets..." -ForegroundColor Cyan
+try {
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ClockWidget], "SuperTUI.Widgets.ClockWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.CounterWidget], "SuperTUI.Widgets.CounterWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.TaskSummaryWidget], "SuperTUI.Widgets.TaskSummaryWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.TaskManagementWidget], "SuperTUI.Widgets.TaskManagementWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.KanbanBoardWidget], "SuperTUI.Widgets.KanbanBoardWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.AgendaWidget], "SuperTUI.Widgets.AgendaWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ProjectStatsWidget], "SuperTUI.Widgets.ProjectStatsWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.NotesWidget], "SuperTUI.Widgets.NotesWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.FileExplorerWidget], "SuperTUI.Widgets.FileExplorerWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ExcelImportWidget], "SuperTUI.Widgets.ExcelImportWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ExcelExportWidget], "SuperTUI.Widgets.ExcelExportWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ExcelMappingEditorWidget], "SuperTUI.Widgets.ExcelMappingEditorWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.CommandPaletteWidget], "SuperTUI.Widgets.CommandPaletteWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.SettingsWidget], "SuperTUI.Widgets.SettingsWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.ShortcutHelpWidget], "SuperTUI.Widgets.ShortcutHelpWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.TimeTrackingWidget], "SuperTUI.Widgets.TimeTrackingWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.RetroTaskManagementWidget], "SuperTUI.Widgets.RetroTaskManagementWidget")
+    Write-Host "Widgets registered in factory (17 widgets)" -ForegroundColor Green
+} catch {
+    Write-Host "ERROR: Failed to register widgets: $_" -ForegroundColor Red
+    Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
+    throw
+}
 
 Write-Host "Infrastructure initialized with DI" -ForegroundColor Green
 
