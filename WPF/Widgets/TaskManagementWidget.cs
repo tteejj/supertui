@@ -313,27 +313,17 @@ namespace SuperTUI.Widgets
         public override void OnWidgetFocusReceived()
         {
             logger?.Info("TaskWidget", "=== OnWidgetFocusReceived() called ===");
-            // Set keyboard focus to the tree control so it can handle input
+            // TaskManagementWidget handles keyboard directly - just set visual focus indicator
             if (treeTaskListControl != null)
             {
-                logger?.Info("TaskWidget", "Setting border and keyboard focus to tree control");
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
+            }
 
-                // Force focus with dispatcher to ensure control is loaded
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    bool focusResult = treeTaskListControl.Focus();
-                    logger?.Info("TaskWidget", $"[Deferred] treeTaskListControl.Focus() returned: {focusResult}");
-                    Keyboard.Focus(treeTaskListControl);
-                    var focusedElement = Keyboard.FocusedElement;
-                    logger?.Info("TaskWidget", $"[Deferred] Keyboard.FocusedElement is now: {focusedElement?.GetType().Name ?? "NULL"}");
-                }), System.Windows.Threading.DispatcherPriority.Input);
-            }
-            else
-            {
-                logger?.Warning("TaskWidget", "treeTaskListControl is NULL - cannot set focus!");
-            }
+            // Set keyboard focus to THIS widget (not child control)
+            this.Focus();
+            Keyboard.Focus(this);
+            logger?.Info("TaskWidget", "Widget has keyboard focus - ready for input");
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
