@@ -594,7 +594,17 @@ namespace SuperTUI.Core.Services
                 // Atomic write: temp → rename pattern
                 string tempFile = dataFilePath + ".tmp";
                 await Task.Run(() => File.WriteAllText(tempFile, json));
-                await Task.Run(() => File.Replace(tempFile, dataFilePath, dataFilePath + ".bak"));
+
+                // Use Move for first save (file doesn't exist), Replace for subsequent saves
+                if (!File.Exists(dataFilePath))
+                {
+                    await Task.Run(() => File.Move(tempFile, dataFilePath));
+                }
+                else
+                {
+                    await Task.Run(() => File.Replace(tempFile, dataFilePath, dataFilePath + ".bak"));
+                }
+
                 Logger.Instance?.Debug("TaskService", $"Saved {taskList.Count} tasks to {dataFilePath}");
             }
             catch (Exception ex)
@@ -650,7 +660,17 @@ namespace SuperTUI.Core.Services
                 // Atomic write: temp → rename pattern
                 string tempFile = dataFilePath + ".tmp";
                 File.WriteAllText(tempFile, json);
-                File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
+
+                // Use Move for first save (file doesn't exist), Replace for subsequent saves
+                if (!File.Exists(dataFilePath))
+                {
+                    File.Move(tempFile, dataFilePath);
+                }
+                else
+                {
+                    File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
+                }
+
                 Logger.Instance?.Debug("TaskService", $"Saved {taskList.Count} tasks to {dataFilePath}");
             }
             catch (Exception ex)

@@ -92,7 +92,9 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15)
+                Margin = new Thickness(0, 5, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 30
             };
             formPanel.Children.Add(titleBox);
 
@@ -111,7 +113,8 @@ namespace SuperTUI.Widgets.Overlays
                 MinHeight = 60,
                 TextWrapping = TextWrapping.Wrap,
                 AcceptsReturn = true,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
             formPanel.Children.Add(descriptionBox);
 
@@ -133,10 +136,10 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 Margin = new Thickness(0, 5, 0, 0)
             };
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Pending", Tag = TaskStatus.Pending });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "In Progress", Tag = TaskStatus.InProgress });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Completed", Tag = TaskStatus.Completed });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = TaskStatus.Cancelled });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Pending", Tag = TaskStatus.Pending, Foreground = new SolidColorBrush(theme.Foreground) });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "In Progress", Tag = TaskStatus.InProgress, Foreground = new SolidColorBrush(theme.Foreground) });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Completed", Tag = TaskStatus.Completed, Foreground = new SolidColorBrush(theme.Foreground) });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = TaskStatus.Cancelled, Foreground = new SolidColorBrush(theme.Foreground) });
             statusPanel.Children.Add(statusCombo);
 
             var priorityPanel = new StackPanel();
@@ -150,10 +153,10 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 Margin = new Thickness(0, 5, 0, 0)
             };
-            priorityCombo.Items.Add(new ComboBoxItem { Content = "Low", Tag = TaskPriority.Low });
-            priorityCombo.Items.Add(new ComboBoxItem { Content = "Medium", Tag = TaskPriority.Medium });
-            priorityCombo.Items.Add(new ComboBoxItem { Content = "High", Tag = TaskPriority.High });
-            priorityCombo.Items.Add(new ComboBoxItem { Content = "Today", Tag = TaskPriority.Today });
+            priorityCombo.Items.Add(new ComboBoxItem { Content = "Low", Tag = TaskPriority.Low, Foreground = new SolidColorBrush(theme.Foreground) });
+            priorityCombo.Items.Add(new ComboBoxItem { Content = "Medium", Tag = TaskPriority.Medium, Foreground = new SolidColorBrush(theme.Foreground) });
+            priorityCombo.Items.Add(new ComboBoxItem { Content = "High", Tag = TaskPriority.High, Foreground = new SolidColorBrush(theme.Foreground) });
+            priorityCombo.Items.Add(new ComboBoxItem { Content = "Today", Tag = TaskPriority.Today, Foreground = new SolidColorBrush(theme.Foreground) });
             priorityPanel.Children.Add(priorityCombo);
 
             statusPriorityPanel.Children.Add(statusPanel);
@@ -185,7 +188,9 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15)
+                Margin = new Thickness(0, 5, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 30
             };
             formPanel.Children.Add(projectBox);
 
@@ -200,7 +205,9 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15)
+                Margin = new Thickness(0, 5, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 30
             };
             formPanel.Children.Add(tagsBox);
 
@@ -219,7 +226,8 @@ namespace SuperTUI.Widgets.Overlays
                 MinHeight = 80,
                 TextWrapping = TextWrapping.Wrap,
                 AcceptsReturn = true,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
             formPanel.Children.Add(notesBox);
 

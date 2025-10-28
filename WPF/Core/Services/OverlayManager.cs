@@ -107,26 +107,31 @@ namespace SuperTUI.Core.Services
             // Left zone (filters, navigation)
             leftZone = CreateZoneContainer(LeftZoneWidth, double.NaN, HorizontalAlignment.Left, VerticalAlignment.Stretch);
             Panel.SetZIndex(leftZone, 1000);
+            Grid.SetRow(leftZone, 1); // Place in workspace row, not title bar
             rootContainer.Children.Add(leftZone);
 
             // Right zone (details, context)
             rightZone = CreateZoneContainer(RightZoneWidth, double.NaN, HorizontalAlignment.Right, VerticalAlignment.Stretch);
             Panel.SetZIndex(rightZone, 1000);
+            Grid.SetRow(rightZone, 1); // Place in workspace row
             rootContainer.Children.Add(rightZone);
 
             // Top zone (command palette, search)
             topZone = CreateZoneContainer(double.NaN, TopZoneHeight, HorizontalAlignment.Stretch, VerticalAlignment.Top);
             Panel.SetZIndex(topZone, 1500);
+            Grid.SetRow(topZone, 1); // Place in workspace row
             rootContainer.Children.Add(topZone);
 
             // Bottom zone (quick add, inline creation)
             bottomZone = CreateZoneContainer(double.NaN, BottomZoneHeight, HorizontalAlignment.Stretch, VerticalAlignment.Bottom);
             Panel.SetZIndex(bottomZone, 1500);
+            Grid.SetRow(bottomZone, 1); // Place in workspace row
             rootContainer.Children.Add(bottomZone);
 
             // Center zone (modals, full dialogs)
             centerZone = CreateZoneContainer(CenterZoneMaxWidth, CenterZoneMaxHeight, HorizontalAlignment.Center, VerticalAlignment.Center);
             Panel.SetZIndex(centerZone, 2000);  // Highest - modals on top
+            Grid.SetRow(centerZone, 1); // Place in workspace row
             rootContainer.Children.Add(centerZone);
         }
 
