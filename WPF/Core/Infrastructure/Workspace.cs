@@ -168,6 +168,7 @@ namespace SuperTUI.Core
             {
                 newWidget.HasFocus = true;
                 newWidget.Focus();
+                newWidget.OnWidgetFocusReceived(); // Trigger focus event handler
             }
             else if (element is ScreenBase newScreen)
             {

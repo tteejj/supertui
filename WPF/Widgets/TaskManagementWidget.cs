@@ -176,13 +176,38 @@ namespace SuperTUI.Widgets
 
         private void OnTaskActivated(TaskItem task)
         {
-            // Open task edit dialog
-            // TODO: Implement task edit dialog
-            logger?.Info("TaskWidget", $"Task activated: {task.Title}");
+            if (OverlayManager.Instance == null)
+            {
+                logger?.Warning("TaskWidget", "OverlayManager not available, cannot show task editor");
+                return;
+            }
+
+            var editOverlay = new TaskEditOverlay(task, taskService, projectService, tagService, isNewTask: false);
+            editOverlay.TaskSaved += (updatedTask) =>
+            {
+                logger?.Info("TaskWidget", $"Task updated: {updatedTask.Title}");
+                LoadCurrentFilter();
+                treeTaskListControl?.SelectTask(updatedTask.Id);
+                OverlayManager.Instance?.HideCenterZone();
+                this.Focus();
+            };
+            editOverlay.Cancelled += () =>
+            {
+                OverlayManager.Instance?.HideCenterZone();
+                this.Focus();
+            };
+
+            OverlayManager.Instance.ShowCenterZone(editOverlay);
         }
 
         private void OnCreateSubtask(TaskItem parentTask)
         {
+            if (OverlayManager.Instance == null)
+            {
+                logger?.Warning("TaskWidget", "OverlayManager not available, cannot show subtask creation overlay");
+                return;
+            }
+
             var inputOverlay = new InputOverlay(
                 themeManager,
                 "Create Subtask",
@@ -205,15 +230,21 @@ namespace SuperTUI.Widgets
                         LoadCurrentFilter();
                         logger?.Info("TaskWidget", $"Created subtask: {title}");
                     }
-                    OverlayManager.Instance.HideCenterZone();
+                    OverlayManager.Instance?.HideCenterZone();
                 },
-                () => OverlayManager.Instance.HideCenterZone());
+                () => OverlayManager.Instance?.HideCenterZone());
 
             OverlayManager.Instance.ShowCenterZone(inputOverlay);
         }
 
         private void OnDeleteTask(TaskItem task)
         {
+            if (OverlayManager.Instance == null)
+            {
+                logger?.Warning("TaskWidget", "OverlayManager not available, cannot show delete confirmation");
+                return;
+            }
+
             var subtasks = taskService.GetAllSubtasksRecursive(task.Id);
             var message = subtasks.Count > 0
                 ? $"Delete '{task.Title}' and {subtasks.Count} subtask(s)?"
@@ -234,9 +265,9 @@ namespace SuperTUI.Widgets
                     }
 
                     logger?.Info("TaskWidget", $"Deleted task: {task.Title}");
-                    OverlayManager.Instance.HideCenterZone();
+                    OverlayManager.Instance?.HideCenterZone();
                 },
-                () => OverlayManager.Instance.HideCenterZone());
+                () => OverlayManager.Instance?.HideCenterZone());
 
             OverlayManager.Instance.ShowCenterZone(confirmationOverlay);
         }
@@ -272,6 +303,13 @@ namespace SuperTUI.Widgets
             // N key (without Ctrl) for quick add task overlay
             if (e.Key == Key.N && !isCtrl)
             {
+                if (OverlayManager.Instance == null)
+                {
+                    logger?.Warning("TaskWidget", "OverlayManager not available, cannot show quick add overlay");
+                    e.Handled = true;
+                    return;
+                }
+
                 var quickAdd = new QuickAddTaskOverlay(taskService, projectService);
                 quickAdd.TaskCreated += (task) =>
                 {
@@ -281,7 +319,7 @@ namespace SuperTUI.Widgets
                 };
                 quickAdd.Cancelled += () =>
                 {
-                    OverlayManager.Instance.HideBottomZone();
+                    OverlayManager.Instance?.HideBottomZone();
                     this.Focus(); // Return focus to widget
                 };
                 OverlayManager.Instance.ShowBottomZone(quickAdd);
@@ -292,6 +330,13 @@ namespace SuperTUI.Widgets
             // / key for filter panel overlay
             if (e.Key == Key.OemQuestion) // Forward slash
             {
+                if (OverlayManager.Instance == null)
+                {
+                    logger?.Warning("TaskWidget", "OverlayManager not available, cannot show filter overlay");
+                    e.Handled = true;
+                    return;
+                }
+
                 var filter = new FilterPanelOverlay(taskService, projectService);
                 filter.FilterChanged += (predicate) =>
                 {
@@ -311,7 +356,7 @@ namespace SuperTUI.Widgets
                 base.OnKeyDown(e);
 
                 // Then show detail overlay for newly selected task
-                if (selectedTask != null)
+                if (selectedTask != null && OverlayManager.Instance != null)
                 {
                     var detail = new TaskDetailOverlay(selectedTask);
                     OverlayManager.Instance.ShowRightZone(detail);
@@ -330,22 +375,64 @@ namespace SuperTUI.Widgets
                 e.Handled = true;
             }
 
-            // Ctrl+M for add note to selected task (TODO: implement note overlay)
+            // Ctrl+M for add note to selected task
             if (e.Key == Key.M && isCtrl)
             {
                 if (selectedTask != null)
                 {
-                    logger?.Info("TaskWidget", "Add note shortcut pressed (not yet implemented)");
+                    if (OverlayManager.Instance == null)
+                    {
+                        logger?.Warning("TaskWidget", "OverlayManager not available, cannot show notes editor");
+                        e.Handled = true;
+                        return;
+                    }
+
+                    var notesOverlay = new NotesEditorOverlay(selectedTask, taskService);
+                    notesOverlay.NotesSaved += (updatedTask) =>
+                    {
+                        logger?.Info("TaskWidget", $"Notes updated for task: {updatedTask.Title}");
+                        LoadCurrentFilter();
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+                    notesOverlay.Cancelled += () =>
+                    {
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+
+                    OverlayManager.Instance.ShowCenterZone(notesOverlay);
                 }
                 e.Handled = true;
             }
 
-            // Ctrl+T for edit tags (TODO: implement tag editor overlay)
+            // Ctrl+T for edit tags
             if (e.Key == Key.T && isCtrl)
             {
                 if (selectedTask != null)
                 {
-                    logger?.Info("TaskWidget", "Edit tags shortcut pressed (not yet implemented)");
+                    if (OverlayManager.Instance == null)
+                    {
+                        logger?.Warning("TaskWidget", "OverlayManager not available, cannot show tag editor");
+                        e.Handled = true;
+                        return;
+                    }
+
+                    var tagOverlay = new TagEditorOverlay(selectedTask, taskService, tagService);
+                    tagOverlay.TagsSaved += (updatedTask) =>
+                    {
+                        logger?.Info("TaskWidget", $"Tags updated for task: {updatedTask.Title}");
+                        LoadCurrentFilter();
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+                    tagOverlay.Cancelled += () =>
+                    {
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+
+                    OverlayManager.Instance.ShowCenterZone(tagOverlay);
                 }
                 e.Handled = true;
             }
@@ -403,11 +490,9 @@ namespace SuperTUI.Widgets
             // F2 to edit selected task (Windows standard)
             if (e.Key == Key.F2)
             {
-                if (selectedTask != null && treeTaskListControl != null)
+                if (selectedTask != null)
                 {
-                    // Focus the tree control to enable inline editing
-                    treeTaskListControl.Focus();
-                    // Note: TreeTaskListControl should implement F2 inline edit internally
+                    OnTaskActivated(selectedTask);
                 }
                 e.Handled = true;
             }
@@ -425,21 +510,41 @@ namespace SuperTUI.Widgets
             // Ctrl+N to create new task
             if (e.Key == Key.N && isCtrl)
             {
+                if (OverlayManager.Instance == null)
+                {
+                    logger?.Warning("TaskWidget", "OverlayManager not available, cannot create task");
+                    e.Handled = true;
+                    return;
+                }
+
                 try
                 {
                     var newTask = new TaskItem
                     {
-                        Title = "New Task",
+                        Title = "",
                         Status = TaskStatus.Pending,
                         Priority = TaskPriority.Medium,
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
                     };
 
-                    taskService.AddTask(newTask);
-                    LoadCurrentFilter();
-                    treeTaskListControl?.SelectTask(newTask.Id);
-                    logger?.Info("TaskWidget", "Created new task");
+                    // Open editor immediately for new task
+                    var editOverlay = new TaskEditOverlay(newTask, taskService, projectService, tagService, isNewTask: true);
+                    editOverlay.TaskSaved += (createdTask) =>
+                    {
+                        logger?.Info("TaskWidget", $"Created new task: {createdTask.Title}");
+                        LoadCurrentFilter();
+                        treeTaskListControl?.SelectTask(createdTask.Id);
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+                    editOverlay.Cancelled += () =>
+                    {
+                        OverlayManager.Instance?.HideCenterZone();
+                        this.Focus();
+                    };
+
+                    OverlayManager.Instance.ShowCenterZone(editOverlay);
                 }
                 catch (Exception ex)
                 {
