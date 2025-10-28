@@ -152,49 +152,87 @@ namespace SuperTUI.Widgets
         {
             var theme = themeManager.CurrentTheme;
 
-            // Main container with footer
-            var mainPanel = new DockPanel();
-
-            // Footer with shortcuts
-            var footer = new Border
+            // TUI-style: Full screen grid layout with box characters
+            var grid = new Grid
             {
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(10, 5, 10, 5)
+                Background = new SolidColorBrush(Colors.Black) // Pure black like TUI
             };
 
-            var footerText = new TextBlock
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Footer
+
+            // Header bar (TUI style)
+            var header = new TextBlock
             {
-                Text = "[N] Quick Add  [Ctrl+N] New Task  [F2/Enter] Edit  [Del] Delete  [S] Subtask  [/] Filter  [Ctrl+M] Notes  [Ctrl+T] Tags  [?] Help",
+                Text = "┌─ TASKS ────────────────────────────────────────────────────────────────────────────┐",
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
-                FontSize = 10,
-                Foreground = new SolidColorBrush(theme.Secondary),
-                TextWrapping = TextWrapping.Wrap
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 0)), // Bright green
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0)
+            };
+            Grid.SetRow(header, 0);
+            grid.Children.Add(header);
+
+            // Task list with TUI border
+            var listContainer = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0, 255, 0)),
+                BorderThickness = new Thickness(1, 0, 1, 0), // Left and right borders only
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0)
             };
 
-            footer.Child = footerText;
-            DockPanel.SetDock(footer, Dock.Bottom);
-            mainPanel.Children.Add(footer);
-
-            // Task list control
             treeTaskListControl = new TreeTaskListControl(logger, themeManager);
-
-            // Subscribe to events
             treeTaskListControl.TaskSelected += OnTaskSelected;
             treeTaskListControl.TaskActivated += OnTaskActivated;
             treeTaskListControl.CreateSubtask += OnCreateSubtask;
             treeTaskListControl.DeleteTask += OnDeleteTask;
             treeTaskListControl.ToggleExpanded += OnToggleExpanded;
 
-            mainPanel.Children.Add(treeTaskListControl);
+            listContainer.Child = treeTaskListControl;
+            Grid.SetRow(listContainer, 1);
+            grid.Children.Add(listContainer);
+
+            // Footer (TUI style)
+            var footerStack = new StackPanel
+            {
+                Background = new SolidColorBrush(Colors.Black)
+            };
+
+            var footerBorder = new TextBlock
+            {
+                Text = "└────────────────────────────────────────────────────────────────────────────────────┘",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 0)),
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0)
+            };
+            footerStack.Children.Add(footerBorder);
+
+            var footerText = new TextBlock
+            {
+                Text = " [N]Add [Ctrl+N]New [F2]Edit [Del]Delete [S]Subtask [/]Filter [?]Help",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 10,
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100)), // Gray
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(1, 0, 0, 0)
+            };
+            footerStack.Children.Add(footerText);
+
+            Grid.SetRow(footerStack, 2);
+            grid.Children.Add(footerStack);
 
             // Ensure widget is focusable
             this.Focusable = true;
-            this.MinHeight = 200;
-            this.MinWidth = 300;
+            this.Background = new SolidColorBrush(Colors.Black);
+            this.Padding = new Thickness(0);
+            this.Margin = new Thickness(0);
 
-            this.Content = mainPanel;
+            this.Content = grid;
         }
 
         private void LoadCurrentFilter()

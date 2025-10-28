@@ -43,76 +43,110 @@ namespace SuperTUI.Widgets.Overlays
 
         private void BuildUI()
         {
-            var theme = themeManager.CurrentTheme;
-
-            // Simple terminal-style panel
-            var mainPanel = new Border
+            // TUI-style: Full width box at bottom with box-drawing chars
+            var mainPanel = new Grid
             {
-                Margin = new Thickness(10, 0, 10, 10),
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(10),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                Background = new SolidColorBrush(Colors.Black)
             };
 
-            var stack = new StackPanel();
+            mainPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
+            mainPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Input
+            mainPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Footer
 
-            // Terminal header
+            // Header
             var header = new TextBlock
             {
-                Text = "┌─ QUICK ADD ────────────────────────────────────────────┐",
+                Text = "┌─ QUICK ADD ────────────────────────────────────────────────────────────────────────┐",
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(theme.Primary),
-                Margin = new Thickness(0, 0, 0, 5)
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 0)), // Yellow
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0)
             };
-            stack.Children.Add(header);
+            Grid.SetRow(header, 0);
+            mainPanel.Children.Add(header);
 
-            // Input box
+            // Input area with border
+            var inputBorder = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.FromRgb(255, 255, 0)),
+                BorderThickness = new Thickness(1, 0, 1, 0),
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(2, 0, 2, 0)
+            };
+
+            var inputStack = new StackPanel { Background = new SolidColorBrush(Colors.Black) };
+
             inputBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
-                FontSize = 13,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Secondary),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(6, 4, 6, 4),
-                Margin = new Thickness(0, 0, 0, 5),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Colors.White),
+                Background = new SolidColorBrush(Colors.Black),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(2, 0, 2, 0),
+                Margin = new Thickness(0),
                 HorizontalAlignment = HorizontalAlignment.Stretch
             };
 
             inputBox.KeyDown += OnInputKeyDown;
             inputBox.TextChanged += OnInputTextChanged;
 
-            stack.Children.Add(inputBox);
+            inputStack.Children.Add(inputBox);
 
-            // Hint text (shows format and examples)
             hintText = new TextBlock
             {
-                Text = "│ title | project | due | priority\n" +
-                       "│ Ex: Fix bug | Backend | +3 | high\n" +
-                       "└────────────────────────────────────────────────────────┘\n" +
-                       "  [Enter] Create    [Esc] Cancel",
-                Foreground = new SolidColorBrush(theme.Secondary),
+                Text = "│ title | project | due | priority",
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 10,
-                TextWrapping = TextWrapping.Wrap,
-                HorizontalAlignment = HorizontalAlignment.Stretch
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0),
+                Margin = new Thickness(0)
             };
 
-            stack.Children.Add(hintText);
+            inputStack.Children.Add(hintText);
 
-            mainPanel.Child = stack;
+            inputBorder.Child = inputStack;
+            Grid.SetRow(inputBorder, 1);
+            mainPanel.Children.Add(inputBorder);
+
+            // Footer
+            var footerStack = new StackPanel { Background = new SolidColorBrush(Colors.Black) };
+            var footerBorder = new TextBlock
+            {
+                Text = "└────────────────────────────────────────────────────────────────────────────────────┘",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 0)),
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(0)
+            };
+            footerStack.Children.Add(footerBorder);
+
+            var instructions = new TextBlock
+            {
+                Text = " [Enter]Create [Esc]Cancel",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 10,
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                Background = new SolidColorBrush(Colors.Black),
+                Padding = new Thickness(1, 0, 0, 0)
+            };
+            footerStack.Children.Add(instructions);
+
+            Grid.SetRow(footerStack, 2);
+            mainPanel.Children.Add(footerStack);
+
             this.Content = mainPanel;
             this.Focusable = true;
+            this.Background = new SolidColorBrush(Colors.Black);
+            this.Padding = new Thickness(0);
+            this.Margin = new Thickness(0);
 
-            // CRITICAL: Trap focus inside overlay
             FocusManager.SetIsFocusScope(this, true);
 
-            // Focus input box when overlay loads and KEEP focus
             this.Loaded += (s, e) =>
             {
                 inputBox.Focus();
@@ -178,12 +212,8 @@ namespace SuperTUI.Widgets.Overlays
             else
             {
                 // Reset to default hint
-                var theme = themeManager.CurrentTheme;
-                hintText.Text = "│ title | project | due | priority\n" +
-                               "│ Ex: Fix bug | Backend | +3 | high\n" +
-                               "└────────────────────────────────────────────────────────┘\n" +
-                               "  [Enter] Create    [Esc] Cancel";
-                hintText.Foreground = new SolidColorBrush(theme.Secondary);
+                hintText.Text = "│ title | project | due | priority";
+                hintText.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
             }
         }
 
