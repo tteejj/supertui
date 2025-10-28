@@ -1,17 +1,105 @@
-﻿2025-10-28 13:18:02.531 [Info    ] [Theme] Applied theme: Dark
-2025-10-28 13:18:02.537 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ClockWidget -> ClockWidget
-2025-10-28 13:18:02.538 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CounterWidget -> CounterWidget
-2025-10-28 13:18:02.538 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskSummaryWidget -> TaskSummaryWidget
-2025-10-28 13:18:02.538 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskManagementWidget -> TaskManagementWidget
-2025-10-28 13:18:02.539 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.KanbanBoardWidget -> KanbanBoardWidget
-2025-10-28 13:18:02.539 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.AgendaWidget -> AgendaWidget
-2025-10-28 13:18:02.539 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ProjectStatsWidget -> ProjectStatsWidget
-2025-10-28 13:18:02.540 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.NotesWidget -> NotesWidget
-2025-10-28 13:18:02.540 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.FileExplorerWidget -> FileExplorerWidget
-2025-10-28 13:18:02.540 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelImportWidget -> ExcelImportWidget
-2025-10-28 13:18:02.540 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelExportWidget -> ExcelExportWidget
-2025-10-28 13:18:02.541 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelMappingEditorWidget -> ExcelMappingEditorWidget
-2025-10-28 13:18:02.739 [Error   ] [ExcelImport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
+﻿
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh SuperTUI.ps1
+Loading WPF assemblies...
+WPF assemblies loaded
+Loading SuperTUI...
+Loaded successfully
+Initializing SuperTUI infrastructure with DI...
+Setting up ServiceContainer...
+ServiceContainer initialized and services registered
+  Config location: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.supertui\config.json
+Core services resolved from container
+Logger set to DEBUG level
+File log sink added: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.supertui\logs\SuperTUI_*.log
+Applied theme: Dark
+ApplicationContext initialized
+WidgetFactory created
+Registering widgets...
+Widgets registered in factory (17 widgets)
+Infrastructure initialized with DI
+ShortcutOverlay initialized
+QuickJumpOverlay initialized
+0
+CRT Effects Overlay initialized
+Global exception handler registered
+Initializing OverlayManager...
+MethodException: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:492
+Line |
+ 492 |  $overlayManager.Initialize($rootContainer, $workspaceContainer)
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot convert argument "workspaceContainer", with value: "System.Windows.Controls.ContentControl", for
+     | "Initialize" to type "System.Windows.Controls.Panel": "Cannot convert the
+     | "System.Windows.Controls.ContentControl" value of type "System.Windows.Controls.ContentControl" to type
+     | "System.Windows.Controls.Panel"."
+OverlayManager initialized
+Setting up workspaces...
+Creating Workspace 2: TaskManagement...
+  Layout engine created: StackLayoutEngine
+  Creating TaskManagementWidget...
+    Widget created successfully
+    Widget type: TaskManagementWidget
+  Initializing widget...
+    Widget initialized
+  Adding widget to workspace...
+    Widget added to workspace with ErrorBoundary
+Workspace 2 created and added to manager
+Setting up Workspace 6: Excel Integration...
+Workspaces created!
+
+Restoring workspace states...
+State restoration complete
+
+Switching to initial workspace...
+Initialized on workspace: Dashboard
+State persistence hooks registered
+
+Starting SuperTUI...
+Keyboard Shortcuts:
+  Ctrl+1-9              Switch workspaces
+  Ctrl+N                Add widget / Command palette
+  Ctrl+Up/Down          Focus previous/next widget
+  Ctrl+Shift+Arrows     Move widget
+  Ctrl+W                Close focused widget
+  F11                   Toggle fullscreen
+  Ctrl+A                Layout: Auto mode
+  Ctrl+Q                Exit application
+  Tab / Shift+Tab       Cycle focus
+  ?                     Help overlay
+
+NOTE: Windows key shortcuts removed (conflict with Windows OS)
+
+MethodInvocationException: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:1483
+Line |
+1483 |  $window.ShowDialog() | Out-Null
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Exception calling "ShowDialog" with "0" argument(s): "OverlayManager.Initialize() must be called before showing
+     | overlays"
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
+
+
+2025-10-28 13:25:06.956 [Info    ] [Theme] Applied theme: Dark
+2025-10-28 13:25:06.963 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ClockWidget -> ClockWidget
+2025-10-28 13:25:06.964 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CounterWidget -> CounterWidget
+2025-10-28 13:25:06.964 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskSummaryWidget -> TaskSummaryWidget
+2025-10-28 13:25:06.964 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskManagementWidget -> TaskManagementWidget
+2025-10-28 13:25:06.964 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.KanbanBoardWidget -> KanbanBoardWidget
+2025-10-28 13:25:06.965 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.AgendaWidget -> AgendaWidget
+2025-10-28 13:25:06.965 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ProjectStatsWidget -> ProjectStatsWidget
+2025-10-28 13:25:06.965 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.NotesWidget -> NotesWidget
+2025-10-28 13:25:06.965 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.FileExplorerWidget -> FileExplorerWidget
+2025-10-28 13:25:06.966 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelImportWidget -> ExcelImportWidget
+2025-10-28 13:25:06.966 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelExportWidget -> ExcelExportWidget
+2025-10-28 13:25:06.966 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelMappingEditorWidget -> ExcelMappingEditorWidget
+2025-10-28 13:25:06.967 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CommandPaletteWidget -> CommandPaletteWidget
+2025-10-28 13:25:06.967 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.SettingsWidget -> SettingsWidget
+2025-10-28 13:25:06.967 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ShortcutHelpWidget -> ShortcutHelpWidget
+2025-10-28 13:25:06.967 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TimeTrackingWidget -> TimeTrackingWidget
+2025-10-28 13:25:06.968 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.RetroTaskManagementWidget -> RetroTaskManagementWidget
+2025-10-28 13:25:07.159 [Info    ] [Clock] Widget initialized
+2025-10-28 13:25:07.171 [Info    ] [TaskSummary] Widget initialized
+2025-10-28 13:25:07.175 [Info    ] [Workspace] Activating workspace 'Dashboard' (Index: 1)
+2025-10-28 13:25:07.175 [Debug   ] [Workspace] Activating 0 error boundaries
+2025-10-28 13:25:07.350 [Error   ] [ExcelImport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
     Exception: ArgumentException: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
        at SuperTUI.Infrastructure.ConfigurationManager.Set[T](String key, T value, Boolean saveImmediately) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs:line 389
    at SuperTUI.Core.Services.ExcelMappingService.SetActiveProfile(Guid id) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ExcelMappingService.cs:line 195
@@ -27,8 +115,8 @@
    at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
    at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
    at SuperTUI.Widgets.ExcelImportWidget.LoadProfiles() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ExcelImportWidget.cs:line 281
-2025-10-28 13:18:02.541 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CommandPaletteWidget -> CommandPaletteWidget
-2025-10-28 13:18:02.757 [Error   ] [ExcelExport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
+2025-10-28 13:25:07.175 [Debug   ] [Workspace] Activating 0 screens
+2025-10-28 13:25:07.372 [Error   ] [ExcelExport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
     Exception: ArgumentException: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
        at SuperTUI.Infrastructure.ConfigurationManager.Set[T](String key, T value, Boolean saveImmediately) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs:line 389
    at SuperTUI.Core.Services.ExcelMappingService.SetActiveProfile(Guid id) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ExcelMappingService.cs:line 195
@@ -44,65 +132,57 @@
    at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
    at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
    at SuperTUI.Widgets.ExcelExportWidget.LoadProfiles() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ExcelExportWidget.cs:line 412
-2025-10-28 13:18:02.541 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.SettingsWidget -> SettingsWidget
-2025-10-28 13:18:02.541 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ShortcutHelpWidget -> ShortcutHelpWidget
-2025-10-28 13:18:02.542 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TimeTrackingWidget -> TimeTrackingWidget
-2025-10-28 13:18:02.542 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.RetroTaskManagementWidget -> RetroTaskManagementWidget
-2025-10-28 13:18:02.606 [Info    ] [Clock] Widget initialized
-2025-10-28 13:18:02.618 [Info    ] [TaskSummary] Widget initialized
-2025-10-28 13:18:02.622 [Info    ] [Workspace] Activating workspace 'Dashboard' (Index: 1)
-2025-10-28 13:18:02.622 [Debug   ] [Workspace] Activating 0 error boundaries
-2025-10-28 13:18:02.622 [Debug   ] [Workspace] Activating 0 screens
-2025-10-28 13:18:02.622 [Info    ] [Workspace] Focusable elements count: 0
-2025-10-28 13:18:02.622 [Warning ] [Workspace] NO FOCUSABLE ELEMENTS - cannot auto-focus!
-2025-10-28 13:18:02.654 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
-2025-10-28 13:18:02.655 [Info    ] [TaskWidget] Task Management widget initialized
-2025-10-28 13:18:02.659 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
-2025-10-28 13:18:02.660 [Info    ] [TaskWidget] Task Management widget initialized
-2025-10-28 13:18:02.670 [Debug   ] [KanbanWidget] Loaded 0 tasks
-2025-10-28 13:18:02.670 [Info    ] [KanbanBoard] Widget initialized
-2025-10-28 13:18:02.686 [Debug   ] [AgendaWidget] Loaded 0 tasks
-2025-10-28 13:18:02.686 [Info    ] [Agenda] Widget initialized
-2025-10-28 13:18:02.710 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:18:02.711 [Info    ] [ProjectStats] Widget initialized
-2025-10-28 13:18:02.739 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
-2025-10-28 13:18:02.740 [Info    ] [ExcelImport] Widget initialized
-2025-10-28 13:18:02.757 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
-2025-10-28 13:18:02.758 [Info    ] [ExcelExport] Loaded 0 projects
-2025-10-28 13:18:02.758 [Info    ] [ExcelExport] Widget initialized
-2025-10-28 13:18:02.777 [Info    ] [ExcelMappingEditor] Loaded 1 profiles
-2025-10-28 13:18:02.777 [Info    ] [ExcelMappingEditor] Widget initialized
-2025-10-28 13:18:02.797 [Debug   ] [StateManagement] No saved state found for workspace: Dashboard
-2025-10-28 13:18:02.798 [Debug   ] [StateManagement] No saved state found for workspace: Projects
-2025-10-28 13:18:02.798 [Debug   ] [StateManagement] No saved state found for workspace: Kanban
-2025-10-28 13:18:02.799 [Debug   ] [StateManagement] No saved state found for workspace: Agenda
-2025-10-28 13:18:02.799 [Debug   ] [StateManagement] No saved state found for workspace: Analytics
-2025-10-28 13:18:02.800 [Debug   ] [StateManagement] No saved state found for workspace: Excel
-2025-10-28 13:18:04.416 [Info    ] [Workspace] Activating workspace 'Projects' (Index: 2)
-2025-10-28 13:18:04.416 [Debug   ] [Workspace] Activating 1 error boundaries
-2025-10-28 13:18:04.416 [Debug   ] [Workspace] Activating 0 screens
-2025-10-28 13:18:04.416 [Info    ] [Workspace] Focusable elements count: 1
-2025-10-28 13:18:04.416 [Info    ] [Workspace] Auto-focusing first element: TaskManagementWidget
-2025-10-28 13:18:04.416 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:18:04.417 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:18:04.417 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:18:04.417 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:18:04.417 [Info    ] [Workspace] Focus set. Focused element: TaskManagementWidget
-2025-10-28 13:18:04.421 [Debug   ] [ApplicationContext] Current workspace changed: Projects
-2025-10-28 13:18:04.423 [Debug   ] [StatePersistence] State snapshot captured
-2025-10-28 13:18:04.446 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
-2025-10-28 13:18:04.446 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
+2025-10-28 13:25:07.175 [Info    ] [Workspace] Focusable elements count: 0
+2025-10-28 13:25:07.175 [Warning ] [Workspace] NO FOCUSABLE ELEMENTS - cannot auto-focus!
+2025-10-28 13:25:07.202 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
+2025-10-28 13:25:07.203 [Info    ] [TaskWidget] Task Management widget initialized
+2025-10-28 13:25:07.208 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
+2025-10-28 13:25:07.209 [Info    ] [TaskWidget] Task Management widget initialized
+2025-10-28 13:25:07.221 [Debug   ] [KanbanWidget] Loaded 0 tasks
+2025-10-28 13:25:07.221 [Info    ] [KanbanBoard] Widget initialized
+2025-10-28 13:25:07.251 [Debug   ] [AgendaWidget] Loaded 0 tasks
+2025-10-28 13:25:07.251 [Info    ] [Agenda] Widget initialized
+2025-10-28 13:25:07.313 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 13:25:07.314 [Info    ] [ProjectStats] Widget initialized
+2025-10-28 13:25:07.349 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
+2025-10-28 13:25:07.350 [Info    ] [ExcelImport] Widget initialized
+2025-10-28 13:25:07.372 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
+2025-10-28 13:25:07.373 [Info    ] [ExcelExport] Loaded 0 projects
+2025-10-28 13:25:07.373 [Info    ] [ExcelExport] Widget initialized
+2025-10-28 13:25:07.402 [Info    ] [ExcelMappingEditor] Loaded 1 profiles
+2025-10-28 13:25:07.402 [Info    ] [ExcelMappingEditor] Widget initialized
+2025-10-28 13:25:07.415 [Debug   ] [StateManagement] No saved state found for workspace: Dashboard
+2025-10-28 13:25:07.416 [Debug   ] [StateManagement] No saved state found for workspace: Projects
+2025-10-28 13:25:07.416 [Debug   ] [StateManagement] No saved state found for workspace: Kanban
+2025-10-28 13:25:07.417 [Debug   ] [StateManagement] No saved state found for workspace: Agenda
+2025-10-28 13:25:07.418 [Debug   ] [StateManagement] No saved state found for workspace: Analytics
+2025-10-28 13:25:07.418 [Debug   ] [StateManagement] No saved state found for workspace: Excel
+2025-10-28 13:25:17.221 [Debug   ] [KanbanWidget] Loaded 0 tasks
+2025-10-28 13:25:19.868 [Info    ] [Workspace] Activating workspace 'Projects' (Index: 2)
+2025-10-28 13:25:19.868 [Debug   ] [Workspace] Activating 1 error boundaries
+2025-10-28 13:25:19.868 [Debug   ] [Workspace] Activating 0 screens
+2025-10-28 13:25:19.868 [Info    ] [Workspace] Focusable elements count: 1
+2025-10-28 13:25:19.868 [Info    ] [Workspace] Auto-focusing first element: TaskManagementWidget
+2025-10-28 13:25:19.869 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 13:25:19.869 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 13:25:19.869 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 13:25:19.869 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 13:25:19.869 [Info    ] [Workspace] Focus set. Focused element: TaskManagementWidget
+2025-10-28 13:25:19.872 [Debug   ] [ApplicationContext] Current workspace changed: Projects
+2025-10-28 13:25:19.874 [Debug   ] [StatePersistence] State snapshot captured
+2025-10-28 13:25:19.895 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
+2025-10-28 13:25:19.895 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
    at System.ArgumentNullException.ThrowIfNull(Object argument, String paramName)
    at System.ArgumentException.ThrowNullOrEmptyException(String argument, String paramName)
    at System.IO.File.Validate(String path, Encoding encoding)
    at System.IO.File.WriteAllTextAsync(String path, ReadOnlyMemory`1 contents, Encoding encoding, CancellationToken cancellationToken)
    at System.IO.File.WriteAllTextAsync(String path, String contents, Encoding encoding, CancellationToken cancellationToken)
    at SuperTUI.Extensions.StatePersistenceManager.SaveStateAsync(StateSnapshot snapshot, Boolean createBackup) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs:line 495
-2025-10-28 13:18:04.447 [Debug   ] [StateManagement] Auto-saved workspace states on switch to: Projects
-2025-10-28 13:18:07.664 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:18:07.666 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:18:07.666 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:18:07.666 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:18:09.851 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=None, Handled=False
-2025-10-28 13:18:09.852 [Error   ] [OverlayManager] bottomZone is NULL - Initialize() was not called properly!
-2025-10-28 13:18:09.852 [Debug   ] [OverlayManager] ShowBottomZone called - bottomZone null? True
+2025-10-28 13:25:19.895 [Debug   ] [StateManagement] Auto-saved workspace states on switch to: Projects
+2025-10-28 13:25:23.558 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 13:25:23.559 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 13:25:23.559 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 13:25:23.559 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 13:25:23.876 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=None, Handled=False
+2025-10-28 13:25:23.877 [Error   ] [OverlayManager] bottomZone is NULL - Initialize() was not called properly!
+2025-10-28 13:25:23.877 [Debug   ] [OverlayManager] ShowBottomZone called - bottomZone null? True
