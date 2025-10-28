@@ -96,8 +96,15 @@ namespace SuperTUI.Widgets.Overlays
             this.Content = mainPanel;
             this.Focusable = true;
 
-            // Focus input box when overlay loads
-            this.Loaded += (s, e) => inputBox.Focus();
+            // CRITICAL: Trap focus inside overlay
+            FocusManager.SetIsFocusScope(this, true);
+
+            // Focus input box when overlay loads and KEEP focus
+            this.Loaded += (s, e) =>
+            {
+                inputBox.Focus();
+                Keyboard.Focus(inputBox);
+            };
         }
 
         private void OnInputKeyDown(object sender, KeyEventArgs e)
@@ -212,9 +219,9 @@ namespace SuperTUI.Widgets.Overlays
                     continue;
                 }
 
-                // Try to parse as project name
-                var projects = projectService.GetProjects(p => !p.Deleted);
-                var matchingProject = projects.FirstOrDefault(p =>
+                // Try to parse as project name (case-insensitive match)
+                var projects = projectService.GetAllProjects()?.Where(p => !p.Deleted).ToList();
+                var matchingProject = projects?.FirstOrDefault(p =>
                     p.Name.Equals(part, StringComparison.OrdinalIgnoreCase));
 
                 if (matchingProject != null)
