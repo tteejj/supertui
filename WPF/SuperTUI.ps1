@@ -264,7 +264,7 @@ $themeManager = $serviceContainer.GetService([SuperTUI.Infrastructure.IThemeMana
 $securityManager = $serviceContainer.GetService([SuperTUI.Infrastructure.ISecurityManager])
 $errorHandler = $serviceContainer.GetService([SuperTUI.Infrastructure.IErrorHandler])
 $eventBus = $serviceContainer.GetService([SuperTUI.Core.IEventBus])
-$stateManager = $serviceContainer.GetService([SuperTUI.Extensions.IStatePersistenceManager])
+$stateManager = $serviceContainer.GetService([SuperTUI.Infrastructure.IStatePersistenceManager])
 Write-Host "Core services resolved from container" -ForegroundColor Green
 
 # Add additional log sink for console output
@@ -284,6 +284,30 @@ Write-Host "ApplicationContext initialized" -ForegroundColor Green
 # Create WidgetFactory for dependency injection
 $widgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
 Write-Host "WidgetFactory created" -ForegroundColor Green
+
+# Register all available widgets in WidgetFactory
+# Note: PowerShell syntax for generic method calls
+$registerMethod = $widgetFactory.GetType().GetMethod("RegisterWidget")
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ClockWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ClockWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.CounterWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.CounterWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TaskSummaryWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TaskSummaryWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TaskManagementWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TaskManagementWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.KanbanBoardWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.KanbanBoardWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.AgendaWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.AgendaWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ProjectStatsWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ProjectStatsWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.NotesWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.NotesWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.FileExplorerWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.FileExplorerWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.SystemMonitorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.SystemMonitorWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelImportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelImportWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelExportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelExportWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelMappingEditorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelMappingEditorWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.CommandPaletteWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.CommandPaletteWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.SettingsWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.SettingsWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ShortcutHelpWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ShortcutHelpWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.TimeTrackingWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TimeTrackingWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.RetroTaskManagementWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.RetroTaskManagementWidget"))
+$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ThemeEditorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ThemeEditorWidget"))
+Write-Host "Widgets registered in factory" -ForegroundColor Green
 
 Write-Host "Infrastructure initialized with DI" -ForegroundColor Green
 
@@ -460,14 +484,14 @@ $workspace1Layout = New-Object SuperTUI.Core.DashboardLayoutEngine($logger, $the
 $workspace1 = New-Object SuperTUI.Core.Workspace("Dashboard", 1, $workspace1Layout, $logger, $themeManager)
 
 # Add Clock widget to slot 0 (top-left)
-$clockWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ClockWidget])
+$clockWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.ClockWidget")
 $clockWidget.WidgetName = "Clock"
 $clockWidget.Initialize()
 $workspace1Layout.SetWidget(0, $clockWidget)
 $workspace1.Widgets.Add($clockWidget)
 
 # Add TaskSummary widget to slot 1 (top-right)
-$taskSummary = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskSummaryWidget])
+$taskSummary = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskSummaryWidget")
 $taskSummary.WidgetName = "TaskSummary"
 $taskSummary.Initialize()
 $workspace1Layout.SetWidget(1, $taskSummary)
@@ -482,7 +506,7 @@ $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout, $logger, $themeManager)
 
 # Add TaskManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.TaskManagementWidget])
+$projectManagementWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskManagementWidget")
 $projectManagementWidget.WidgetName = "TaskManagement"
 $projectManagementWidget.Initialize()
 $ws2Params = New-Object SuperTUI.Core.LayoutParams
@@ -496,7 +520,7 @@ $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace3 = New-Object SuperTUI.Core.Workspace("Kanban", 3, $workspace3Layout, $logger, $themeManager)
 
 # Add KanbanBoardWidget (Todo, In Progress, Done columns)
-$kanbanWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.KanbanBoardWidget])
+$kanbanWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.KanbanBoardWidget")
 $kanbanWidget.WidgetName = "KanbanBoard"
 $kanbanWidget.Initialize()
 $ws3Params = New-Object SuperTUI.Core.LayoutParams
@@ -510,7 +534,7 @@ $workspace4Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace4 = New-Object SuperTUI.Core.Workspace("Agenda", 4, $workspace4Layout, $logger, $themeManager)
 
 # Add AgendaWidget (Overdue, Today, Tomorrow, This Week, Later, No Due Date)
-$agendaWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.AgendaWidget])
+$agendaWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.AgendaWidget")
 $agendaWidget.WidgetName = "Agenda"
 $agendaWidget.Initialize()
 $ws4Params = New-Object SuperTUI.Core.LayoutParams
@@ -524,7 +548,7 @@ $workspace5Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace5 = New-Object SuperTUI.Core.Workspace("Analytics", 5, $workspace5Layout, $logger, $themeManager)
 
 # Add ProjectStatsWidget (Metrics, charts, recent activity)
-$statsWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ProjectStatsWidget])
+$statsWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.ProjectStatsWidget")
 $statsWidget.WidgetName = "ProjectStats"
 $statsWidget.Initialize()
 $ws5Params = New-Object SuperTUI.Core.LayoutParams
@@ -543,7 +567,7 @@ $workspace6Layout = New-Object SuperTUI.Core.GridLayoutEngine(2, 2)
 $workspace6 = New-Object SuperTUI.Core.Workspace("Excel", 6, $workspace6Layout, $logger, $themeManager)
 
 # Top-left: Excel Import Widget
-$excelImportWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelImportWidget])
+$excelImportWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.ExcelImportWidget")
 $excelImportWidget.WidgetName = "Excel Import"
 $excelImportWidget.Initialize()
 $ws6ImportParams = New-Object SuperTUI.Core.LayoutParams
@@ -553,7 +577,7 @@ $workspace6Layout.AddChild($excelImportWidget, $ws6ImportParams)
 $workspace6.Widgets.Add($excelImportWidget)
 
 # Top-right: Excel Export Widget
-$excelExportWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelExportWidget])
+$excelExportWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.ExcelExportWidget")
 $excelExportWidget.WidgetName = "Excel Export"
 $excelExportWidget.Initialize()
 $ws6ExportParams = New-Object SuperTUI.Core.LayoutParams
@@ -563,7 +587,7 @@ $workspace6Layout.AddChild($excelExportWidget, $ws6ExportParams)
 $workspace6.Widgets.Add($excelExportWidget)
 
 # Bottom (spans both columns): Excel Mapping Editor
-$excelMappingWidget = $widgetFactory.CreateWidget([SuperTUI.Widgets.ExcelMappingEditorWidget])
+$excelMappingWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.ExcelMappingEditorWidget")
 $excelMappingWidget.WidgetName = "Mapping Editor"
 $excelMappingWidget.Initialize()
 $ws6MappingParams = New-Object SuperTUI.Core.LayoutParams
@@ -628,8 +652,9 @@ foreach ($ws in $workspaceManager.Workspaces) {
                             # For now, just add to workspace - layout engines will position automatically
                             # TODO: Restore specific grid slots for DashboardLayoutEngine
 
-                            # Add to workspace
-                            $ws.AddWidget($widget)
+                            # Add to workspace with layout params
+                            $layoutParams = New-Object SuperTUI.Core.LayoutParams
+                            $ws.AddWidget($widget, $layoutParams)
 
                             $logger.Debug("StateManagement", "Restored widget: $($widget.WidgetName)")
                         }

@@ -62,7 +62,10 @@ namespace SuperTUI.Extensions
                     fallbacks.Add((fallback1, "User's LocalAppData"));
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                logger?.Debug("DirectoryHelper", $"Failed to get LocalAppData fallback: {ex.Message}");
+            }
 
             // Fallback 2: Temp\SuperTUI\{purpose}
             try
@@ -74,7 +77,10 @@ namespace SuperTUI.Extensions
                     fallbacks.Add((fallback2, "User's Temp directory"));
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                logger?.Debug("DirectoryHelper", $"Failed to get Temp fallback: {ex.Message}");
+            }
 
             // Fallback 3: Current directory\.supertui\{purpose}
             try
@@ -86,7 +92,10 @@ namespace SuperTUI.Extensions
                     fallbacks.Add((fallback3, "Current directory"));
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                logger?.Debug("DirectoryHelper", $"Failed to get CurrentDirectory fallback: {ex.Message}");
+            }
 
             // Fallback 4: Temp with unique name
             try
@@ -99,7 +108,10 @@ namespace SuperTUI.Extensions
                     fallbacks.Add((fallback4, "Temp directory with unique name"));
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                logger?.Debug("DirectoryHelper", $"Failed to get Temp unique fallback: {ex.Message}");
+            }
 
             // Try each fallback
             foreach (var (fallbackPath, description) in fallbacks)

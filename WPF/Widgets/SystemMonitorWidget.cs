@@ -95,7 +95,10 @@ namespace SuperTUI.Widgets
                 networkSentCounter?.NextValue();
                 networkReceivedCounter?.NextValue();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                logger?.Warning("SystemMonitor", $"Performance counter initialization failed: {ex.Message}");
+            }
 
             // Start update timer
             updateTimer = new DispatcherTimer

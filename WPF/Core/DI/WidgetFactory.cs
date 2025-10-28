@@ -52,6 +52,25 @@ namespace SuperTUI.DI
         }
 
         /// <summary>
+        /// Create widget by Type with dependency injection
+        /// Used by PowerShell scripts for state restoration
+        /// </summary>
+        public WidgetBase CreateWidget(Type widgetType)
+        {
+            if (widgetType == null)
+            {
+                throw new ArgumentNullException(nameof(widgetType));
+            }
+
+            if (!typeof(WidgetBase).IsAssignableFrom(widgetType))
+            {
+                throw new InvalidOperationException($"Type {widgetType.Name} does not inherit from WidgetBase");
+            }
+
+            return (WidgetBase)CreateWidgetInternal(widgetType);
+        }
+
+        /// <summary>
         /// Internal method to create widget with constructor injection
         /// </summary>
         private object CreateWidgetInternal(Type widgetType)

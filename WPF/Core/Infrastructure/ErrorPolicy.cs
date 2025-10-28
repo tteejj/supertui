@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using SuperTUI.Infrastructure;
 
@@ -246,16 +247,24 @@ namespace SuperTUI.Core.Infrastructure
         private static void ShowNotification(string title, string message, MessageBoxImage icon)
         {
             // Use Dispatcher to ensure we're on UI thread
-            if (Application.Current != null)
+            if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.HasShutdownStarted)
             {
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                try
                 {
-                    MessageBox.Show(
-                        message,
-                        title,
-                        MessageBoxButton.OK,
-                        icon);
-                }));
+                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show(
+                            message,
+                            title,
+                            MessageBoxButton.OK,
+                            icon);
+                    }));
+                }
+                catch (TaskCanceledException)
+                {
+                    // Dispatcher is shutting down - fallback to console
+                    Console.WriteLine($"[{icon}] {title}: {message}");
+                }
             }
             else
             {
@@ -276,17 +285,26 @@ namespace SuperTUI.Core.Infrastructure
                              $"Please check the log files for more details.";
 
             // Use Dispatcher if available, otherwise show synchronously
-            if (Application.Current != null)
+            if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.HasShutdownStarted)
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                try
                 {
-                    MessageBox.Show(
-                        fullMessage,
-                        "Fatal Error - Application Terminating",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error,
-                        MessageBoxResult.OK);
-                });
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            fullMessage,
+                            "Fatal Error - Application Terminating",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error,
+                            MessageBoxResult.OK);
+                    });
+                }
+                catch (Exception dispatcherEx)
+                {
+                    // Dispatcher failed - fallback to console
+                    Console.WriteLine($"[FATAL ERROR] {fullMessage}");
+                    Console.WriteLine($"(Dispatcher error: {dispatcherEx.Message})");
+                }
             }
             else
             {

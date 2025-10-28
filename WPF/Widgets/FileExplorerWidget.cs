@@ -74,12 +74,12 @@ namespace SuperTUI.Widgets
             ".reg", ".hta", ".cpl", ".msc", ".jar", ".app", ".deb", ".rpm"
         };
 
+        // DI constructor (used by WidgetFactory - no optional parameters)
         public FileExplorerWidget(
             ILogger logger,
             IThemeManager themeManager,
             IConfigurationManager config,
-            ISecurityManager security,
-            string initialPath = null)
+            ISecurityManager security)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
@@ -87,8 +87,22 @@ namespace SuperTUI.Widgets
             this.security = security ?? throw new ArgumentNullException(nameof(security));
 
             WidgetName = "File Explorer";
-            currentPath = initialPath ?? Directory.GetCurrentDirectory();
+            // Get initial path from config, fallback to current directory
+            currentPath = config.Get("FileExplorer.InitialPath", Directory.GetCurrentDirectory());
             currentItems = new List<FileSystemInfo>();
+        }
+
+        // Manual constructor with initialPath (for direct instantiation)
+        public FileExplorerWidget(
+            ILogger logger,
+            IThemeManager themeManager,
+            IConfigurationManager config,
+            ISecurityManager security,
+            string initialPath)
+            : this(logger, themeManager, config, security)
+        {
+            // Override the path from config with explicit initialPath
+            currentPath = initialPath ?? Directory.GetCurrentDirectory();
         }
 
 

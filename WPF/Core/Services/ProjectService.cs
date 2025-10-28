@@ -84,6 +84,12 @@ namespace SuperTUI.Core.Services
             var taskService = TaskService.Instance;
             if (taskService != null)
             {
+                // Unsubscribe first to prevent double-subscription if Initialize() called multiple times
+                taskService.TaskAdded -= OnTaskChanged;
+                taskService.TaskUpdated -= OnTaskChanged;
+                taskService.TaskDeleted -= OnTaskDeleted;
+
+                // Now subscribe
                 taskService.TaskAdded += OnTaskChanged;
                 taskService.TaskUpdated += OnTaskChanged;
                 taskService.TaskDeleted += OnTaskDeleted;

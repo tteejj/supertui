@@ -35,7 +35,7 @@ namespace SuperTUI.Tests.Linux
         [Theory]
         [InlineData("ClockWidget")]
         [InlineData("CounterWidget")]
-        [InlineData("TodoWidget")]
+        // TodoWidget removed - functionality replaced by TaskManagementWidget
         [InlineData("CommandPaletteWidget")]
         [InlineData("ShortcutHelpWidget")]
         [InlineData("SettingsWidget")]

@@ -19,6 +19,13 @@ namespace SuperTUI.Core
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
 
+        // Backward-compatible constructor (for PowerShell scripts)
+        public GridLayoutEngine(int rows, int columns)
+            : this(rows, columns, false, Logger.Instance, ThemeManager.Instance)
+        {
+        }
+
+        // DI constructor (preferred)
         public GridLayoutEngine(int rows, int columns, bool enableSplitters, ILogger logger, IThemeManager themeManager)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));

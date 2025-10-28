@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -353,8 +354,8 @@ namespace SuperTUI
                 var statePersistence = serviceContainer.GetService<IStatePersistenceManager>();
                 if (statePersistence != null)
                 {
-                    // Use async version but with proper ConfigureAwait
-                    var saveTask = statePersistence.SaveStateAsync(null, false);
+                    // Use Task.Run to avoid UI thread deadlock, then wait
+                    var saveTask = Task.Run(async () => await statePersistence.SaveStateAsync(null, false));
 
                     // Show a brief progress dialog if save takes too long
                     if (!saveTask.Wait(TimeSpan.FromSeconds(5)))
@@ -371,9 +372,8 @@ namespace SuperTUI
                         }
                         else
                         {
-                            // Cancel close and let background save finish
-                            e.Cancel = true;
-                            return;
+                            // Let user exit without waiting
+                            // Note: Save will continue in background but may not complete
                         }
                     }
                 }
