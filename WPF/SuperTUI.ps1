@@ -103,7 +103,7 @@ try {
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootContainer">
         <Grid.RowDefinitions>
             <RowDefinition Height="35"/>
             <RowDefinition Height="*"/>
@@ -210,6 +210,7 @@ $reader = [System.Xml.XmlNodeReader]::new($xaml)
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
 # Get controls
+$rootContainer = $window.FindName("RootContainer")
 $workspaceContainer = $window.FindName("WorkspaceContainer")
 $workspaceTitle = $window.FindName("WorkspaceTitle")
 $modeIndicator = $window.FindName("ModeIndicator")
@@ -484,6 +485,12 @@ Write-Host "CRT Effects Overlay initialized" -ForegroundColor Green
 })
 
 Write-Host "Global exception handler registered" -ForegroundColor Green
+
+# Initialize OverlayManager with root container and workspace container
+Write-Host "Initializing OverlayManager..." -ForegroundColor Cyan
+$overlayManager = [SuperTUI.Core.Services.OverlayManager]::Instance
+$overlayManager.Initialize($rootContainer, $workspaceContainer)
+Write-Host "OverlayManager initialized" -ForegroundColor Green
 
 # Create WorkspaceManager
 $workspaceManager = New-Object SuperTUI.Core.WorkspaceManager($workspaceContainer)
