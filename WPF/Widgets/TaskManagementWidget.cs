@@ -318,11 +318,17 @@ namespace SuperTUI.Widgets
             {
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
+
+                // CRITICAL: Set keyboard focus to the tree control immediately so it receives input
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    treeTaskListControl.Focus();
+                    Keyboard.Focus(treeTaskListControl);
+                    var focused = Keyboard.FocusedElement;
+                    logger?.Info("TaskWidget", $"Keyboard focus NOW on: {focused?.GetType().Name ?? "NULL"}");
+                }), System.Windows.Threading.DispatcherPriority.Input);
             }
 
-            // Set keyboard focus to THIS widget (not child control)
-            this.Focus();
-            Keyboard.Focus(this);
             logger?.Info("TaskWidget", "Widget has keyboard focus - ready for input");
         }
 

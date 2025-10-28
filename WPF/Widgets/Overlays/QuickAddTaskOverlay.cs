@@ -48,7 +48,9 @@ namespace SuperTUI.Widgets.Overlays
             var mainPanel = new StackPanel
             {
                 Margin = new Thickness(15),
-                Background = new SolidColorBrush(theme.Surface)
+                Background = new SolidColorBrush(theme.Surface),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
 
             // Input box (prominent, monospace for terminal vibe)
@@ -61,7 +63,9 @@ namespace SuperTUI.Widgets.Overlays
                 BorderBrush = new SolidColorBrush(theme.Primary),
                 BorderThickness = new Thickness(2),
                 Padding = new Thickness(10),
-                Margin = new Thickness(0, 0, 0, 10)
+                Margin = new Thickness(0, 0, 0, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 35
             };
 
             inputBox.KeyDown += OnInputKeyDown;
@@ -81,8 +85,10 @@ namespace SuperTUI.Widgets.Overlays
                     (byte)(theme.Foreground.G * 0.6),
                     (byte)(theme.Foreground.B * 0.6)
                 )),
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 11,
-                TextWrapping = TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
 
             mainPanel.Children.Add(hintText);
