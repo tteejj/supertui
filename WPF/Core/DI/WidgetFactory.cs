@@ -21,12 +21,27 @@ namespace SuperTUI.DI
         }
 
         /// <summary>
-        /// Register a widget type for creation
+        /// Register a widget type for creation (generic version)
         /// </summary>
         public void RegisterWidget<TWidget>(string name) where TWidget : WidgetBase
         {
             registeredWidgets[name] = typeof(TWidget);
             Logger.Instance.Debug("WidgetFactory", $"Registered widget: {name} -> {typeof(TWidget).Name}");
+        }
+
+        /// <summary>
+        /// Register a widget type for creation (non-generic version for PowerShell)
+        /// </summary>
+        public void RegisterWidget(Type widgetType, string name)
+        {
+            if (widgetType == null)
+                throw new ArgumentNullException(nameof(widgetType));
+
+            if (!typeof(WidgetBase).IsAssignableFrom(widgetType))
+                throw new ArgumentException($"Type {widgetType.Name} must inherit from WidgetBase", nameof(widgetType));
+
+            registeredWidgets[name] = widgetType;
+            Logger.Instance.Info("WidgetFactory", $"Registered widget: {name} -> {widgetType.Name}");
         }
 
         /// <summary>
