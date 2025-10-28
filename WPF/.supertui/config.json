@@ -1,0 +1,32 @@
+﻿{
+  "App.Title": "SuperTUI",
+  "App.LogLevel": 2,
+  "App.LogDirectory": "C:\\Users\\jhnhe\\OneDrive\\Documents\\GitHub\\supertui\\WPF\\.data\\SuperTUI\\Logs",
+  "App.AutoSave": true,
+  "App.AutoSaveInterval": 300,
+  "UI.Theme": "Dark",
+  "UI.FontFamily": "Cascadia Mono, Consolas",
+  "UI.FontSize": 12,
+  "UI.AnimationDuration": 200,
+  "UI.ShowLineNumbers": false,
+  "UI.WordWrap": true,
+  "Performance.MaxFPS": 60,
+  "Performance.EnableVSync": true,
+  "Performance.LazyLoadThreshold": 100,
+  "Performance.VirtualizationEnabled": true,
+  "Security.AllowScriptExecution": false,
+  "Security.ValidateFileAccess": true,
+  "Security.MaxFileSize": 10,
+  "Security.AllowedExtensions": [
+    ".txt",
+    ".md",
+    ".json",
+    ".csv",
+    ".log"
+  ],
+  "Backup.Enabled": true,
+  "Backup.Directory": "C:\\Users\\jhnhe\\OneDrive\\Documents\\GitHub\\supertui\\WPF\\.data\\SuperTUI\\Backups",
+  "Backup.Interval": 3600,
+  "Backup.MaxBackups": 10,
+  "Backup.CompressBackups": true
+}
