@@ -143,6 +143,34 @@ namespace SuperTUI.Widgets
 
         private void BuildUI()
         {
+            var theme = themeManager.CurrentTheme;
+
+            // Main container with footer
+            var mainPanel = new DockPanel();
+
+            // Footer with shortcuts
+            var footer = new Border
+            {
+                Background = new SolidColorBrush(theme.Background),
+                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderThickness = new Thickness(0, 1, 0, 0),
+                Padding = new Thickness(10, 5, 10, 5)
+            };
+
+            var footerText = new TextBlock
+            {
+                Text = "[N] Quick Add  [Ctrl+N] New Task  [F2/Enter] Edit  [Del] Delete  [S] Subtask  [/] Filter  [Ctrl+M] Notes  [Ctrl+T] Tags  [?] Help",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 10,
+                Foreground = new SolidColorBrush(theme.Secondary),
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            footer.Child = footerText;
+            DockPanel.SetDock(footer, Dock.Bottom);
+            mainPanel.Children.Add(footer);
+
+            // Task list control
             treeTaskListControl = new TreeTaskListControl(logger, themeManager);
 
             // Subscribe to events
@@ -152,12 +180,14 @@ namespace SuperTUI.Widgets
             treeTaskListControl.DeleteTask += OnDeleteTask;
             treeTaskListControl.ToggleExpanded += OnToggleExpanded;
 
+            mainPanel.Children.Add(treeTaskListControl);
+
             // Ensure widget is focusable
             this.Focusable = true;
             this.MinHeight = 200;
             this.MinWidth = 300;
 
-            this.Content = treeTaskListControl;
+            this.Content = mainPanel;
         }
 
         private void LoadCurrentFilter()

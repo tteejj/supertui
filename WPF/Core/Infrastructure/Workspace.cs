@@ -94,8 +94,8 @@ namespace SuperTUI.Core
                 }
             }
 
-            // Focus first element if nothing focused
-            if (focusedElement == null && focusableElements.Count > 0)
+            // Always focus first element on activation to ensure workspace starts with focus
+            if (focusableElements.Count > 0)
             {
                 FocusElement(focusableElements[0]);
             }
