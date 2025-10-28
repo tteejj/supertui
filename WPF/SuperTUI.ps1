@@ -136,7 +136,9 @@ try {
         <ContentControl
             x:Name="WorkspaceContainer"
             Grid.Row="1"
-            Background="{StaticResource TerminalBackground}"/>
+            Background="{StaticResource TerminalBackground}">
+            <Grid x:Name="WorkspacePanel"/>
+        </ContentControl>
 
         <!-- Status Bar -->
         <Border Grid.Row="2" Style="{StaticResource StatusBarStyle}">
@@ -212,6 +214,7 @@ $window = [Windows.Markup.XamlReader]::Load($reader)
 # Get controls
 $rootContainer = $window.FindName("RootContainer")
 $workspaceContainer = $window.FindName("WorkspaceContainer")
+$workspacePanel = $window.FindName("WorkspacePanel")
 $workspaceTitle = $window.FindName("WorkspaceTitle")
 $modeIndicator = $window.FindName("ModeIndicator")
 $statusText = $window.FindName("StatusText")
@@ -486,10 +489,10 @@ Write-Host "CRT Effects Overlay initialized" -ForegroundColor Green
 
 Write-Host "Global exception handler registered" -ForegroundColor Green
 
-# Initialize OverlayManager with root container and workspace container
+# Initialize OverlayManager with root container and workspace panel (Grid inside ContentControl)
 Write-Host "Initializing OverlayManager..." -ForegroundColor Cyan
 $overlayManager = [SuperTUI.Core.Services.OverlayManager]::Instance
-$overlayManager.Initialize($rootContainer, $workspaceContainer)
+$overlayManager.Initialize($rootContainer, $workspacePanel)
 Write-Host "OverlayManager initialized" -ForegroundColor Green
 
 # Create WorkspaceManager
