@@ -254,8 +254,14 @@ Write-Host "Initializing SuperTUI infrastructure with DI..." -ForegroundColor Cy
 
 # Initialize ServiceContainer and register all services
 Write-Host "Setting up ServiceContainer..." -ForegroundColor Cyan
-$serviceContainer = [SuperTUI.DI.ServiceRegistration]::RegisterAllServices("$env:TEMP\SuperTUI-config.json", $null)
+$supertuiDataDir = Join-Path $PSScriptRoot ".supertui"
+if (-not (Test-Path $supertuiDataDir)) {
+    New-Item -Path $supertuiDataDir -ItemType Directory -Force | Out-Null
+}
+$configPath = Join-Path $supertuiDataDir "config.json"
+$serviceContainer = [SuperTUI.DI.ServiceRegistration]::RegisterAllServices($configPath, $null)
 Write-Host "ServiceContainer initialized and services registered" -ForegroundColor Green
+Write-Host "  Config location: $configPath" -ForegroundColor Gray
 
 # Get services from container (already initialized by RegisterAllServices)
 $logger = $serviceContainer.GetService([SuperTUI.Infrastructure.ILogger])
@@ -271,8 +277,11 @@ Write-Host "Core services resolved from container" -ForegroundColor Green
 $logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Debug)
 Write-Host "Logger set to DEBUG level" -ForegroundColor Yellow
 
-# Add additional log sink for console output
-$logPath = "$env:TEMP\SuperTUI"
+# Add file log sink to supertui folder
+$logPath = Join-Path $supertuiDataDir "logs"
+if (-not (Test-Path $logPath)) {
+    New-Item -Path $logPath -ItemType Directory -Force | Out-Null
+}
 $fileLogSink = New-Object SuperTUI.Infrastructure.FileLogSink($logPath, "SuperTUI")
 $logger.AddSink($fileLogSink)
 Write-Host "File log sink added: $logPath\SuperTUI_*.log" -ForegroundColor Green
@@ -529,10 +538,9 @@ try {
     Write-Host "    Widget initialized" -ForegroundColor Green
 
     $ws2Params = New-Object SuperTUI.Core.LayoutParams
-    Write-Host "  Adding widget to layout..." -ForegroundColor Gray
-    $workspace2Layout.AddChild($projectManagementWidget, $ws2Params)
-    $workspace2.Widgets.Add($projectManagementWidget)
-    Write-Host "    Widget added to workspace" -ForegroundColor Green
+    Write-Host "  Adding widget to workspace..." -ForegroundColor Gray
+    $workspace2.AddWidget($projectManagementWidget, $ws2Params)
+    Write-Host "    Widget added to workspace with ErrorBoundary" -ForegroundColor Green
 } catch {
     Write-Host "    ERROR creating TaskManagementWidget: $_" -ForegroundColor Red
     Write-Host "    Exception type: $($_.Exception.GetType().FullName)" -ForegroundColor Red

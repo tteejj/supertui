@@ -24,9 +24,9 @@ namespace SuperTUI.Extensions
         /// Fallback order:
         /// 1. Primary path (user-specified)
         /// 2. User's LocalAppData\SuperTUI\{purpose}
-        /// 3. User's Temp\SuperTUI\{purpose}
-        /// 4. Current directory\.supertui\{purpose}
-        /// 5. Temp directory with unique name
+        /// 3. Current directory\.supertui\{purpose} (preferred local storage)
+        /// 4. User's Temp\SuperTUI\{purpose} (less preferred)
+        /// 5. Temp directory with unique name (last resort)
         /// </summary>
         /// <param name="primaryPath">Primary directory path to create</param>
         /// <param name="purpose">Purpose/subdirectory name for fallback paths (e.g., "Logs", "Config", "State")</param>
@@ -67,34 +67,34 @@ namespace SuperTUI.Extensions
                 logger?.Debug("DirectoryHelper", $"Failed to get LocalAppData fallback: {ex.Message}");
             }
 
-            // Fallback 2: Temp\SuperTUI\{purpose}
-            try
-            {
-                var tempPath = Path.GetTempPath();
-                if (!string.IsNullOrEmpty(tempPath))
-                {
-                    var fallback2 = Path.Combine(tempPath, "SuperTUI", purpose ?? "Data");
-                    fallbacks.Add((fallback2, "User's Temp directory"));
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.Debug("DirectoryHelper", $"Failed to get Temp fallback: {ex.Message}");
-            }
-
-            // Fallback 3: Current directory\.supertui\{purpose}
+            // Fallback 2: Current directory\.supertui\{purpose} (prefer local over temp)
             try
             {
                 var currentDir = Directory.GetCurrentDirectory();
                 if (!string.IsNullOrEmpty(currentDir))
                 {
-                    var fallback3 = Path.Combine(currentDir, ".supertui", purpose ?? "Data");
-                    fallbacks.Add((fallback3, "Current directory"));
+                    var fallback2 = Path.Combine(currentDir, ".supertui", purpose ?? "Data");
+                    fallbacks.Add((fallback2, "Current directory"));
                 }
             }
             catch (Exception ex)
             {
                 logger?.Debug("DirectoryHelper", $"Failed to get CurrentDirectory fallback: {ex.Message}");
+            }
+
+            // Fallback 3: Temp\SuperTUI\{purpose} (less preferred)
+            try
+            {
+                var tempPath = Path.GetTempPath();
+                if (!string.IsNullOrEmpty(tempPath))
+                {
+                    var fallback3 = Path.Combine(tempPath, "SuperTUI", purpose ?? "Data");
+                    fallbacks.Add((fallback3, "User's Temp directory"));
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.Debug("DirectoryHelper", $"Failed to get Temp fallback: {ex.Message}");
             }
 
             // Fallback 4: Temp with unique name

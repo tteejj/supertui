@@ -29,7 +29,7 @@ namespace SuperTUI.Core.Commands
         {
             _logger = logger;
 
-            // Setup data directory
+            // Setup data directory using DirectoryHelper for consistent fallback behavior
             var appDataDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 ".supertui"
@@ -37,14 +37,15 @@ namespace SuperTUI.Core.Commands
 
             try
             {
-                Directory.CreateDirectory(appDataDir);
+                appDataDir = SuperTUI.Extensions.DirectoryHelper.CreateDirectoryWithFallback(appDataDir, "Commands");
                 _dataPath = Path.Combine(appDataDir, "commands.json");
             }
             catch (Exception ex)
             {
                 _logger?.Error($"Failed to create data directory: {ex.Message}");
-                // Fallback to temp directory
-                _dataPath = Path.Combine(Path.GetTempPath(), "supertui_commands.json");
+                // Last resort fallback - should rarely happen with DirectoryHelper
+                var currentDir = Directory.GetCurrentDirectory();
+                _dataPath = Path.Combine(currentDir, ".supertui", "commands.json");
             }
 
             _commands = new List<Command>();
