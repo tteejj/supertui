@@ -1,17 +1,36 @@
-﻿2025-10-28 13:44:35.374 [Info    ] [Theme] Applied theme: Dark
-2025-10-28 13:44:35.381 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ClockWidget -> ClockWidget
-2025-10-28 13:44:35.381 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CounterWidget -> CounterWidget
-2025-10-28 13:44:35.381 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskSummaryWidget -> TaskSummaryWidget
-2025-10-28 13:44:35.382 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskManagementWidget -> TaskManagementWidget
-2025-10-28 13:44:35.382 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.KanbanBoardWidget -> KanbanBoardWidget
-2025-10-28 13:44:35.382 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.AgendaWidget -> AgendaWidget
-2025-10-28 13:44:35.382 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ProjectStatsWidget -> ProjectStatsWidget
-2025-10-28 13:44:35.383 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.NotesWidget -> NotesWidget
-2025-10-28 13:44:35.383 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.FileExplorerWidget -> FileExplorerWidget
-2025-10-28 13:44:35.383 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelImportWidget -> ExcelImportWidget
-2025-10-28 13:44:35.383 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelExportWidget -> ExcelExportWidget
-2025-10-28 13:44:35.384 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelMappingEditorWidget -> ExcelMappingEditorWidget
-2025-10-28 13:44:35.575 [Error   ] [ExcelImport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
+﻿NOTE: Windows key shortcuts removed (conflict with Windows OS)
+
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:1334
+Line |
+1334 |  …             $widget.InputMode = [SuperTUI.Core.WidgetInputMode]::Norm …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 'InputMode' is a ReadOnly property.
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:1334
+Line |
+1334 |  …             $widget.InputMode = [SuperTUI.Core.WidgetInputMode]::Norm …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 'InputMode' is a ReadOnly property.
+Saving workspace states...
+Workspace states saved
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
+
+2025-10-28 14:01:29.144 [Info    ] [Theme] Applied theme: Dark
+2025-10-28 14:01:29.153 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ClockWidget -> ClockWidget
+2025-10-28 14:01:29.154 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CounterWidget -> CounterWidget
+2025-10-28 14:01:29.155 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskSummaryWidget -> TaskSummaryWidget
+2025-10-28 14:01:29.155 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TaskManagementWidget -> TaskManagementWidget
+2025-10-28 14:01:29.156 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.KanbanBoardWidget -> KanbanBoardWidget
+2025-10-28 14:01:29.156 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.AgendaWidget -> AgendaWidget
+2025-10-28 14:01:29.156 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ProjectStatsWidget -> ProjectStatsWidget
+2025-10-28 14:01:29.157 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.NotesWidget -> NotesWidget
+2025-10-28 14:01:29.157 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.FileExplorerWidget -> FileExplorerWidget
+2025-10-28 14:01:29.157 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelImportWidget -> ExcelImportWidget
+2025-10-28 14:01:29.158 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelExportWidget -> ExcelExportWidget
+2025-10-28 14:01:29.158 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ExcelMappingEditorWidget -> ExcelMappingEditorWidget
+2025-10-28 14:01:29.158 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CommandPaletteWidget -> CommandPaletteWidget
+2025-10-28 14:01:29.159 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.SettingsWidget -> SettingsWidget
+2025-10-28 14:01:29.159 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ShortcutHelpWidget -> ShortcutHelpWidget
+2025-10-28 14:01:29.401 [Error   ] [ExcelImport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
     Exception: ArgumentException: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
        at SuperTUI.Infrastructure.ConfigurationManager.Set[T](String key, T value, Boolean saveImmediately) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs:line 389
    at SuperTUI.Core.Services.ExcelMappingService.SetActiveProfile(Guid id) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ExcelMappingService.cs:line 195
@@ -27,8 +46,8 @@
    at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
    at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
    at SuperTUI.Widgets.ExcelImportWidget.LoadProfiles() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ExcelImportWidget.cs:line 281
-2025-10-28 13:44:35.384 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.CommandPaletteWidget -> CommandPaletteWidget
-2025-10-28 13:44:35.592 [Error   ] [ExcelExport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
+2025-10-28 14:01:29.159 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TimeTrackingWidget -> TimeTrackingWidget
+2025-10-28 14:01:29.420 [Error   ] [ExcelExport] Failed to load profiles: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
     Exception: ArgumentException: Unknown configuration key: Excel.ActiveProfileId (Parameter 'key')
        at SuperTUI.Infrastructure.ConfigurationManager.Set[T](String key, T value, Boolean saveImmediately) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ConfigurationManager.cs:line 389
    at SuperTUI.Core.Services.ExcelMappingService.SetActiveProfile(Guid id) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ExcelMappingService.cs:line 195
@@ -44,215 +63,242 @@
    at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
    at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
    at SuperTUI.Widgets.ExcelExportWidget.LoadProfiles() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Widgets\ExcelExportWidget.cs:line 412
-2025-10-28 13:44:35.384 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.SettingsWidget -> SettingsWidget
-2025-10-28 13:44:35.384 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.ShortcutHelpWidget -> ShortcutHelpWidget
-2025-10-28 13:44:35.385 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.TimeTrackingWidget -> TimeTrackingWidget
-2025-10-28 13:44:35.385 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.RetroTaskManagementWidget -> RetroTaskManagementWidget
-2025-10-28 13:44:35.429 [Info    ] [OverlayManager] Initialize called - rootContainer: Grid, workspaceContainer: Grid
-2025-10-28 13:44:35.429 [Info    ] [OverlayManager] Initialized overlay zone system - bottomZone null? False
-2025-10-28 13:44:35.449 [Info    ] [Clock] Widget initialized
-2025-10-28 13:44:35.459 [Info    ] [TaskSummary] Widget initialized
-2025-10-28 13:44:35.463 [Info    ] [Workspace] Activating workspace 'Dashboard' (Index: 1)
-2025-10-28 13:44:35.463 [Debug   ] [Workspace] Activating 0 error boundaries
-2025-10-28 13:44:35.463 [Debug   ] [Workspace] Activating 0 screens
-2025-10-28 13:44:35.463 [Info    ] [Workspace] Focusable elements count: 0
-2025-10-28 13:44:35.463 [Warning ] [Workspace] NO FOCUSABLE ELEMENTS - cannot auto-focus!
-2025-10-28 13:44:35.494 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
-2025-10-28 13:44:35.495 [Info    ] [TaskWidget] Task Management widget initialized
-2025-10-28 13:44:35.499 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
-2025-10-28 13:44:35.499 [Info    ] [TaskWidget] Task Management widget initialized
-2025-10-28 13:44:35.508 [Debug   ] [KanbanWidget] Loaded 0 tasks
-2025-10-28 13:44:35.508 [Info    ] [KanbanBoard] Widget initialized
-2025-10-28 13:44:35.524 [Debug   ] [AgendaWidget] Loaded 0 tasks
-2025-10-28 13:44:35.524 [Info    ] [Agenda] Widget initialized
-2025-10-28 13:44:35.547 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:44:35.548 [Info    ] [ProjectStats] Widget initialized
-2025-10-28 13:44:35.575 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
-2025-10-28 13:44:35.576 [Info    ] [ExcelImport] Widget initialized
-2025-10-28 13:44:35.592 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
-2025-10-28 13:44:35.592 [Info    ] [ExcelExport] Loaded 0 projects
-2025-10-28 13:44:35.592 [Info    ] [ExcelExport] Widget initialized
-2025-10-28 13:44:35.621 [Info    ] [ExcelMappingEditor] Loaded 1 profiles
-2025-10-28 13:44:35.621 [Info    ] [ExcelMappingEditor] Widget initialized
-2025-10-28 13:44:35.630 [Debug   ] [StateManagement] No saved state found for workspace: Dashboard
-2025-10-28 13:44:35.630 [Debug   ] [StateManagement] No saved state found for workspace: Projects
-2025-10-28 13:44:35.631 [Debug   ] [StateManagement] No saved state found for workspace: Kanban
-2025-10-28 13:44:35.631 [Debug   ] [StateManagement] No saved state found for workspace: Agenda
-2025-10-28 13:44:35.631 [Debug   ] [StateManagement] No saved state found for workspace: Analytics
-2025-10-28 13:44:35.632 [Debug   ] [StateManagement] No saved state found for workspace: Excel
-2025-10-28 13:44:38.573 [Info    ] [Workspace] Activating workspace 'Projects' (Index: 2)
-2025-10-28 13:44:38.573 [Debug   ] [Workspace] Activating 1 error boundaries
-2025-10-28 13:44:38.573 [Debug   ] [Workspace] Activating 0 screens
-2025-10-28 13:44:38.573 [Info    ] [Workspace] Focusable elements count: 1
-2025-10-28 13:44:38.573 [Info    ] [Workspace] Auto-focusing first element: TaskManagementWidget
-2025-10-28 13:44:38.574 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:44:38.574 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:44:38.574 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:44:38.574 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:44:38.574 [Info    ] [Workspace] Focus set. Focused element: TaskManagementWidget
-2025-10-28 13:44:38.579 [Debug   ] [ApplicationContext] Current workspace changed: Projects
-2025-10-28 13:44:38.583 [Debug   ] [StatePersistence] State snapshot captured
-2025-10-28 13:44:38.608 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
-2025-10-28 13:44:38.608 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
+2025-10-28 14:01:29.160 [Info    ] [WidgetFactory] Registered widget: SuperTUI.Widgets.RetroTaskManagementWidget -> RetroTaskManagementWidget
+2025-10-28 14:01:29.220 [Info    ] [OverlayManager] Initialize called - rootContainer: Grid, workspaceContainer: Grid
+2025-10-28 14:01:29.221 [Info    ] [OverlayManager] Initialized overlay zone system - bottomZone null? False
+2025-10-28 14:01:29.248 [Info    ] [Clock] Widget initialized
+2025-10-28 14:01:29.261 [Info    ] [TaskSummary] Widget initialized
+2025-10-28 14:01:29.265 [Info    ] [Workspace] Activating workspace 'Dashboard' (Index: 1)
+2025-10-28 14:01:29.265 [Debug   ] [Workspace] Activating 0 error boundaries
+2025-10-28 14:01:29.265 [Debug   ] [Workspace] Activating 0 screens
+2025-10-28 14:01:29.265 [Info    ] [Workspace] Focusable elements count: 0
+2025-10-28 14:01:29.265 [Warning ] [Workspace] NO FOCUSABLE ELEMENTS - cannot auto-focus!
+2025-10-28 14:01:29.305 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
+2025-10-28 14:01:29.306 [Info    ] [TaskWidget] Task Management widget initialized
+2025-10-28 14:01:29.312 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
+2025-10-28 14:01:29.313 [Info    ] [TaskWidget] Task Management widget initialized
+2025-10-28 14:01:29.325 [Debug   ] [KanbanWidget] Loaded 0 tasks
+2025-10-28 14:01:29.326 [Info    ] [KanbanBoard] Widget initialized
+2025-10-28 14:01:29.344 [Debug   ] [AgendaWidget] Loaded 0 tasks
+2025-10-28 14:01:29.344 [Info    ] [Agenda] Widget initialized
+2025-10-28 14:01:29.370 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:01:29.370 [Info    ] [ProjectStats] Widget initialized
+2025-10-28 14:01:29.401 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
+2025-10-28 14:01:29.402 [Info    ] [ExcelImport] Widget initialized
+2025-10-28 14:01:29.420 [Warning ] [Config] Unknown config key: Excel.ActiveProfileId
+2025-10-28 14:01:29.421 [Info    ] [ExcelExport] Loaded 0 projects
+2025-10-28 14:01:29.421 [Info    ] [ExcelExport] Widget initialized
+2025-10-28 14:01:29.452 [Info    ] [ExcelMappingEditor] Loaded 1 profiles
+2025-10-28 14:01:29.452 [Info    ] [ExcelMappingEditor] Widget initialized
+2025-10-28 14:01:29.462 [Debug   ] [StateManagement] No saved state found for workspace: Dashboard
+2025-10-28 14:01:29.462 [Debug   ] [StateManagement] No saved state found for workspace: Projects
+2025-10-28 14:01:29.463 [Debug   ] [StateManagement] No saved state found for workspace: Kanban
+2025-10-28 14:01:29.463 [Debug   ] [StateManagement] No saved state found for workspace: Agenda
+2025-10-28 14:01:29.463 [Debug   ] [StateManagement] No saved state found for workspace: Analytics
+2025-10-28 14:01:29.464 [Debug   ] [StateManagement] No saved state found for workspace: Excel
+2025-10-28 14:01:32.886 [Info    ] [Workspace] Activating workspace 'Projects' (Index: 2)
+2025-10-28 14:01:32.886 [Debug   ] [Workspace] Activating 1 error boundaries
+2025-10-28 14:01:32.886 [Debug   ] [Workspace] Activating 0 screens
+2025-10-28 14:01:32.886 [Info    ] [Workspace] Focusable elements count: 1
+2025-10-28 14:01:32.886 [Info    ] [Workspace] Auto-focusing first element: TaskManagementWidget
+2025-10-28 14:01:32.887 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:32.887 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:32.887 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:32.887 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:32.887 [Info    ] [Workspace] Focus set. Focused element: TaskManagementWidget
+2025-10-28 14:01:32.890 [Debug   ] [ApplicationContext] Current workspace changed: Projects
+2025-10-28 14:01:32.892 [Debug   ] [StatePersistence] State snapshot captured
+2025-10-28 14:01:32.914 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
+2025-10-28 14:01:32.914 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
    at System.ArgumentNullException.ThrowIfNull(Object argument, String paramName)
    at System.ArgumentException.ThrowNullOrEmptyException(String argument, String paramName)
    at System.IO.File.Validate(String path, Encoding encoding)
    at System.IO.File.WriteAllTextAsync(String path, ReadOnlyMemory`1 contents, Encoding encoding, CancellationToken cancellationToken)
    at System.IO.File.WriteAllTextAsync(String path, String contents, Encoding encoding, CancellationToken cancellationToken)
    at SuperTUI.Extensions.StatePersistenceManager.SaveStateAsync(StateSnapshot snapshot, Boolean createBackup) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs:line 495
-2025-10-28 13:44:38.609 [Debug   ] [StateManagement] Auto-saved workspace states on switch to: Projects
-2025-10-28 13:44:38.632 [Info    ] [TaskWidget] Keyboard focus NOW on: Window
-2025-10-28 13:44:38.632 [Info    ] [TaskWidget] Keyboard focus NOW on: Window
-2025-10-28 13:44:44.730 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:44:44.730 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:44:44.733 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:44:44.733 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:44:44.743 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:44:44.743 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:44:45.417 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=None, Handled=False
-2025-10-28 13:44:45.419 [Debug   ] [OverlayManager] ShowBottomZone called - bottomZone null? False
-2025-10-28 13:44:45.419 [Debug   ] [OverlayManager] Opened bottom zone
-2025-10-28 13:44:45.492 [Debug   ] [KanbanWidget] Loaded 0 tasks
-2025-10-28 13:44:55.514 [Debug   ] [KanbanWidget] Loaded 0 tasks
-2025-10-28 13:44:56.613 [Info    ] [QuickJump] Overlay shown
-2025-10-28 13:44:58.263 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:44:58.263 [Debug   ] [AgendaWidget] Loaded 1 tasks
-2025-10-28 13:44:58.264 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:44:58.264 [Info    ] [TaskService] Added task: testin (ID: 6f47a744-7d26-4ce6-b839-5845a8896e83)
-2025-10-28 13:44:58.264 [Info    ] [QuickAddTaskOverlay] Created task: testin
-2025-10-28 13:44:58.264 [Info    ] [TaskWidget] Quick-created task: testin
-2025-10-28 13:44:58.264 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
-2025-10-28 13:44:58.793 [Error   ] [TaskService] Failed to save tasks: Unable to find the specified file.
-    Exception: FileNotFoundException: Unable to find the specified file.
-       at System.IO.FileSystem.ReplaceFile(String sourceFullPath, String destFullPath, String destBackupFullPath, Boolean ignoreMetadataErrors)
-   at SuperTUI.Core.Services.TaskService.<>c__DisplayClass44_0.<SaveToFileAsync>b__1() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\TaskService.cs:line 597
-   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
---- End of stack trace from previous location ---
-   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
-   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
---- End of stack trace from previous location ---
-   at SuperTUI.Core.Services.TaskService.SaveToFileAsync() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\TaskService.cs:line 597
-2025-10-28 13:45:05.515 [Debug   ] [AgendaWidget] Loaded 1 tasks
-2025-10-28 13:45:05.515 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:05.546 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:45:10.694 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:10.694 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:10.695 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:10.695 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:10.725 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:10.725 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:11.924 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:45:12.369 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=Control, Handled=False
-2025-10-28 13:45:12.379 [Debug   ] [OverlayManager] Opened center zone
-2025-10-28 13:45:15.509 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:25.503 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:26.033 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:26.034 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:26.034 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:26.034 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:26.066 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:26.066 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:31.208 [Info    ] [TaskWidget] OnKeyDown: Key=E, Modifiers=None, Handled=False
-2025-10-28 13:45:32.465 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:45:32.907 [Info    ] [TaskWidget] OnKeyDown: Key=M, Modifiers=Control, Handled=False
-2025-10-28 13:45:32.910 [Debug   ] [OverlayManager] Opened center zone
-2025-10-28 13:45:35.503 [Debug   ] [AgendaWidget] Loaded 1 tasks
-2025-10-28 13:45:35.503 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:35.535 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:45:41.904 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:41.905 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:41.905 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:41.905 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:41.938 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:41.938 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:44.005 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=None, Handled=False
-2025-10-28 13:45:44.010 [Debug   ] [OverlayManager] Opened left zone
-2025-10-28 13:45:45.507 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:47.631 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:47.631 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:47.631 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:47.631 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:47.631 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:47.636 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:47.636 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:48.806 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:48.806 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:48.806 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:48.806 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:48.806 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:48.821 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:48.821 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:49.199 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:49.199 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:49.199 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:49.199 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:49.199 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:49.211 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:49.211 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:49.355 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:49.355 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:49.355 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:49.355 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:49.355 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:49.374 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:49.374 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:50.130 [Info    ] [TaskWidget] OnKeyDown: Key=Escape, Modifiers=None, Handled=False
-2025-10-28 13:45:50.147 [Info    ] [QuickJump] Overlay hidden
-2025-10-28 13:45:51.429 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:51.429 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:51.429 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:51.429 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:51.429 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:51.433 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:51.433 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:53.351 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:45:53.351 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:53.351 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:53.351 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:45:53.351 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:45:53.352 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:53.352 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:45:55.511 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:45:56.589 [Info    ] [TaskWidget] OnKeyDown: Key=F2, Modifiers=None, Handled=False
-2025-10-28 13:45:56.590 [Debug   ] [OverlayManager] Opened center zone
-2025-10-28 13:46:00.766 [Debug   ] [OverlayManager] Closed center zone
-2025-10-28 13:46:00.766 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:46:00.766 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:46:00.782 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:46:01.588 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
-2025-10-28 13:46:01.589 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:46:01.589 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:46:01.589 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
-2025-10-28 13:46:01.589 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
-2025-10-28 13:46:01.590 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:46:01.590 [Info    ] [TaskWidget] Keyboard focus NOW on: TaskManagementWidget
-2025-10-28 13:46:02.066 [Info    ] [TaskWidget] OnKeyDown: Key=RightShift, Modifiers=Shift, Handled=False
-2025-10-28 13:46:02.568 [Info    ] [TaskWidget] OnKeyDown: Key=RightShift, Modifiers=Shift, Handled=False
-2025-10-28 13:46:02.601 [Info    ] [TaskWidget] OnKeyDown: Key=RightShift, Modifiers=Shift, Handled=False
-2025-10-28 13:46:02.633 [Info    ] [TaskWidget] OnKeyDown: Key=RightShift, Modifiers=Shift, Handled=False
-2025-10-28 13:46:02.634 [Info    ] [TaskWidget] OnKeyDown: Key=OemPeriod, Modifiers=Shift, Handled=False
-2025-10-28 13:46:04.194 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=Shift, Handled=False
-2025-10-28 13:46:04.195 [Debug   ] [OverlayManager] Opened left zone
-2025-10-28 13:46:05.518 [Debug   ] [AgendaWidget] Loaded 1 tasks
-2025-10-28 13:46:05.518 [Debug   ] [KanbanWidget] Loaded 1 tasks
-2025-10-28 13:46:05.535 [Debug   ] [ProjectStatsWidget] Refreshed metrics
-2025-10-28 13:46:06.562 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.058 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.091 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.123 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.156 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.188 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.221 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.269 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.302 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.323 [Info    ] [TaskWidget] OnKeyDown: Key=Q, Modifiers=Control, Handled=False
-2025-10-28 13:46:07.327 [Debug   ] [StatePersistence] State snapshot captured
-2025-10-28 13:46:07.330 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
-2025-10-28 13:46:07.330 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
+2025-10-28 14:01:32.914 [Debug   ] [StateManagement] Auto-saved workspace states on switch to: Projects
+2025-10-28 14:01:32.928 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: Window
+2025-10-28 14:01:32.928 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: Window
+2025-10-28 14:01:36.447 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:36.447 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:36.448 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:36.448 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:36.449 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:01:36.449 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:01:38.445 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=None, Handled=False
+2025-10-28 14:01:38.447 [Debug   ] [OverlayManager] ShowBottomZone called - bottomZone null? False
+2025-10-28 14:01:38.448 [Debug   ] [OverlayManager] Opened bottom zone
+2025-10-28 14:01:39.367 [Debug   ] [KanbanWidget] Loaded 0 tasks
+2025-10-28 14:01:49.373 [Debug   ] [KanbanWidget] Loaded 0 tasks
+2025-10-28 14:01:56.713 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:01:56.713 [Debug   ] [AgendaWidget] Loaded 1 tasks
+2025-10-28 14:01:56.715 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:01:56.715 [Info    ] [TaskService] Added task: new task test (ID: a7007706-2d23-4da8-9c41-cf7eabde0724)
+2025-10-28 14:01:56.715 [Info    ] [QuickAddTaskOverlay] Created task: new task test
+2025-10-28 14:01:56.715 [Info    ] [TaskWidget] Quick-created task: new task test
+2025-10-28 14:01:56.716 [Info    ] [TreeTaskList] Loaded 1 tasks (hierarchical)
+2025-10-28 14:01:57.242 [Debug   ] [TaskService] Saved 1 tasks to C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.data\SuperTUI\tasks.json
+2025-10-28 14:01:59.340 [Debug   ] [AgendaWidget] Loaded 1 tasks
+2025-10-28 14:01:59.357 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:01:59.387 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:01:59.714 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:59.714 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:59.716 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:01:59.716 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:01:59.728 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:01:59.728 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:05.585 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:02:05.772 [Info    ] [TaskWidget] OnKeyDown: Key=N, Modifiers=Control, Handled=False
+2025-10-28 14:02:05.781 [Debug   ] [OverlayManager] Opened center zone
+2025-10-28 14:02:09.387 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:19.382 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:19.667 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:19.667 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:19.668 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:19.668 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:19.669 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:19.669 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:21.221 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
+2025-10-28 14:02:21.221 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:21.221 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:21.221 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:21.221 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:21.222 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:21.222 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:21.844 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
+2025-10-28 14:02:21.844 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:21.844 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:21.844 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:21.844 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:21.845 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:21.845 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:22.101 [Info    ] [TaskWidget] OnKeyDown: Key=Tab, Modifiers=None, Handled=False
+2025-10-28 14:02:22.101 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:22.101 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:22.101 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:22.101 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:22.102 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:22.102 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:29.342 [Debug   ] [AgendaWidget] Loaded 1 tasks
+2025-10-28 14:02:29.352 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:02:29.388 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:34.482 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:34.482 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:34.483 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:34.483 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:34.506 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:34.506 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:02:39.384 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:49.379 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:59.361 [Debug   ] [AgendaWidget] Loaded 1 tasks
+2025-10-28 14:02:59.361 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:02:59.393 [Debug   ] [KanbanWidget] Loaded 1 tasks
+2025-10-28 14:02:59.916 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:02:59.916 [Debug   ] [AgendaWidget] Loaded 2 tasks
+2025-10-28 14:02:59.916 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:02:59.916 [Info    ] [TaskService] Added task: ctrl n test task (ID: 5548ec26-9d43-4d3d-9810-9590176f5825)
+2025-10-28 14:02:59.916 [Info    ] [TaskEditOverlay] Created new task: ctrl n test task
+2025-10-28 14:02:59.916 [Info    ] [TaskWidget] Created new task: ctrl n test task
+2025-10-28 14:02:59.917 [Info    ] [TreeTaskList] Loaded 2 tasks (hierarchical)
+2025-10-28 14:02:59.920 [Debug   ] [OverlayManager] Closed center zone
+2025-10-28 14:02:59.920 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:02:59.920 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:02:59.921 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:03:00.433 [Debug   ] [TaskService] Saved 2 tasks to C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.data\SuperTUI\tasks.json
+2025-10-28 14:03:05.544 [Info    ] [TaskWidget] OnKeyDown: Key=F2, Modifiers=None, Handled=False
+2025-10-28 14:03:05.548 [Debug   ] [OverlayManager] Opened center zone
+2025-10-28 14:03:09.416 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:13.816 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:13.816 [Debug   ] [AgendaWidget] Loaded 2 tasks
+2025-10-28 14:03:13.816 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:03:13.816 [Debug   ] [TaskService] Updated task: ctrl n test task (ID: 5548ec26-9d43-4d3d-9810-9590176f5825)
+2025-10-28 14:03:13.816 [Info    ] [TaskEditOverlay] Updated task: ctrl n test task
+2025-10-28 14:03:13.817 [Info    ] [TaskWidget] Task updated: ctrl n test task
+2025-10-28 14:03:13.817 [Info    ] [TreeTaskList] Loaded 2 tasks (hierarchical)
+2025-10-28 14:03:13.820 [Debug   ] [OverlayManager] Closed center zone
+2025-10-28 14:03:13.820 [Info    ] [TaskWidget] === OnWidgetFocusReceived() called ===
+2025-10-28 14:03:13.820 [Info    ] [TaskWidget] Widget has keyboard focus - ready for input
+2025-10-28 14:03:13.821 [Info    ] [TaskWidget] Focus attempt result: False, Keyboard focus NOW on: TaskManagementWidget
+2025-10-28 14:03:14.338 [Debug   ] [TaskService] Saved 2 tasks to C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.data\SuperTUI\tasks.json
+2025-10-28 14:03:19.424 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:20.987 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=None, Handled=False
+2025-10-28 14:03:21.001 [Debug   ] [OverlayManager] Opened left zone
+2025-10-28 14:03:24.467 [Info    ] [TaskWidget] OnKeyDown: Key=Down, Modifiers=None, Handled=False
+2025-10-28 14:03:24.470 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:27.412 [Info    ] [TaskWidget] OnKeyDown: Key=Down, Modifiers=None, Handled=False
+2025-10-28 14:03:27.413 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:29.360 [Debug   ] [AgendaWidget] Loaded 2 tasks
+2025-10-28 14:03:29.361 [Debug   ] [ProjectStatsWidget] Refreshed metrics
+2025-10-28 14:03:29.441 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:39.385 [Info    ] [TaskWidget] OnKeyDown: Key=Up, Modifiers=None, Handled=False
+2025-10-28 14:03:39.386 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:39.441 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:40.773 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=None, Handled=False
+2025-10-28 14:03:40.775 [Debug   ] [OverlayManager] Opened left zone
+2025-10-28 14:03:41.603 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=None, Handled=False
+2025-10-28 14:03:41.604 [Debug   ] [OverlayManager] Opened left zone
+2025-10-28 14:03:42.096 [Info    ] [TaskWidget] OnKeyDown: Key=OemQuestion, Modifiers=None, Handled=False
+2025-10-28 14:03:42.097 [Debug   ] [OverlayManager] Opened left zone
+2025-10-28 14:03:42.584 [Info    ] [TaskWidget] OnKeyDown: Key=Escape, Modifiers=None, Handled=False
+2025-10-28 14:03:44.147 [Info    ] [TaskWidget] OnKeyDown: Key=Down, Modifiers=None, Handled=False
+2025-10-28 14:03:44.148 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:44.730 [Info    ] [TaskWidget] OnKeyDown: Key=Down, Modifiers=None, Handled=False
+2025-10-28 14:03:44.731 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:44.963 [Info    ] [TaskWidget] OnKeyDown: Key=Up, Modifiers=None, Handled=False
+2025-10-28 14:03:44.963 [Debug   ] [OverlayManager] Opened right zone
+2025-10-28 14:03:45.407 [Info    ] [TaskWidget] OnKeyDown: Key=Escape, Modifiers=None, Handled=False
+2025-10-28 14:03:49.469 [Debug   ] [KanbanWidget] Loaded 2 tasks
+2025-10-28 14:03:55.686 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.177 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.209 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.242 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.274 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.307 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.339 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.388 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.421 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.453 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.486 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.518 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.551 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.583 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.616 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.649 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.681 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.714 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.746 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.779 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.811 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.844 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.877 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.909 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:56.942 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.138 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.169 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.202 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.234 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.267 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.299 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.332 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.365 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.397 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.429 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.462 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.494 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.543 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.576 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.608 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.641 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.674 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.705 [Info    ] [TaskWidget] OnKeyDown: Key=LeftCtrl, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.728 [Info    ] [TaskWidget] OnKeyDown: Key=Q, Modifiers=Control, Handled=False
+2025-10-28 14:03:57.731 [Debug   ] [StatePersistence] State snapshot captured
+2025-10-28 14:03:57.734 [Warning ] [IO] Saving application state to : Value cannot be null. (Parameter 'path')
+2025-10-28 14:03:57.734 [Debug   ] [IO] Stack trace:    at System.ArgumentNullException.Throw(String paramName)
    at System.ArgumentNullException.ThrowIfNull(Object argument, String paramName)
    at System.ArgumentException.ThrowNullOrEmptyException(String argument, String paramName)
    at System.IO.File.Validate(String path, Encoding encoding)
    at System.IO.File.WriteAllTextAsync(String path, ReadOnlyMemory`1 contents, Encoding encoding, CancellationToken cancellationToken)
    at System.IO.File.WriteAllTextAsync(String path, String contents, Encoding encoding, CancellationToken cancellationToken)
    at SuperTUI.Extensions.StatePersistenceManager.SaveStateAsync(StateSnapshot snapshot, Boolean createBackup) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs:line 495
-2025-10-28 13:46:07.330 [Debug   ] [StateManagement] Saved state for all workspaces
+2025-10-28 14:03:57.734 [Debug   ] [StateManagement] Saved state for all workspaces
