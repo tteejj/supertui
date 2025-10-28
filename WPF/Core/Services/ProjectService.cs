@@ -71,6 +71,61 @@ namespace SuperTUI.Core.Services
 
             // Load existing projects
             LoadFromFile();
+
+            // Subscribe to task events for auto-update project stats
+            SubscribeToTaskEvents();
+        }
+
+        /// <summary>
+        /// Subscribe to task service events for automatic project stats updates
+        /// </summary>
+        private void SubscribeToTaskEvents()
+        {
+            var taskService = TaskService.Instance;
+            if (taskService != null)
+            {
+                taskService.TaskAdded += OnTaskChanged;
+                taskService.TaskUpdated += OnTaskChanged;
+                taskService.TaskDeleted += OnTaskDeleted;
+                Logger.Instance?.Debug("ProjectService", "Subscribed to TaskService events for auto-update");
+            }
+        }
+
+        /// <summary>
+        /// Handle task added or updated - refresh affected project stats
+        /// </summary>
+        private void OnTaskChanged(TaskItem task)
+        {
+            if (task?.ProjectId == null)
+                return;
+
+            // The stats are calculated on-demand via GetProjectStats()
+            // Fire ProjectUpdated event to notify widgets to refresh
+            lock (lockObject)
+            {
+                if (projects.TryGetValue(task.ProjectId.Value, out var project))
+                {
+                    ProjectUpdated?.Invoke(project);
+                    Logger.Instance?.Debug("ProjectService", $"Auto-refreshed stats for project: {project.Name}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle task deleted - refresh affected project stats
+        /// </summary>
+        private void OnTaskDeleted(Guid taskId)
+        {
+            // We don't have the task anymore, so trigger refresh for all projects
+            // Alternative: Could cache task.ProjectId before deletion
+            lock (lockObject)
+            {
+                foreach (var project in projects.Values.Where(p => !p.Deleted))
+                {
+                    ProjectUpdated?.Invoke(project);
+                }
+            }
+            Logger.Instance?.Debug("ProjectService", "Auto-refreshed stats for all projects after task deletion");
         }
 
         #region CRUD Operations
@@ -778,10 +833,20 @@ namespace SuperTUI.Core.Services
         #endregion
 
         /// <summary>
-        /// Dispose resources (timer)
+        /// Dispose resources (timer and event subscriptions)
         /// </summary>
         public void Dispose()
         {
+            // Unsubscribe from task events
+            var taskService = TaskService.Instance;
+            if (taskService != null)
+            {
+                taskService.TaskAdded -= OnTaskChanged;
+                taskService.TaskUpdated -= OnTaskChanged;
+                taskService.TaskDeleted -= OnTaskDeleted;
+                Logger.Instance?.Debug("ProjectService", "Unsubscribed from TaskService events");
+            }
+
             if (saveTimer != null)
             {
                 // Ensure any pending save is executed before disposal

@@ -10,6 +10,7 @@ using SuperTUI.Core.Components;
 using SuperTUI.Core.Models;
 using SuperTUI.Core.Services;
 using SuperTUI.Infrastructure;
+using SuperTUI.Widgets.Overlays;
 
 namespace SuperTUI.Widgets
 {
@@ -23,6 +24,7 @@ namespace SuperTUI.Widgets
         private readonly IThemeManager themeManager;
         private readonly IConfigurationManager config;
         private readonly ITaskService taskService;
+        private readonly IProjectService projectService;
         private readonly ITagService tagService;
 
         private Theme theme;
@@ -64,12 +66,14 @@ namespace SuperTUI.Widgets
             IThemeManager themeManager,
             IConfigurationManager config,
             ITaskService taskService,
+            IProjectService projectService,
             ITagService tagService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
             this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
+            this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             this.tagService = tagService ?? throw new ArgumentNullException(nameof(tagService));
 
             WidgetName = "Task Manager";
@@ -924,6 +928,62 @@ namespace SuperTUI.Widgets
             base.OnKeyDown(e);
 
             var isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+
+            // OVERLAY SHORTCUTS (NEW)
+
+            // N key (without Ctrl) for quick add task overlay
+            if (e.Key == Key.N && !isCtrl)
+            {
+                var quickAdd = new QuickAddTaskOverlay(taskService, projectService);
+                quickAdd.TaskCreated += (task) =>
+                {
+                    logger?.Info("TaskWidget", $"Quick-created task: {task.Title}");
+                    LoadCurrentFilter();
+                    treeTaskListControl?.SelectTask(task.Id);
+                };
+                quickAdd.Cancelled += () =>
+                {
+                    OverlayManager.Instance.HideBottomZone();
+                    this.Focus(); // Return focus to widget
+                };
+                OverlayManager.Instance.ShowBottomZone(quickAdd);
+                e.Handled = true;
+                return;
+            }
+
+            // / key for filter panel overlay
+            if (e.Key == Key.OemQuestion) // Forward slash
+            {
+                var filter = new FilterPanelOverlay(taskService, projectService);
+                filter.FilterChanged += (predicate) =>
+                {
+                    logger?.Info("TaskWidget", "Filter applied from overlay");
+                    var filteredTasks = taskService.GetTasks(predicate);
+                    treeTaskListControl?.LoadTasks(filteredTasks);
+                };
+                OverlayManager.Instance.ShowLeftZone(filter);
+                e.Handled = true;
+                return;
+            }
+
+            // Arrow keys (Up/Down) auto-show task detail overlay
+            if (e.Key == Key.Up || e.Key == Key.Down)
+            {
+                // Let tree control handle navigation first
+                base.OnKeyDown(e);
+
+                // Then show detail overlay for newly selected task
+                if (selectedTask != null)
+                {
+                    var detail = new TaskDetailOverlay(selectedTask);
+                    OverlayManager.Instance.ShowRightZone(detail);
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            // EXISTING SHORTCUTS
 
             // Ctrl+E for export
             if (e.Key == Key.E && isCtrl)

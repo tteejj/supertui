@@ -145,6 +145,41 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
+        /// Find task by external IDs (for Excel import duplicate detection)
+        /// </summary>
+        public TaskItem FindTaskByExternalIds(string externalId1, string externalId2)
+        {
+            lock (lockObject)
+            {
+                if (string.IsNullOrWhiteSpace(externalId1) && string.IsNullOrWhiteSpace(externalId2))
+                    return null;
+
+                return tasks.Values.FirstOrDefault(t => !t.Deleted &&
+                    (!string.IsNullOrWhiteSpace(externalId1) && t.ExternalId1 == externalId1) &&
+                    (!string.IsNullOrWhiteSpace(externalId2) && t.ExternalId2 == externalId2));
+            }
+        }
+
+        /// <summary>
+        /// Check if a task with the same external IDs exists (for duplicate detection)
+        /// </summary>
+        public bool HasDuplicateExternalIds(string externalId1, string externalId2, Guid? excludeTaskId = null)
+        {
+            lock (lockObject)
+            {
+                if (string.IsNullOrWhiteSpace(externalId1) && string.IsNullOrWhiteSpace(externalId2))
+                    return false;
+
+                var existing = FindTaskByExternalIds(externalId1, externalId2);
+                if (existing == null)
+                    return false;
+
+                // If excludeTaskId is provided, check if the found task is not the one being excluded
+                return !excludeTaskId.HasValue || existing.Id != excludeTaskId.Value;
+            }
+        }
+
+        /// <summary>
         /// Add new task
         /// </summary>
         public TaskItem AddTask(TaskItem task)
@@ -289,9 +324,20 @@ namespace SuperTUI.Core.Services
                     return false;
 
                 var task = tasks[id];
-                task.Status = task.Status == Models.TaskStatus.Completed ? Models.TaskStatus.Pending : Models.TaskStatus.Completed;
+                var wasCompleted = task.Status == Models.TaskStatus.Completed;
+                task.Status = wasCompleted ? Models.TaskStatus.Pending : Models.TaskStatus.Completed;
                 task.Progress = task.Status == Models.TaskStatus.Completed ? 100 : 0;
                 task.UpdatedAt = DateTime.Now;
+
+                // Auto-set CompletedDate when task is completed
+                if (task.Status == Models.TaskStatus.Completed && !wasCompleted)
+                {
+                    task.CompletedDate = DateTime.Now;
+                }
+                else if (task.Status != Models.TaskStatus.Completed)
+                {
+                    task.CompletedDate = null;  // Clear if uncompleted
+                }
 
                 ScheduleSave();
                 TaskUpdated?.Invoke(task);

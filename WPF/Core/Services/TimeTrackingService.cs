@@ -208,6 +208,20 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
+        /// Get time entries for a specific task
+        /// </summary>
+        public List<TimeEntry> GetTimeEntriesForTask(Guid taskId)
+        {
+            lock (lockObject)
+            {
+                return entries.Values
+                    .Where(e => !e.Deleted && e.TaskId.HasValue && e.TaskId.Value == taskId)
+                    .OrderByDescending(e => e.WeekEnding)
+                    .ToList();
+            }
+        }
+
+        /// <summary>
         /// Get time entry for a specific project and week (or null if doesn't exist)
         /// </summary>
         public TimeEntry GetEntryForProjectAndWeek(Guid projectId, DateTime weekEnding)

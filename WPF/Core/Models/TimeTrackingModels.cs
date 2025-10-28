@@ -12,9 +12,15 @@ namespace SuperTUI.Core.Models
     {
         public Guid Id { get; set; }
         public Guid ProjectId { get; set; }
+        public Guid? TaskId { get; set; }  // Optional task linkage
         public DateTime WeekEnding { get; set; }  // Sunday date for the week
         public decimal Hours { get; set; }
         public string Description { get; set; }
+
+        // Time allocation codes (for Excel integration and categorization)
+        public string ID1 { get; set; }  // Category code (PROJ, MEET, TRAIN, ADMIN) - max 20 chars
+        public string ID2 { get; set; }  // Project/Task code - max 20 chars
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool Deleted { get; set; }
@@ -105,9 +111,12 @@ namespace SuperTUI.Core.Models
             {
                 Id = this.Id,
                 ProjectId = this.ProjectId,
+                TaskId = this.TaskId,
                 WeekEnding = this.WeekEnding,
                 Hours = this.Hours,
                 Description = this.Description,
+                ID1 = this.ID1,
+                ID2 = this.ID2,
                 CreatedAt = this.CreatedAt,
                 UpdatedAt = this.UpdatedAt,
                 Deleted = this.Deleted,
@@ -409,6 +418,162 @@ namespace SuperTUI.Core.Models
         public override string ToString()
         {
             return $"FY{FiscalYear}: {TotalHours:F2}h ({ProjectCount} projects)";
+        }
+    }
+
+    /// <summary>
+    /// Weekly time entry model for batch time tracking
+    /// Uses Friday as week-ending date (workweek convention)
+    /// </summary>
+    public class WeeklyTimeEntry
+    {
+        public Guid Id { get; set; }
+        public DateTime WeekEndingFriday { get; set; }  // Friday date (end of workweek)
+        public string FiscalYear { get; set; }          // Format: "2025-2026" (Apr-Mar)
+
+        // Time allocation codes
+        public string ID1 { get; set; }                 // Category code (PROJ, MEET, TRAIN, ADMIN) - max 20 chars
+        public string ID2 { get; set; }                 // Project/task code - max 20 chars
+        public string Description { get; set; }         // Max 200 chars
+
+        // Linkage (three-level hierarchy)
+        public Guid? ProjectId { get; set; }            // Link to project
+        public Guid? TaskId { get; set; }               // Link to task (optional)
+
+        // Daily hours (workweek only - Mon-Fri)
+        public decimal MondayHours { get; set; }        // 0.0-24.0
+        public decimal TuesdayHours { get; set; }       // 0.0-24.0
+        public decimal WednesdayHours { get; set; }     // 0.0-24.0
+        public decimal ThursdayHours { get; set; }      // 0.0-24.0
+        public decimal FridayHours { get; set; }        // 0.0-24.0
+
+        // Metadata
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public bool Deleted { get; set; }
+
+        public WeeklyTimeEntry()
+        {
+            Id = Guid.NewGuid();
+            WeekEndingFriday = GetFridayOfCurrentWeek();
+            FiscalYear = CalculateFiscalYear(WeekEndingFriday);
+            ID1 = string.Empty;
+            ID2 = string.Empty;
+            Description = string.Empty;
+            MondayHours = 0;
+            TuesdayHours = 0;
+            WednesdayHours = 0;
+            ThursdayHours = 0;
+            FridayHours = 0;
+            CreatedAt = DateTime.Now;
+            UpdatedAt = DateTime.Now;
+            Deleted = false;
+        }
+
+        /// <summary>
+        /// Calculate total hours for the week
+        /// </summary>
+        public decimal TotalHours =>
+            MondayHours + TuesdayHours + WednesdayHours + ThursdayHours + FridayHours;
+
+        /// <summary>
+        /// Check if linked to a specific task
+        /// </summary>
+        public bool IsLinkedToTask => TaskId.HasValue;
+
+        /// <summary>
+        /// Get week start date (Monday)
+        /// </summary>
+        public DateTime WeekStart => WeekEndingFriday.AddDays(-4);
+
+        /// <summary>
+        /// Get Friday of current week
+        /// </summary>
+        private static DateTime GetFridayOfCurrentWeek()
+        {
+            var today = DateTime.Today;
+            var daysUntilFriday = ((int)DayOfWeek.Friday - (int)today.DayOfWeek + 7) % 7;
+            if (daysUntilFriday == 0 && today.DayOfWeek != DayOfWeek.Friday)
+                daysUntilFriday = 7;
+            return today.AddDays(daysUntilFriday);
+        }
+
+        /// <summary>
+        /// Calculate fiscal year from date (Apr 1 - Mar 31)
+        /// </summary>
+        private static string CalculateFiscalYear(DateTime date)
+        {
+            var fiscalYearEnd = date.Month >= 4 ? date.Year + 1 : date.Year;
+            return $"{fiscalYearEnd - 1}-{fiscalYearEnd}";
+        }
+
+        /// <summary>
+        /// Validate time entry
+        /// </summary>
+        public List<string> Validate()
+        {
+            var errors = new List<string>();
+
+            // ID1 required
+            if (string.IsNullOrWhiteSpace(ID1))
+                errors.Add("ID1 (category code) is required");
+
+            // ID1 max 20 chars
+            if (ID1?.Length > 20)
+                errors.Add("ID1 must be 20 characters or less");
+
+            // ID2 max 20 chars
+            if (ID2?.Length > 20)
+                errors.Add("ID2 must be 20 characters or less");
+
+            // Description max 200 chars
+            if (Description?.Length > 200)
+                errors.Add("Description must be 200 characters or less");
+
+            // Daily hours 0-24
+            if (MondayHours < 0 || MondayHours > 24)
+                errors.Add("Monday hours must be between 0 and 24");
+            if (TuesdayHours < 0 || TuesdayHours > 24)
+                errors.Add("Tuesday hours must be between 0 and 24");
+            if (WednesdayHours < 0 || WednesdayHours > 24)
+                errors.Add("Wednesday hours must be between 0 and 24");
+            if (ThursdayHours < 0 || ThursdayHours > 24)
+                errors.Add("Thursday hours must be between 0 and 24");
+            if (FridayHours < 0 || FridayHours > 24)
+                errors.Add("Friday hours must be between 0 and 24");
+
+            return errors;
+        }
+
+        /// <summary>
+        /// Clone this weekly time entry
+        /// </summary>
+        public WeeklyTimeEntry Clone()
+        {
+            return new WeeklyTimeEntry
+            {
+                Id = this.Id,
+                WeekEndingFriday = this.WeekEndingFriday,
+                FiscalYear = this.FiscalYear,
+                ID1 = this.ID1,
+                ID2 = this.ID2,
+                Description = this.Description,
+                ProjectId = this.ProjectId,
+                TaskId = this.TaskId,
+                MondayHours = this.MondayHours,
+                TuesdayHours = this.TuesdayHours,
+                WednesdayHours = this.WednesdayHours,
+                ThursdayHours = this.ThursdayHours,
+                FridayHours = this.FridayHours,
+                CreatedAt = this.CreatedAt,
+                UpdatedAt = this.UpdatedAt,
+                Deleted = this.Deleted
+            };
+        }
+
+        public override string ToString()
+        {
+            return $"{WeekEndingFriday:yyyy-MM-dd} - {ID1}/{ID2} - {TotalHours:F2}h";
         }
     }
 }

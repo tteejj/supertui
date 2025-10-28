@@ -22,7 +22,8 @@ namespace SuperTUI.Core.Models
     {
         Low = 0,
         Medium = 1,
-        High = 2
+        High = 2,
+        Today = 3      // Highest priority - must do today
     }
 
     /// <summary>
@@ -80,12 +81,23 @@ namespace SuperTUI.Core.Models
         public TaskPriority Priority { get; set; }
         public int Progress { get; set; } // 0-100
         public DateTime? DueDate { get; set; }
+        public DateTime? CompletedDate { get; set; }  // When task was completed
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool Deleted { get; set; } // Soft delete
 
+        // Time tracking
+        public TimeSpan? EstimatedDuration { get; set; }  // User-entered estimate
+
         // Project integration (for future)
         public Guid? ProjectId { get; set; }
+
+        // Assignment
+        public string AssignedTo { get; set; }  // Username or email
+
+        // External system integration (Excel, etc.)
+        public string ExternalId1 { get; set; }  // Category/Type code (max 20 chars)
+        public string ExternalId2 { get; set; }  // Project/Task code (max 20 chars)
 
         // Tags
         public List<string> Tags { get; set; }
@@ -130,6 +142,45 @@ namespace SuperTUI.Core.Models
             RecurrenceInterval = 1;
             Notes = new List<TaskNote>();
         }
+
+        /// <summary>
+        /// Get actual duration from time entries
+        /// Note: Requires TimeTrackingService to calculate
+        /// </summary>
+        public TimeSpan ActualDuration
+        {
+            get
+            {
+                try
+                {
+                    var timeTracking = SuperTUI.Core.Services.TimeTrackingService.Instance;
+                    var entries = timeTracking.GetTimeEntriesForTask(Id);
+                    return TimeSpan.FromHours((double)entries.Sum(e => e.Hours));
+                }
+                catch
+                {
+                    return TimeSpan.Zero;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get time variance (actual - estimated)
+        /// </summary>
+        public TimeSpan? TimeVariance
+        {
+            get
+            {
+                if (!EstimatedDuration.HasValue)
+                    return null;
+                return ActualDuration - EstimatedDuration.Value;
+            }
+        }
+
+        /// <summary>
+        /// Check if task is over estimate
+        /// </summary>
+        public bool IsOverEstimate => ActualDuration > (EstimatedDuration ?? TimeSpan.MaxValue);
 
         /// <summary>
         /// Check if this task is a subtask
@@ -231,6 +282,7 @@ namespace SuperTUI.Core.Models
                     TaskPriority.Low => "↓",
                     TaskPriority.Medium => "●",
                     TaskPriority.High => "↑",
+                    TaskPriority.Today => "‼",
                     _ => "?"
                 };
             }
@@ -250,10 +302,15 @@ namespace SuperTUI.Core.Models
                 Priority = this.Priority,
                 Progress = this.Progress,
                 DueDate = this.DueDate,
+                CompletedDate = this.CompletedDate,
                 CreatedAt = this.CreatedAt,
                 UpdatedAt = this.UpdatedAt,
                 Deleted = this.Deleted,
+                EstimatedDuration = this.EstimatedDuration,
                 ProjectId = this.ProjectId,
+                AssignedTo = this.AssignedTo,
+                ExternalId1 = this.ExternalId1,
+                ExternalId2 = this.ExternalId2,
                 Tags = new List<string>(this.Tags),
                 ColorTheme = this.ColorTheme,
                 ParentTaskId = this.ParentTaskId,
