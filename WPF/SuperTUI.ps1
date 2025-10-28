@@ -1369,19 +1369,19 @@ $window.Add_KeyDown({
 $window.Add_Closing({
     Write-Host "Saving workspace states..." -ForegroundColor Yellow
 
-    foreach ($ws in $workspaceManager.Workspaces) {
-        try {
-            $state = $ws.SaveState()
-            $stateManager.SaveState("workspace_$($ws.Index)", $state)
-            $logger.Debug("StateManagement", "Saved state for workspace: $($ws.Name)")
-        } catch {
-            $logger.Error("StateManagement", "Failed to save workspace $($ws.Name): $_")
-        }
-    }
+    try {
+        # Capture state from all workspaces
+        $snapshot = $stateManager.CaptureState($workspaceManager)
 
-    # Flush to disk
-    $stateManager.Flush()
-    Write-Host "Workspace states saved" -ForegroundColor Green
+        # Save the snapshot to disk
+        $stateManager.SaveState($snapshot, $false)
+
+        $logger.Debug("StateManagement", "Saved state for all workspaces")
+        Write-Host "Workspace states saved" -ForegroundColor Green
+    } catch {
+        $logger.Error("StateManagement", "Failed to save workspace states: $_")
+        Write-Host "Failed to save workspace states: $_" -ForegroundColor Red
+    }
 })
 
 # Auto-save on workspace switch
@@ -1391,16 +1391,13 @@ $workspaceManager.add_WorkspaceChanged({
     # Update ApplicationContext
     $appContext.CurrentWorkspace = $workspace
 
-    # Save previous workspace state (if any)
-    foreach ($ws in $workspaceManager.Workspaces) {
-        if ($ws -ne $workspace) {
-            try {
-                $state = $ws.SaveState()
-                $stateManager.SaveState("workspace_$($ws.Index)", $state)
-            } catch {
-                $logger.Error("StateManagement", "Failed to auto-save workspace: $_")
-            }
-        }
+    # Auto-save all workspace states when switching
+    try {
+        $snapshot = $stateManager.CaptureState($workspaceManager)
+        $stateManager.SaveState($snapshot, $false)
+        $logger.Debug("StateManagement", "Auto-saved workspace states on switch to: $($workspace.Name)")
+    } catch {
+        $logger.Error("StateManagement", "Failed to auto-save workspace states: $_")
     }
 })
 
