@@ -267,10 +267,15 @@ $eventBus = $serviceContainer.GetService([SuperTUI.Core.IEventBus])
 $stateManager = $serviceContainer.GetService([SuperTUI.Infrastructure.IStatePersistenceManager])
 Write-Host "Core services resolved from container" -ForegroundColor Green
 
+# Enable DEBUG level logging
+$logger.SetMinLevel([SuperTUI.Infrastructure.LogLevel]::Debug)
+Write-Host "Logger set to DEBUG level" -ForegroundColor Yellow
+
 # Add additional log sink for console output
-$fileLogSink = New-Object SuperTUI.Infrastructure.FileLogSink("$env:TEMP", "SuperTUI")
+$logPath = "$env:TEMP\SuperTUI"
+$fileLogSink = New-Object SuperTUI.Infrastructure.FileLogSink($logPath, "SuperTUI")
 $logger.AddSink($fileLogSink)
-Write-Host "File log sink added" -ForegroundColor Green
+Write-Host "File log sink added: $logPath\SuperTUI_*.log" -ForegroundColor Green
 
 # Apply saved theme (or default to "Cyberpunk" to showcase new effects)
 $savedThemeName = $configManager.Get("UI.Theme", "Cyberpunk")
@@ -506,18 +511,39 @@ $workspace1.Widgets.Add($taskSummary)
 $workspaceManager.AddWorkspace($workspace1)
 
 # Workspace 2: Projects (Full Project Management)
+Write-Host "Creating Workspace 2: TaskManagement..." -ForegroundColor Cyan
 $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout, $logger, $themeManager)
+Write-Host "  Layout engine created: StackLayoutEngine" -ForegroundColor Gray
 
 # Add TaskManagementWidget (3-pane layout: list, context, details)
-$projectManagementWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskManagementWidget")
-$projectManagementWidget.WidgetName = "TaskManagement"
-$projectManagementWidget.Initialize()
-$ws2Params = New-Object SuperTUI.Core.LayoutParams
-$workspace2Layout.AddChild($projectManagementWidget, $ws2Params)
-$workspace2.Widgets.Add($projectManagementWidget)
+Write-Host "  Creating TaskManagementWidget..." -ForegroundColor Gray
+try {
+    $projectManagementWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskManagementWidget")
+    Write-Host "    Widget created successfully" -ForegroundColor Green
+    Write-Host "    Widget type: $($projectManagementWidget.GetType().Name)" -ForegroundColor Gray
+
+    $projectManagementWidget.WidgetName = "TaskManagement"
+    Write-Host "  Initializing widget..." -ForegroundColor Gray
+    $projectManagementWidget.Initialize()
+    Write-Host "    Widget initialized" -ForegroundColor Green
+
+    $ws2Params = New-Object SuperTUI.Core.LayoutParams
+    Write-Host "  Adding widget to layout..." -ForegroundColor Gray
+    $workspace2Layout.AddChild($projectManagementWidget, $ws2Params)
+    $workspace2.Widgets.Add($projectManagementWidget)
+    Write-Host "    Widget added to workspace" -ForegroundColor Green
+} catch {
+    Write-Host "    ERROR creating TaskManagementWidget: $_" -ForegroundColor Red
+    Write-Host "    Exception type: $($_.Exception.GetType().FullName)" -ForegroundColor Red
+    Write-Host "    Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
+    if ($_.Exception.InnerException) {
+        Write-Host "    Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+    }
+}
 
 $workspaceManager.AddWorkspace($workspace2)
+Write-Host "Workspace 2 created and added to manager" -ForegroundColor Green
 
 # Workspace 3: Kanban Board (3-column task board)
 $workspace3Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.Controls.Orientation]::Vertical)
