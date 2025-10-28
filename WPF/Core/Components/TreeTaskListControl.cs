@@ -50,14 +50,30 @@ namespace SuperTUI.Core.Components
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1),
-                HorizontalContentAlignment = HorizontalAlignment.Stretch
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 200,
+                MinWidth = 300,
+                Focusable = true
             };
 
             taskListBox.SelectionChanged += TaskListBox_SelectionChanged;
             taskListBox.MouseDoubleClick += TaskListBox_MouseDoubleClick;
             taskListBox.KeyDown += TaskListBox_KeyDown;
 
+            // Create ItemTemplate for task rendering
+            var template = new DataTemplate();
+            var factory = new FrameworkElementFactory(typeof(TextBlock));
+            factory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(".")); // Binds to ToString()
+            factory.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Cascadia Mono, Consolas"));
+            factory.SetValue(TextBlock.FontSizeProperty, 12.0);
+            template.VisualTree = factory;
+            taskListBox.ItemTemplate = template;
+
             taskListBox.ItemsSource = flattenedTasks;
+
+            // Set minimum size for this control
+            this.MinHeight = 200;
+            this.MinWidth = 300;
 
             this.Content = taskListBox;
         }
@@ -70,6 +86,21 @@ namespace SuperTUI.Core.Components
             // Flatten tree for display
             flattenedTasks.Clear();
             FlattenTree(tree, flattenedTasks, 0);
+
+            // Add empty state placeholder if no tasks
+            if (flattenedTasks.Count == 0)
+            {
+                var emptyTask = new TaskItem
+                {
+                    Id = Guid.Empty,
+                    Title = "No tasks. Press Ctrl+N to create a task, or N for quick add.",
+                    Status = TaskStatus.Pending,
+                    Priority = TaskPriority.Low,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+                flattenedTasks.Add(new TreeTaskItem(emptyTask));
+            }
 
             logger?.Info("TreeTaskList", $"Loaded {flattenedTasks.Count} tasks (hierarchical)");
         }
@@ -129,7 +160,7 @@ namespace SuperTUI.Core.Components
         private void TaskListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedItem = taskListBox.SelectedItem as TreeTaskItem;
-            if (selectedItem != null)
+            if (selectedItem != null && selectedItem.Task.Id != Guid.Empty)
             {
                 TaskSelected?.Invoke(selectedItem.Task);
             }
@@ -138,7 +169,7 @@ namespace SuperTUI.Core.Components
         private void TaskListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var selectedItem = taskListBox.SelectedItem as TreeTaskItem;
-            if (selectedItem != null)
+            if (selectedItem != null && selectedItem.Task.Id != Guid.Empty)
             {
                 TaskActivated?.Invoke(selectedItem.Task);
             }
@@ -147,7 +178,7 @@ namespace SuperTUI.Core.Components
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
         {
             var selectedItem = taskListBox.SelectedItem as TreeTaskItem;
-            if (selectedItem == null) return;
+            if (selectedItem == null || selectedItem.Task.Id == Guid.Empty) return; // Ignore placeholder
 
             var isCtrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 

@@ -152,6 +152,11 @@ namespace SuperTUI.Widgets
             treeTaskListControl.DeleteTask += OnDeleteTask;
             treeTaskListControl.ToggleExpanded += OnToggleExpanded;
 
+            // Ensure widget is focusable
+            this.Focusable = true;
+            this.MinHeight = 200;
+            this.MinWidth = 300;
+
             this.Content = treeTaskListControl;
         }
 
@@ -246,12 +251,13 @@ namespace SuperTUI.Widgets
 
         public override void OnWidgetFocusReceived()
         {
-            // Don't steal keyboard focus from workspace!
-            // Just update visual indicators to show this widget is focused
+            // Set keyboard focus to the tree control so it can handle input
             if (treeTaskListControl != null)
             {
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
+                treeTaskListControl.Focus(); // Actually give it keyboard focus
+                Keyboard.Focus(treeTaskListControl);
             }
         }
 
