@@ -75,13 +75,16 @@ namespace SuperTUI.Core
         public void Activate()
         {
             isActive = true;
+            logger?.Info("Workspace", $"Activating workspace '{Name}' (Index: {Index})");
 
             // Safely activate widgets through error boundaries
+            logger?.Debug("Workspace", $"Activating {errorBoundaries.Count} error boundaries");
             foreach (var errorBoundary in errorBoundaries)
             {
                 errorBoundary.SafeActivate();
             }
 
+            logger?.Debug("Workspace", $"Activating {Screens.Count} screens");
             foreach (var screen in Screens)
             {
                 try
@@ -95,9 +98,16 @@ namespace SuperTUI.Core
             }
 
             // Always focus first element on activation to ensure workspace starts with focus
+            logger?.Info("Workspace", $"Focusable elements count: {focusableElements.Count}");
             if (focusableElements.Count > 0)
             {
+                logger?.Info("Workspace", $"Auto-focusing first element: {focusableElements[0].GetType().Name}");
                 FocusElement(focusableElements[0]);
+                logger?.Info("Workspace", $"Focus set. Focused element: {focusedElement?.GetType().Name ?? "NULL"}");
+            }
+            else
+            {
+                logger?.Warning("Workspace", "NO FOCUSABLE ELEMENTS - cannot auto-focus!");
             }
         }
 

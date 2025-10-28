@@ -312,18 +312,28 @@ namespace SuperTUI.Widgets
 
         public override void OnWidgetFocusReceived()
         {
+            logger?.Info("TaskWidget", "=== OnWidgetFocusReceived() called ===");
             // Set keyboard focus to the tree control so it can handle input
             if (treeTaskListControl != null)
             {
+                logger?.Info("TaskWidget", "Setting border and keyboard focus to tree control");
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
-                treeTaskListControl.Focus(); // Actually give it keyboard focus
+                bool focusResult = treeTaskListControl.Focus(); // Actually give it keyboard focus
+                logger?.Info("TaskWidget", $"treeTaskListControl.Focus() returned: {focusResult}");
                 Keyboard.Focus(treeTaskListControl);
+                var focusedElement = Keyboard.FocusedElement;
+                logger?.Info("TaskWidget", $"Keyboard.FocusedElement is now: {focusedElement?.GetType().Name ?? "NULL"}");
+            }
+            else
+            {
+                logger?.Warning("TaskWidget", "treeTaskListControl is NULL - cannot set focus!");
             }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            logger?.Info("TaskWidget", $"OnKeyDown: Key={e.Key}, Modifiers={Keyboard.Modifiers}, Handled={e.Handled}");
             base.OnKeyDown(e);
 
             var isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
