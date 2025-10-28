@@ -46,6 +46,11 @@ namespace SuperTUI
             var defaultWorkspace = new Workspace("Main", 0, null, logger, themeManager);
 
             workspaceManager.AddWorkspace(defaultWorkspace);
+
+            // Create and add the Task Management workspace as the second workspace
+            var taskWorkspace = CreateTaskWorkspace(1);
+            workspaceManager.AddWorkspace(taskWorkspace);
+
             workspaceManager.SwitchToWorkspace(0);
 
             // Set up global keyboard handler for overlays
@@ -55,11 +60,40 @@ namespace SuperTUI
             Closing += MainWindow_Closing;
         }
 
+        private Workspace CreateTaskWorkspace(int index)
+        {
+            var logger = serviceContainer.GetRequiredService<ILogger>();
+            var themeManager = serviceContainer.GetRequiredService<IThemeManager>();
+            var configManager = serviceContainer.GetRequiredService<IConfigurationManager>();
+            var taskService = serviceContainer.GetRequiredService<ITaskService>();
+            var projectService = serviceContainer.GetRequiredService<IProjectService>();
+            var tagService = serviceContainer.GetRequiredService<ITagService>();
+
+            // Use a simple layout for the fullscreen widget (1 row, 1 column for fullscreen)
+            var layout = new Core.GridLayoutEngine(1, 1, false, logger, themeManager);
+            var workspace = new Workspace($"Tasks", index, layout, logger, themeManager);
+
+            var taskWidget = new Widgets.TaskManagementWidget(logger, themeManager, configManager, taskService, projectService, tagService);
+
+            // Add the widget to the workspace with default layout parameters (it will fill the space)
+            workspace.AddWidget(taskWidget, new Core.LayoutParams());
+
+            return workspace;
+        }
+
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             var overlayManager = OverlayManager.Instance;
 
             // Global overlay shortcuts - handle before workspace
+
+            // Toggle Fullscreen: Alt+F
+            if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Alt)
+            {
+                workspaceManager.CurrentWorkspace?.ToggleFullscreen();
+                e.Handled = true;
+                return;
+            }
 
             // Command Palette: : or Ctrl+P
             if ((e.Key == Key.OemSemicolon && e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Shift)) ||
