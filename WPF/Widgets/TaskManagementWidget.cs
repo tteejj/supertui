@@ -76,6 +76,13 @@ namespace SuperTUI.Widgets
                 EventBus.Subscribe<Core.Events.TaskSelectedEvent>(OnTaskSelectedFromOtherWidget);
                 EventBus.Subscribe<Core.Events.NavigationRequestedEvent>(OnNavigationRequested);
 
+                // CRITICAL: Capture keyboard input BEFORE it can be eaten by WPF
+                this.PreviewKeyDown += (s, e) =>
+                {
+                    logger?.Info("TaskWidget", $"PreviewKeyDown CAPTURED: Key={e.Key}");
+                    OnKeyDown(e); // Call the override method
+                };
+
                 logger?.Info("TaskWidget", "Task Management widget initialized");
             }
             catch (Exception ex)
@@ -313,21 +320,22 @@ namespace SuperTUI.Widgets
         public override void OnWidgetFocusReceived()
         {
             logger?.Info("TaskWidget", "=== OnWidgetFocusReceived() called ===");
-            // TaskManagementWidget handles keyboard directly - just set visual focus indicator
+
             if (treeTaskListControl != null)
             {
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
-
-                // CRITICAL: Force focus to tree control at HIGHEST priority to ensure it happens LAST
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    bool focusResult = treeTaskListControl.Focus();
-                    Keyboard.Focus(treeTaskListControl);
-                    var focused = Keyboard.FocusedElement;
-                    logger?.Info("TaskWidget", $"Focus attempt result: {focusResult}, Keyboard focus NOW on: {focused?.GetType().Name ?? "NULL"}");
-                }), System.Windows.Threading.DispatcherPriority.Loaded); // Changed from Input to Loaded
             }
+
+            // CRITICAL: Focus THIS widget, not the tree control
+            // The widget will capture ALL keyboard input via PreviewKeyDown
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                this.Focus();
+                Keyboard.Focus(this);
+                var focused = Keyboard.FocusedElement;
+                logger?.Info("TaskWidget", $"Focus set to TaskManagementWidget. Keyboard focus: {focused?.GetType().Name ?? "NULL"}");
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
 
             logger?.Info("TaskWidget", "Widget has keyboard focus - ready for input");
         }

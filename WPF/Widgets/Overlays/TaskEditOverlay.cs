@@ -62,15 +62,16 @@ namespace SuperTUI.Widgets.Overlays
         {
             var theme = themeManager.CurrentTheme;
 
+            // Simple terminal-style panel with single-line border
             var mainPanel = new Border
             {
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 BorderBrush = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(2),
-                Padding = new Thickness(20),
-                Margin = new Thickness(50),
-                MaxWidth = 800,
-                MaxHeight = 700
+                BorderThickness = new Thickness(1), // Single line
+                Padding = new Thickness(15),
+                Margin = new Thickness(30),
+                MaxWidth = 700,
+                MaxHeight = 600
             };
 
             var scrollViewer = new ScrollViewer
@@ -81,36 +82,46 @@ namespace SuperTUI.Widgets.Overlays
 
             var formPanel = new StackPanel { Margin = new Thickness(0) };
 
+            // Terminal-style header
+            var header = new TextBlock
+            {
+                Text = isNewTask ? "┌─ NEW TASK ─────────────────────────────────────────────┐" : "┌─ EDIT TASK ────────────────────────────────────────────┐",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 12,
+                Foreground = new SolidColorBrush(theme.Primary),
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            formPanel.Children.Add(header);
+
             // Title
-            formPanel.Children.Add(CreateLabel("Task Title"));
+            formPanel.Children.Add(CreateLabel("│ Title:"));
             titleBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
-                FontSize = 14,
+                FontSize = 13,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderBrush = new SolidColorBrush(theme.Secondary),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                MinHeight = 30
+                Padding = new Thickness(6, 4, 6, 4),
+                Margin = new Thickness(0, 2, 0, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
             formPanel.Children.Add(titleBox);
 
             // Description
-            formPanel.Children.Add(CreateLabel("Description"));
+            formPanel.Children.Add(CreateLabel("│ Description:"));
             descriptionBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 12,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderBrush = new SolidColorBrush(theme.Secondary),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15),
-                MinHeight = 60,
+                Padding = new Thickness(6, 4, 6, 4),
+                Margin = new Thickness(0, 2, 0, 10),
+                MinHeight = 50,
                 TextWrapping = TextWrapping.Wrap,
                 AcceptsReturn = true,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -122,21 +133,21 @@ namespace SuperTUI.Widgets.Overlays
             var statusPriorityPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Margin = new Thickness(0, 0, 0, 15)
+                Margin = new Thickness(0, 0, 0, 10)
             };
 
-            var statusPanel = new StackPanel { Margin = new Thickness(0, 0, 20, 0) };
-            statusPanel.Children.Add(CreateLabel("Status [Space/Enter=Open, ↑↓=Select]"));
-            statusCombo = CreateKeyboardComboBox(theme, 200);
+            var statusPanel = new StackPanel { Margin = new Thickness(0, 0, 15, 0), Width = 250 };
+            statusPanel.Children.Add(CreateLabel("│ Status:"));
+            statusCombo = CreateKeyboardComboBox(theme, 240);
             statusCombo.Items.Add(new ComboBoxItem { Content = "Pending", Tag = TaskStatus.Pending, Foreground = new SolidColorBrush(theme.Foreground) });
             statusCombo.Items.Add(new ComboBoxItem { Content = "In Progress", Tag = TaskStatus.InProgress, Foreground = new SolidColorBrush(theme.Foreground) });
             statusCombo.Items.Add(new ComboBoxItem { Content = "Completed", Tag = TaskStatus.Completed, Foreground = new SolidColorBrush(theme.Foreground) });
             statusCombo.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = TaskStatus.Cancelled, Foreground = new SolidColorBrush(theme.Foreground) });
             statusPanel.Children.Add(statusCombo);
 
-            var priorityPanel = new StackPanel();
-            priorityPanel.Children.Add(CreateLabel("Priority [Space/Enter=Open, ↑↓=Select]"));
-            priorityCombo = CreateKeyboardComboBox(theme, 200);
+            var priorityPanel = new StackPanel { Width = 250 };
+            priorityPanel.Children.Add(CreateLabel("│ Priority:"));
+            priorityCombo = CreateKeyboardComboBox(theme, 240);
             priorityCombo.Items.Add(new ComboBoxItem { Content = "Low", Tag = TaskPriority.Low, Foreground = new SolidColorBrush(theme.Foreground) });
             priorityCombo.Items.Add(new ComboBoxItem { Content = "Medium", Tag = TaskPriority.Medium, Foreground = new SolidColorBrush(theme.Foreground) });
             priorityCombo.Items.Add(new ComboBoxItem { Content = "High", Tag = TaskPriority.High, Foreground = new SolidColorBrush(theme.Foreground) });
@@ -147,25 +158,31 @@ namespace SuperTUI.Widgets.Overlays
             statusPriorityPanel.Children.Add(priorityPanel);
             formPanel.Children.Add(statusPriorityPanel);
 
-            // Due Date - keyboard-friendly ComboBox with smart date options
-            formPanel.Children.Add(CreateLabel("Due Date [Space/Enter=Open, Type to filter]"));
-            dueDateCombo = CreateKeyboardComboBox(theme, 200);
-            dueDateCombo.IsEditable = true; // Allow typing dates like "tomorrow", "+3", "2025-11-01"
+            // Due Date and Project (side by side)
+            var dateProjPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var datePanel = new StackPanel { Margin = new Thickness(0, 0, 15, 0), Width = 250 };
+            datePanel.Children.Add(CreateLabel("│ Due Date:"));
+            dueDateCombo = CreateKeyboardComboBox(theme, 240);
+            dueDateCombo.IsEditable = true;
             dueDateCombo.Items.Add(new ComboBoxItem { Content = "None", Tag = (DateTime?)null, Foreground = new SolidColorBrush(theme.Foreground) });
             dueDateCombo.Items.Add(new ComboBoxItem { Content = "Today", Tag = DateTime.Today, Foreground = new SolidColorBrush(theme.Foreground) });
             dueDateCombo.Items.Add(new ComboBoxItem { Content = "Tomorrow", Tag = DateTime.Today.AddDays(1), Foreground = new SolidColorBrush(theme.Foreground) });
             dueDateCombo.Items.Add(new ComboBoxItem { Content = "+3 days", Tag = DateTime.Today.AddDays(3), Foreground = new SolidColorBrush(theme.Foreground) });
             dueDateCombo.Items.Add(new ComboBoxItem { Content = "+7 days", Tag = DateTime.Today.AddDays(7), Foreground = new SolidColorBrush(theme.Foreground) });
-            dueDateCombo.Items.Add(new ComboBoxItem { Content = "Next Monday", Tag = GetNextWeekday(DayOfWeek.Monday), Foreground = new SolidColorBrush(theme.Foreground) });
-            formPanel.Children.Add(dueDateCombo);
+            dueDateCombo.Items.Add(new ComboBoxItem { Content = "Next Mon", Tag = GetNextWeekday(DayOfWeek.Monday), Foreground = new SolidColorBrush(theme.Foreground) });
+            datePanel.Children.Add(dueDateCombo);
 
-            // Project - dropdown with existing projects
-            formPanel.Children.Add(CreateLabel("Project [Space/Enter=Open, Type to filter or create new]"));
-            projectCombo = CreateKeyboardComboBox(theme, 200);
-            projectCombo.IsEditable = true; // Allow typing new project names
+            var projPanel = new StackPanel { Width = 250 };
+            projPanel.Children.Add(CreateLabel("│ Project:"));
+            projectCombo = CreateKeyboardComboBox(theme, 240);
+            projectCombo.IsEditable = true;
             projectCombo.Items.Add(new ComboBoxItem { Content = "None", Tag = (Guid?)null, Foreground = new SolidColorBrush(theme.Foreground) });
 
-            // Populate with existing projects
             var projects = projectService.GetAllProjects()?.Where(p => !p.Deleted).OrderBy(p => p.Name).ToList();
             if (projects != null)
             {
@@ -179,38 +196,41 @@ namespace SuperTUI.Widgets.Overlays
                     });
                 }
             }
-            formPanel.Children.Add(projectCombo);
+            projPanel.Children.Add(projectCombo);
+
+            dateProjPanel.Children.Add(datePanel);
+            dateProjPanel.Children.Add(projPanel);
+            formPanel.Children.Add(dateProjPanel);
 
             // Tags
-            formPanel.Children.Add(CreateLabel("Tags (comma-separated)"));
+            formPanel.Children.Add(CreateLabel("│ Tags (comma-separated):"));
             tagsBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 12,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderBrush = new SolidColorBrush(theme.Secondary),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                MinHeight = 30
+                Padding = new Thickness(6, 4, 6, 4),
+                Margin = new Thickness(0, 2, 0, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
             formPanel.Children.Add(tagsBox);
 
             // Notes
-            formPanel.Children.Add(CreateLabel("Notes"));
+            formPanel.Children.Add(CreateLabel("│ Notes:"));
             notesBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 12,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderBrush = new SolidColorBrush(theme.Secondary),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Margin = new Thickness(0, 5, 0, 15),
-                MinHeight = 80,
+                Padding = new Thickness(6, 4, 6, 4),
+                Margin = new Thickness(0, 2, 0, 10),
+                MinHeight = 60,
                 TextWrapping = TextWrapping.Wrap,
                 AcceptsReturn = true,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -218,50 +238,33 @@ namespace SuperTUI.Widgets.Overlays
             };
             formPanel.Children.Add(notesBox);
 
-            // Button panel
-            var buttonPanel = new StackPanel
+            // Terminal-style footer with instructions
+            var footer = new TextBlock
             {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 20, 0, 0)
-            };
-
-            var saveButton = new Button
-            {
-                Content = isNewTask ? "Create Task [Ctrl+S]" : "Save Changes [Ctrl+S]",
-                Width = 180,
-                Height = 35,
+                Text = "└────────────────────────────────────────────────────────┘",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 FontSize = 12,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Colors.White),
-                Background = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(0),
-                Margin = new Thickness(0, 0, 10, 0)
+                Foreground = new SolidColorBrush(theme.Primary),
+                Margin = new Thickness(0, 10, 0, 5)
             };
-            // NO CLICK HANDLER - Ctrl+S only
+            formPanel.Children.Add(footer);
 
-            var cancelButton = new Button
+            var instructions = new TextBlock
             {
-                Content = "Cancel [Esc]",
-                Width = 120,
-                Height = 35,
-                FontSize = 12,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(1)
+                Text = "  [Ctrl+S] Save    [Esc] Cancel    [Tab] Next Field",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(theme.Secondary),
+                Margin = new Thickness(0, 5, 0, 0)
             };
-            // NO CLICK HANDLER - Esc only
-
-            buttonPanel.Children.Add(saveButton);
-            buttonPanel.Children.Add(cancelButton);
-            formPanel.Children.Add(buttonPanel);
+            formPanel.Children.Add(instructions);
 
             // Status text
             statusText = new TextBlock
             {
-                Margin = new Thickness(0, 10, 0, 0),
+                Margin = new Thickness(0, 5, 0, 0),
                 FontSize = 11,
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 Foreground = new SolidColorBrush(theme.Secondary),
                 TextWrapping = TextWrapping.Wrap
             };
@@ -293,9 +296,9 @@ namespace SuperTUI.Widgets.Overlays
             {
                 Text = text,
                 FontSize = 11,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(theme.Secondary),
-                Margin = new Thickness(0, 0, 0, 0)
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Margin = new Thickness(0, 0, 0, 2)
             };
         }
 
@@ -308,8 +311,10 @@ namespace SuperTUI.Widgets.Overlays
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
-                Margin = new Thickness(0, 5, 0, 0),
+                BorderBrush = new SolidColorBrush(theme.Secondary),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(4, 2, 4, 2),
+                Margin = new Thickness(0, 2, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Left
             };
 

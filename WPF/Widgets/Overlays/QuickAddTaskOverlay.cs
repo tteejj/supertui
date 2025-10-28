@@ -45,54 +45,67 @@ namespace SuperTUI.Widgets.Overlays
         {
             var theme = themeManager.CurrentTheme;
 
-            var mainPanel = new StackPanel
+            // Simple terminal-style panel
+            var mainPanel = new Border
             {
-                Margin = new Thickness(15),
-                Background = new SolidColorBrush(theme.Surface),
+                Margin = new Thickness(10, 0, 10, 10),
+                Background = new SolidColorBrush(theme.Background),
+                BorderBrush = new SolidColorBrush(theme.Primary),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(10),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Input box (prominent, monospace for terminal vibe)
+            var stack = new StackPanel();
+
+            // Terminal header
+            var header = new TextBlock
+            {
+                Text = "┌─ QUICK ADD ────────────────────────────────────────────┐",
+                FontFamily = new FontFamily("Consolas, Courier New, monospace"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(theme.Primary),
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            stack.Children.Add(header);
+
+            // Input box
             inputBox = new TextBox
             {
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
-                FontSize = 16,
+                FontSize = 13,
                 Foreground = new SolidColorBrush(theme.Foreground),
                 Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Primary),
-                BorderThickness = new Thickness(2),
-                Padding = new Thickness(10),
-                Margin = new Thickness(0, 0, 0, 10),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                MinHeight = 35
+                BorderBrush = new SolidColorBrush(theme.Secondary),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(6, 4, 6, 4),
+                Margin = new Thickness(0, 0, 0, 5),
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
 
             inputBox.KeyDown += OnInputKeyDown;
             inputBox.TextChanged += OnInputTextChanged;
 
-            mainPanel.Children.Add(inputBox);
+            stack.Children.Add(inputBox);
 
             // Hint text (shows format and examples)
             hintText = new TextBlock
             {
-                Text = "Format: title | project | due | priority\n" +
-                       "Example: Fix auth bug | Backend | +3 | high\n" +
-                       "Due: +3 (days), tomorrow, next week, 2025-11-01\n" +
-                       "[Enter] Create  [Esc] Cancel",
-                Foreground = new SolidColorBrush(Color.FromRgb(
-                    (byte)(theme.Foreground.R * 0.6),
-                    (byte)(theme.Foreground.G * 0.6),
-                    (byte)(theme.Foreground.B * 0.6)
-                )),
+                Text = "│ title | project | due | priority\n" +
+                       "│ Ex: Fix bug | Backend | +3 | high\n" +
+                       "└────────────────────────────────────────────────────────┘\n" +
+                       "  [Enter] Create    [Esc] Cancel",
+                Foreground = new SolidColorBrush(theme.Secondary),
                 FontFamily = new FontFamily("Consolas, Courier New, monospace"),
-                FontSize = 11,
+                FontSize = 10,
                 TextWrapping = TextWrapping.Wrap,
                 HorizontalAlignment = HorizontalAlignment.Stretch
             };
 
-            mainPanel.Children.Add(hintText);
+            stack.Children.Add(hintText);
 
+            mainPanel.Child = stack;
             this.Content = mainPanel;
             this.Focusable = true;
 
@@ -165,10 +178,12 @@ namespace SuperTUI.Widgets.Overlays
             else
             {
                 // Reset to default hint
-                hintText.Text = "Format: title | project | due | priority\n" +
-                               "Example: Fix auth bug | Backend | +3 | high\n" +
-                               "[Enter] Create  [Esc] Cancel";
-                hintText.Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128));
+                var theme = themeManager.CurrentTheme;
+                hintText.Text = "│ title | project | due | priority\n" +
+                               "│ Ex: Fix bug | Backend | +3 | high\n" +
+                               "└────────────────────────────────────────────────────────┘\n" +
+                               "  [Enter] Create    [Esc] Cancel";
+                hintText.Foreground = new SolidColorBrush(theme.Secondary);
             }
         }
 
