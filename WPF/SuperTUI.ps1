@@ -719,6 +719,18 @@ foreach ($ws in $workspaceManager.Workspaces) {
 
 Write-Host "State restoration complete`n" -ForegroundColor Green
 
+# Switch to the first workspace (important: must be done before ShowDialog())
+Write-Host "Switching to initial workspace..." -ForegroundColor Cyan
+$workspaceManager.SwitchToWorkspace(1)
+$current = $workspaceManager.CurrentWorkspace
+if ($current) {
+    $workspaceTitle.Text = "SuperTUI - $($current.Name)"
+    Write-Host "Initialized on workspace: $($current.Name)" -ForegroundColor Green
+} else {
+    Write-Error "Failed to switch to initial workspace!"
+    exit 1
+}
+
 # ============================================================================
 # KEYBOARD SHORTCUTS (i3-style with Windows key as $mod)
 # ============================================================================
