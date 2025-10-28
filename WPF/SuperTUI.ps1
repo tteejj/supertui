@@ -297,7 +297,6 @@ $registerMethod.MakeGenericMethod([SuperTUI.Widgets.AgendaWidget]).Invoke($widge
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.ProjectStatsWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ProjectStatsWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.NotesWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.NotesWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.FileExplorerWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.FileExplorerWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.SystemMonitorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.SystemMonitorWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelImportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelImportWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelExportWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelExportWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.ExcelMappingEditorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ExcelMappingEditorWidget"))
@@ -306,7 +305,6 @@ $registerMethod.MakeGenericMethod([SuperTUI.Widgets.SettingsWidget]).Invoke($wid
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.ShortcutHelpWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ShortcutHelpWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.TimeTrackingWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.TimeTrackingWidget"))
 $registerMethod.MakeGenericMethod([SuperTUI.Widgets.RetroTaskManagementWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.RetroTaskManagementWidget"))
-$registerMethod.MakeGenericMethod([SuperTUI.Widgets.ThemeEditorWidget]).Invoke($widgetFactory, @("SuperTUI.Widgets.ThemeEditorWidget"))
 Write-Host "Widgets registered in factory" -ForegroundColor Green
 
 Write-Host "Infrastructure initialized with DI" -ForegroundColor Green
