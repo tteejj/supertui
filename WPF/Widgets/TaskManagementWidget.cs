@@ -319,11 +319,16 @@ namespace SuperTUI.Widgets
                 logger?.Info("TaskWidget", "Setting border and keyboard focus to tree control");
                 treeTaskListControl.BorderBrush = new SolidColorBrush(theme.Focus);
                 treeTaskListControl.BorderThickness = new Thickness(2);
-                bool focusResult = treeTaskListControl.Focus(); // Actually give it keyboard focus
-                logger?.Info("TaskWidget", $"treeTaskListControl.Focus() returned: {focusResult}");
-                Keyboard.Focus(treeTaskListControl);
-                var focusedElement = Keyboard.FocusedElement;
-                logger?.Info("TaskWidget", $"Keyboard.FocusedElement is now: {focusedElement?.GetType().Name ?? "NULL"}");
+
+                // Force focus with dispatcher to ensure control is loaded
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    bool focusResult = treeTaskListControl.Focus();
+                    logger?.Info("TaskWidget", $"[Deferred] treeTaskListControl.Focus() returned: {focusResult}");
+                    Keyboard.Focus(treeTaskListControl);
+                    var focusedElement = Keyboard.FocusedElement;
+                    logger?.Info("TaskWidget", $"[Deferred] Keyboard.FocusedElement is now: {focusedElement?.GetType().Name ?? "NULL"}");
+                }), System.Windows.Threading.DispatcherPriority.Input);
             }
             else
             {
