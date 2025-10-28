@@ -87,12 +87,14 @@ namespace SuperTUI.Core.Services
         /// </summary>
         public void Initialize(Grid rootContainer, Panel workspaceContainer)
         {
+            logger?.Info("OverlayManager", $"Initialize called - rootContainer: {rootContainer?.GetType().Name ?? "NULL"}, workspaceContainer: {workspaceContainer?.GetType().Name ?? "NULL"}");
+
             this.rootContainer = rootContainer ?? throw new ArgumentNullException(nameof(rootContainer));
             this.workspaceContainer = workspaceContainer ?? throw new ArgumentNullException(nameof(workspaceContainer));
 
             CreateOverlayZones();
 
-            logger?.Info("OverlayManager", "Initialized overlay zone system");
+            logger?.Info("OverlayManager", $"Initialized overlay zone system - bottomZone null? {bottomZone == null}");
         }
 
         /// <summary>
@@ -491,8 +493,16 @@ namespace SuperTUI.Core.Services
 
         public void ShowBottomZone(UIElement content)
         {
+            logger?.Debug("OverlayManager", $"ShowBottomZone called - bottomZone null? {bottomZone == null}");
+
             if (isBottomZoneVisible && bottomZoneContent == content)
                 return;
+
+            if (bottomZone == null)
+            {
+                logger?.Error("OverlayManager", "bottomZone is NULL - Initialize() was not called properly!");
+                throw new InvalidOperationException("OverlayManager.Initialize() must be called before showing overlays");
+            }
 
             var border = bottomZone.Children[0] as Border;
             var contentGrid = border.Child as Grid;
