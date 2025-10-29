@@ -535,24 +535,24 @@ $workspace2Layout = New-Object SuperTUI.Core.StackLayoutEngine([System.Windows.C
 $workspace2 = New-Object SuperTUI.Core.Workspace("Projects", 2, $workspace2Layout, $logger, $themeManager)
 Write-Host "  Layout engine created: StackLayoutEngine" -ForegroundColor Gray
 
-# Add TaskManagementWidget (3-pane layout: list, context, details)
-Write-Host "  Creating TaskManagementWidget..." -ForegroundColor Gray
+# Add TaskManagementWidget_TUI (NEW clean TUI-styled version)
+Write-Host "  Creating TaskManagementWidget_TUI..." -ForegroundColor Gray
 try {
-    $projectManagementWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskManagementWidget")
+    $projectManagementWidget = $widgetFactory.CreateWidget("SuperTUI.Widgets.TaskManagementWidget_TUI")
     Write-Host "    Widget created successfully" -ForegroundColor Green
     Write-Host "    Widget type: $($projectManagementWidget.GetType().Name)" -ForegroundColor Gray
 
-    $projectManagementWidget.WidgetName = "TaskManagement"
+    $projectManagementWidget.WidgetName = "Tasks"
     Write-Host "  Initializing widget..." -ForegroundColor Gray
     $projectManagementWidget.Initialize()
-    Write-Host "    Widget initialized" -ForegroundColor Green
+    Write-Host "    Widget initialized (NEW TUI-styled version)" -ForegroundColor Green
 
     $ws2Params = New-Object SuperTUI.Core.LayoutParams
     Write-Host "  Adding widget to workspace..." -ForegroundColor Gray
     $workspace2.AddWidget($projectManagementWidget, $ws2Params)
     Write-Host "    Widget added to workspace with ErrorBoundary" -ForegroundColor Green
 } catch {
-    Write-Host "    ERROR creating TaskManagementWidget: $_" -ForegroundColor Red
+    Write-Host "    ERROR creating TaskManagementWidget_TUI: $_" -ForegroundColor Red
     Write-Host "    Exception type: $($_.Exception.GetType().FullName)" -ForegroundColor Red
     Write-Host "    Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
     if ($_.Exception.InnerException) {
