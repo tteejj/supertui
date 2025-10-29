@@ -15,6 +15,8 @@ namespace SuperTUI.Core.Controls
     /// </summary>
     public class TUIListBox : Control
     {
+        public event SelectionChangedEventHandler SelectionChanged;
+
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TUIListBox),
                 new PropertyMetadata(null, OnItemsSourceChanged));
@@ -107,6 +109,9 @@ namespace SuperTUI.Core.Controls
 
             // Custom item container style (for selection visual)
             listBox.ItemContainerStyle = CreateItemContainerStyle();
+
+            // Forward selection changed events
+            listBox.SelectionChanged += (s, e) => SelectionChanged?.Invoke(this, e);
 
             container = new Border
             {
