@@ -574,8 +574,8 @@ namespace SuperTUI.Infrastructure
             var terminalCyan = Color.FromRgb(0, 217, 255);       // #00D9FF - Cyan secondary
             var terminalForeground = Color.FromRgb(0, 255, 0);   // #00FF00 - Bright green text
             var terminalBackground = Color.FromRgb(0, 0, 0);     // #000000 - Pure black (CRT screen)
-            var paneBackground = Color.FromRgb(0, 17, 0);        // #001100 - Very dark green tint
-            var paneHeader = Color.FromRgb(0, 34, 0);            // #002200 - Slightly lighter dark green
+            var paneBackground = Color.FromRgb(0, 0, 0);         // #000000 - Pure black background
+            var paneHeader = Color.FromRgb(10, 10, 10);          // #0A0A0A - Almost black header
 
             return new Theme
             {
@@ -593,16 +593,16 @@ namespace SuperTUI.Infrastructure
                 Background = terminalBackground,
                 BackgroundSecondary = paneBackground,
                 Surface = paneHeader,
-                SurfaceHighlight = Color.FromRgb(0, 51, 0),      // #003300 - Dark green selection
+                SurfaceHighlight = Color.FromRgb(10, 20, 10),    // #0A140A - Very subtle dark green tint
 
                 Foreground = terminalForeground,
                 ForegroundSecondary = Color.FromRgb(0, 180, 0),  // #00B400 - Dimmer green text
                 ForegroundDisabled = Color.FromRgb(0, 100, 0),   // #006400 - Muted green
 
-                Border = Color.FromRgb(0, 255, 0),               // #00FF00 - Bright green borders
-                BorderActive = terminalGreen,
+                Border = Color.FromRgb(0, 0, 0),                 // #000000 - BLACK borders (inactive panes)
+                BorderActive = terminalGreen,                    // #00FF00 - Bright green ONLY for focused pane
                 Focus = terminalGreen,
-                Selection = Color.FromRgb(0, 51, 0),             // #003300 - Dark green selection
+                Selection = Color.FromRgb(10, 20, 10),           // #0A140A - Very subtle dark green selection
                 Hover = paneHeader,
                 Active = Color.FromRgb(0, 51, 0),
 
@@ -640,7 +640,7 @@ namespace SuperTUI.Infrastructure
                 Typography = new TypographySettings
                 {
                     FontFamily = "JetBrains Mono, Consolas",
-                    FontSize = 14.0,
+                    FontSize = 16.0,
                     FontWeight = "Normal"
                 }
             };
