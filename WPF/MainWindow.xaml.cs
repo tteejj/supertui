@@ -158,7 +158,12 @@ namespace SuperTUI
         {
             // Create pane manager (blank canvas)
             paneManager = new PaneManager(logger, themeManager);
-            PaneCanvas.Children.Add(paneManager.Container);
+
+            // Check if container is already added (prevents "logical parent" error)
+            if (!PaneCanvas.Children.Contains(paneManager.Container))
+            {
+                PaneCanvas.Children.Add(paneManager.Container);
+            }
 
             // Create pane factory
             paneFactory = new PaneFactory(
@@ -190,7 +195,12 @@ namespace SuperTUI
                 serviceContainer.GetRequiredService<IConfigurationManager>()
             );
             statusBar.Initialize();
-            StatusBarContainer.Child = statusBar;
+
+            // Check if status bar is already set (prevents "logical parent" error)
+            if (StatusBarContainer.Child == null)
+            {
+                StatusBarContainer.Child = statusBar;
+            }
         }
 
         private void OnPaneFocusChanged(object sender, PaneEventArgs e)
@@ -227,8 +237,8 @@ namespace SuperTUI
                 return;
             }
 
-            // Switch workspaces: Alt+1-9 (i3-style)
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Alt)
+            // Switch workspaces: Ctrl+Alt+1-9 (avoid Windows Alt key interception)
+            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
             {
                 // Workspace switching
                 if (e.Key >= Key.D1 && e.Key <= Key.D9)
@@ -261,8 +271,8 @@ namespace SuperTUI
                 }
             }
 
-            // Move panes: Alt+Shift+Arrows (i3-style)
-            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Alt | ModifierKeys.Shift))
+            // Move panes: Ctrl+Alt+Shift+Arrows (avoid Windows Alt key interception)
+            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Shift))
             {
                 switch (e.Key)
                 {
@@ -344,9 +354,15 @@ namespace SuperTUI
                 commandPalette.CloseRequested += (s, e) => HideCommandPalette();
             }
 
-            // Show modal overlay
+            // Clear modal overlay and ensure command palette has no parent (prevents "logical parent" error)
             ModalOverlay.Children.Clear();
-            ModalOverlay.Children.Add(commandPalette);
+
+            // Check if command palette is not already in the overlay
+            if (!ModalOverlay.Children.Contains(commandPalette))
+            {
+                ModalOverlay.Children.Add(commandPalette);
+            }
+
             ModalOverlay.Visibility = Visibility.Visible;
 
             // Animate opening

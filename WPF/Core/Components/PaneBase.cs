@@ -42,6 +42,7 @@ namespace SuperTUI.Core.Components
         public string PaneName { get; protected set; }
         public string PaneIcon { get; protected set; }  // Optional emoji/icon
         public bool IsActive { get; private set; }
+        public bool IsFocused { get; internal set; }  // Set by PaneManager
         public virtual PaneSizePreference SizePreference => PaneSizePreference.Flex;
 
         // Constructor
@@ -190,6 +191,14 @@ namespace SuperTUI.Core.Components
         }
 
         /// <summary>
+        /// Called when focus state changes (for visual feedback)
+        /// </summary>
+        public virtual void OnFocusChanged()
+        {
+            ApplyTheme();
+        }
+
+        /// <summary>
         /// Apply terminal theme to pane
         /// </summary>
         public void ApplyTheme()
@@ -200,17 +209,18 @@ namespace SuperTUI.Core.Components
             var background = theme.GetColor("pane_background");
             var headerBg = theme.GetColor("pane_header");
             var foreground = theme.GetColor("foreground");
-            var border = IsActive ? theme.GetColor("border_active") : theme.GetColor("border");
+            var border = IsFocused ? theme.GetColor("border_active") : theme.GetColor("border");
             var accent = theme.GetColor("accent");
 
-            // Container
+            // Container with focus indicator
             containerBorder.Background = new SolidColorBrush(background);
             containerBorder.BorderBrush = new SolidColorBrush(border);
+            containerBorder.BorderThickness = new Thickness(IsFocused ? 2 : 1);  // Thicker border when focused
 
             // Header
             headerBorder.Background = new SolidColorBrush(headerBg);
             headerBorder.BorderBrush = new SolidColorBrush(border);
-            headerText.Foreground = new SolidColorBrush(IsActive ? accent : foreground);
+            headerText.Foreground = new SolidColorBrush(IsFocused ? accent : foreground);
 
             // Content
             if (contentArea.Content is Panel panel)

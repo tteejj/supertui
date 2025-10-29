@@ -176,9 +176,9 @@ Write-Host "  Ctrl+Space or :       Command palette" -ForegroundColor Cyan
 Write-Host "  Ctrl+T                Open tasks pane" -ForegroundColor Gray
 Write-Host "  Ctrl+N                Open notes pane" -ForegroundColor Gray
 Write-Host "  Ctrl+P                Open processing pane" -ForegroundColor Gray
-Write-Host "  Alt+1-9               Switch workspaces" -ForegroundColor Gray
-Write-Host "  Alt+Arrows            Navigate between panes" -ForegroundColor Gray
-Write-Host "  Alt+Shift+Arrows      Move panes" -ForegroundColor Gray
+Write-Host "  Ctrl+Alt+1-9          Switch workspaces" -ForegroundColor Gray
+Write-Host "  Ctrl+Alt+Arrows       Navigate between panes" -ForegroundColor Gray
+Write-Host "  Ctrl+Alt+Shift+Arrows Move panes" -ForegroundColor Gray
 Write-Host "  Ctrl+Shift+Q          Close focused pane" -ForegroundColor Gray
 Write-Host ""
 

@@ -570,17 +570,17 @@ namespace SuperTUI.Infrastructure
         /// </summary>
         public static Theme CreateTerminalTheme()
         {
-            var terminalGreen = Color.FromRgb(57, 255, 20);      // #39FF14 - Neon green accent
+            var terminalGreen = Color.FromRgb(0, 255, 0);        // #00FF00 - Bright neon green (CRT phosphor)
             var terminalCyan = Color.FromRgb(0, 217, 255);       // #00D9FF - Cyan secondary
-            var terminalForeground = Color.FromRgb(184, 197, 219); // #B8C5DB - Foreground text
-            var terminalBackground = Color.FromRgb(10, 14, 20);   // #0A0E14 - Dark background
-            var paneBackground = Color.FromRgb(13, 17, 23);      // #0D1117 - Pane background
-            var paneHeader = Color.FromRgb(22, 27, 34);          // #161B22 - Pane header
+            var terminalForeground = Color.FromRgb(0, 255, 0);   // #00FF00 - Bright green text
+            var terminalBackground = Color.FromRgb(0, 0, 0);     // #000000 - Pure black (CRT screen)
+            var paneBackground = Color.FromRgb(0, 17, 0);        // #001100 - Very dark green tint
+            var paneHeader = Color.FromRgb(0, 34, 0);            // #002200 - Slightly lighter dark green
 
             return new Theme
             {
                 Name = "Terminal",
-                Description = "Clean terminal aesthetic matching mockup design - dark background, green accent, minimal borders",
+                Description = "Classic CRT terminal aesthetic - bright green phosphor on pure black screen",
                 IsDark = true,
 
                 Primary = terminalGreen,
@@ -593,18 +593,18 @@ namespace SuperTUI.Infrastructure
                 Background = terminalBackground,
                 BackgroundSecondary = paneBackground,
                 Surface = paneHeader,
-                SurfaceHighlight = Color.FromRgb(37, 51, 64),    // #253340 - Selection
+                SurfaceHighlight = Color.FromRgb(0, 51, 0),      // #003300 - Dark green selection
 
                 Foreground = terminalForeground,
-                ForegroundSecondary = Color.FromRgb(108, 122, 137), // #6C7A89 - Text secondary
-                ForegroundDisabled = Color.FromRgb(77, 85, 102),    // #4D5566 - Muted
+                ForegroundSecondary = Color.FromRgb(0, 180, 0),  // #00B400 - Dimmer green text
+                ForegroundDisabled = Color.FromRgb(0, 100, 0),   // #006400 - Muted green
 
-                Border = Color.FromRgb(31, 36, 48),              // #1F2430
+                Border = Color.FromRgb(0, 255, 0),               // #00FF00 - Bright green borders
                 BorderActive = terminalGreen,
                 Focus = terminalGreen,
-                Selection = Color.FromRgb(37, 51, 64),           // #253340
+                Selection = Color.FromRgb(0, 51, 0),             // #003300 - Dark green selection
                 Hover = paneHeader,
-                Active = Color.FromRgb(37, 51, 64),
+                Active = Color.FromRgb(0, 51, 0),
 
                 SyntaxKeyword = terminalGreen,
                 SyntaxString = Color.FromRgb(255, 180, 84),
@@ -640,7 +640,7 @@ namespace SuperTUI.Infrastructure
                 Typography = new TypographySettings
                 {
                     FontFamily = "JetBrains Mono, Consolas",
-                    FontSize = 11.0,
+                    FontSize = 14.0,
                     FontWeight = "Normal"
                 }
             };
