@@ -105,7 +105,7 @@ namespace SuperTUI.Infrastructure
             Register("App.AutoSaveInterval", 300, "Auto-save interval in seconds (0 = disabled)", "Application", value => (int)value >= 0);
 
             // UI settings
-            Register("UI.Theme", "Dark", "UI theme name", "UI");
+            Register("UI.Theme", "Terminal", "UI theme name", "UI");
             Register("UI.FontFamily", "Cascadia Mono, Consolas", "Font family", "UI");
             Register("UI.FontSize", 12, "Font size in points", "UI", value => (int)value >= 8 && (int)value <= 24);
             Register("UI.AnimationDuration", 200, "Animation duration in milliseconds", "UI", value => (int)value >= 0 && (int)value <= 1000);

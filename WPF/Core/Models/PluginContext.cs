@@ -62,21 +62,17 @@ namespace SuperTUI.Infrastructure
         /// </summary>
         public ThemeManager Themes { get; set; }
 
-        /// <summary>
-        /// Access to workspace management
-        /// </summary>
-        public WorkspaceManager Workspaces { get; set; }
+        // Note: Old workspace and widget infrastructure removed during pane system migration
+        // Plugins should use pane system instead
+        // /// <summary>
+        // /// Access to workspace management
+        // /// </summary>
+        // public PaneWorkspaceManager Workspaces { get; set; }
 
-        /// <summary>
-        /// Widget factory for creating widgets with dependency injection.
-        /// Use this instead of direct instantiation (new Widget()) for widgets that require services.
-        /// </summary>
-        /// <remarks>
-        /// Added in 2025-10-27 to support widgets without parameterless constructors.
-        /// Some built-in widgets (AgendaWidget, KanbanBoardWidget, ProjectStatsWidget)
-        /// require dependency injection and cannot be instantiated with new().
-        /// </remarks>
-        public WidgetFactory WidgetFactory { get; set; }
+        // /// <summary>
+        // /// Pane factory for creating panes with dependency injection.
+        // /// </summary>
+        // public PaneFactory PaneFactory { get; set; }
 
         /// <summary>
         /// Shared data dictionary for inter-plugin communication

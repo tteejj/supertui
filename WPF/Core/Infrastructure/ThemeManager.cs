@@ -563,6 +563,88 @@ namespace SuperTUI.Infrastructure
                 }
             };
         }
+
+        /// <summary>
+        /// Creates the Terminal theme - clean terminal aesthetic matching terminal.json design
+        /// Dark background with neon green accents, minimal borders, terminal-focused design
+        /// </summary>
+        public static Theme CreateTerminalTheme()
+        {
+            var terminalGreen = Color.FromRgb(57, 255, 20);      // #39FF14 - Neon green accent
+            var terminalCyan = Color.FromRgb(0, 217, 255);       // #00D9FF - Cyan secondary
+            var terminalForeground = Color.FromRgb(184, 197, 219); // #B8C5DB - Foreground text
+            var terminalBackground = Color.FromRgb(10, 14, 20);   // #0A0E14 - Dark background
+            var paneBackground = Color.FromRgb(13, 17, 23);      // #0D1117 - Pane background
+            var paneHeader = Color.FromRgb(22, 27, 34);          // #161B22 - Pane header
+
+            return new Theme
+            {
+                Name = "Terminal",
+                Description = "Clean terminal aesthetic matching mockup design - dark background, green accent, minimal borders",
+                IsDark = true,
+
+                Primary = terminalGreen,
+                Secondary = terminalCyan,
+                Success = terminalGreen,
+                Warning = Color.FromRgb(255, 180, 84),            // #FFB454
+                Error = Color.FromRgb(240, 113, 120),             // #F07178
+                Info = terminalCyan,
+
+                Background = terminalBackground,
+                BackgroundSecondary = paneBackground,
+                Surface = paneHeader,
+                SurfaceHighlight = Color.FromRgb(37, 51, 64),    // #253340 - Selection
+
+                Foreground = terminalForeground,
+                ForegroundSecondary = Color.FromRgb(108, 122, 137), // #6C7A89 - Text secondary
+                ForegroundDisabled = Color.FromRgb(77, 85, 102),    // #4D5566 - Muted
+
+                Border = Color.FromRgb(31, 36, 48),              // #1F2430
+                BorderActive = terminalGreen,
+                Focus = terminalGreen,
+                Selection = Color.FromRgb(37, 51, 64),           // #253340
+                Hover = paneHeader,
+                Active = Color.FromRgb(37, 51, 64),
+
+                SyntaxKeyword = terminalGreen,
+                SyntaxString = Color.FromRgb(255, 180, 84),
+                SyntaxComment = Color.FromRgb(77, 85, 102),
+                SyntaxNumber = terminalCyan,
+                SyntaxFunction = terminalGreen,
+                SyntaxVariable = terminalCyan,
+
+                Glow = new GlowSettings
+                {
+                    Mode = GlowMode.OnFocus,
+                    GlowColor = terminalGreen,
+                    GlowRadius = 12.0,
+                    GlowOpacity = 0.7,
+                    FocusGlowColor = terminalGreen,
+                    HoverGlowColor = terminalCyan
+                },
+                CRTEffects = new CRTEffectSettings
+                {
+                    EnableScanlines = false,
+                    ScanlineOpacity = 0.0,
+                    ScanlineSpacing = 0,
+                    ScanlineColor = Colors.Black,
+                    EnableBloom = false,
+                    BloomIntensity = 0.0
+                },
+                Opacity = new OpacitySettings
+                {
+                    WindowOpacity = 1.0,
+                    BackgroundOpacity = 1.0,
+                    InactiveWidgetOpacity = 0.7
+                },
+                Typography = new TypographySettings
+                {
+                    FontFamily = "JetBrains Mono, Consolas",
+                    FontSize = 11.0,
+                    FontWeight = "Normal"
+                }
+            };
+        }
     }
 
     /// <summary>
@@ -591,7 +673,8 @@ namespace SuperTUI.Infrastructure
             themesDirectory = themesDir ?? Path.Combine(
                 SuperTUI.Extensions.PortableDataDirectory.GetSuperTUIDataDirectory(), "Themes");
 
-            // Register built-in themes
+            // Register built-in themes (Terminal is the primary default)
+            RegisterTheme(Theme.CreateTerminalTheme());
             RegisterTheme(Theme.CreateDarkTheme());
             RegisterTheme(Theme.CreateLightTheme());
 
@@ -605,7 +688,7 @@ namespace SuperTUI.Infrastructure
             LoadCustomThemes();
 
             // Apply saved theme from config
-            string savedTheme = ConfigurationManager.Instance.Get<string>("UI.Theme", "Dark");
+            string savedTheme = ConfigurationManager.Instance.Get<string>("UI.Theme", "Terminal");
             ApplyTheme(savedTheme);
         }
 

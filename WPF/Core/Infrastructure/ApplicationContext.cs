@@ -15,12 +15,10 @@ namespace SuperTUI.Infrastructure
 
         private Project currentProject;
         private TaskFilterType currentFilter;
-        private Workspace currentWorkspace;
 
         // Events for state changes
         public event Action<Project> ProjectChanged;
         public event Action<TaskFilterType> FilterChanged;
-        public event Action<Workspace> WorkspaceChanged;
         public event Action<string, object> NavigationRequested;
 
         private ApplicationContext()
@@ -65,23 +63,6 @@ namespace SuperTUI.Infrastructure
             }
         }
 
-        /// <summary>
-        /// Currently active workspace
-        /// </summary>
-        public Workspace CurrentWorkspace
-        {
-            get => currentWorkspace;
-            set
-            {
-                if (currentWorkspace != value)
-                {
-                    currentWorkspace = value;
-                    WorkspaceChanged?.Invoke(currentWorkspace);
-                    Logger.Instance?.Debug("ApplicationContext",
-                        $"Current workspace changed: {currentWorkspace?.Name}");
-                }
-            }
-        }
 
         /// <summary>
         /// Request navigation to a specific widget with optional context

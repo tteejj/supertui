@@ -288,167 +288,48 @@ namespace SuperTUI.Extensions
             Logger.Instance.Info("StatePersistence", $"Initialized state persistence at {stateDirectory}");
         }
 
-        public StateSnapshot CaptureState(WorkspaceManager workspaceManager, Dictionary<string, object> customData = null)
-        {
-            var snapshot = new StateSnapshot
-            {
-                Timestamp = DateTime.Now,
-                ApplicationState = new Dictionary<string, object>
-                {
-                    ["CurrentWorkspaceIndex"] = workspaceManager.CurrentWorkspace?.Index ?? 0
-                },
-                UserData = customData ?? new Dictionary<string, object>()
-            };
+        // Note: CaptureState temporarily disabled during pane system migration
+        // Will be reimplemented to work with PaneWorkspaceManager
+        // public StateSnapshot CaptureState(PaneWorkspaceManager workspaceManager, Dictionary<string, object> customData = null)
+        // {
+        //     var snapshot = new StateSnapshot
+        //     {
+        //         Timestamp = DateTime.Now,
+        //         ApplicationState = new Dictionary<string, object>
+        //         {
+        //             ["CurrentWorkspaceIndex"] = workspaceManager.CurrentWorkspaceIndex
+        //         },
+        //         UserData = customData ?? new Dictionary<string, object>()
+        //     };
+        //
+        //     currentState = snapshot;
+        //     Logger.Instance.Debug("StatePersistence", "State snapshot captured");
+        //
+        //     return snapshot;
+        // }
 
-            // Capture workspace states
-            foreach (var workspace in workspaceManager.Workspaces)
-            {
-                var workspaceState = new WorkspaceState
-                {
-                    Name = workspace.Name,
-                    Index = workspace.Index
-                };
-
-                // Capture widget states
-                foreach (var widget in workspace.Widgets)
-                {
-                    try
-                    {
-                        var widgetState = widget.SaveState();
-                        workspaceState.WidgetStates.Add(widgetState);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorHandlingPolicy.Handle(
-                            ErrorCategory.Widget,
-                            ex,
-                            $"Saving state for widget {widget.WidgetName}");
-                    }
-                }
-
-                snapshot.Workspaces.Add(workspaceState);
-            }
-
-            currentState = snapshot;
-            Logger.Instance.Debug("StatePersistence", "State snapshot captured");
-
-            return snapshot;
-        }
-
-        /// <summary>
-        /// Restores application state from a snapshot
-        /// Matches widgets by WidgetId ONLY - does not fallback to WidgetName
-        /// </summary>
-        /// <remarks>
-        /// Design Decision: We require WidgetId for state restoration because:
-        /// 1. Multiple widgets can have the same name (e.g., "Counter 1", "Counter 2" both named "Counter")
-        /// 2. Name-based matching is non-deterministic (depends on widget creation order)
-        /// 3. Name-based matching can restore state to the WRONG widget silently
-        /// 4. WidgetId is unique per widget instance and never changes
-        ///
-        /// Legacy states without WidgetId will log a warning and be skipped.
-        /// User should save state again to generate WidgetIds for all widgets.
-        /// </remarks>
-        public void RestoreState(StateSnapshot snapshot, WorkspaceManager workspaceManager)
-        {
-            try
-            {
-                Logger.Instance.Info("StatePersistence", "Restoring state from snapshot");
-
-                // Restore workspace states
-                foreach (var workspaceState in snapshot.Workspaces)
-                {
-                    var workspace = workspaceManager.Workspaces.FirstOrDefault(w => w.Index == workspaceState.Index);
-                    if (workspace != null)
-                    {
-                        // Restore widget states by matching WidgetId ONLY
-                        // WidgetName fallback removed to prevent ambiguous matching with duplicate names
-                        foreach (var widgetState in workspaceState.WidgetStates)
-                        {
-                            try
-                            {
-                                // Find widget by ID (required)
-                                if (widgetState.TryGetValue("WidgetId", out var widgetIdObj))
-                                {
-                                    Guid widgetId;
-
-                                    // Handle different serialization formats
-                                    if (widgetIdObj is Guid guid)
-                                    {
-                                        widgetId = guid;
-                                    }
-                                    else if (widgetIdObj is string guidString && Guid.TryParse(guidString, out var parsedGuid))
-                                    {
-                                        widgetId = parsedGuid;
-                                    }
-                                    else
-                                    {
-                                        Logger.Instance.Warning("StatePersistence",
-                                            $"Widget state has invalid WidgetId format: {widgetIdObj?.GetType().Name ?? "null"}");
-                                        continue;
-                                    }
-
-                                    // Find widget by ID
-                                    var widget = workspace.Widgets.FirstOrDefault(w => w.WidgetId == widgetId);
-                                    if (widget != null)
-                                    {
-                                        widget.RestoreState(widgetState);
-                                        Logger.Instance.Debug("StatePersistence",
-                                            $"Restored widget: {widget.WidgetName} (ID: {widgetId})");
-                                    }
-                                    else
-                                    {
-                                        // Widget with this ID doesn't exist (might have been removed)
-                                        string widgetName = widgetState.TryGetValue("WidgetName", out var nameObj) ? nameObj?.ToString() : "Unknown";
-                                        Logger.Instance.Debug("StatePersistence",
-                                            $"Widget '{widgetName}' with ID {widgetId} not found in workspace (may have been removed)");
-                                    }
-                                }
-                                else
-                                {
-                                    // No WidgetId in saved state - this is a legacy state or corrupted data
-                                    string widgetName = widgetState.TryGetValue("WidgetName", out var nameObj) ? nameObj?.ToString() : "Unknown";
-                                    string widgetType = widgetState.TryGetValue("WidgetType", out var typeObj) ? typeObj?.ToString() : "Unknown";
-
-                                    Logger.Instance.Warning("StatePersistence",
-                                        $"LEGACY STATE DETECTED: Widget '{widgetName}' (type: {widgetType}) has no WidgetId. " +
-                                        $"State will NOT be restored. Please save state again to generate WidgetIds.");
-
-                                    // NOTE: We deliberately do NOT attempt name-based matching because:
-                                    // 1. It's ambiguous when multiple widgets have the same name
-                                    // 2. It's non-deterministic (depends on widget order)
-                                    // 3. It leads to subtle bugs that are hard to diagnose
-                                    // Instead, we require the user to save state again, which will generate WidgetIds
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                ErrorHandlingPolicy.Handle(
-                                    ErrorCategory.Widget,
-                                    ex,
-                                    "Restoring widget state from snapshot");
-                            }
-                        }
-                    }
-                }
-
-                // Restore current workspace
-                if (snapshot.ApplicationState.TryGetValue("CurrentWorkspaceIndex", out var currentIndex))
-                {
-                    workspaceManager.SwitchToWorkspace((int)currentIndex);
-                }
-
-                StateChanged?.Invoke(this, new StateChangedEventArgs { Snapshot = snapshot });
-                Logger.Instance.Info("StatePersistence", "State restored successfully");
-            }
-            catch (Exception ex)
-            {
-                ErrorHandlingPolicy.Handle(
-                    ErrorCategory.IO,
-                    ex,
-                    "Restoring application state from snapshot");
-            }
-        }
+        // Note: RestoreState temporarily disabled during pane system migration
+        // Will be reimplemented to work with PaneWorkspaceManager
+        // /// <summary>
+        // /// Restores application state from a snapshot
+        // /// </summary>
+        // public void RestoreState(StateSnapshot snapshot, PaneWorkspaceManager workspaceManager)
+        // {
+        //     try
+        //     {
+        //         Logger.Instance.Info("StatePersistence", "Restoring state from snapshot");
+        //         // TODO: Implement pane state restoration
+        //         StateChanged?.Invoke(this, new StateChangedEventArgs { Snapshot = snapshot });
+        //         Logger.Instance.Info("StatePersistence", "State restored successfully");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         ErrorHandlingPolicy.Handle(
+        //             ErrorCategory.IO,
+        //             ex,
+        //             "Restoring application state from snapshot");
+        //     }
+        // }
 
         /// <summary>
         /// Synchronous wrapper for SaveStateAsync - AVOID CALLING FROM UI THREAD

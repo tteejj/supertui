@@ -1,5 +1,6 @@
 using System;
 using SuperTUI.Core;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Services;
 using SuperTUI.Infrastructure;
 using SuperTUI.Extensions;
@@ -46,9 +47,10 @@ namespace SuperTUI.DI
             container.RegisterSingleton<IPluginManager, PluginManager>(PluginManager.Instance);
             container.RegisterSingleton<IEventBus, EventBus>(EventBus.Instance);
             container.RegisterSingleton<IShortcutManager, ShortcutManager>(ShortcutManager.Instance);
+            container.RegisterSingleton<IProjectContextManager, ProjectContextManager>(ProjectContextManager.Instance);
             // HotReloadManager not yet implemented - skip for now
 
-            Logger.Instance.Info("DI", $"✅ Registered {10} infrastructure services");
+            Logger.Instance.Info("DI", $"✅ Registered {11} infrastructure services");
 
             // Register domain services with their interfaces
             container.RegisterSingleton<ITaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);
@@ -168,6 +170,14 @@ namespace SuperTUI.DI
             }
             // TagService doesn't have Initialize method - it's ready to use immediately
             Logger.Instance.Info("DI", "✅ TagService ready (no initialization needed)");
+
+            // Initialize ProjectContextManager (depends on ProjectService)
+            var projectContext = container.GetRequiredService<IProjectContextManager>();
+            if (projectContext == null)
+            {
+                throw new InvalidOperationException("IProjectContextManager not registered in service container.");
+            }
+            Logger.Instance.Info("DI", "✅ ProjectContextManager ready");
 
             Logger.Instance.Info("DI", "✅ All services initialized successfully in proper dependency order");
         }

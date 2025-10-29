@@ -1,0 +1,45 @@
+{
+  "name": "Terminal",
+  "description": "Clean terminal aesthetic matching mockup design - dark background, green accent, minimal borders",
+  "colors": {
+    "background": "#0A0E14",
+    "foreground": "#B8C5DB",
+    "primary": "#39FF14",
+    "secondary": "#00D9FF",
+    "accent": "#39FF14",
+    "success": "#39FF14",
+    "warning": "#FFB454",
+    "error": "#F07178",
+    "info": "#00D9FF",
+    "border": "#1F2430",
+    "border_active": "#39FF14",
+    "selection": "#253340",
+    "highlight": "#39FF14",
+    "muted": "#4D5566",
+    "text_primary": "#B8C5DB",
+    "text_secondary": "#6C7A89",
+    "text_accent": "#39FF14",
+    "pane_background": "#0D1117",
+    "pane_header": "#161B22",
+    "statusbar": "#0D1117"
+  },
+  "fonts": {
+    "primary": "JetBrains Mono",
+    "fallback": "Consolas",
+    "size": 11,
+    "header_size": 12,
+    "title_size": 14
+  },
+  "spacing": {
+    "pane_padding": 12,
+    "item_padding": 6,
+    "border_thickness": 1,
+    "border_radius": 0
+  },
+  "effects": {
+    "shadow": false,
+    "glow": true,
+    "scanlines": false,
+    "animations": true
+  }
+}

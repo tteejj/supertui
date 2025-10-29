@@ -26,15 +26,17 @@ namespace SuperTUI.Infrastructure
         /// </summary>
         void Initialize(string stateDir = null);
 
-        /// <summary>
-        /// Capture current state from workspace manager
-        /// </summary>
-        StateSnapshot CaptureState(WorkspaceManager workspaceManager, Dictionary<string, object> customData = null);
+        // Note: CaptureState and RestoreState are currently disabled during migration to pane system
+        // These methods will be reimplemented to work with PaneWorkspaceManager
+        // /// <summary>
+        // /// Capture current state from workspace manager
+        // /// </summary>
+        // StateSnapshot CaptureState(PaneWorkspaceManager workspaceManager, Dictionary<string, object> customData = null);
 
-        /// <summary>
-        /// Restore state from a snapshot
-        /// </summary>
-        void RestoreState(StateSnapshot snapshot, WorkspaceManager workspaceManager);
+        // /// <summary>
+        // /// Restore state from a snapshot
+        // /// </summary>
+        // void RestoreState(StateSnapshot snapshot, PaneWorkspaceManager workspaceManager);
 
         /// <summary>
         /// Save state synchronously
