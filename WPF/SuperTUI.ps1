@@ -311,6 +311,7 @@ try {
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.CounterWidget], "SuperTUI.Widgets.CounterWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.TaskSummaryWidget], "SuperTUI.Widgets.TaskSummaryWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.TaskManagementWidget], "SuperTUI.Widgets.TaskManagementWidget")
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.TaskManagementWidget_TUI], "SuperTUI.Widgets.TaskManagementWidget_TUI")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.KanbanBoardWidget], "SuperTUI.Widgets.KanbanBoardWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.AgendaWidget], "SuperTUI.Widgets.AgendaWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.ProjectStatsWidget], "SuperTUI.Widgets.ProjectStatsWidget")
@@ -324,7 +325,8 @@ try {
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.ShortcutHelpWidget], "SuperTUI.Widgets.ShortcutHelpWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.TimeTrackingWidget], "SuperTUI.Widgets.TimeTrackingWidget")
     $widgetFactory.RegisterWidget([SuperTUI.Widgets.RetroTaskManagementWidget], "SuperTUI.Widgets.RetroTaskManagementWidget")
-    Write-Host "Widgets registered in factory (17 widgets)" -ForegroundColor Green
+    $widgetFactory.RegisterWidget([SuperTUI.Widgets.TUIDemoWidget], "SuperTUI.Widgets.TUIDemoWidget")
+    Write-Host "Widgets registered in factory (19 widgets)" -ForegroundColor Green
 } catch {
     Write-Host "ERROR: Failed to register widgets: $_" -ForegroundColor Red
     Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
