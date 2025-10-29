@@ -1,0 +1,138 @@
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh clean-build.ps1
+Cleaning build artifacts...
+  Removed bin/
+  Removed obj/
+Clean complete!
+
+Building SuperTUI...
+  Determining projects to restore...
+  Restored C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj (in 1.67 sec).
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(24,59): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(19,16): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(29,32): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(44,16): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(196,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(60,66): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(197,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(58,23): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(75,39): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(118,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(199,54): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(199,75): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(56,24): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(693,21): warning CS0618: 'StatePersistenceMana
+ger.SaveState(StateSnapshot, bool)' is obsolete: 'Use SaveStateAsync to avoid potential deadlocks on UI thread' [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(273,58): warning CS0067: The event 'StatePersi
+stenceManager.StateChanged' is never used [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+  SuperTUI -> C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Release\net8.0-windows\SuperTUI.dll
+
+Build succeeded.
+
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(24,59): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(19,16): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(29,32): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(44,16): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(196,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(60,66): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(197,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(58,23): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(75,39): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(118,23): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(199,54): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(199,75): warning CS8
+632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+[C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ProjectContextManager.cs(56,24): warning CS86
+32: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(693,21): warning CS0618: 'StatePersistenceMana
+ger.SaveState(StateSnapshot, bool)' is obsolete: 'Use SaveStateAsync to avoid potential deadlocks on UI thread' [C:\Use
+rs\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Extensions.cs(273,58): warning CS0067: The event 'StatePersi
+stenceManager.StateChanged' is never used [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+    15 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.53
+
+Build successful!
+DLL: bin/Release/net8.0-windows/SuperTUI.dll
+
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh SuperTUI.ps1
+Loading WPF assemblies...
+WPF assemblies loaded
+Loading SuperTUI...
+Loaded successfully
+Initializing SuperTUI infrastructure with DI...
+Setting up ServiceContainer...
+ServiceContainer initialized and services registered
+  Config location: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.supertui\config.json
+Core services resolved from container
+Logger set to DEBUG level
+File log sink added: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\.supertui\logs\SuperTUI_*.log
+Applied theme: Dark
+ApplicationContext initialized
+New-Object: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:303
+Line |
+ 303 |  … dgetFactory = New-Object SuperTUI.DI.WidgetFactory($serviceContainer)
+     |                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find type [SuperTUI.DI.WidgetFactory]: verify that the assembly containing this type is loaded.
+WidgetFactory created
+Registering widgets...
+ERROR: Failed to register widgets: Unable to find type [SuperTUI.Widgets.ClockWidget].
+Stack trace: at <ScriptBlock>, C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1: line 310
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:310
+Line |
+ 310 |  …  $widgetFactory.RegisterWidget([SuperTUI.Widgets.ClockWidget], "Super …
+     |                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Unable to find type [SuperTUI.Widgets.ClockWidget].
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
