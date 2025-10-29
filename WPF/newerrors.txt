@@ -1,0 +1,21 @@
+NOTE: Windows key shortcuts removed (conflict with Windows OS)
+
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:1334
+Line |
+1334 |  …             $widget.InputMode = [SuperTUI.Core.WidgetInputMode]::Norm …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 'InputMode' is a ReadOnly property.
+InvalidOperation: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:1334
+Line |
+1334 |  …             $widget.InputMode = [SuperTUI.Core.WidgetInputMode]::Norm …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 'InputMode' is a ReadOnly property.
+Saving workspace states...
+Workspace states saved
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
+
+  Creating TaskManagementWidget_TUI...
+    ERROR creating TaskManagementWidget_TUI: Exception calling "CreateWidget" with "1" argument(s): "Widget not registered: SuperTUI.Widgets.TaskManagementWidget_TUI"
+    Exception type: System.Management.Automation.MethodInvocationException
+    Stack trace: at <ScriptBlock>, C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1: line 541
+    Inner exception: Widget not registered: SuperTUI.Widgets.TaskManagementWidget_TUI
