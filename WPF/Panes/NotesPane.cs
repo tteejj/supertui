@@ -101,6 +101,13 @@ namespace SuperTUI.Panes
 
         protected override UIElement BuildContent()
         {
+            // Get theme colors
+            var theme = themeManager.CurrentTheme;
+            var bgBrush = new SolidColorBrush(theme.Background);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var borderBrush = new SolidColorBrush(theme.Border);
+            var borderActiveBrush = new SolidColorBrush(theme.BorderActive);
+
             mainLayout = new Grid();
 
             // Three-column layout: Search/Filter | Note List | Editor
@@ -121,6 +128,7 @@ namespace SuperTUI.Panes
             commandPaletteBorder = BuildCommandPalette();
             commandPaletteBorder.Visibility = Visibility.Collapsed;
             Grid.SetColumnSpan(commandPaletteBorder, 2);
+            Panel.SetZIndex(commandPaletteBorder, 1000);
             mainLayout.Children.Add(commandPaletteBorder);
 
             // Set up keyboard shortcuts
@@ -136,6 +144,12 @@ namespace SuperTUI.Panes
 
         private Grid BuildLeftPanel()
         {
+            var theme = themeManager.CurrentTheme;
+            var bgBrush = new SolidColorBrush(theme.Background);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var borderBrush = new SolidColorBrush(theme.Border);
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+
             var panel = new Grid();
             panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search
             panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // List
@@ -143,6 +157,7 @@ namespace SuperTUI.Panes
             // Search box
             var searchContainer = new Border
             {
+                BorderBrush = borderBrush,
                 BorderThickness = new Thickness(0, 0, 1, 1),
                 Padding = new Thickness(8),
                 Height = 40
@@ -152,7 +167,8 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
+                Foreground = fgBrush,
+                Background = transparentBrush,
                 BorderThickness = new Thickness(0),
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -168,6 +184,7 @@ namespace SuperTUI.Panes
             // Notes list
             var listBorder = new Border
             {
+                BorderBrush = borderBrush,
                 BorderThickness = new Thickness(0, 0, 1, 0),
                 Padding = new Thickness(0)
             };
@@ -176,7 +193,8 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
+                Foreground = fgBrush,
+                Background = transparentBrush,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
             };
@@ -184,7 +202,8 @@ namespace SuperTUI.Panes
             notesListBox.PreviewKeyDown += OnNotesListKeyDown;
 
             var itemStyle = new Style(typeof(ListBoxItem));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, transparentBrush));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, fgBrush));
             itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
             notesListBox.ItemContainerStyle = itemStyle;
@@ -198,6 +217,12 @@ namespace SuperTUI.Panes
 
         private Grid BuildEditorPanel()
         {
+            var theme = themeManager.CurrentTheme;
+            var bgBrush = new SolidColorBrush(theme.Background);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var borderBrush = new SolidColorBrush(theme.Border);
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+
             var panel = new Grid();
             panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Editor
             panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
@@ -207,14 +232,15 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 11,
-                Background = Brushes.Transparent,
+                Foreground = fgBrush,
+                Background = transparentBrush,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(16),
                 TextWrapping = TextWrapping.Wrap,
                 AcceptsReturn = true,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Text = "No note selected\n\nPress Ctrl+N to create a new note\nPress : for command palette"
+                Text = "No note selected\n\nPress Ctrl+N to create a new note\nPress Ctrl+: for command palette"
             };
             noteEditor.TextChanged += OnEditorTextChanged;
             noteEditor.IsEnabled = false;
@@ -225,6 +251,7 @@ namespace SuperTUI.Panes
             // Status bar
             var statusBorder = new Border
             {
+                BorderBrush = borderBrush,
                 BorderThickness = new Thickness(0, 1, 0, 0),
                 Height = 24,
                 Padding = new Thickness(12, 0, 12, 0)
@@ -234,6 +261,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 9,
+                Foreground = fgBrush,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = "Ready"
             };
@@ -247,6 +275,12 @@ namespace SuperTUI.Panes
 
         private Border BuildCommandPalette()
         {
+            var theme = themeManager.CurrentTheme;
+            var bgBrush = new SolidColorBrush(theme.Surface);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var borderBrush = new SolidColorBrush(theme.BorderActive);
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+
             var border = new Border
             {
                 Width = 500,
@@ -254,6 +288,8 @@ namespace SuperTUI.Panes
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Top,
                 Margin = new Thickness(0, 60, 0, 0),
+                Background = bgBrush,
+                BorderBrush = borderBrush,
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(0)
@@ -268,7 +304,9 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 12,
-                Background = Brushes.Transparent,
+                Foreground = fgBrush,
+                Background = transparentBrush,
+                BorderBrush = borderBrush,
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Padding = new Thickness(12, 8, 12, 8),
                 Height = 36
@@ -284,14 +322,23 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
+                Foreground = fgBrush,
+                Background = transparentBrush,
                 BorderThickness = new Thickness(0),
                 MaxHeight = 240
             };
             commandList.PreviewKeyDown += OnCommandListKeyDown;
+            commandList.MouseDoubleClick += (s, e) =>
+            {
+                if (commandList.SelectedItem is ListBoxItem item)
+                {
+                    ExecuteCommand(item.Tag as string);
+                }
+            };
 
             var cmdItemStyle = new Style(typeof(ListBoxItem));
-            cmdItemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
+            cmdItemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, transparentBrush));
+            cmdItemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, fgBrush));
             cmdItemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
             cmdItemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
             commandList.ItemContainerStyle = cmdItemStyle;
@@ -330,12 +377,32 @@ namespace SuperTUI.Panes
                 {
                     Directory.CreateDirectory(currentNotesFolder);
                     Log($"Created notes folder: {currentNotesFolder}");
+                    ShowStatus($"Notes folder created: {currentNotesFolder}");
                 }
                 catch (Exception ex)
                 {
-                    Log($"Failed to create notes folder: {ex.Message}", LogLevel.Error);
-                    ShowStatus($"ERROR: Could not create notes folder", isError: true);
+                    Log($"Failed to create notes folder '{currentNotesFolder}': {ex.Message}", LogLevel.Error);
+                    ShowStatus($"ERROR: Could not create notes folder - {ex.Message}", isError: true);
+
+                    // Fallback to a known-good path
+                    try
+                    {
+                        var fallbackPath = Path.Combine(Path.GetTempPath(), "SuperTUI", "Notes");
+                        Directory.CreateDirectory(fallbackPath);
+                        currentNotesFolder = fallbackPath;
+                        Log($"Using fallback notes folder: {fallbackPath}", LogLevel.Warning);
+                        ShowStatus($"Using temporary notes folder: {fallbackPath}", isError: false);
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Log($"Failed to create fallback notes folder: {fallbackEx.Message}", LogLevel.Error);
+                        ShowStatus($"CRITICAL: Cannot create notes folder anywhere", isError: true);
+                    }
                 }
+            }
+            else
+            {
+                Log($"Using existing notes folder: {currentNotesFolder}");
             }
         }
 
@@ -559,6 +626,7 @@ namespace SuperTUI.Panes
             }
 
             // Prompt for note name
+            var theme = themeManager.CurrentTheme;
             var dialog = new Window
             {
                 Title = "New Note",
@@ -567,7 +635,7 @@ namespace SuperTUI.Panes
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
                 ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(Color.FromRgb(0x1e, 0x1e, 0x1e))
+                Background = new SolidColorBrush(theme.Surface)
             };
 
             var grid = new Grid();
@@ -580,9 +648,9 @@ namespace SuperTUI.Panes
                 FontSize = 12,
                 Margin = new Thickness(16),
                 Padding = new Thickness(8),
-                Background = new SolidColorBrush(Color.FromRgb(0x2d, 0x2d, 0x2d)),
-                Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0xd4, 0xd4)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3e, 0x3e, 0x3e)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1)
             };
 
@@ -805,6 +873,7 @@ namespace SuperTUI.Panes
             if (currentNote == null) return;
 
             // Prompt for new name
+            var theme = themeManager.CurrentTheme;
             var dialog = new Window
             {
                 Title = "Rename Note",
@@ -813,7 +882,7 @@ namespace SuperTUI.Panes
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
                 ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(Color.FromRgb(0x1e, 0x1e, 0x1e))
+                Background = new SolidColorBrush(theme.Surface)
             };
 
             var grid = new Grid();
@@ -827,9 +896,9 @@ namespace SuperTUI.Panes
                 FontSize = 12,
                 Margin = new Thickness(16),
                 Padding = new Thickness(8),
-                Background = new SolidColorBrush(Color.FromRgb(0x2d, 0x2d, 0x2d)),
-                Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0xd4, 0xd4)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3e, 0x3e, 0x3e)),
+                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                Foreground = new SolidColorBrush(theme.Foreground),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1)
             };
 
@@ -969,17 +1038,6 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Command palette
-            if (e.Key == Key.OemSemicolon && e.KeyboardDevice.Modifiers == ModifierKeys.None && !isCommandPaletteVisible)
-            {
-                if (!noteEditor.IsFocused || string.IsNullOrEmpty(noteEditor.SelectedText))
-                {
-                    ShowCommandPalette();
-                    e.Handled = true;
-                    return;
-                }
-            }
-
             // Keyboard shortcuts
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
@@ -1004,6 +1062,15 @@ namespace SuperTUI.Panes
                         searchBox.Focus();
                         searchBox.SelectAll();
                         e.Handled = true;
+                        break;
+
+                    case Key.OemSemicolon:
+                        // Ctrl+: for command palette (doesn't conflict with MainWindow global palette)
+                        if (!isCommandPaletteVisible)
+                        {
+                            ShowCommandPalette();
+                            e.Handled = true;
+                        }
                         break;
                 }
             }
@@ -1155,6 +1222,12 @@ namespace SuperTUI.Panes
                 HideCommandPalette();
                 e.Handled = true;
             }
+            else if (e.Key == Key.Up && commandList.SelectedIndex == 0)
+            {
+                // Return focus to input when at top of list
+                commandInput.Focus();
+                e.Handled = true;
+            }
         }
 
         private void ExecuteCommand(string command)
@@ -1267,17 +1340,16 @@ namespace SuperTUI.Panes
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
+                var theme = themeManager.CurrentTheme;
                 statusBar.Text = message;
 
                 if (isError)
                 {
-                    statusBar.Foreground = new SolidColorBrush(Color.FromRgb(0xff, 0x66, 0x66));
+                    statusBar.Foreground = new SolidColorBrush(theme.Error);
                 }
                 else
                 {
-                    statusBar.Foreground = themeManager.CurrentTheme != null
-                        ? new SolidColorBrush(themeManager.CurrentTheme.GetColor("foreground"))
-                        : new SolidColorBrush(Color.FromRgb(0xd4, 0xd4, 0xd4));
+                    statusBar.Foreground = new SolidColorBrush(theme.Foreground);
                 }
 
                 // Reset status after 3 seconds
@@ -1286,9 +1358,7 @@ namespace SuperTUI.Panes
                 {
                     timer.Stop();
                     UpdateStatusBar();
-                    statusBar.Foreground = themeManager.CurrentTheme != null
-                        ? new SolidColorBrush(themeManager.CurrentTheme.GetColor("foreground"))
-                        : new SolidColorBrush(Color.FromRgb(0xd4, 0xd4, 0xd4));
+                    statusBar.Foreground = new SolidColorBrush(theme.Foreground);
                 };
                 timer.Start();
             });
@@ -1356,6 +1426,17 @@ namespace SuperTUI.Panes
         #endregion
 
         #region Overrides
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Set initial focus to notes list for keyboard-first navigation
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                notesListBox?.Focus();
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
         {

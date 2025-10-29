@@ -66,10 +66,12 @@ namespace SuperTUI.Panes
             // Build palette items from available panes
             BuildPaletteItems();
 
+            var theme = themeManager.CurrentTheme;
+
             // Modal overlay (semi-transparent dark background)
             overlayBorder = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(204, 10, 14, 20)), // 0.8 opacity
+                Background = new SolidColorBrush(Color.FromArgb(204, theme.Background.R, theme.Background.G, theme.Background.B)), // 0.8 opacity
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -79,6 +81,8 @@ namespace SuperTUI.Panes
             {
                 Width = 600,
                 Height = 400,
+                Background = new SolidColorBrush(theme.Background),
+                BorderBrush = new SolidColorBrush(theme.Border),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 BorderThickness = new Thickness(1),
@@ -101,6 +105,7 @@ namespace SuperTUI.Panes
             // Search box
             var searchContainer = new Border
             {
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Padding = new Thickness(16, 12, 16, 12)
             };
@@ -109,9 +114,10 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                CaretBrush = Brushes.Lime,
+                CaretBrush = new SolidColorBrush(theme.Primary),
                 Text = ""
             };
             searchBox.TextChanged += OnSearchTextChanged;
@@ -125,6 +131,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 12,
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 8, 8, 8)
@@ -134,18 +141,19 @@ namespace SuperTUI.Panes
             // Clean list style
             var itemStyle = new Style(typeof(ListBoxItem));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(theme.Foreground)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(8, 6, 8, 6)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.MarginProperty, new Thickness(0, 2, 0, 2)));
 
-            // Hover effect
+            // Hover effect (semi-transparent primary/accent color)
             var hoverTrigger = new Trigger { Property = ListBoxItem.IsMouseOverProperty, Value = true };
-            hoverTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, 50, 255, 100))));
+            hoverTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B))));
             itemStyle.Triggers.Add(hoverTrigger);
 
-            // Selection effect
+            // Selection effect (semi-transparent primary/accent color, slightly brighter)
             var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
-            selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(60, 50, 255, 100))));
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B))));
             itemStyle.Triggers.Add(selectedTrigger);
 
             resultsListBox.ItemContainerStyle = itemStyle;
@@ -157,14 +165,25 @@ namespace SuperTUI.Panes
             // Status bar
             var statusBar = new Border
             {
+                BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(0, 1, 0, 0),
                 Padding = new Thickness(16, 8, 16, 8)
             };
+
+            // Muted foreground for status text (use ForegroundSecondary or calculate if not available)
+            var mutedFg = theme.ForegroundSecondary != default(Color)
+                ? new SolidColorBrush(theme.ForegroundSecondary)
+                : new SolidColorBrush(Color.FromRgb(
+                    (byte)(theme.Foreground.R * 0.6),
+                    (byte)(theme.Foreground.G * 0.6),
+                    (byte)(theme.Foreground.B * 0.6)
+                ));
 
             statusText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
+                Foreground = mutedFg,
                 Text = "Type to search panes and commands | ↑↓ Navigate | Enter Execute | Esc Close"
             };
             statusBar.Child = statusText;
@@ -358,6 +377,7 @@ namespace SuperTUI.Panes
         /// </summary>
         private StackPanel BuildResultItem(PaletteItem item, string query)
         {
+            var theme = themeManager.CurrentTheme;
             var panel = new StackPanel { Orientation = Orientation.Horizontal };
 
             // Icon
@@ -366,6 +386,7 @@ namespace SuperTUI.Panes
                 Text = item.Icon,
                 FontSize = 14,
                 Width = 30,
+                Foreground = new SolidColorBrush(theme.Primary),
                 VerticalAlignment = VerticalAlignment.Center
             };
             panel.Children.Add(icon);
@@ -376,6 +397,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Foreground),
                 Width = 200,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -392,13 +414,21 @@ namespace SuperTUI.Panes
 
             panel.Children.Add(nameText);
 
-            // Description
+            // Description (muted - use ForegroundSecondary or calculate)
+            var mutedFg = theme.ForegroundSecondary != default(Color)
+                ? new SolidColorBrush(theme.ForegroundSecondary)
+                : new SolidColorBrush(Color.FromRgb(
+                    (byte)(theme.Foreground.R * 0.7),
+                    (byte)(theme.Foreground.G * 0.7),
+                    (byte)(theme.Foreground.B * 0.7)
+                ));
+
             var description = new TextBlock
             {
                 Text = item.Description,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Opacity = 0.7,
+                Foreground = mutedFg,
                 VerticalAlignment = VerticalAlignment.Center
             };
             panel.Children.Add(description);
@@ -412,6 +442,7 @@ namespace SuperTUI.Panes
         /// </summary>
         private void BuildHighlightedText(TextBlock textBlock, string text, string query)
         {
+            var theme = themeManager.CurrentTheme;
             textBlock.Inlines.Clear();
             query = query.ToLower();
             int queryIndex = 0;
@@ -424,7 +455,7 @@ namespace SuperTUI.Panes
                 var run = new System.Windows.Documents.Run(text[i].ToString());
                 if (isMatch)
                 {
-                    run.Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 0)); // Bright green
+                    run.Foreground = new SolidColorBrush(theme.Primary); // Use primary/accent color for highlights
                     run.FontWeight = FontWeights.Bold;
                     queryIndex++;
                 }

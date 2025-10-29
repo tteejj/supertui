@@ -67,6 +67,11 @@ namespace SuperTUI.Panes
         private TextBlock infoPermissionsText;
         private TextBlock infoWarningText;
 
+        // Theme-aware UI elements (need to track for ApplyTheme)
+        private List<Button> bookmarkButtons = new List<Button>();
+        private List<Button> breadcrumbButtons = new List<Button>();
+        private Style listBoxItemStyle;
+
         // State
         private string currentPath;
         private List<FileSystemItem> currentFiles = new List<FileSystemItem>();
@@ -201,10 +206,21 @@ namespace SuperTUI.Panes
             // Set up keyboard shortcuts
             this.PreviewKeyDown += OnPreviewKeyDown;
 
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Apply initial theme
+            ApplyFileBrowserTheme();
+
             // Load initial directory
             NavigateToDirectory(currentPath);
 
             return mainLayout;
+        }
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            ApplyFileBrowserTheme();
         }
 
         private Border BuildBreadcrumb()
@@ -290,6 +306,7 @@ namespace SuperTUI.Panes
 
             var bookmarksStack = new StackPanel();
 
+            bookmarkButtons.Clear();
             foreach (var bookmark in bookmarks)
             {
                 var btn = new Button
@@ -301,11 +318,11 @@ namespace SuperTUI.Panes
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     HorizontalContentAlignment = HorizontalAlignment.Left,
                     Margin = new Thickness(0, 0, 0, 2),
-                    Background = Brushes.Transparent,
                     BorderThickness = new Thickness(0),
                     Tag = bookmark
                 };
                 btn.Click += OnBookmarkClick;
+                bookmarkButtons.Add(btn);
                 bookmarksStack.Children.Add(btn);
             }
 
@@ -328,7 +345,6 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(4)
             };
@@ -360,7 +376,6 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -384,18 +399,16 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
             };
             fileListBox.SelectionChanged += OnFileSelected;
             fileListBox.PreviewKeyDown += OnFileListKeyDown;
 
-            var itemStyle = new Style(typeof(ListBoxItem));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
-            fileListBox.ItemContainerStyle = itemStyle;
+            listBoxItemStyle = new Style(typeof(ListBoxItem));
+            listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
+            listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
+            fileListBox.ItemContainerStyle = listBoxItemStyle;
 
             listBorder.Child = fileListBox;
             Grid.SetRow(listBorder, 1);
@@ -545,6 +558,140 @@ namespace SuperTUI.Panes
 
             border.Child = statusBar;
             return border;
+        }
+
+        #endregion
+
+        #region Theme Application
+
+        /// <summary>
+        /// Apply theme to all FileBrowser UI elements
+        /// </summary>
+        private void ApplyFileBrowserTheme()
+        {
+            var theme = themeManager.CurrentTheme;
+            if (theme == null) return;
+
+            var background = theme.GetColor("Background");
+            var surface = theme.GetColor("Surface");
+            var foreground = theme.GetColor("Foreground");
+            var border = theme.GetColor("Border");
+            var accent = theme.GetColor("Primary");
+
+            // Apply to breadcrumb border
+            if (breadcrumbBorder != null)
+            {
+                breadcrumbBorder.Background = new SolidColorBrush(surface);
+                breadcrumbBorder.BorderBrush = new SolidColorBrush(border);
+            }
+
+            // Apply to breadcrumb buttons
+            foreach (var btn in breadcrumbButtons)
+            {
+                btn.Background = new SolidColorBrush(Colors.Transparent);
+                btn.Foreground = new SolidColorBrush(foreground);
+            }
+
+            // Apply to bookmarks panel
+            if (bookmarksPanel != null)
+            {
+                // Find header border and content border in bookmarksPanel
+                foreach (UIElement child in bookmarksPanel.Children)
+                {
+                    if (child is Border border_elem)
+                    {
+                        border_elem.Background = new SolidColorBrush(surface);
+                        border_elem.BorderBrush = new SolidColorBrush(border);
+
+                        if (border_elem.Child is TextBlock header)
+                        {
+                            header.Foreground = new SolidColorBrush(foreground);
+                        }
+                    }
+                }
+            }
+
+            // Apply to bookmark buttons
+            foreach (var btn in bookmarkButtons)
+            {
+                btn.Background = new SolidColorBrush(Colors.Transparent);
+                btn.Foreground = new SolidColorBrush(foreground);
+            }
+
+            // Apply to directory tree
+            if (directoryTree != null)
+            {
+                directoryTree.Background = new SolidColorBrush(background);
+                directoryTree.Foreground = new SolidColorBrush(foreground);
+            }
+
+            // Apply to search box
+            if (searchBox != null)
+            {
+                searchBox.Background = new SolidColorBrush(Colors.Transparent);
+                searchBox.Foreground = new SolidColorBrush(foreground);
+                searchBox.CaretBrush = new SolidColorBrush(accent);
+            }
+
+            // Apply to file list box
+            if (fileListBox != null)
+            {
+                fileListBox.Background = new SolidColorBrush(background);
+                fileListBox.Foreground = new SolidColorBrush(foreground);
+            }
+
+            // Update ListBoxItem style
+            if (listBoxItemStyle != null)
+            {
+                listBoxItemStyle.Setters.Clear();
+                listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Colors.Transparent)));
+                listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
+                listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
+                listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(foreground)));
+            }
+
+            // Apply to info panel
+            if (infoPanel != null)
+            {
+                // Find header and content borders
+                foreach (UIElement child in infoPanel.Children)
+                {
+                    if (child is Border border_elem)
+                    {
+                        border_elem.Background = new SolidColorBrush(surface);
+                        border_elem.BorderBrush = new SolidColorBrush(border);
+
+                        // Apply to child elements
+                        if (border_elem.Child is TextBlock text)
+                        {
+                            text.Foreground = new SolidColorBrush(foreground);
+                        }
+                        else if (border_elem.Child is StackPanel stack)
+                        {
+                            foreach (var item in stack.Children)
+                            {
+                                if (item is TextBlock tb)
+                                {
+                                    tb.Foreground = new SolidColorBrush(foreground);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Apply to info panel text blocks
+            if (infoPathText != null) infoPathText.Foreground = new SolidColorBrush(foreground);
+            if (infoTypeText != null) infoTypeText.Foreground = new SolidColorBrush(foreground);
+            if (infoSizeText != null) infoSizeText.Foreground = new SolidColorBrush(foreground);
+            if (infoModifiedText != null) infoModifiedText.Foreground = new SolidColorBrush(foreground);
+            if (infoPermissionsText != null) infoPermissionsText.Foreground = new SolidColorBrush(foreground);
+
+            // Apply to status bar
+            if (statusBar != null)
+            {
+                statusBar.Foreground = new SolidColorBrush(foreground);
+            }
         }
 
         #endregion
@@ -771,6 +918,7 @@ namespace SuperTUI.Panes
             Application.Current?.Dispatcher.Invoke(() =>
             {
                 breadcrumbPanel.Children.Clear();
+                breadcrumbButtons.Clear();
 
                 if (string.IsNullOrEmpty(currentPath))
                     return;
@@ -802,11 +950,11 @@ namespace SuperTUI.Panes
                         FontSize = 10,
                         Padding = new Thickness(6, 2, 6, 2),
                         Margin = new Thickness(0, 0, 4, 0),
-                        Background = Brushes.Transparent,
                         BorderThickness = new Thickness(0),
                         Tag = buildPath
                     };
                     btn.Click += OnBreadcrumbClick;
+                    breadcrumbButtons.Add(btn);
 
                     breadcrumbPanel.Children.Add(btn);
 
@@ -1126,7 +1274,7 @@ namespace SuperTUI.Panes
             // Rebuild layout
             var content = BuildContent();
             contentArea.Content = content;
-            ApplyTheme();
+            // ApplyTheme is called in BuildContent via ApplyFileBrowserTheme
         }
 
         private void JumpToBookmark(int index)
@@ -1205,16 +1353,17 @@ namespace SuperTUI.Panes
             infoPermissionsText.Text = canRead ? "Read ✓" : "Read ✗";
 
             // Security warnings
+            var theme = themeManager.CurrentTheme;
             if (IsDangerousPath(item.FullPath))
             {
                 infoWarningText.Text = "⚠ WARNING: System path\nModifications could damage your system";
-                infoWarningText.Foreground = new SolidColorBrush(Color.FromRgb(240, 113, 120));
+                infoWarningText.Foreground = new SolidColorBrush(theme.Error);
                 infoWarningText.Visibility = Visibility.Visible;
             }
             else if (item.IsSymlink)
             {
                 infoWarningText.Text = "ℹ Symbolic link\nPoints to another location";
-                infoWarningText.Foreground = new SolidColorBrush(Color.FromRgb(255, 180, 84));
+                infoWarningText.Foreground = new SolidColorBrush(theme.Warning);
                 infoWarningText.Visibility = Visibility.Visible;
             }
             else
@@ -1533,6 +1682,9 @@ namespace SuperTUI.Panes
 
         protected override void OnDispose()
         {
+            // Unsubscribe from theme events
+            themeManager.ThemeChanged -= OnThemeChanged;
+
             // Cancel any ongoing operations
             loadCancellation?.Cancel();
             loadCancellation?.Dispose();

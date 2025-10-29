@@ -16,7 +16,8 @@ namespace SuperTUI.Panes
 {
     /// <summary>
     /// Production-quality task manager pane with full CRUD, subtasks, filtering, keyboard shortcuts
-    /// Terminal aesthetic: JetBrains Mono, green-on-dark, keyboard-first
+    /// Terminal aesthetic: JetBrains Mono, theme-aware colors, 100% keyboard-driven
+    /// NO MOUSE-REQUIRED CONTROLS - All editing is inline with keyboard shortcuts
     /// </summary>
     public class TaskListPane : PaneBase
     {
@@ -26,30 +27,29 @@ namespace SuperTUI.Panes
         // UI Components
         private Grid mainLayout;
         private ListBox taskListBox;
-        private Grid detailPanel;
         private TextBox quickAddBox;
         private TextBlock statusBar;
         private TextBlock filterLabel;
 
-        // Detail panel controls
-        private TextBox detailTitleBox;
-        private TextBox detailDescriptionBox;
-        private ComboBox detailPriorityCombo;
-        private ComboBox detailStatusCombo;
-        private DatePicker detailDueDatePicker;
-        private TextBox detailTagsBox;
-        private Button saveDetailButton;
-        private Button closeDetailButton;
+        // Inline editing
+        private TextBox inlineEditBox;
+        private TaskItemViewModel editingTask;
 
         // State
         private List<TaskItemViewModel> taskViewModels = new List<TaskItemViewModel>();
         private TaskItemViewModel selectedTask;
-        private TaskItemViewModel editingTask;
         private FilterMode currentFilter = FilterMode.Active;
         private SortMode currentSort = SortMode.Priority;
-        private bool showDetailPanel = false;
         private bool isInternalCommand = false;
         private string commandBuffer = string.Empty;
+
+        // Theme colors (cached for performance)
+        private SolidColorBrush bgBrush;
+        private SolidColorBrush fgBrush;
+        private SolidColorBrush accentBrush;
+        private SolidColorBrush borderBrush;
+        private SolidColorBrush dimBrush;
+        private SolidColorBrush surfaceBrush;
 
         // Enums
         private enum FilterMode
@@ -83,21 +83,29 @@ namespace SuperTUI.Panes
             PaneName = "Tasks";
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Set initial focus to task list
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                taskListBox?.Focus();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
         protected override UIElement BuildContent()
         {
+            // Cache theme colors
+            CacheThemeColors();
+
             mainLayout = new Grid();
             mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0) }); // Detail panel (hidden initially)
 
-            // Left side: Task list
-            var leftPanel = BuildTaskListPanel();
-            Grid.SetColumn(leftPanel, 0);
-            mainLayout.Children.Add(leftPanel);
-
-            // Right side: Detail panel
-            detailPanel = BuildDetailPanel();
-            Grid.SetColumn(detailPanel, 1);
-            mainLayout.Children.Add(detailPanel);
+            // Task list panel
+            var taskPanel = BuildTaskListPanel();
+            Grid.SetColumn(taskPanel, 0);
+            mainLayout.Children.Add(taskPanel);
 
             // Subscribe to events
             SubscribeToTaskEvents();
@@ -106,6 +114,17 @@ namespace SuperTUI.Panes
             RefreshTaskList();
 
             return mainLayout;
+        }
+
+        private void CacheThemeColors()
+        {
+            var theme = themeManager.CurrentTheme;
+            bgBrush = new SolidColorBrush(theme.Background);
+            fgBrush = new SolidColorBrush(theme.Foreground);
+            accentBrush = new SolidColorBrush(theme.Primary);
+            borderBrush = new SolidColorBrush(theme.Border);
+            dimBrush = new SolidColorBrush(theme.ForegroundSecondary);
+            surfaceBrush = new SolidColorBrush(theme.Surface);
         }
 
         private Grid BuildTaskListPanel()
@@ -122,10 +141,10 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 11,
                 Padding = new Thickness(8, 4, 8, 4),
-                Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x1E)),
-                Foreground = Brushes.White,
+                Background = surfaceBrush,
+                Foreground = fgBrush,
                 BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
+                BorderBrush = accentBrush,
                 Visibility = Visibility.Collapsed
             };
             quickAddBox.KeyDown += QuickAddBox_KeyDown;
@@ -143,7 +162,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
+                Foreground = accentBrush,
                 Text = GetFilterText()
             };
             filterBar.Children.Add(filterLabel);
@@ -164,7 +183,6 @@ namespace SuperTUI.Panes
 
             taskListBox.SelectionChanged += TaskListBox_SelectionChanged;
             taskListBox.KeyDown += TaskListBox_KeyDown;
-            taskListBox.MouseDoubleClick += TaskListBox_MouseDoubleClick;
 
             // Clean list style
             var itemContainerStyle = new Style(typeof(ListBoxItem));
@@ -189,191 +207,13 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 9,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89)),
+                Foreground = dimBrush,
                 Margin = new Thickness(0, 8, 0, 0)
             };
             Grid.SetRow(statusBar, 3);
             grid.Children.Add(statusBar);
 
             return grid;
-        }
-
-        private Grid BuildDetailPanel()
-        {
-            var grid = new Grid
-            {
-                Background = new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x1A)),
-                Width = 400,
-                Margin = new Thickness(12, 0, 0, 0)
-            };
-
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Buttons
-
-            // Header
-            var header = new TextBlock
-            {
-                Text = "Task Details",
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 12,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
-                Margin = new Thickness(12, 12, 12, 12)
-            };
-            Grid.SetRow(header, 0);
-            grid.Children.Add(header);
-
-            // Content
-            var contentScroll = new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Padding = new Thickness(12, 0, 12, 0)
-            };
-
-            var contentStack = new StackPanel();
-
-            // Title
-            contentStack.Children.Add(CreateLabel("Title:"));
-            detailTitleBox = CreateTextBox(multiline: false);
-            contentStack.Children.Add(detailTitleBox);
-
-            // Description
-            contentStack.Children.Add(CreateLabel("Description:"));
-            detailDescriptionBox = CreateTextBox(multiline: true, height: 80);
-            contentStack.Children.Add(detailDescriptionBox);
-
-            // Priority
-            contentStack.Children.Add(CreateLabel("Priority:"));
-            detailPriorityCombo = CreateComboBox(new[] { "Low", "Medium", "High", "Today" });
-            contentStack.Children.Add(detailPriorityCombo);
-
-            // Status
-            contentStack.Children.Add(CreateLabel("Status:"));
-            detailStatusCombo = CreateComboBox(new[] { "Pending", "In Progress", "Completed", "Cancelled" });
-            contentStack.Children.Add(detailStatusCombo);
-
-            // Due Date
-            contentStack.Children.Add(CreateLabel("Due Date:"));
-            detailDueDatePicker = new DatePicker
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
-                Margin = new Thickness(0, 0, 0, 12),
-                Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x2D)),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3E, 0x3E, 0x3E))
-            };
-            contentStack.Children.Add(detailDueDatePicker);
-
-            // Tags
-            contentStack.Children.Add(CreateLabel("Tags (comma-separated):"));
-            detailTagsBox = CreateTextBox(multiline: false);
-            contentStack.Children.Add(detailTagsBox);
-
-            contentScroll.Content = contentStack;
-            Grid.SetRow(contentScroll, 1);
-            grid.Children.Add(contentScroll);
-
-            // Buttons
-            var buttonPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(12)
-            };
-
-            saveDetailButton = CreateButton("Save (Ctrl+S)", SaveDetailChanges);
-            closeDetailButton = CreateButton("Close (Esc)", CloseDetailPanel);
-
-            buttonPanel.Children.Add(saveDetailButton);
-            buttonPanel.Children.Add(closeDetailButton);
-
-            Grid.SetRow(buttonPanel, 2);
-            grid.Children.Add(buttonPanel);
-
-            return grid;
-        }
-
-        private TextBlock CreateLabel(string text)
-        {
-            return new TextBlock
-            {
-                Text = text,
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89)),
-                Margin = new Thickness(0, 0, 0, 4)
-            };
-        }
-
-        private TextBox CreateTextBox(bool multiline = false, double height = 0)
-        {
-            var textBox = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
-                Padding = new Thickness(6, 4, 6, 4),
-                Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x2D)),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3E, 0x3E, 0x3E)),
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(0, 0, 0, 12)
-            };
-
-            if (multiline)
-            {
-                textBox.AcceptsReturn = true;
-                textBox.TextWrapping = TextWrapping.Wrap;
-                textBox.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            }
-
-            if (height > 0)
-            {
-                textBox.Height = height;
-            }
-
-            return textBox;
-        }
-
-        private ComboBox CreateComboBox(string[] items)
-        {
-            var comboBox = new ComboBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
-                Margin = new Thickness(0, 0, 0, 12),
-                Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x2D)),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3E, 0x3E, 0x3E))
-            };
-
-            foreach (var item in items)
-            {
-                comboBox.Items.Add(item);
-            }
-
-            return comboBox;
-        }
-
-        private Button CreateButton(string content, RoutedEventHandler handler)
-        {
-            var button = new Button
-            {
-                Content = content,
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
-                Padding = new Thickness(12, 6, 12, 6),
-                Margin = new Thickness(4, 0, 0, 0),
-                Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x2D)),
-                Foreground = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
-                BorderThickness = new Thickness(1),
-                Cursor = Cursors.Hand
-            };
-
-            button.Click += handler;
-            return button;
         }
 
         private void SubscribeToTaskEvents()
@@ -534,7 +374,7 @@ namespace SuperTUI.Panes
                     Text = "No tasks. Press Ctrl+N to create one.",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89)),
+                    Foreground = dimBrush,
                     FontStyle = FontStyles.Italic,
                     Margin = new Thickness(0, 20, 0, 0),
                     HorizontalAlignment = HorizontalAlignment.Center
@@ -552,6 +392,8 @@ namespace SuperTUI.Panes
 
         private Grid CreateTaskListItem(TaskItemViewModel vm)
         {
+            var theme = themeManager.CurrentTheme;
+
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Checkbox
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Indent
@@ -594,12 +436,10 @@ namespace SuperTUI.Panes
                     Text = vm.IsExpanded ? "▼" : "▶",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                     FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89)),
+                    Foreground = dimBrush,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 4, 0),
-                    Cursor = Cursors.Hand
+                    Margin = new Thickness(0, 0, 4, 0)
                 };
-                expandIcon.MouseDown += (s, e) => ToggleExpand(vm);
                 Grid.SetColumn(expandIcon, 2);
                 grid.Children.Add(expandIcon);
             }
@@ -613,10 +453,8 @@ namespace SuperTUI.Panes
                 Foreground = GetPriorityColor(vm.Task.Priority),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 6, 0),
-                Cursor = Cursors.Hand,
-                ToolTip = $"Priority: {vm.Task.Priority}"
+                ToolTip = $"Priority: {vm.Task.Priority} (Ctrl+1/2/3 to change)"
             };
-            priorityIcon.MouseDown += (s, e) => CyclePriority(vm.Task.Id);
             Grid.SetColumn(priorityIcon, 3);
             grid.Children.Add(priorityIcon);
 
@@ -634,7 +472,7 @@ namespace SuperTUI.Panes
             if (vm.Task.Status == TaskStatus.Completed)
             {
                 title.TextDecorations = TextDecorations.Strikethrough;
-                title.Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89));
+                title.Foreground = dimBrush;
             }
 
             Grid.SetColumn(title, 4);
@@ -664,7 +502,7 @@ namespace SuperTUI.Panes
                     Text = string.Join(" ", vm.Task.Tags.Select(t => $"#{t}")),
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                     FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x4E, 0xC9, 0xB0)),
+                    Foreground = accentBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(8, 0, 0, 0)
                 };
@@ -689,22 +527,24 @@ namespace SuperTUI.Panes
 
         private Brush GetPriorityColor(TaskPriority priority)
         {
+            var theme = themeManager.CurrentTheme;
             return priority switch
             {
-                TaskPriority.Low => new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89)),
-                TaskPriority.Medium => new SolidColorBrush(Color.FromRgb(0x33, 0x99, 0xFF)),
-                TaskPriority.High => new SolidColorBrush(Color.FromRgb(0xFF, 0x99, 0x33)),
-                TaskPriority.Today => new SolidColorBrush(Color.FromRgb(0xFF, 0x33, 0x33)),
-                _ => Brushes.White
+                TaskPriority.Low => dimBrush,
+                TaskPriority.Medium => new SolidColorBrush(theme.Info),
+                TaskPriority.High => new SolidColorBrush(theme.Warning),
+                TaskPriority.Today => new SolidColorBrush(theme.Error),
+                _ => fgBrush
             };
         }
 
         private Brush GetTaskForeground(TaskItem task)
         {
+            var theme = themeManager.CurrentTheme;
             if (task.IsOverdue && task.Status != TaskStatus.Completed)
-                return new SolidColorBrush(Color.FromRgb(0xFF, 0x33, 0x33));
+                return new SolidColorBrush(theme.Error);
 
-            return Brushes.White;
+            return fgBrush;
         }
 
         private string FormatDueDate(TaskItem task)
@@ -723,13 +563,14 @@ namespace SuperTUI.Panes
 
         private Brush GetDueDateColor(TaskItem task)
         {
+            var theme = themeManager.CurrentTheme;
             if (task.IsOverdue && task.Status != TaskStatus.Completed)
-                return new SolidColorBrush(Color.FromRgb(0xFF, 0x33, 0x33));
+                return new SolidColorBrush(theme.Error);
 
             if (task.IsDueToday)
-                return new SolidColorBrush(Color.FromRgb(0xFF, 0x99, 0x33));
+                return new SolidColorBrush(theme.Warning);
 
-            return new SolidColorBrush(Color.FromRgb(0x6C, 0x7A, 0x89));
+            return dimBrush;
         }
 
         private string GetFilterText()
@@ -768,7 +609,7 @@ namespace SuperTUI.Panes
             var completed = taskViewModels.Count(vm => vm.Task.Status == TaskStatus.Completed);
             var overdue = taskViewModels.Count(vm => vm.Task.IsOverdue);
 
-            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | Ctrl+N: new | F2: edit | Del: delete | Space: complete";
+            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | Ctrl+N: new | F2: edit | Del: delete | Space: toggle | Tab: indent";
         }
 
         // Event Handlers
@@ -783,8 +624,8 @@ namespace SuperTUI.Panes
 
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            // Check for internal command mode
-            if (e.Key == Key.OemSemicolon && Keyboard.Modifiers == ModifierKeys.Shift)
+            // Check for internal command mode (changed from Shift+: to Ctrl+:)
+            if (e.Key == Key.OemSemicolon && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 isInternalCommand = true;
                 commandBuffer = ":";
@@ -806,13 +647,6 @@ namespace SuperTUI.Panes
                     case Key.N:
                         ShowQuickAdd();
                         e.Handled = true;
-                        break;
-                    case Key.S:
-                        if (showDetailPanel)
-                        {
-                            SaveDetailChanges(null, null);
-                            e.Handled = true;
-                        }
                         break;
                     case Key.D1:
                         SetSelectedTaskPriority(TaskPriority.High);
@@ -844,7 +678,7 @@ namespace SuperTUI.Panes
                     case Key.Enter:
                         if (selectedTask != null)
                         {
-                            ShowDetailPanel();
+                            StartInlineEdit();
                             e.Handled = true;
                         }
                         break;
@@ -869,13 +703,6 @@ namespace SuperTUI.Panes
                             e.Handled = true;
                         }
                         break;
-                    case Key.Escape:
-                        if (showDetailPanel)
-                        {
-                            CloseDetailPanel(null, null);
-                            e.Handled = true;
-                        }
-                        break;
                 }
             }
         }
@@ -886,6 +713,7 @@ namespace SuperTUI.Panes
             {
                 isInternalCommand = false;
                 commandBuffer = string.Empty;
+                UpdateStatusBar();
                 e.Handled = true;
                 return;
             }
@@ -932,7 +760,7 @@ namespace SuperTUI.Panes
                     ShowQuickAdd();
                     break;
                 case "edit":
-                    ShowDetailPanel();
+                    StartInlineEdit();
                     break;
                 case "delete":
                 case "del":
@@ -1009,14 +837,6 @@ namespace SuperTUI.Panes
                 SetSelectedTaskPriority(p.Value);
         }
 
-        private void TaskListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (selectedTask != null)
-            {
-                ShowDetailPanel();
-            }
-        }
-
         private void QuickAddBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -1068,15 +888,93 @@ namespace SuperTUI.Panes
             RefreshTaskList();
         }
 
+        private void StartInlineEdit()
+        {
+            if (selectedTask == null)
+                return;
+
+            // Find the selected item in the ListBox
+            var selectedIndex = taskListBox.SelectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
+                return;
+
+            // Create inline edit box
+            if (inlineEditBox == null)
+            {
+                inlineEditBox = new TextBox
+                {
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 11,
+                    Padding = new Thickness(6, 2, 6, 2),
+                    Background = surfaceBrush,
+                    Foreground = fgBrush,
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = accentBrush
+                };
+                inlineEditBox.KeyDown += InlineEditBox_KeyDown;
+                inlineEditBox.LostFocus += InlineEditBox_LostFocus;
+            }
+
+            editingTask = selectedTask;
+            inlineEditBox.Text = selectedTask.Task.Title;
+
+            // Replace the task item with the edit box temporarily
+            taskListBox.Items[selectedIndex] = inlineEditBox;
+            inlineEditBox.Focus();
+            inlineEditBox.SelectAll();
+        }
+
+        private void InlineEditBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SaveInlineEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelInlineEdit();
+                e.Handled = true;
+            }
+        }
+
+        private void InlineEditBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            SaveInlineEdit();
+        }
+
+        private void SaveInlineEdit()
+        {
+            if (editingTask == null || inlineEditBox == null)
+                return;
+
+            var newTitle = inlineEditBox.Text.Trim();
+            if (!string.IsNullOrEmpty(newTitle))
+            {
+                var task = taskService.GetTask(editingTask.Task.Id);
+                if (task != null)
+                {
+                    task.Title = newTitle;
+                    task.UpdatedAt = DateTime.Now;
+                    taskService.UpdateTask(task);
+                }
+            }
+
+            editingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+        }
+
+        private void CancelInlineEdit()
+        {
+            editingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+        }
+
         private void ToggleTaskComplete(Guid taskId)
         {
             taskService.ToggleTaskCompletion(taskId);
-            RefreshTaskList();
-        }
-
-        private void CyclePriority(Guid taskId)
-        {
-            taskService.CyclePriority(taskId);
             RefreshTaskList();
         }
 
@@ -1093,12 +991,6 @@ namespace SuperTUI.Panes
                 taskService.UpdateTask(task);
                 RefreshTaskList();
             }
-        }
-
-        private void ToggleExpand(TaskItemViewModel vm)
-        {
-            vm.IsExpanded = !vm.IsExpanded;
-            RefreshTaskList();
         }
 
         private void IndentTask()
@@ -1172,84 +1064,6 @@ namespace SuperTUI.Panes
                 taskService.DeleteTask(selectedTask.Task.Id);
                 RefreshTaskList();
             }
-        }
-
-        // Detail Panel
-
-        private void ShowDetailPanel()
-        {
-            if (selectedTask == null)
-                return;
-
-            editingTask = selectedTask;
-            showDetailPanel = true;
-
-            // Load task data into detail panel
-            var task = taskService.GetTask(editingTask.Task.Id);
-            if (task != null)
-            {
-                detailTitleBox.Text = task.Title;
-                detailDescriptionBox.Text = task.Description ?? string.Empty;
-                detailPriorityCombo.SelectedIndex = (int)task.Priority;
-                detailStatusCombo.SelectedIndex = (int)task.Status;
-                detailDueDatePicker.SelectedDate = task.DueDate;
-                detailTagsBox.Text = task.Tags != null ? string.Join(", ", task.Tags) : string.Empty;
-            }
-
-            // Show panel
-            mainLayout.ColumnDefinitions[1].Width = new GridLength(400);
-            detailTitleBox.Focus();
-            detailTitleBox.SelectAll();
-        }
-
-        private void CloseDetailPanel(object sender, RoutedEventArgs e)
-        {
-            showDetailPanel = false;
-            editingTask = null;
-            mainLayout.ColumnDefinitions[1].Width = new GridLength(0);
-            taskListBox.Focus();
-        }
-
-        private void SaveDetailChanges(object sender, RoutedEventArgs e)
-        {
-            if (editingTask == null)
-                return;
-
-            var task = taskService.GetTask(editingTask.Task.Id);
-            if (task == null)
-                return;
-
-            // Update task properties
-            task.Title = detailTitleBox.Text.Trim();
-            task.Description = detailDescriptionBox.Text.Trim();
-            task.Priority = (TaskPriority)detailPriorityCombo.SelectedIndex;
-            task.Status = (TaskStatus)detailStatusCombo.SelectedIndex;
-            task.DueDate = detailDueDatePicker.SelectedDate;
-            task.UpdatedAt = DateTime.Now;
-
-            // Parse tags
-            var tagsText = detailTagsBox.Text.Trim();
-            if (!string.IsNullOrEmpty(tagsText))
-            {
-                task.Tags = tagsText.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Trim())
-                    .Where(t => !string.IsNullOrEmpty(t))
-                    .ToList();
-            }
-            else
-            {
-                task.Tags.Clear();
-            }
-
-            // Mark as completed if status changed
-            if (task.Status == TaskStatus.Completed && task.CompletedDate == null)
-            {
-                task.CompletedDate = DateTime.Now;
-            }
-
-            taskService.UpdateTask(task);
-            CloseDetailPanel(null, null);
-            RefreshTaskList();
         }
 
         protected override void OnDispose()

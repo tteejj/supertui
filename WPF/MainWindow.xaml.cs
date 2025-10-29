@@ -299,8 +299,8 @@ namespace SuperTUI
                         OpenPane("notes");
                         e.Handled = true;
                         return;
-                    case Key.P:
-                        OpenPane("processing");
+                    case Key.F:
+                        OpenPane("files");
                         e.Handled = true;
                         return;
                 }
