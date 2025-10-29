@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -270,7 +271,9 @@ namespace SuperTUI.Extensions
         private readonly StateMigrationManager migrationManager = new StateMigrationManager();
         private const int MaxUndoLevels = 50;
 
+        #pragma warning disable CS0067 // Event is never used - reserved for future state change notifications
         public event EventHandler<StateChangedEventArgs> StateChanged;
+        #pragma warning restore CS0067
 
         /// <summary>
         /// Get the migration manager for registering custom migrations
@@ -690,7 +693,7 @@ namespace SuperTUI.Extensions
                 if (snapshot != null)
                 {
                     currentState = snapshot;
-                    SaveState(snapshot);
+                    SaveStateAsync(snapshot).GetAwaiter().GetResult();
                     Logger.Instance.Info("StatePersistence", $"Restored from backup: {backupFilePath}");
                 }
                 else
