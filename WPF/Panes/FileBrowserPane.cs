@@ -1173,10 +1173,11 @@ namespace SuperTUI.Panes
             {
                 switch (e.Key)
                 {
-                    case Key.H:
-                        ToggleHiddenFiles();
-                        e.Handled = true;
-                        break;
+                    // H key removed - hidden files are always hidden
+                    // case Key.H:
+                    //     ToggleHiddenFiles();
+                    //     e.Handled = true;
+                    //     break;
 
                     case Key.B:
                         ToggleBookmarks();

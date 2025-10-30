@@ -29,7 +29,10 @@ namespace SuperTUI.Panes
         // UI Components
         private Grid mainLayout;
         private ListBox taskListBox;
-        private TextBox quickAddBox;
+        private Grid quickAddForm;
+        private TextBox quickAddTitle;
+        private TextBox quickAddDueDate;
+        private TextBox quickAddPriority;
         private TextBlock statusBar;
         private TextBlock filterLabel;
 
@@ -143,21 +146,93 @@ namespace SuperTUI.Panes
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
 
-            // Quick add box (hidden by default)
-            quickAddBox = new TextBox
+            // Quick add form (hidden by default)
+            quickAddForm = new Grid
+            {
+                Background = surfaceBrush,
+                Visibility = Visibility.Collapsed
+            };
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }); // Title
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // DueDate
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
+
+            // Title field
+            quickAddTitle = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
                 Padding = new Thickness(8, 4, 8, 4),
                 Background = surfaceBrush,
                 Foreground = fgBrush,
-                BorderThickness = new Thickness(1),
-                BorderBrush = accentBrush,
-                Visibility = Visibility.Collapsed
+                BorderThickness = new Thickness(1, 1, 0, 1),
+                BorderBrush = accentBrush
             };
-            quickAddBox.KeyDown += QuickAddBox_KeyDown;
-            Grid.SetRow(quickAddBox, 0);
-            grid.Children.Add(quickAddBox);
+            quickAddTitle.KeyDown += QuickAddField_KeyDown;
+            Grid.SetColumn(quickAddTitle, 0);
+            quickAddForm.Children.Add(quickAddTitle);
+
+            // Separator
+            var sep1 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = surfaceBrush
+            };
+            Grid.SetColumn(sep1, 1);
+            quickAddForm.Children.Add(sep1);
+
+            // Due date field
+            quickAddDueDate = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = surfaceBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 0, 1),
+                BorderBrush = accentBrush
+            };
+            quickAddDueDate.KeyDown += QuickAddField_KeyDown;
+            Grid.SetColumn(quickAddDueDate, 2);
+            quickAddForm.Children.Add(quickAddDueDate);
+
+            // Separator
+            var sep2 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = surfaceBrush
+            };
+            Grid.SetColumn(sep2, 3);
+            quickAddForm.Children.Add(sep2);
+
+            // Priority field
+            quickAddPriority = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = surfaceBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 1, 1),
+                BorderBrush = accentBrush,
+                Width = 60,
+                MaxLength = 1
+            };
+            quickAddPriority.KeyDown += QuickAddField_KeyDown;
+            Grid.SetColumn(quickAddPriority, 4);
+            quickAddForm.Children.Add(quickAddPriority);
+
+            Grid.SetRow(quickAddForm, 0);
+            grid.Children.Add(quickAddForm);
 
             // Filter bar
             var filterBar = new StackPanel
@@ -615,7 +690,7 @@ namespace SuperTUI.Panes
             var completed = taskViewModels.Count(vm => vm.Task.Status == TaskStatus.Completed);
             var overdue = taskViewModels.Count(vm => vm.Task.IsOverdue);
 
-            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | A: new | E: edit | D: delete | Shift+D: date | Shift+T: tags | Space: toggle | Tab: indent";
+            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | A:Add S:Subtask E:Edit D:Delete Space:Toggle Shift+D:Date Shift+T:Tags";
         }
 
         // Event Handlers
@@ -697,6 +772,13 @@ namespace SuperTUI.Panes
                         DeleteSelectedTask();
                         e.Handled = true;
                         break;
+                    case Key.S:
+                        if (selectedTask != null)
+                        {
+                            CreateSubtask();
+                            e.Handled = true;
+                        }
+                        break;
                     case Key.C:
                         if (selectedTask != null)
                         {
@@ -719,21 +801,6 @@ namespace SuperTUI.Panes
                         MoveSelectedTaskDown();
                         e.Handled = true;
                         break;
-                    case Key.Tab:
-                        if (selectedTask != null)
-                        {
-                            IndentTask();
-                            e.Handled = true;
-                        }
-                        break;
-                }
-            }
-            else if (Keyboard.Modifiers == ModifierKeys.Shift)
-            {
-                if (e.Key == Key.Tab && selectedTask != null)
-                {
-                    UnindentTask();
-                    e.Handled = true;
                 }
             }
         }
@@ -868,7 +935,7 @@ namespace SuperTUI.Panes
                 SetSelectedTaskPriority(p.Value);
         }
 
-        private void QuickAddBox_KeyDown(object sender, KeyEventArgs e)
+        private void QuickAddField_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -880,26 +947,47 @@ namespace SuperTUI.Panes
                 HideQuickAdd();
                 e.Handled = true;
             }
+            else if (e.Key == Key.Tab)
+            {
+                // Tab navigation between fields
+                if (sender == quickAddTitle)
+                {
+                    quickAddDueDate.Focus();
+                    e.Handled = true;
+                }
+                else if (sender == quickAddDueDate)
+                {
+                    quickAddPriority.Focus();
+                    e.Handled = true;
+                }
+                else if (sender == quickAddPriority)
+                {
+                    quickAddTitle.Focus();
+                    e.Handled = true;
+                }
+            }
         }
 
         // Task Operations
 
         private void ShowQuickAdd()
         {
-            quickAddBox.Visibility = Visibility.Visible;
-            quickAddBox.Text = string.Empty;
-            quickAddBox.Focus();
+            quickAddForm.Visibility = Visibility.Visible;
+            quickAddTitle.Text = string.Empty;
+            quickAddDueDate.Text = string.Empty;
+            quickAddPriority.Text = "2"; // Default to Medium
+            quickAddTitle.Focus();
         }
 
         private void HideQuickAdd()
         {
-            quickAddBox.Visibility = Visibility.Collapsed;
+            quickAddForm.Visibility = Visibility.Collapsed;
             taskListBox.Focus();
         }
 
         private void CreateTaskFromQuickAdd()
         {
-            var title = quickAddBox.Text.Trim();
+            var title = quickAddTitle.Text.Trim();
             if (string.IsNullOrEmpty(title))
             {
                 HideQuickAdd();
@@ -913,6 +1001,30 @@ namespace SuperTUI.Panes
                 Status = TaskStatus.Pending,
                 Priority = TaskPriority.Medium
             };
+
+            // Parse due date
+            var dueDateText = quickAddDueDate.Text.Trim();
+            if (!string.IsNullOrEmpty(dueDateText))
+            {
+                var parsedDate = ParseDateInput(dueDateText);
+                if (parsedDate.HasValue)
+                {
+                    task.DueDate = parsedDate.Value;
+                }
+            }
+
+            // Parse priority (1=High, 2=Medium, 3=Low)
+            var priorityText = quickAddPriority.Text.Trim();
+            if (!string.IsNullOrEmpty(priorityText))
+            {
+                task.Priority = priorityText switch
+                {
+                    "1" => TaskPriority.High,
+                    "2" => TaskPriority.Medium,
+                    "3" => TaskPriority.Low,
+                    _ => TaskPriority.Medium
+                };
+            }
 
             taskService.AddTask(task);
             HideQuickAdd();
@@ -1333,6 +1445,7 @@ namespace SuperTUI.Panes
         {
             taskService.ToggleTaskCompletion(taskId);
             RefreshTaskList();
+            taskListBox.Focus();
         }
 
         private void SetSelectedTaskPriority(TaskPriority priority)
@@ -1347,56 +1460,53 @@ namespace SuperTUI.Panes
                 task.UpdatedAt = DateTime.Now;
                 taskService.UpdateTask(task);
                 RefreshTaskList();
+                taskListBox.Focus();
             }
         }
 
-        private void IndentTask()
+        private void CreateSubtask()
         {
             if (selectedTask == null)
                 return;
 
-            // Find previous task at same indent level to become parent
-            var index = taskViewModels.IndexOf(selectedTask);
-            if (index == 0)
-                return;
+            // Determine parent based on 2-level limit rule:
+            // - If selected task is a parent (no parent): Create child under it
+            // - If selected task is a child (has parent): Create sibling (same parent as selected)
+            Guid? parentId = null;
 
-            // Find previous task at same or lower indent level
-            TaskItemViewModel previousTask = null;
-            for (int i = index - 1; i >= 0; i--)
+            if (selectedTask.Task.ParentTaskId.HasValue)
             {
-                if (taskViewModels[i].IndentLevel <= selectedTask.IndentLevel)
-                {
-                    previousTask = taskViewModels[i];
-                    break;
-                }
+                // Selected task is already a child, create sibling with same parent
+                parentId = selectedTask.Task.ParentTaskId.Value;
+                logger.Log(LogLevel.Debug, "TaskListPane", $"Creating sibling for child task '{selectedTask.Task.Title}'");
+            }
+            else
+            {
+                // Selected task is a parent, create child under it
+                parentId = selectedTask.Task.Id;
+                logger.Log(LogLevel.Debug, "TaskListPane", $"Creating subtask under parent '{selectedTask.Task.Title}'");
             }
 
-            if (previousTask == null)
-                return;
-
-            var task = taskService.GetTask(selectedTask.Task.Id);
-            if (task != null)
+            // Create the new subtask
+            var subtask = new TaskItem
             {
-                task.ParentTaskId = previousTask.Task.Id;
-                task.UpdatedAt = DateTime.Now;
-                taskService.UpdateTask(task);
-                logger.Log(LogLevel.Debug, "TaskListPane", $"Indented task '{task.Title}' under '{previousTask.Task.Title}'");
-                RefreshTaskList();
-            }
-        }
+                Title = "New Subtask",
+                ProjectId = projectContext.CurrentProject?.Id,
+                Status = TaskStatus.Pending,
+                Priority = TaskPriority.Medium,
+                ParentTaskId = parentId
+            };
 
-        private void UnindentTask()
-        {
-            if (selectedTask == null || !selectedTask.Task.ParentTaskId.HasValue)
-                return;
+            taskService.AddTask(subtask);
+            RefreshTaskList();
 
-            var task = taskService.GetTask(selectedTask.Task.Id);
-            if (task != null)
+            // Select the new subtask and start editing it
+            var newTaskVm = taskViewModels.FirstOrDefault(vm => vm.Task.Id == subtask.Id);
+            if (newTaskVm != null)
             {
-                task.ParentTaskId = null;
-                task.UpdatedAt = DateTime.Now;
-                taskService.UpdateTask(task);
-                RefreshTaskList();
+                taskListBox.SelectedItem = newTaskVm;
+                selectedTask = newTaskVm;
+                StartInlineEdit();
             }
         }
 
@@ -1407,6 +1517,7 @@ namespace SuperTUI.Panes
 
             taskService.MoveTaskUp(selectedTask.Task.Id);
             RefreshTaskList();
+            taskListBox.Focus();
         }
 
         private void MoveSelectedTaskDown()
@@ -1416,6 +1527,7 @@ namespace SuperTUI.Panes
 
             taskService.MoveTaskDown(selectedTask.Task.Id);
             RefreshTaskList();
+            taskListBox.Focus();
         }
 
         private void DeleteSelectedTask()
@@ -1433,6 +1545,7 @@ namespace SuperTUI.Panes
             {
                 taskService.DeleteTask(selectedTask.Task.Id);
                 RefreshTaskList();
+                taskListBox.Focus();
             }
         }
 

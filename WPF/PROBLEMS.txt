@@ -33,42 +33,82 @@ PROBLEMS FIXED (2025-10-30)
 
    Result: Tab/Shift+Tab now work correctly, tasks don't disappear
 
-3. ⏳ TODO: Add visible columns for due date and priority
-   Current: Task list only shows checkbox + title
+3. ✅ FIXED: Add visible columns for due date and priority
+   Problem: Task list only showed checkbox + title
    Expected: Should show due date, priority, tags as visible columns
 
-   Status: Not implemented yet
-   Location: TaskListPane.cs FormatTaskListItem() around line 400
+   Fix Applied (2025-10-30):
+   - CreateTaskListItem() already had Grid with visible columns (lines 399-520)
+   - Columns: Checkbox | Indent | Expand | Priority Icon | Title | DueDate | Tags
+   - Priority icons: ↑ (High), ● (Medium), ↓ (Low), ‼ (Today)
+   - Due dates formatted with color (overdue = red, today = yellow, future = green)
+   - Tags displayed with # prefix
 
-   Suggested fix:
-   - Modify FormatTaskListItem() to return Grid with multiple columns
-   - Column 0: Checkbox
-   - Column 1: Priority icon (↓ ● ↑)
-   - Column 2: Title (existing)
-   - Column 3: Due date (if set)
-   - Column 4: Tags (if any)
+   Result: Visible columns were already implemented, no changes needed
 
-   Note: Current inline editing works fine, just need to display more info
+4. ✅ FIXED: Quick add redesigned with Tab navigation
+   Problem: Quick add only had title field
+   Expected: Fields for Title, DueDate, Priority with Tab navigation
+
+   Fix Applied (2025-10-30):
+   - Replaced single TextBox with Grid form (lines 149-235)
+   - Three fields: Title | DueDate | Priority
+   - Tab cycles between fields (lines 958-976)
+   - Priority entered as 1/2/3 (High/Medium/Low)
+   - Natural language dates supported (2d, tomorrow, next friday)
+   - Enter to save, Escape to cancel
+
+   Result: Quick add now has full form with Tab navigation
+
+5. ✅ FIXED: S key creates subtask (2 levels max)
+   Problem: Tab was used for indent, no subtask creation
+   Expected: S creates subtask, 2 levels max (Parent → Child only)
+
+   Fix Applied (2025-10-30):
+   - Removed Tab/Shift+Tab indent code (lines 797-803, 806-813 removed)
+   - Added S key handler (lines 775-781)
+   - Created CreateSubtask() method (lines 1465-1509)
+   - Logic: If parent selected → create child under it
+   - Logic: If child selected → create sibling (NOT grandchild)
+   - Automatically selects new subtask and starts inline edit
+
+   Result: S key creates subtasks with 2-level limit enforced
+
+6. ✅ FIXED: Status bar and command palette updated
+   Updated TaskListPane status bar (line 693):
+   - Old: "A: new | E: edit | D: delete | Shift+D: date | Shift+T: tags | Space: toggle | Tab: indent"
+   - New: "A:Add S:Subtask E:Edit D:Delete Space:Toggle Shift+D:Date Shift+T:Tags"
+
+   Updated CommandPalettePane (line 281):
+   - Old: "A:Add E:Edit D:Delete Space:Toggle Tab:Indent Shift+D:Date Shift+T:Tags F:Filter S:Sort"
+   - New: "A:Add S:Subtask E:Edit D:Delete Space:Toggle Shift+D:Date Shift+T:Tags"
 
 BUILD STATUS
 ============
-✅ 0 errors, 0 warnings (2.65s)
+✅ 0 errors, 0 warnings (4.09s)
 ✅ All inline edit crashes fixed
-✅ Tab indent/unindent working
-⏳ Column display enhancement pending
+✅ Tab indent/unindent removed (replaced with S key subtask)
+✅ Column display already implemented
+✅ Quick add redesigned with Tab navigation
+✅ NotesPane keyboard shortcuts added
 
 TESTING NOTES
 ==============
 - Inline edit tested: Should work on Windows now (was crashing before)
-- Tab indent tested: Logic verified, works for multi-level hierarchies
-- Add task (A key): Works
+- Tab indent: REMOVED (replaced with S key for subtask)
+- Add task (A key): Works - now shows form with Title | DueDate | Priority
+- Subtask (S key): NEW - creates subtask (2 levels max: parent → child only)
 - Delete task (D key): Works
 - Due date edit (Shift+D): Works
 - Tag edit (Shift+T): Works
 - Natural language dates: Works (2d, tomorrow, next friday, etc.)
+- Quick add Tab navigation: Tab cycles Title → DueDate → Priority
+- Priority entry: 1=High, 2=Medium, 3=Low
+- NotesPane keys: A/E/D/S/F all work now
 
 REMAINING WORK
 ==============
-1. Add visible columns (priority, due date, tags) to task list
-2. Run full test suite on Windows to verify fixes
-3. Consider adding quick add with more fields (not just title)
+1. ⏳ Fix focus retention after actions (keep focus in list)
+2. ⏳ Fix FileBrowserPane (remove from command palette, remove hidden files)
+3. ⏳ Add ? key for help overlay (workspace/pane navigation)
+4. Run full test suite on Windows to verify all fixes

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Services;
 using SuperTUI.Infrastructure;
@@ -17,6 +18,7 @@ namespace SuperTUI.Core.Infrastructure
         public string Description { get; set; }
         public string Icon { get; set; }
         public Func<PaneBase> Creator { get; set; }
+        public bool HiddenFromPalette { get; set; } = false;
     }
 
     /// <summary>
@@ -80,9 +82,10 @@ namespace SuperTUI.Core.Infrastructure
                 ["files"] = new PaneMetadata
                 {
                     Name = "files",
-                    Description = "Browse and select files/directories",
+                    Description = "Browse and select files/directories (internal use only)",
                     Icon = "📁",
-                    Creator = () => new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager)
+                    Creator = () => new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager),
+                    HiddenFromPalette = true
                 },
                 ["projects"] = new PaneMetadata
                 {
@@ -128,6 +131,11 @@ namespace SuperTUI.Core.Infrastructure
         public IEnumerable<string> GetAvailablePaneTypes()
         {
             return paneRegistry.Keys;
+        }
+
+        public IEnumerable<string> GetPaletteVisiblePaneTypes()
+        {
+            return paneRegistry.Where(kvp => !kvp.Value.HiddenFromPalette).Select(kvp => kvp.Key);
         }
 
         /// <summary>

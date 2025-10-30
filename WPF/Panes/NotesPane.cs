@@ -1127,7 +1127,40 @@ namespace SuperTUI.Panes
 
         private void OnNotesListKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && notesListBox.SelectedItem != null)
+            // A - New note
+            if (e.Key == Key.A)
+            {
+                CreateNewNote();
+                e.Handled = true;
+            }
+            // E - Edit (focus editor)
+            else if (e.Key == Key.E && notesListBox.SelectedItem != null)
+            {
+                noteEditor.Focus();
+                e.Handled = true;
+            }
+            // D - Delete note
+            else if (e.Key == Key.D && currentNote != null)
+            {
+                DeleteCurrentNote();
+                e.Handled = true;
+            }
+            // S - Search (focus search box)
+            else if (e.Key == Key.S)
+            {
+                searchBox.Focus();
+                searchBox.SelectAll();
+                e.Handled = true;
+            }
+            // F - Clear filter (same as S for now)
+            else if (e.Key == Key.F)
+            {
+                searchBox.Focus();
+                searchBox.SelectAll();
+                e.Handled = true;
+            }
+            // Enter - Focus editor
+            else if (e.Key == Key.Enter && notesListBox.SelectedItem != null)
             {
                 noteEditor.Focus();
                 e.Handled = true;
@@ -1422,7 +1455,7 @@ namespace SuperTUI.Panes
         {
             if (currentNote == null)
             {
-                statusBar.Text = "Ready";
+                statusBar.Text = $"{filteredNotes.Count} notes | A:New E:Edit D:Delete S:Search F:Filter";
                 return;
             }
 
@@ -1430,7 +1463,7 @@ namespace SuperTUI.Panes
             var charCount = noteEditor.Text.Length;
             var modifiedIndicator = hasUnsavedChanges ? " •" : "";
 
-            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | {wordCount} words | {charCount} chars";
+            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | {wordCount} words | {charCount} chars | A:New E:Edit D:Delete S:Search";
         }
 
         private void ShowStatus(string message, bool isError = false)
