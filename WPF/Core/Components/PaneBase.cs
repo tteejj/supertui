@@ -206,11 +206,10 @@ namespace SuperTUI.Core.Components
             var theme = themeManager.CurrentTheme;
             if (theme == null) return;
 
-            var background = theme.GetColor("pane_background");
-            var headerBg = theme.GetColor("pane_header");
-            var foreground = theme.GetColor("foreground");
-            var border = IsFocused ? theme.GetColor("border_active") : theme.GetColor("border");
-            var accent = theme.GetColor("accent");
+            var background = theme.Background;
+            var headerBg = theme.Surface;
+            var foreground = theme.Foreground;
+            var border = IsFocused ? theme.BorderActive : theme.Border;
 
             // Container with focus indicator
             containerBorder.Background = new SolidColorBrush(background);
@@ -220,7 +219,7 @@ namespace SuperTUI.Core.Components
             // Header
             headerBorder.Background = new SolidColorBrush(headerBg);
             headerBorder.BorderBrush = new SolidColorBrush(border);
-            headerText.Foreground = new SolidColorBrush(IsFocused ? accent : foreground);
+            headerText.Foreground = new SolidColorBrush(foreground);  // Always use foreground, border shows focus
 
             // Content
             if (contentArea.Content is Panel panel)
