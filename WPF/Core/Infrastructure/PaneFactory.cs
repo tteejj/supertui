@@ -83,8 +83,21 @@ namespace SuperTUI.Core.Infrastructure
                     Description = "Browse and select files/directories",
                     Icon = "📁",
                     Creator = () => new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager)
+                },
+                ["projects"] = new PaneMetadata
+                {
+                    Name = "projects",
+                    Description = "Manage projects with full CRUD and Excel integration",
+                    Icon = "📊",
+                    Creator = () => new ProjectsPane(logger, themeManager, projectContext, configManager, projectService, eventBus)
+                },
+                ["excel-import"] = new PaneMetadata
+                {
+                    Name = "excel-import",
+                    Description = "Import projects from Excel clipboard",
+                    Icon = "📋",
+                    Creator = () => new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus)
                 }
-                // Excel panes removed - will be rebuilt with proper terminal aesthetic and keyboard-only navigation
             };
         }
 

@@ -929,28 +929,32 @@ namespace SuperTUI.Panes
             if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
                 return;
 
-            // Create inline edit box
-            if (inlineEditBox == null)
+            // Store the original item
+            var originalItem = taskListBox.Items[selectedIndex];
+
+            // Create NEW inline edit box each time (avoid "already has logical parent" error)
+            inlineEditBox = new TextBox
             {
-                inlineEditBox = new TextBox
-                {
-                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 18,
-                    Padding = new Thickness(6, 2, 6, 2),
-                    Background = surfaceBrush,
-                    Foreground = fgBrush,
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = accentBrush
-                };
-                inlineEditBox.KeyDown += InlineEditBox_KeyDown;
-                inlineEditBox.LostFocus += InlineEditBox_LostFocus;
-            }
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(6, 2, 6, 2),
+                Background = surfaceBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(1),
+                BorderBrush = accentBrush,
+                Tag = originalItem  // Store original to restore on cancel
+            };
+            inlineEditBox.KeyDown += InlineEditBox_KeyDown;
+            inlineEditBox.LostFocus += InlineEditBox_LostFocus;
 
             editingTask = selectedTask;
             inlineEditBox.Text = selectedTask.Task.Title;
 
-            // Replace the task item with the edit box temporarily
-            taskListBox.Items[selectedIndex] = inlineEditBox;
+            // Remove old item and insert edit box (avoids parenting error)
+            taskListBox.Items.RemoveAt(selectedIndex);
+            taskListBox.Items.Insert(selectedIndex, inlineEditBox);
+            taskListBox.SelectedIndex = selectedIndex;
+
             inlineEditBox.Focus();
             inlineEditBox.SelectAll();
         }
@@ -1014,22 +1018,23 @@ namespace SuperTUI.Panes
             if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
                 return;
 
-            // Create date edit box
-            if (dateEditBox == null)
+            // Store the original item
+            var originalItem = taskListBox.Items[selectedIndex];
+
+            // Create NEW date edit box each time (avoid parenting error)
+            dateEditBox = new TextBox
             {
-                dateEditBox = new TextBox
-                {
-                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 18,
-                    Padding = new Thickness(6, 2, 6, 2),
-                    Background = surfaceBrush,
-                    Foreground = accentBrush,
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = accentBrush
-                };
-                dateEditBox.KeyDown += DateEditBox_KeyDown;
-                dateEditBox.LostFocus += DateEditBox_LostFocus;
-            }
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(6, 2, 6, 2),
+                Background = surfaceBrush,
+                Foreground = accentBrush,
+                BorderThickness = new Thickness(1),
+                BorderBrush = accentBrush,
+                Tag = originalItem  // Store original to restore on cancel
+            };
+            dateEditBox.KeyDown += DateEditBox_KeyDown;
+            dateEditBox.LostFocus += DateEditBox_LostFocus;
 
             dateEditingTask = selectedTask;
 
@@ -1043,8 +1048,11 @@ namespace SuperTUI.Panes
                 dateEditBox.Text = "2d, tomorrow, 2025-12-25, next friday, none";
             }
 
-            // Replace the task item with the edit box temporarily
-            taskListBox.Items[selectedIndex] = dateEditBox;
+            // Remove old item and insert edit box (avoids parenting error)
+            taskListBox.Items.RemoveAt(selectedIndex);
+            taskListBox.Items.Insert(selectedIndex, dateEditBox);
+            taskListBox.SelectedIndex = selectedIndex;
+
             dateEditBox.Focus();
             dateEditBox.SelectAll();
 
@@ -1216,22 +1224,23 @@ namespace SuperTUI.Panes
             if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
                 return;
 
-            // Create tag edit box
-            if (tagEditBox == null)
+            // Store the original item
+            var originalItem = taskListBox.Items[selectedIndex];
+
+            // Create NEW tag edit box each time (avoid parenting error)
+            tagEditBox = new TextBox
             {
-                tagEditBox = new TextBox
-                {
-                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 18,
-                    Padding = new Thickness(6, 2, 6, 2),
-                    Background = surfaceBrush,
-                    Foreground = new SolidColorBrush(Colors.Cyan),  // Cyan for tags
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = new SolidColorBrush(Colors.Cyan)
-                };
-                tagEditBox.KeyDown += TagEditBox_KeyDown;
-                tagEditBox.LostFocus += TagEditBox_LostFocus;
-            }
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(6, 2, 6, 2),
+                Background = surfaceBrush,
+                Foreground = new SolidColorBrush(Colors.Cyan),  // Cyan for tags
+                BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Colors.Cyan),
+                Tag = originalItem  // Store original to restore on cancel
+            };
+            tagEditBox.KeyDown += TagEditBox_KeyDown;
+            tagEditBox.LostFocus += TagEditBox_LostFocus;
 
             tagEditingTask = selectedTask;
 
@@ -1245,8 +1254,11 @@ namespace SuperTUI.Panes
                 tagEditBox.Text = "bug, feature, urgent, work, personal";
             }
 
-            // Replace the task item with the edit box temporarily
-            taskListBox.Items[selectedIndex] = tagEditBox;
+            // Remove old item and insert edit box (avoids parenting error)
+            taskListBox.Items.RemoveAt(selectedIndex);
+            taskListBox.Items.Insert(selectedIndex, tagEditBox);
+            taskListBox.SelectedIndex = selectedIndex;
+
             tagEditBox.Focus();
             tagEditBox.SelectAll();
 
@@ -1340,15 +1352,27 @@ namespace SuperTUI.Panes
 
         private void IndentTask()
         {
-            if (selectedTask == null || selectedTask.IndentLevel > 0)
+            if (selectedTask == null)
                 return;
 
-            // Find previous task at same level to become parent
+            // Find previous task at same indent level to become parent
             var index = taskViewModels.IndexOf(selectedTask);
             if (index == 0)
                 return;
 
-            var previousTask = taskViewModels[index - 1];
+            // Find previous task at same or lower indent level
+            TaskItemViewModel previousTask = null;
+            for (int i = index - 1; i >= 0; i--)
+            {
+                if (taskViewModels[i].IndentLevel <= selectedTask.IndentLevel)
+                {
+                    previousTask = taskViewModels[i];
+                    break;
+                }
+            }
+
+            if (previousTask == null)
+                return;
 
             var task = taskService.GetTask(selectedTask.Task.Id);
             if (task != null)
@@ -1356,6 +1380,7 @@ namespace SuperTUI.Panes
                 task.ParentTaskId = previousTask.Task.Id;
                 task.UpdatedAt = DateTime.Now;
                 taskService.UpdateTask(task);
+                logger.Log(LogLevel.Debug, "TaskListPane", $"Indented task '{task.Title}' under '{previousTask.Task.Title}'");
                 RefreshTaskList();
             }
         }

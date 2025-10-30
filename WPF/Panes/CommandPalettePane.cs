@@ -278,12 +278,11 @@ namespace SuperTUI.Panes
             // Map pane types to descriptions (can be extended with metadata system)
             return paneType.ToLower() switch
             {
-                "tasks" => "View and manage tasks",
-                "notes" => "Browse and edit notes",
-                "processing" => "Process inbox items",
-                "projects" => "View all projects",
-                "calendar" => "View calendar and agenda",
-                "timeline" => "View task timeline",
+                "tasks" => "Manage tasks - A:Add E:Edit D:Delete Space:Toggle Tab:Indent Shift+D:Date Shift+T:Tags F:Filter S:Sort",
+                "notes" => "Browse and edit notes - A:New E:Edit D:Delete S:Search F:Filter",
+                "files" => "Browse files and directories - Enter:Open D:Delete",
+                "projects" => "Manage projects - A:Add D:Delete F:Filter K:SetContext X:ExportT2020 Click:Edit",
+                "excel-import" => "Import from Excel - I:Import (paste SVI-CAS W3:W130)",
                 _ => $"Open {paneType} pane"
             };
         }
