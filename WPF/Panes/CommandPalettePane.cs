@@ -279,9 +279,10 @@ namespace SuperTUI.Panes
             return paneType.ToLower() switch
             {
                 "tasks" => "Manage tasks - A:Add S:Subtask E:Edit D:Delete Space:Toggle Shift+D:Date Shift+T:Tags",
-                "notes" => "Browse and edit notes - A:New E:Edit D:Delete S:Search F:Filter",
-                "projects" => "Manage projects - A:Add D:Delete F:Filter K:SetContext X:ExportT2020 Click:Edit",
+                "notes" => "Browse and edit notes - A:New E:Edit D:Delete S:Search F:Filter O:OpenFile",
+                "projects" => "Manage projects - A:Add D:Delete K:SetContext X:ExportT2020 Click:Edit",
                 "excel-import" => "Import from Excel - I:Import (paste SVI-CAS W3:W130)",
+                "help" => "Keyboard shortcuts reference - Press ? or Ctrl+Shift+H",
                 _ => $"Open {paneType} pane"
             };
         }

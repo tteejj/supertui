@@ -329,6 +329,14 @@ namespace SuperTUI
                         OpenPane("notes");
                         e.Handled = true;
                         return;
+                    case Key.P:
+                        OpenPane("projects");
+                        e.Handled = true;
+                        return;
+                    case Key.E:
+                        OpenPane("excel-import");
+                        e.Handled = true;
+                        return;
                     case Key.F:
                         OpenPane("files");
                         e.Handled = true;
@@ -451,49 +459,7 @@ namespace SuperTUI
 
         private void ShowHelpOverlay()
         {
-            var helpText = @"SuperTUI Keyboard Shortcuts
-
-WORKSPACES:
-  Ctrl+1-9          Switch to workspace 1-9
-  F12               Toggle move pane mode (then use arrows to move focused pane)
-
-PANE NAVIGATION:
-  Ctrl+Shift+←→↑↓   Focus pane in direction
-  Ctrl+Shift+T      Open Tasks pane
-  Ctrl+Shift+N      Open Notes pane
-  Ctrl+Shift+Q      Close focused pane
-
-COMMAND PALETTE:
-  : (colon)         Open command palette
-  ? (question)      Show this help
-
-TASK PANE:
-  A                 Add new task (form: Title | DueDate | Priority)
-  S                 Create subtask (2 levels max)
-  E / Enter         Edit task inline
-  D                 Delete task
-  Space             Toggle complete
-  Shift+D           Edit due date
-  Shift+T           Edit tags
-  PageUp/PageDown   Reorder tasks
-
-NOTES PANE:
-  A                 New note
-  E                 Edit note
-  D                 Delete note
-  S / F             Search/filter
-  Ctrl+S            Save note
-
-PROJECTS PANE:
-  A                 Add project
-  D                 Delete project
-  K                 Set project context
-  X                 Export T2020
-  Click field       Edit inline
-
-Press Escape or ? to close this help.";
-
-            MessageBox.Show(helpText, "SuperTUI Help", MessageBoxButton.OK, MessageBoxImage.Information);
+            OpenPane("help");
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)

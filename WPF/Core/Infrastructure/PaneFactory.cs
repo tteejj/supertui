@@ -100,6 +100,13 @@ namespace SuperTUI.Core.Infrastructure
                     Description = "Import projects from Excel clipboard",
                     Icon = "📋",
                     Creator = () => new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus)
+                },
+                ["help"] = new PaneMetadata
+                {
+                    Name = "help",
+                    Description = "Keyboard shortcuts reference",
+                    Icon = "⌨️",
+                    Creator = () => new HelpPane(logger, themeManager, projectContext)
                 }
             };
         }
