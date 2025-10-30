@@ -1,26 +1,11 @@
-Global exception handler registered
-
-Creating MainWindow...
-MainWindow created
-
-Starting SuperTUI...
-Keyboard Shortcuts:
-  Ctrl+Space or :       Command palette
-  Ctrl+T                Open tasks pane
-  Ctrl+N                Open notes pane
-  Ctrl+P                Open processing pane
-  Alt+1-9               Switch workspaces
-  Alt+Arrows            Navigate between panes
-  Alt+Shift+Arrows      Move panes
-  Ctrl+Shift+Q          Close focused pane
-add a focus indicator to the pane currently focused. 
-MethodInvocationException: C:\Users\jeverything is still wrng colour. hnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:185
-Linekeys conflict with windows diot.  |
-alt  185 |  $window.ShowDialog() | Out-Null
+MethodInvocationException: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.ps1:185
+Line |
+ 185 |  $window.ShowDialog() | Out-Null
      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      | Exception calling "ShowDialog" with "0" argument(s): "Element already has a logical parent. It must be detached
      | from the old parent before it is attached to a new one."
-PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF> pwsh SuperTUI.ps1
+PS C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF>
+-encountered when trying to edit a new added task. tried to press esc to exit the inline edit. expected that add would alow entering hte due date priority etc. if not, then  that edit would allow such. it should, bth of them.
 
-
-palette is till not closable. alt keys conflict with windows idiot. colours are wrong. text is too small, especially footers. use 14 pt minimum. 
+tab indnt is a problem. how do i specify its parent? when i tab a parent with a sub they both disappear. 
+task should have due date, priority, etc cols and inline edit for al cols. 
