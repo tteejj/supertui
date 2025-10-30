@@ -222,6 +222,8 @@ namespace SuperTUI.Core.Events
 
     public class TaskSelectedEvent
     {
+        public Guid TaskId { get; set; }
+        public Guid? ProjectId { get; set; }
         public Core.Models.TaskItem Task { get; set; }
         public string SourceWidget { get; set; }
     }

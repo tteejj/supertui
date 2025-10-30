@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Documents;
 using System.Globalization;
+using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
@@ -23,6 +24,7 @@ namespace SuperTUI.Panes
     {
         // Services
         private readonly ITaskService taskService;
+        private readonly IEventBus eventBus;
 
         // UI Components
         private Grid mainLayout;
@@ -33,7 +35,11 @@ namespace SuperTUI.Panes
 
         // Inline editing
         private TextBox inlineEditBox;
+        private TextBox dateEditBox;
+        private TextBox tagEditBox;
         private TaskItemViewModel editingTask;
+        private TaskItemViewModel dateEditingTask;
+        private TaskItemViewModel tagEditingTask;
 
         // State
         private List<TaskItemViewModel> taskViewModels = new List<TaskItemViewModel>();
@@ -76,10 +82,12 @@ namespace SuperTUI.Panes
             ILogger logger,
             IThemeManager themeManager,
             IProjectContextManager projectContext,
-            ITaskService taskService)
+            ITaskService taskService,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
             this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             PaneName = "Tasks";
         }
 
@@ -139,7 +147,7 @@ namespace SuperTUI.Panes
             quickAddBox = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Padding = new Thickness(8, 4, 8, 4),
                 Background = surfaceBrush,
                 Foreground = fgBrush,
@@ -161,7 +169,7 @@ namespace SuperTUI.Panes
             filterLabel = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 Foreground = accentBrush,
                 Text = GetFilterText()
             };
@@ -170,11 +178,11 @@ namespace SuperTUI.Panes
             Grid.SetRow(filterBar, 1);
             grid.Children.Add(filterBar);
 
-            // Task list
+            // Task list with virtualization enabled
             taskListBox = new ListBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0),
@@ -192,21 +200,19 @@ namespace SuperTUI.Panes
             itemContainerStyle.Setters.Add(new Setter(ListBoxItem.FocusVisualStyleProperty, null));
             taskListBox.ItemContainerStyle = itemContainerStyle;
 
-            var scrollViewer = new ScrollViewer
-            {
-                Content = taskListBox,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
-            };
+            // Enable virtualization for large lists (10,000+ items)
+            VirtualizingPanel.SetIsVirtualizing(taskListBox, true);
+            VirtualizingPanel.SetVirtualizationMode(taskListBox, VirtualizationMode.Recycling);
+            VirtualizingPanel.SetScrollUnit(taskListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(scrollViewer, 2);
-            grid.Children.Add(scrollViewer);
+            Grid.SetRow(taskListBox, 2);
+            grid.Children.Add(taskListBox);
 
             // Status bar
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Foreground = dimBrush,
                 Margin = new Thickness(0, 8, 0, 0)
             };
@@ -373,7 +379,7 @@ namespace SuperTUI.Panes
                 {
                     Text = "No tasks. Press Ctrl+N to create one.",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 11,
+                    FontSize = 18,
                     Foreground = dimBrush,
                     FontStyle = FontStyles.Italic,
                     Margin = new Thickness(0, 20, 0, 0),
@@ -435,7 +441,7 @@ namespace SuperTUI.Panes
                 {
                     Text = vm.IsExpanded ? "▼" : "▶",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 9,
+                    FontSize = 18,
                     Foreground = dimBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 0, 4, 0)
@@ -449,7 +455,7 @@ namespace SuperTUI.Panes
             {
                 Text = GetPriorityIcon(vm.Task.Priority),
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Foreground = GetPriorityColor(vm.Task.Priority),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 6, 0),
@@ -463,7 +469,7 @@ namespace SuperTUI.Panes
             {
                 Text = vm.Task.Title,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Foreground = GetTaskForeground(vm.Task),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
@@ -485,7 +491,7 @@ namespace SuperTUI.Panes
                 {
                     Text = FormatDueDate(vm.Task),
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 9,
+                    FontSize = 18,
                     Foreground = GetDueDateColor(vm.Task),
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(8, 0, 0, 0)
@@ -501,7 +507,7 @@ namespace SuperTUI.Panes
                 {
                     Text = string.Join(" ", vm.Task.Tags.Select(t => $"#{t}")),
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 9,
+                    FontSize = 18,
                     Foreground = accentBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(8, 0, 0, 0)
@@ -609,7 +615,7 @@ namespace SuperTUI.Panes
             var completed = taskViewModels.Count(vm => vm.Task.Status == TaskStatus.Completed);
             var overdue = taskViewModels.Count(vm => vm.Task.IsOverdue);
 
-            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | Ctrl+N: new | F2: edit | Del: delete | Space: toggle | Tab: indent";
+            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | A: new | E: edit | D: delete | Shift+D: date | Shift+T: tags | Space: toggle | Tab: indent";
         }
 
         // Event Handlers
@@ -619,12 +625,21 @@ namespace SuperTUI.Panes
             if (taskListBox.SelectedItem is Grid grid && grid.Tag is TaskItemViewModel vm)
             {
                 selectedTask = vm;
+
+                // Publish TaskSelectedEvent for cross-pane communication
+                eventBus.Publish(new Core.Events.TaskSelectedEvent
+                {
+                    TaskId = vm.Task.Id,
+                    ProjectId = vm.Task.ProjectId,
+                    Task = vm.Task,
+                    SourceWidget = "TaskListPane"
+                });
             }
         }
 
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            // Check for internal command mode (changed from Shift+: to Ctrl+:)
+            // Check for internal command mode (Ctrl+:)
             if (e.Key == Key.OemSemicolon && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 isInternalCommand = true;
@@ -639,42 +654,38 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            // Normal keyboard shortcuts
-            if (Keyboard.Modifiers == ModifierKeys.Control)
+            // Shift+D: Edit due date
+            if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                if (selectedTask != null)
+                {
+                    StartDateEdit();
+                    e.Handled = true;
+                }
+                return;
+            }
+
+            // Shift+T: Edit tags
+            if (e.Key == Key.T && Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                if (selectedTask != null)
+                {
+                    StartTagEdit();
+                    e.Handled = true;
+                }
+                return;
+            }
+
+            // Single-key shortcuts (no modifiers, when list focused NOT in text input)
+            if (Keyboard.Modifiers == ModifierKeys.None)
             {
                 switch (e.Key)
                 {
-                    case Key.N:
+                    case Key.A:
                         ShowQuickAdd();
                         e.Handled = true;
                         break;
-                    case Key.D1:
-                        SetSelectedTaskPriority(TaskPriority.High);
-                        e.Handled = true;
-                        break;
-                    case Key.D2:
-                        SetSelectedTaskPriority(TaskPriority.Medium);
-                        e.Handled = true;
-                        break;
-                    case Key.D3:
-                        SetSelectedTaskPriority(TaskPriority.Low);
-                        e.Handled = true;
-                        break;
-                    case Key.Up:
-                        MoveSelectedTaskUp();
-                        e.Handled = true;
-                        break;
-                    case Key.Down:
-                        MoveSelectedTaskDown();
-                        e.Handled = true;
-                        break;
-                }
-            }
-            else
-            {
-                switch (e.Key)
-                {
-                    case Key.F2:
+                    case Key.E:
                     case Key.Enter:
                         if (selectedTask != null)
                         {
@@ -682,9 +693,16 @@ namespace SuperTUI.Panes
                             e.Handled = true;
                         }
                         break;
-                    case Key.Delete:
+                    case Key.D:
                         DeleteSelectedTask();
                         e.Handled = true;
+                        break;
+                    case Key.C:
+                        if (selectedTask != null)
+                        {
+                            ToggleTaskComplete(selectedTask.Task.Id);
+                            e.Handled = true;
+                        }
                         break;
                     case Key.Space:
                         if (selectedTask != null)
@@ -693,16 +711,29 @@ namespace SuperTUI.Panes
                             e.Handled = true;
                         }
                         break;
+                    case Key.PageUp:
+                        MoveSelectedTaskUp();
+                        e.Handled = true;
+                        break;
+                    case Key.PageDown:
+                        MoveSelectedTaskDown();
+                        e.Handled = true;
+                        break;
                     case Key.Tab:
                         if (selectedTask != null)
                         {
-                            if (Keyboard.Modifiers == ModifierKeys.Shift)
-                                UnindentTask();
-                            else
-                                IndentTask();
+                            IndentTask();
                             e.Handled = true;
                         }
                         break;
+                }
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                if (e.Key == Key.Tab && selectedTask != null)
+                {
+                    UnindentTask();
+                    e.Handled = true;
                 }
             }
         }
@@ -904,7 +935,7 @@ namespace SuperTUI.Panes
                 inlineEditBox = new TextBox
                 {
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 11,
+                    FontSize = 18,
                     Padding = new Thickness(6, 2, 6, 2),
                     Background = surfaceBrush,
                     Foreground = fgBrush,
@@ -970,6 +1001,320 @@ namespace SuperTUI.Panes
             editingTask = null;
             RefreshTaskList();
             taskListBox.Focus();
+        }
+
+        // Date editing methods
+        private void StartDateEdit()
+        {
+            if (selectedTask == null)
+                return;
+
+            // Find the selected item in the ListBox
+            var selectedIndex = taskListBox.SelectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
+                return;
+
+            // Create date edit box
+            if (dateEditBox == null)
+            {
+                dateEditBox = new TextBox
+                {
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 18,
+                    Padding = new Thickness(6, 2, 6, 2),
+                    Background = surfaceBrush,
+                    Foreground = accentBrush,
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = accentBrush
+                };
+                dateEditBox.KeyDown += DateEditBox_KeyDown;
+                dateEditBox.LostFocus += DateEditBox_LostFocus;
+            }
+
+            dateEditingTask = selectedTask;
+
+            // Show current due date or placeholder
+            if (selectedTask.Task.DueDate.HasValue)
+            {
+                dateEditBox.Text = selectedTask.Task.DueDate.Value.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                dateEditBox.Text = "2d, tomorrow, 2025-12-25, next friday, none";
+            }
+
+            // Replace the task item with the edit box temporarily
+            taskListBox.Items[selectedIndex] = dateEditBox;
+            dateEditBox.Focus();
+            dateEditBox.SelectAll();
+
+            // Update status bar with hints
+            statusBar.Text = "📅 Date formats: 2d, tomorrow, 2025-12-25, next friday, mon, none (to clear) | Enter: save | Esc: cancel";
+        }
+
+        private void DateEditBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SaveDateEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelDateEdit();
+                e.Handled = true;
+            }
+        }
+
+        private void DateEditBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            SaveDateEdit();
+        }
+
+        private void SaveDateEdit()
+        {
+            if (dateEditingTask == null || dateEditBox == null)
+                return;
+
+            var dateInput = dateEditBox.Text.Trim().ToLowerInvariant();
+            DateTime? newDate = ParseDateInput(dateInput);
+
+            var task = taskService.GetTask(dateEditingTask.Task.Id);
+            if (task != null)
+            {
+                task.DueDate = newDate;
+                task.UpdatedAt = DateTime.Now;
+                taskService.UpdateTask(task);
+            }
+
+            dateEditingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+            UpdateStatusBar();
+        }
+
+        private void CancelDateEdit()
+        {
+            dateEditingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+            UpdateStatusBar();
+        }
+
+        private DateTime? ParseDateInput(string input)
+        {
+            if (string.IsNullOrEmpty(input) || input == "none" || input == "clear")
+                return null;
+
+            // Try ISO format first: yyyy-MM-dd
+            if (DateTime.TryParse(input, out DateTime exactDate))
+                return exactDate;
+
+            var today = DateTime.Today;
+
+            // Relative days: "2d", "5d", "30d"
+            if (input.EndsWith("d") && int.TryParse(input.Substring(0, input.Length - 1), out int days))
+                return today.AddDays(days);
+
+            // Relative weeks: "2w", "3w"
+            if (input.EndsWith("w") && int.TryParse(input.Substring(0, input.Length - 1), out int weeks))
+                return today.AddDays(weeks * 7);
+
+            // Relative months: "2m", "3m"
+            if (input.EndsWith("m") && int.TryParse(input.Substring(0, input.Length - 1), out int months))
+                return today.AddMonths(months);
+
+            // Named shortcuts
+            switch (input)
+            {
+                case "today":
+                    return today;
+                case "tomorrow":
+                case "tom":
+                    return today.AddDays(1);
+                case "yesterday":
+                    return today.AddDays(-1);
+
+                // Days of week (next occurrence)
+                case "mon":
+                case "monday":
+                    return GetNextWeekday(DayOfWeek.Monday);
+                case "tue":
+                case "tuesday":
+                    return GetNextWeekday(DayOfWeek.Tuesday);
+                case "wed":
+                case "wednesday":
+                    return GetNextWeekday(DayOfWeek.Wednesday);
+                case "thu":
+                case "thursday":
+                    return GetNextWeekday(DayOfWeek.Thursday);
+                case "fri":
+                case "friday":
+                    return GetNextWeekday(DayOfWeek.Friday);
+                case "sat":
+                case "saturday":
+                    return GetNextWeekday(DayOfWeek.Saturday);
+                case "sun":
+                case "sunday":
+                    return GetNextWeekday(DayOfWeek.Sunday);
+            }
+
+            // Prefixed weekdays: "next monday", "next fri"
+            if (input.StartsWith("next "))
+            {
+                var day = input.Substring(5);
+                switch (day)
+                {
+                    case "mon":
+                    case "monday":
+                        return GetNextWeekday(DayOfWeek.Monday);
+                    case "tue":
+                    case "tuesday":
+                        return GetNextWeekday(DayOfWeek.Tuesday);
+                    case "wed":
+                    case "wednesday":
+                        return GetNextWeekday(DayOfWeek.Wednesday);
+                    case "thu":
+                    case "thursday":
+                        return GetNextWeekday(DayOfWeek.Thursday);
+                    case "fri":
+                    case "friday":
+                        return GetNextWeekday(DayOfWeek.Friday);
+                    case "sat":
+                    case "saturday":
+                        return GetNextWeekday(DayOfWeek.Saturday);
+                    case "sun":
+                    case "sunday":
+                        return GetNextWeekday(DayOfWeek.Sunday);
+                }
+            }
+
+            // If nothing matched, return null
+            return null;
+        }
+
+        private DateTime GetNextWeekday(DayOfWeek targetDay)
+        {
+            var today = DateTime.Today;
+            int daysUntilTarget = ((int)targetDay - (int)today.DayOfWeek + 7) % 7;
+
+            // If target is today, go to next week
+            if (daysUntilTarget == 0)
+                daysUntilTarget = 7;
+
+            return today.AddDays(daysUntilTarget);
+        }
+
+        // Tag editing methods
+        private void StartTagEdit()
+        {
+            if (selectedTask == null)
+                return;
+
+            // Find the selected item in the ListBox
+            var selectedIndex = taskListBox.SelectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
+                return;
+
+            // Create tag edit box
+            if (tagEditBox == null)
+            {
+                tagEditBox = new TextBox
+                {
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 18,
+                    Padding = new Thickness(6, 2, 6, 2),
+                    Background = surfaceBrush,
+                    Foreground = new SolidColorBrush(Colors.Cyan),  // Cyan for tags
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = new SolidColorBrush(Colors.Cyan)
+                };
+                tagEditBox.KeyDown += TagEditBox_KeyDown;
+                tagEditBox.LostFocus += TagEditBox_LostFocus;
+            }
+
+            tagEditingTask = selectedTask;
+
+            // Show current tags or placeholder
+            if (selectedTask.Task.Tags != null && selectedTask.Task.Tags.Count > 0)
+            {
+                tagEditBox.Text = string.Join(", ", selectedTask.Task.Tags);
+            }
+            else
+            {
+                tagEditBox.Text = "bug, feature, urgent, work, personal";
+            }
+
+            // Replace the task item with the edit box temporarily
+            taskListBox.Items[selectedIndex] = tagEditBox;
+            tagEditBox.Focus();
+            tagEditBox.SelectAll();
+
+            // Update status bar with hints
+            statusBar.Text = "🏷️  Tags: comma-separated (bug, feature, urgent) | Enter: save | Esc: cancel";
+        }
+
+        private void TagEditBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SaveTagEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelTagEdit();
+                e.Handled = true;
+            }
+        }
+
+        private void TagEditBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            SaveTagEdit();
+        }
+
+        private void SaveTagEdit()
+        {
+            if (tagEditingTask == null || tagEditBox == null)
+                return;
+
+            var tagInput = tagEditBox.Text.Trim();
+            var tags = ParseTagInput(tagInput);
+
+            var task = taskService.GetTask(tagEditingTask.Task.Id);
+            if (task != null)
+            {
+                task.Tags = tags;
+                task.UpdatedAt = DateTime.Now;
+                taskService.UpdateTask(task);
+            }
+
+            tagEditingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+            UpdateStatusBar();
+        }
+
+        private void CancelTagEdit()
+        {
+            tagEditingTask = null;
+            RefreshTaskList();
+            taskListBox.Focus();
+            UpdateStatusBar();
+        }
+
+        private List<string> ParseTagInput(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return new List<string>();
+
+            // Split by comma, trim whitespace, remove empties, convert to lowercase
+            return input
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(tag => tag.Trim().ToLowerInvariant())
+                .Where(tag => !string.IsNullOrEmpty(tag))
+                .Distinct()
+                .ToList();
         }
 
         private void ToggleTaskComplete(Guid taskId)

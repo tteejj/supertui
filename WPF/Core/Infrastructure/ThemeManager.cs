@@ -640,7 +640,7 @@ namespace SuperTUI.Infrastructure
                 Typography = new TypographySettings
                 {
                     FontFamily = "JetBrains Mono, Consolas",
-                    FontSize = 16.0,
+                    FontSize = 18.0,
                     FontWeight = "Normal"
                 }
             };

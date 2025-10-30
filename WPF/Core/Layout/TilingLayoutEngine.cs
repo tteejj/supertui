@@ -205,9 +205,9 @@ namespace SuperTUI.Core
         /// WIDE: All widgets stacked vertically (horizontal splits, like i3 splitv)
         /// ┌──────────┐
         /// │    W1    │
-        /// ├──────────┤
+        /// ├──────────┤ ← GridSplitter
         /// │    W2    │
-        /// ├──────────┤
+        /// ├──────────┤ ← GridSplitter
         /// │    W3    │
         /// └──────────┘
         /// </summary>
@@ -216,19 +216,34 @@ namespace SuperTUI.Core
             // All widgets in rows, 1 column
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
+            int gridRow = 0;
             for (int i = 0; i < children.Count; i++)
             {
+                // Add row for widget
                 grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
                 var widget = children[i];
                 var lp = layoutParams[widget];
 
-                Grid.SetRow(widget, i);
+                Grid.SetRow(widget, gridRow);
                 Grid.SetColumn(widget, 0);
                 ApplyCommonParams(widget, lp);
                 grid.Children.Add(widget);
 
-                widgetPositions[widget] = new GridPosition(i, 0, 1, 1);
+                widgetPositions[widget] = new GridPosition(gridRow, 0, 1, 1);
+                gridRow++;
+
+                // Add GridSplitter after widget (except after last widget)
+                if (i < children.Count - 1)
+                {
+                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
+
+                    var splitter = CreateHorizontalSplitter();
+                    Grid.SetRow(splitter, gridRow);
+                    Grid.SetColumn(splitter, 0);
+                    grid.Children.Add(splitter);
+                    gridRow++;
+                }
             }
         }
 
@@ -243,19 +258,34 @@ namespace SuperTUI.Core
             // All widgets in columns, 1 row
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
+            int gridCol = 0;
             for (int i = 0; i < children.Count; i++)
             {
+                // Add column for widget
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 var widget = children[i];
                 var lp = layoutParams[widget];
 
                 Grid.SetRow(widget, 0);
-                Grid.SetColumn(widget, i);
+                Grid.SetColumn(widget, gridCol);
                 ApplyCommonParams(widget, lp);
                 grid.Children.Add(widget);
 
-                widgetPositions[widget] = new GridPosition(0, i, 1, 1);
+                widgetPositions[widget] = new GridPosition(0, gridCol, 1, 1);
+                gridCol++;
+
+                // Add GridSplitter after widget (except after last widget)
+                if (i < children.Count - 1)
+                {
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Pixel) });
+
+                    var splitter = CreateVerticalSplitter();
+                    Grid.SetRow(splitter, 0);
+                    Grid.SetColumn(splitter, gridCol);
+                    grid.Children.Add(splitter);
+                    gridCol++;
+                }
             }
         }
 
@@ -272,83 +302,157 @@ namespace SuperTUI.Core
             if (children.Count == 0)
                 return;
 
-            // Calculate grid dimensions
+            // Calculate grid dimensions (widgets only, not splitters)
             int cols = (int)Math.Ceiling(Math.Sqrt(children.Count));
             int rows = (int)Math.Ceiling((double)children.Count / cols);
 
-            // Create grid structure
+            // Create grid structure with splitters
+            // Pattern: widget, splitter, widget, splitter, widget
+            // Rows: r0 (widget), r1 (splitter), r2 (widget), r3 (splitter), r4 (widget)
             for (int r = 0; r < rows; r++)
             {
                 grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+                if (r < rows - 1)
+                {
+                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
+                }
             }
 
+            // Columns: c0 (widget), c1 (splitter), c2 (widget), c3 (splitter), c4 (widget)
             for (int c = 0; c < cols; c++)
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                if (c < cols - 1)
+                {
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Pixel) });
+                }
             }
 
             // Place widgets
             for (int i = 0; i < children.Count; i++)
             {
-                int row = i / cols;
-                int col = i % cols;
+                int logicalRow = i / cols;
+                int logicalCol = i % cols;
+
+                // Convert logical position to grid position (accounting for splitters)
+                int gridRow = logicalRow * 2;  // Skip splitter rows
+                int gridCol = logicalCol * 2;  // Skip splitter columns
 
                 var widget = children[i];
                 var lp = layoutParams[widget];
 
-                Grid.SetRow(widget, row);
-                Grid.SetColumn(widget, col);
+                Grid.SetRow(widget, gridRow);
+                Grid.SetColumn(widget, gridCol);
                 ApplyCommonParams(widget, lp);
                 grid.Children.Add(widget);
 
-                widgetPositions[widget] = new GridPosition(row, col, 1, 1);
+                widgetPositions[widget] = new GridPosition(gridRow, gridCol, 1, 1);
+            }
+
+            // Add horizontal splitters (between rows)
+            for (int r = 0; r < rows - 1; r++)
+            {
+                int gridRow = r * 2 + 1;  // Splitter rows
+                for (int c = 0; c < cols; c++)
+                {
+                    int gridCol = c * 2;  // Widget columns
+                    var splitter = CreateHorizontalSplitter();
+                    Grid.SetRow(splitter, gridRow);
+                    Grid.SetColumn(splitter, gridCol);
+                    grid.Children.Add(splitter);
+                }
+            }
+
+            // Add vertical splitters (between columns)
+            for (int c = 0; c < cols - 1; c++)
+            {
+                int gridCol = c * 2 + 1;  // Splitter columns
+                for (int r = 0; r < rows; r++)
+                {
+                    int gridRow = r * 2;  // Widget rows
+                    var splitter = CreateVerticalSplitter();
+                    Grid.SetRow(splitter, gridRow);
+                    Grid.SetColumn(splitter, gridCol);
+                    grid.Children.Add(splitter);
+                }
             }
         }
 
         /// <summary>
         /// MASTER_STACK: 6+ widgets - main (60%) left, stack (40%) right
-        /// ┌──────────┬───┐
-        /// │    W1    │W2 │
-        /// │  (main)  │W3 │
-        /// │   60%    │W4 │
-        /// │          │...│
-        /// └──────────┴───┘
+        /// ┌──────────┬│┬───┐
+        /// │    W1    │││W2 │
+        /// │  (main)  │├┼───┤ ← horizontal splitters between stack widgets
+        /// │   60%    │││W3 │
+        /// │          │├┼───┤
+        /// │          │││W4 │
+        /// └──────────┴│┴───┘
+        ///              ↑ vertical splitter between main and stack
         /// </summary>
         private void ApplyMasterStackLayout()
         {
             int stackCount = children.Count - 1;
 
-            // Create rows for stack
+            // Create rows for stack (with splitters between them)
+            int gridRow = 0;
             for (int i = 0; i < stackCount; i++)
             {
                 grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+                if (i < stackCount - 1)
+                {
+                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
+                }
             }
 
+            // Columns: main (60%), splitter (4px), stack (40%)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) }); // 60%
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Pixel) }); // splitter
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }); // 40%
+
+            // Calculate total rows including splitters
+            int totalRows = stackCount * 2 - 1;  // widgets + splitters between them
 
             // Main widget (left, spans all rows)
             var mainWidget = children[0];
             var mainLp = layoutParams[mainWidget];
             Grid.SetRow(mainWidget, 0);
             Grid.SetColumn(mainWidget, 0);
-            Grid.SetRowSpan(mainWidget, stackCount);
+            Grid.SetRowSpan(mainWidget, totalRows);
             ApplyCommonParams(mainWidget, mainLp);
             grid.Children.Add(mainWidget);
-            widgetPositions[mainWidget] = new GridPosition(0, 0, stackCount, 1);
+            widgetPositions[mainWidget] = new GridPosition(0, 0, totalRows, 1);
+
+            // Vertical splitter between main and stack (spans all rows)
+            var verticalSplitter = CreateVerticalSplitter();
+            Grid.SetRow(verticalSplitter, 0);
+            Grid.SetColumn(verticalSplitter, 1);
+            Grid.SetRowSpan(verticalSplitter, totalRows);
+            grid.Children.Add(verticalSplitter);
 
             // Stack widgets (right)
+            gridRow = 0;
             for (int i = 1; i < children.Count; i++)
             {
                 var widget = children[i];
                 var lp = layoutParams[widget];
 
-                Grid.SetRow(widget, i - 1);
-                Grid.SetColumn(widget, 1);
+                Grid.SetRow(widget, gridRow);
+                Grid.SetColumn(widget, 2);  // Column 2 (after splitter)
                 ApplyCommonParams(widget, lp);
                 grid.Children.Add(widget);
 
-                widgetPositions[widget] = new GridPosition(i - 1, 1, 1, 1);
+                widgetPositions[widget] = new GridPosition(gridRow, 2, 1, 1);
+                gridRow++;
+
+                // Add horizontal splitter between stack widgets (except after last)
+                if (i < children.Count - 1)
+                {
+                    var horizontalSplitter = CreateHorizontalSplitter();
+                    Grid.SetRow(horizontalSplitter, gridRow);
+                    Grid.SetColumn(horizontalSplitter, 2);  // Column 2 (stack column)
+                    grid.Children.Add(horizontalSplitter);
+                    gridRow++;
+                }
             }
         }
 
@@ -439,6 +543,44 @@ namespace SuperTUI.Core
 
             // Re-layout
             Relayout();
+        }
+
+        /// <summary>
+        /// Creates a horizontal GridSplitter (for resizing rows)
+        /// </summary>
+        private System.Windows.Controls.GridSplitter CreateHorizontalSplitter()
+        {
+            var theme = themeManager?.CurrentTheme;
+            var splitter = new System.Windows.Controls.GridSplitter
+            {
+                Height = 4,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Center,
+                ResizeDirection = System.Windows.Controls.GridResizeDirection.Rows,
+                ResizeBehavior = System.Windows.Controls.GridResizeBehavior.PreviousAndNext,
+                Background = theme != null ? new SolidColorBrush(theme.Border) : new SolidColorBrush(System.Windows.Media.Colors.Gray),
+                Cursor = System.Windows.Input.Cursors.SizeNS
+            };
+            return splitter;
+        }
+
+        /// <summary>
+        /// Creates a vertical GridSplitter (for resizing columns)
+        /// </summary>
+        private System.Windows.Controls.GridSplitter CreateVerticalSplitter()
+        {
+            var theme = themeManager?.CurrentTheme;
+            var splitter = new System.Windows.Controls.GridSplitter
+            {
+                Width = 4,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                ResizeDirection = System.Windows.Controls.GridResizeDirection.Columns,
+                ResizeBehavior = System.Windows.Controls.GridResizeBehavior.PreviousAndNext,
+                Background = theme != null ? new SolidColorBrush(theme.Border) : new SolidColorBrush(System.Windows.Media.Colors.Gray),
+                Cursor = System.Windows.Input.Cursors.SizeWE
+            };
+            return splitter;
         }
 
         /// <summary>

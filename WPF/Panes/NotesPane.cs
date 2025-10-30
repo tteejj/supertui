@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
@@ -26,6 +27,8 @@ namespace SuperTUI.Panes
         #region Fields
 
         private readonly IConfigurationManager config;
+        private readonly IEventBus eventBus;
+        private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
 
         // UI Components - Three-panel layout
         private Grid mainLayout;
@@ -66,10 +69,12 @@ namespace SuperTUI.Panes
             ILogger logger,
             IThemeManager themeManager,
             IProjectContextManager projectContext,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
             this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             PaneName = "Notes";
             PaneIcon = "📝";
 
@@ -166,7 +171,7 @@ namespace SuperTUI.Panes
             searchBox = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
                 BorderThickness = new Thickness(0),
@@ -192,7 +197,7 @@ namespace SuperTUI.Panes
             notesListBox = new ListBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
                 BorderThickness = new Thickness(0),
@@ -207,6 +212,11 @@ namespace SuperTUI.Panes
             itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
             notesListBox.ItemContainerStyle = itemStyle;
+
+            // Enable virtualization for large note collections (1000+ notes)
+            VirtualizingPanel.SetIsVirtualizing(notesListBox, true);
+            VirtualizingPanel.SetVirtualizationMode(notesListBox, VirtualizationMode.Recycling);
+            VirtualizingPanel.SetScrollUnit(notesListBox, ScrollUnit.Pixel);
 
             listBorder.Child = notesListBox;
             Grid.SetRow(listBorder, 1);
@@ -231,7 +241,7 @@ namespace SuperTUI.Panes
             noteEditor = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
                 BorderThickness = new Thickness(0),
@@ -260,7 +270,7 @@ namespace SuperTUI.Panes
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Foreground = fgBrush,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = "Ready"
@@ -303,7 +313,7 @@ namespace SuperTUI.Panes
             commandInput = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 12,
+                FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
                 BorderBrush = borderBrush,
@@ -321,7 +331,7 @@ namespace SuperTUI.Panes
             commandList = new ListBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
                 BorderThickness = new Thickness(0),
@@ -481,7 +491,7 @@ namespace SuperTUI.Panes
                     {
                         Text = allNotes.Any() ? "No matching notes" : "No notes yet\nPress Ctrl+N to create one",
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         FontStyle = FontStyles.Italic,
                         Opacity = 0.5,
                         TextAlignment = TextAlignment.Center,
@@ -499,7 +509,7 @@ namespace SuperTUI.Panes
                     {
                         Text = note.Name,
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         FontWeight = FontWeights.Bold
                     };
                     stackPanel.Children.Add(nameBlock);
@@ -645,7 +655,7 @@ namespace SuperTUI.Panes
             var nameInput = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 12,
+                FontSize = 18,
                 Margin = new Thickness(16),
                 Padding = new Thickness(8),
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
@@ -868,6 +878,94 @@ namespace SuperTUI.Panes
             }
         }
 
+        private void OpenExternalNote()
+        {
+            // Request parent window to open FileBrowser pane in FILE mode
+            // The FileBrowser should fire FileSelected event when user picks a .txt file
+            ShowStatus("Open external note: Use Ctrl+Shift+F to open file browser, select .txt file");
+            Log("OpenExternalNote: User should open FileBrowser and select .txt file");
+
+            // TODO: This needs inter-pane communication via events or PaneManager
+            // For now, user must manually open FileBrowser and we'll listen for file selection
+        }
+
+        private void CloseNoteEditor()
+        {
+            if (currentNote == null) return;
+
+            // Check for unsaved changes
+            if (hasUnsavedChanges)
+            {
+                var result = MessageBox.Show(
+                    $"Save changes to '{currentNote.Name}'?\n\nYes = Save normally\nNo = Discard changes\nCancel = Return to editing",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question,
+                    MessageBoxResult.Yes);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    // Check if note has a location set
+                    if (string.IsNullOrEmpty(currentNote.FullPath) || currentNote.Name.StartsWith("Untitled"))
+                    {
+                        // No location - save as temp file
+                        SaveAsTempFile();
+                    }
+                    else
+                    {
+                        _ = SaveCurrentNoteAsync();
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return; // Stay in editor
+                }
+                // No = discard changes, continue closing
+            }
+
+            // Close editor, return to list
+            currentNote = null;
+            hasUnsavedChanges = false;
+            noteEditor.Text = "";
+            noteEditor.IsEnabled = false;
+            notesListBox.Focus();
+            ShowStatus("Note closed");
+        }
+
+        private void SaveAsTempFile()
+        {
+            try
+            {
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var tempFileName = $"temp_{timestamp}.txt";
+                var tempFilePath = Path.Combine(currentNotesFolder, tempFileName);
+
+                File.WriteAllText(tempFilePath, noteEditor.Text);
+
+                // Update current note metadata
+                currentNote.Name = tempFileName;
+                currentNote.FullPath = tempFilePath;
+                currentNote.LastModified = DateTime.Now;
+                hasUnsavedChanges = false;
+
+                Log($"Saved as temp file: {tempFileName}");
+                ShowStatus($"Saved as temporary file: {tempFileName}");
+
+                // Reload notes list to show the new temp file
+                LoadAllNotes();
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to save temp file: {ex.Message}", LogLevel.Error);
+                ShowStatus($"ERROR: Failed to save temp file", isError: true);
+                MessageBox.Show(
+                    $"Failed to save temp file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
         private void RenameCurrentNote()
         {
             if (currentNote == null) return;
@@ -893,7 +991,7 @@ namespace SuperTUI.Panes
             {
                 Text = currentNote.Name,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 12,
+                FontSize = 18,
                 Margin = new Thickness(16),
                 Padding = new Thickness(8),
                 Background = new SolidColorBrush(theme.BackgroundSecondary),
@@ -1038,53 +1136,16 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Keyboard shortcuts
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            // Ctrl+S always saves when editor has focus
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.S)
             {
-                switch (e.Key)
-                {
-                    case Key.N:
-                        CreateNewNote();
-                        e.Handled = true;
-                        break;
-
-                    case Key.S:
-                        _ = SaveCurrentNoteAsync();
-                        e.Handled = true;
-                        break;
-
-                    case Key.D:
-                        DeleteCurrentNote();
-                        e.Handled = true;
-                        break;
-
-                    case Key.F:
-                        searchBox.Focus();
-                        searchBox.SelectAll();
-                        e.Handled = true;
-                        break;
-
-                    case Key.OemSemicolon:
-                        // Ctrl+: for command palette (doesn't conflict with MainWindow global palette)
-                        if (!isCommandPaletteVisible)
-                        {
-                            ShowCommandPalette();
-                            e.Handled = true;
-                        }
-                        break;
-                }
-            }
-            else if (e.Key == Key.F2)
-            {
-                RenameCurrentNote();
+                _ = SaveCurrentNoteAsync();
                 e.Handled = true;
+                return;
             }
-            else if (e.Key == Key.Delete && notesListBox.IsFocused)
-            {
-                DeleteCurrentNote();
-                e.Handled = true;
-            }
-            else if (e.Key == Key.Escape)
+
+            // Escape handling
+            if (e.Key == Key.Escape)
             {
                 if (isCommandPaletteVisible)
                 {
@@ -1094,8 +1155,44 @@ namespace SuperTUI.Panes
                 else if (searchBox.IsFocused)
                 {
                     searchBox.Text = "";
-                    noteEditor.Focus();
+                    notesListBox.Focus();
                     e.Handled = true;
+                }
+                else if (noteEditor.IsFocused && currentNote != null)
+                {
+                    // Close editor, prompt if unsaved
+                    CloseNoteEditor();
+                    e.Handled = true;
+                }
+                return;
+            }
+
+            // Single-key shortcuts when notes list is focused (not in text input)
+            if (notesListBox.IsFocused && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                switch (e.Key)
+                {
+                    case Key.A:
+                        CreateNewNote();
+                        e.Handled = true;
+                        break;
+                    case Key.O:
+                        OpenExternalNote();
+                        e.Handled = true;
+                        break;
+                    case Key.D:
+                        DeleteCurrentNote();
+                        e.Handled = true;
+                        break;
+                    case Key.E:
+                    case Key.Enter:
+                        // Open selected note for editing
+                        if (notesListBox.SelectedItem is NoteMetadata note)
+                        {
+                            _ = LoadNoteAsync(note);
+                            e.Handled = true;
+                        }
+                        break;
                 }
             }
         }
@@ -1150,7 +1247,7 @@ namespace SuperTUI.Panes
                 {
                     Text = cmd.Name,
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 11,
+                    FontSize = 18,
                     FontWeight = FontWeights.Bold
                 };
                 stackPanel.Children.Add(nameBlock);
@@ -1159,7 +1256,7 @@ namespace SuperTUI.Panes
                 {
                     Text = cmd.Description,
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 9,
+                    FontSize = 18,
                     Opacity = 0.6,
                     Margin = new Thickness(0, 2, 0, 0)
                 };
@@ -1431,11 +1528,30 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
+            // Subscribe to TaskSelectedEvent for cross-pane communication
+            taskSelectedHandler = OnTaskSelected;
+            eventBus.Subscribe(taskSelectedHandler);
+
             // Set initial focus to notes list for keyboard-first navigation
             Application.Current?.Dispatcher.InvokeAsync(() =>
             {
                 notesListBox?.Focus();
             }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
+        {
+            // Filter notes when a task is selected
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                if (evt.Task != null)
+                {
+                    // Search for notes that contain the task title or ID
+                    searchBox.Text = evt.Task.Title;
+                    FilterNotes();
+                    Log($"Filtered notes for task: {evt.Task.Title}");
+                }
+            });
         }
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
@@ -1461,6 +1577,12 @@ namespace SuperTUI.Panes
 
         protected override void OnDispose()
         {
+            // Unsubscribe from event bus to prevent memory leaks
+            if (taskSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(taskSelectedHandler);
+            }
+
             // Save on close if needed
             if (hasUnsavedChanges && currentNote != null)
             {

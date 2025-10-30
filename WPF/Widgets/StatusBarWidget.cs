@@ -29,6 +29,7 @@ namespace SuperTUI.Widgets
         private TextBlock taskCountLabel;
         private TextBlock timeLabel;
         private TextBlock clockLabel;
+        private TextBlock workspaceLabel;
         private Border container;
         private DispatcherTimer timeUpdateTimer;
         private DispatcherTimer clockTimer;
@@ -93,11 +94,12 @@ namespace SuperTUI.Widgets
             {
                 projectLabel = new TextBlock
                 {
-                    Text = "[Project: None]",
+                    Text = "📁 No Project",
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(10, 0, 0, 0),
-                    FontFamily = new FontFamily("Consolas"),
-                    FontSize = 12
+                    Margin = new Thickness(12, 0, 16, 0),
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 20,
+                    FontWeight = FontWeights.Bold
                 };
                 stackPanel.Children.Add(projectLabel);
             }
@@ -110,8 +112,8 @@ namespace SuperTUI.Widgets
                     Text = "[0 Tasks]",
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(10, 0, 0, 0),
-                    FontFamily = new FontFamily("Consolas"),
-                    FontSize = 12
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 18
                 };
                 stackPanel.Children.Add(taskCountLabel);
             }
@@ -124,8 +126,8 @@ namespace SuperTUI.Widgets
                     Text = "[⏱️ 0h 0m]",
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(10, 0, 0, 0),
-                    FontFamily = new FontFamily("Consolas"),
-                    FontSize = 12
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 18
                 };
                 stackPanel.Children.Add(timeLabel);
             }
@@ -138,11 +140,23 @@ namespace SuperTUI.Widgets
                     Text = "[00:00]",
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(10, 0, 10, 0),
-                    FontFamily = new FontFamily("Consolas"),
-                    FontSize = 12
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 18
                 };
                 stackPanel.Children.Add(clockLabel);
             }
+
+            // Workspace indicator (always show)
+            workspaceLabel = new TextBlock
+            {
+                Text = "⬚ Workspace 1",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 0, 12, 0),
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 16,
+                Opacity = 0.8
+            };
+            stackPanel.Children.Add(workspaceLabel);
 
             // Add separator between labels if needed (visual improvement)
             AddSeparators(stackPanel);
@@ -175,8 +189,8 @@ namespace SuperTUI.Widgets
                     {
                         Text = " | ",
                         VerticalAlignment = VerticalAlignment.Center,
-                        FontFamily = new FontFamily("Consolas"),
-                        FontSize = 12,
+                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                        FontSize = 18,
                         Opacity = 0.5
                     };
                     panel.Children.Add(separator);
@@ -256,12 +270,25 @@ namespace SuperTUI.Widgets
             {
                 if (projectContext.CurrentProject != null)
                 {
-                    projectLabel.Text = $"[Project: {projectContext.CurrentProject.Name}]";
+                    projectLabel.Text = $"📁 {projectContext.CurrentProject.Name}";
                 }
                 else
                 {
-                    projectLabel.Text = "[Project: All]";
+                    projectLabel.Text = "📂 All Projects";
                 }
+            });
+        }
+
+        /// <summary>
+        /// Update workspace indicator (called by MainWindow on workspace switch)
+        /// </summary>
+        public void UpdateWorkspaceIndicator(int workspaceIndex)
+        {
+            if (workspaceLabel == null) return;
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                workspaceLabel.Text = $"⬚ Workspace {workspaceIndex + 1}";
             });
         }
 
@@ -335,9 +362,9 @@ namespace SuperTUI.Widgets
             var theme = themeManager.CurrentTheme;
             if (theme == null) return;
 
-            var bg = theme.GetColor("background");
-            var fg = theme.GetColor("foreground");
-            var border = theme.GetColor("border");
+            var bg = theme.Surface;  // Use Surface for status bar background
+            var fg = theme.Foreground;
+            var border = theme.Border;
 
             container.Background = new SolidColorBrush(bg);
             container.BorderBrush = new SolidColorBrush(border);

@@ -24,6 +24,7 @@ namespace SuperTUI
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
         private readonly IProjectContextManager projectContext;
+        private readonly IStatePersistenceManager statePersistence;
 
         private PaneManager paneManager;
         private PaneFactory paneFactory;
@@ -39,6 +40,7 @@ namespace SuperTUI
             logger = serviceContainer.GetRequiredService<ILogger>();
             themeManager = serviceContainer.GetRequiredService<IThemeManager>();
             projectContext = serviceContainer.GetRequiredService<IProjectContextManager>();
+            statePersistence = serviceContainer.GetRequiredService<IStatePersistenceManager>();
 
             InitializeComponent();
 
@@ -57,6 +59,9 @@ namespace SuperTUI
             InitializeWorkspaceManager();
             InitializePaneSystem();
             InitializeStatusBar();
+
+            // Restore full application state from disk (with checksum validation)
+            RestoreApplicationState();
 
             // Load current workspace state
             RestoreWorkspaceState();
@@ -83,6 +88,9 @@ namespace SuperTUI
             // Restore new workspace state
             RestoreWorkspaceState();
 
+            // Update status bar workspace indicator
+            statusBar?.UpdateWorkspaceIndicator(e.NewIndex);
+
             logger.Log(LogLevel.Info, "MainWindow", $"Switched from workspace {e.OldIndex} to {e.NewIndex}");
         }
 
@@ -107,6 +115,31 @@ namespace SuperTUI
 
             workspaceManager.UpdateCurrentWorkspace(state);
             logger.Log(LogLevel.Debug, "MainWindow", $"Saved workspace {state.Index} state ({state.OpenPaneTypes.Count} panes)");
+        }
+
+        private void RestoreApplicationState()
+        {
+            try
+            {
+                var snapshot = statePersistence.LoadStateAsync().Result;
+                if (snapshot != null)
+                {
+                    // Validate checksum
+                    if (snapshot.VerifyChecksum())
+                    {
+                        statePersistence.RestoreState(snapshot, workspaceManager);
+                        logger.Log(LogLevel.Info, "MainWindow", "Application state restored from disk");
+                    }
+                    else
+                    {
+                        logger.Log(LogLevel.Warning, "MainWindow", "State file checksum invalid, skipping restore");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore application state: {ex.Message}");
+            }
         }
 
         private void RestoreWorkspaceState()
@@ -184,7 +217,8 @@ namespace SuperTUI
                 serviceContainer.GetRequiredService<ITaskService>(),
                 serviceContainer.GetRequiredService<IProjectService>(),
                 serviceContainer.GetRequiredService<ITimeTrackingService>(),
-                serviceContainer.GetRequiredService<ITagService>()
+                serviceContainer.GetRequiredService<ITagService>(),
+                serviceContainer.GetRequiredService<IEventBus>()
             );
 
             // Subscribe to pane events
@@ -223,33 +257,31 @@ namespace SuperTUI
             // No need to manually set context - it's handled by the widget itself
         }
 
+        private bool isMovePaneMode = false;
+
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            // Command palette: Ctrl+Space or : (when not in text box)
-            if ((e.Key == Key.Space && e.KeyboardDevice.Modifiers == ModifierKeys.Control) ||
-                (e.Key == Key.OemSemicolon && e.KeyboardDevice.Modifiers == ModifierKeys.Shift &&
-                 !(Keyboard.FocusedElement is TextBox)))
+            // Command palette: : (colon) when not in text box
+            if (e.Key == Key.OemSemicolon && e.KeyboardDevice.Modifiers == ModifierKeys.Shift &&
+                !(Keyboard.FocusedElement is TextBox))
             {
                 ShowCommandPalette();
                 e.Handled = true;
                 return;
             }
 
-            // Close focused pane: Ctrl+Shift+Q (i3-style)
-            if (e.Key == Key.Q &&
-                e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control) &&
-                e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Shift))
+            // F12: Toggle move pane mode
+            if (e.Key == Key.F12 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                paneManager.CloseFocusedPane();
-                UpdateStatusBarContext();
+                isMovePaneMode = !isMovePaneMode;
+                logger.Log(LogLevel.Info, "MainWindow", $"Move pane mode: {(isMovePaneMode ? "ON" : "OFF")}");
                 e.Handled = true;
                 return;
             }
 
-            // Switch workspaces: Ctrl+Alt+1-9 (avoid Windows Alt key interception)
-            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+            // Switch workspaces: Ctrl+1-9
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                // Workspace switching
                 if (e.Key >= Key.D1 && e.Key <= Key.D9)
                 {
                     int workspaceIndex = e.Key - Key.D1;
@@ -257,8 +289,11 @@ namespace SuperTUI
                     e.Handled = true;
                     return;
                 }
+            }
 
-                // Navigate between panes
+            // Focus panes: Ctrl+Shift+Arrows
+            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
                 switch (e.Key)
                 {
                     case Key.Left:
@@ -277,39 +312,6 @@ namespace SuperTUI
                         paneManager.NavigateFocus(FocusDirection.Down);
                         e.Handled = true;
                         return;
-                }
-            }
-
-            // Move panes: Ctrl+Alt+Shift+Arrows (avoid Windows Alt key interception)
-            if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Shift))
-            {
-                switch (e.Key)
-                {
-                    case Key.Left:
-                        paneManager.MovePane(FocusDirection.Left);
-                        e.Handled = true;
-                        return;
-                    case Key.Right:
-                        paneManager.MovePane(FocusDirection.Right);
-                        e.Handled = true;
-                        return;
-                    case Key.Up:
-                        paneManager.MovePane(FocusDirection.Up);
-                        e.Handled = true;
-                        return;
-                    case Key.Down:
-                        paneManager.MovePane(FocusDirection.Down);
-                        e.Handled = true;
-                        return;
-                }
-            }
-
-
-            // Quick open shortcuts (example - will be configurable)
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                switch (e.Key)
-                {
                     case Key.T:
                         OpenPane("tasks");
                         e.Handled = true;
@@ -322,6 +324,43 @@ namespace SuperTUI
                         OpenPane("files");
                         e.Handled = true;
                         return;
+                    case Key.Q:
+                        paneManager.CloseFocusedPane();
+                        UpdateStatusBarContext();
+                        e.Handled = true;
+                        return;
+                }
+            }
+
+            // Move panes: Arrow keys when in move mode OR when F12 held down
+            if (isMovePaneMode || e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                if (isMovePaneMode && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+                {
+                    switch (e.Key)
+                    {
+                        case Key.Left:
+                            paneManager.MovePane(FocusDirection.Left);
+                            e.Handled = true;
+                            return;
+                        case Key.Right:
+                            paneManager.MovePane(FocusDirection.Right);
+                            e.Handled = true;
+                            return;
+                        case Key.Up:
+                            paneManager.MovePane(FocusDirection.Up);
+                            e.Handled = true;
+                            return;
+                        case Key.Down:
+                            paneManager.MovePane(FocusDirection.Down);
+                            e.Handled = true;
+                            return;
+                        case Key.Escape:
+                            isMovePaneMode = false;
+                            logger.Log(LogLevel.Info, "MainWindow", "Move pane mode: OFF");
+                            e.Handled = true;
+                            return;
+                    }
                 }
             }
         }
@@ -412,6 +451,10 @@ namespace SuperTUI
 
                 // Save all workspaces to disk
                 workspaceManager?.SaveWorkspaces();
+
+                // Capture and save full application state with checksums
+                var snapshot = statePersistence.CaptureState(workspaceManager);
+                statePersistence.SaveStateAsync(snapshot, createBackup: true).Wait();
 
                 // Close all panes
                 paneManager?.CloseAll();

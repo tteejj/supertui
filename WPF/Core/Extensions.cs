@@ -291,48 +291,59 @@ namespace SuperTUI.Extensions
             Logger.Instance.Info("StatePersistence", $"Initialized state persistence at {stateDirectory}");
         }
 
-        // Note: CaptureState temporarily disabled during pane system migration
-        // Will be reimplemented to work with PaneWorkspaceManager
-        // public StateSnapshot CaptureState(PaneWorkspaceManager workspaceManager, Dictionary<string, object> customData = null)
-        // {
-        //     var snapshot = new StateSnapshot
-        //     {
-        //         Timestamp = DateTime.Now,
-        //         ApplicationState = new Dictionary<string, object>
-        //         {
-        //             ["CurrentWorkspaceIndex"] = workspaceManager.CurrentWorkspaceIndex
-        //         },
-        //         UserData = customData ?? new Dictionary<string, object>()
-        //     };
-        //
-        //     currentState = snapshot;
-        //     Logger.Instance.Debug("StatePersistence", "State snapshot captured");
-        //
-        //     return snapshot;
-        // }
+        /// <summary>
+        /// Captures current application state including workspace configuration
+        /// </summary>
+        public StateSnapshot CaptureState(Core.Infrastructure.PaneWorkspaceManager workspaceManager, Dictionary<string, object> customData = null)
+        {
+            var snapshot = new StateSnapshot
+            {
+                Timestamp = DateTime.Now,
+                ApplicationState = new Dictionary<string, object>
+                {
+                    ["CurrentWorkspaceIndex"] = workspaceManager.CurrentWorkspaceIndex,
+                    ["TotalWorkspaces"] = workspaceManager.AllWorkspaces.Count
+                },
+                UserData = customData ?? new Dictionary<string, object>()
+            };
 
-        // Note: RestoreState temporarily disabled during pane system migration
-        // Will be reimplemented to work with PaneWorkspaceManager
-        // /// <summary>
-        // /// Restores application state from a snapshot
-        // /// </summary>
-        // public void RestoreState(StateSnapshot snapshot, PaneWorkspaceManager workspaceManager)
-        // {
-        //     try
-        //     {
-        //         Logger.Instance.Info("StatePersistence", "Restoring state from snapshot");
-        //         // TODO: Implement pane state restoration
-        //         StateChanged?.Invoke(this, new StateChangedEventArgs { Snapshot = snapshot });
-        //         Logger.Instance.Info("StatePersistence", "State restored successfully");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         ErrorHandlingPolicy.Handle(
-        //             ErrorCategory.IO,
-        //             ex,
-        //             "Restoring application state from snapshot");
-        //     }
-        // }
+            currentState = snapshot;
+            Logger.Instance.Debug("StatePersistence", $"State snapshot captured (workspace {workspaceManager.CurrentWorkspaceIndex})");
+
+            return snapshot;
+        }
+
+        /// <summary>
+        /// Restores application state from a snapshot
+        /// </summary>
+        public void RestoreState(StateSnapshot snapshot, Core.Infrastructure.PaneWorkspaceManager workspaceManager)
+        {
+            try
+            {
+                Logger.Instance.Info("StatePersistence", "Restoring state from snapshot");
+
+                // Restore workspace index if present
+                if (snapshot.ApplicationState.TryGetValue("CurrentWorkspaceIndex", out var workspaceIndexObj) &&
+                    workspaceIndexObj is int workspaceIndex)
+                {
+                    if (workspaceIndex >= 0 && workspaceIndex < workspaceManager.AllWorkspaces.Count)
+                    {
+                        workspaceManager.SwitchToWorkspace(workspaceIndex);
+                        Logger.Instance.Debug("StatePersistence", $"Restored workspace index: {workspaceIndex}");
+                    }
+                }
+
+                StateChanged?.Invoke(this, new StateChangedEventArgs { Snapshot = snapshot });
+                Logger.Instance.Info("StatePersistence", "State restored successfully");
+            }
+            catch (Exception ex)
+            {
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    "Restoring application state from snapshot");
+            }
+        }
 
         /// <summary>
         /// Synchronous wrapper for SaveStateAsync - AVOID CALLING FROM UI THREAD

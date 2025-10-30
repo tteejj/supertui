@@ -9,13 +9,13 @@
 
 ## Project Overview
 
-**Project:** SuperTUI - WPF-Based Widget Framework
+**Project:** SuperTUI - WPF-Based Pane Framework
 **Location:** /home/teej/supertui
-**Goal:** Desktop GUI framework with terminal aesthetics, workspace/widget system with declarative layouts
+**Goal:** Desktop GUI framework with terminal aesthetics, workspace/pane system with tiling layout
 
 **Technology Stack:** WPF (Windows Presentation Foundation) + C# (.NET 8.0)
 **Platform:** Windows-only (WPF requirement)
-**Architecture:** Widget/Workspace system with dependency injection
+**Architecture:** Pane/Workspace system with dependency injection
 
 ---
 
@@ -40,11 +40,11 @@
 - StateSnapshot SHA256 checksums (corruption detection)
 
 **Phase 3: Architecture (100%)** ✅
-- DI infrastructure created (ServiceContainer, ServiceRegistration, WidgetFactory)
-- **DI migration: 100%** (15/15 active widgets + 6 domain services)
-- WidgetFactory: Proper constructor injection (no longer a stub)
+- DI infrastructure created (ServiceContainer, ServiceRegistration, PaneFactory)
+- **DI migration: 100%** (4 panes + 1 status widget + domain services)
+- PaneFactory: Proper constructor injection for panes
 - Domain service interfaces: ITaskService, IProjectService, ITimeTrackingService, ITagService
-- Widget cleanup: 17/17 widgets with OnDispose() (zero memory leaks)
+- Component cleanup: All panes with OnDispose() (zero memory leaks)
 - Error handling policy (ErrorPolicy.cs, 7 categories, 24 handlers)
 
 ---
@@ -77,35 +77,41 @@
 - ITimeTrackingService - Time tracking (16 methods, 3 events)
 - ITagService - Tag management (9 methods)
 
-**Widgets (15 active):**
-- ClockWidget, CounterWidget, TodoWidget
-- CommandPaletteWidget, ShortcutHelpWidget, SettingsWidget
-- FileExplorerWidget, GitStatusWidget, SystemMonitorWidget
-- TaskManagementWidget, AgendaWidget, ProjectStatsWidget
-- KanbanBoardWidget, TaskSummaryWidget, NotesWidget
+**Panes (4 active):**
+- TaskListPane - Full task management UI with filtering, sorting, subtasks
+- NotesPane - Note editor with auto-save, fuzzy search, project context
+- FileBrowserPane - Secure file browser with breadcrumbs, bookmarks
+- CommandPalettePane - Command palette for pane operations
 
-All widgets use **dependency injection** with backward compatibility constructors.
+**Legacy Widget:**
+- StatusBarWidget - Status bar showing time, task counts, project info
+
+All panes use **dependency injection** and proper resource cleanup.
 
 ---
 
 ## Key Features
 
 ### Workspace System
-- Multiple independent desktops with state preservation
-- Tab navigation, keyboard shortcuts
-- Focus management across widgets
+- Multiple independent workspaces (Ctrl+1-9) with state preservation
+- Tiling layout with automatic pane arrangement
+- i3-style directional navigation (Ctrl+Shift+Arrows)
+- Focus management across panes
 
-### Layout Engines
-- Grid, Stack, Dock with resizable splitters
-- Declarative layout definitions
+**Note:** "Processing" refers to day-to-day project work activities (using existing panes), not a separate pane type.
+
+### Layout Engine
+- TilingLayoutEngine with 5 modes (Auto, MasterStack, Wide, Tall, Grid)
+- Automatic layout selection based on pane count
+- Widget swapping and directional navigation
 
 ### Infrastructure
-- **Dependency Injection:** 100% adoption (widgets), interfaces, ServiceContainer
+- **Dependency Injection:** ServiceContainer with interfaces for all services
 - **Error Handling:** 7 categories, 3 severity levels (Recoverable, Degraded, Fatal)
 - **Logging:** Dual-queue async, critical logs never dropped
 - **Security:** Immutable modes (Strict/Permissive/Development), path validation
 - **Configuration:** Type-safe, validated types
-- **State Persistence:** JSON with SHA256 checksums
+- **State Persistence:** Workspace state with project context
 
 ---
 
@@ -116,15 +122,15 @@ All widgets use **dependency injection** with backward compatibility constructor
 | **Build Status** | ✅ 0 Errors, ⚠️ 325 Warnings |
 | **Build Time** | 9.31 seconds |
 | **Warnings Explanation** | Obsolete .Instance in layout engines/infrastructure (intentional) |
-| **Total C# Files** | 94 (88 original + 6 new interfaces) |
+| **Total C# Files** | ~90 |
 | **Total Lines** | ~26,000 |
-| **DI Adoption (Widgets)** | 100% (15/15 widgets) |
+| **Active Panes** | 4 (TaskList, Notes, FileBrowser, CommandPalette) |
+| **Legacy Widgets** | 1 (StatusBarWidget) |
 | **DI Adoption (Services)** | 100% (14/14 services with interfaces) |
 | **Singleton Declarations** | 17 (with .Instance property) |
-| **Singleton Usage (.Instance calls)** | 395 (layout engines + infrastructure only) |
-| **Backward Compatibility Constructors** | 0 (all removed) |
-| **Widgets with OnDispose()** | 17/17 (100% cleanup) |
-| **Memory Leaks** | 0 (all widgets properly dispose resources) |
+| **Singleton Usage (.Instance calls)** | ~395 (infrastructure only) |
+| **Components with OnDispose()** | 5/5 (100% cleanup) |
+| **Memory Leaks** | 0 (all components properly dispose resources) |
 | **Error Handlers** | 24 (standardized) |
 | **Test Files** | 16 (excluded from build, require Windows) |
 
@@ -133,16 +139,20 @@ All widgets use **dependency injection** with backward compatibility constructor
 ## File Structure
 
 **Core Infrastructure:**
-- `/home/teej/supertui/WPF/Core/Infrastructure/` - Services (Logger, Config, Theme, Security, etc.)
+- `/home/teej/supertui/WPF/Core/Infrastructure/` - Services (Logger, Config, Theme, Security, PaneFactory, etc.)
 - `/home/teej/supertui/WPF/Core/DI/` - Dependency injection (ServiceContainer, ServiceRegistration)
-- `/home/teej/supertui/WPF/Core/Components/` - UI components (WidgetBase, ErrorBoundary)
-- `/home/teej/supertui/WPF/Core/Layout/` - Layout engines (Grid, Stack, Dock)
-- `/home/teej/supertui/WPF/Core/Models/` - Data models (StateSnapshot, TaskModels, etc.)
+- `/home/teej/supertui/WPF/Core/Components/` - UI components (PaneBase, WidgetBase, ErrorBoundary)
+- `/home/teej/supertui/WPF/Core/Layout/` - Layout engine (TilingLayoutEngine)
+- `/home/teej/supertui/WPF/Core/Models/` - Data models (TaskModels, ProjectModels, etc.)
 - `/home/teej/supertui/WPF/Core/Events/` - Event args
 - `/home/teej/supertui/WPF/Core/Interfaces/` - Service interfaces
+- `/home/teej/supertui/WPF/Core/Services/` - Domain services (TaskService, ProjectService, etc.)
 
-**Widgets:**
-- `/home/teej/supertui/WPF/Widgets/*.cs` - 15 production widgets
+**Panes:**
+- `/home/teej/supertui/WPF/Panes/*.cs` - 4 production panes
+
+**Legacy Widgets:**
+- `/home/teej/supertui/WPF/Widgets/StatusBarWidget.cs` - Status bar (legacy widget architecture)
 
 **Documentation:**
 - `/home/teej/supertui/DI_IMPLEMENTATION_COMPLETE_2025-10-26.md` - **Latest DI completion report**
@@ -156,45 +166,37 @@ All widgets use **dependency injection** with backward compatibility constructor
 
 ## Dependency Injection Pattern
 
-All widgets and services follow this pattern:
+All panes and services follow this pattern:
 
 ```csharp
-public class MyWidget : WidgetBase, IThemeable
+public class MyPane : PaneBase
 {
     private readonly ILogger logger;
     private readonly IThemeManager themeManager;
     private readonly IConfigurationManager config;
     private readonly ITaskService taskService;  // Domain service via interface
 
-    // DI constructor (preferred) - used by WidgetFactory
-    public MyWidget(
+    // DI constructor (preferred) - used by PaneFactory
+    public MyPane(
         ILogger logger,
         IThemeManager themeManager,
         IConfigurationManager config,
-        ITaskService taskService)
+        ITaskService taskService,
+        IProjectContext projectContext)
+        : base(logger, themeManager, config, projectContext)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
 
-        WidgetName = "MyWidget";
-        BuildUI();
+        PaneName = "MyPane";
     }
-
-    // Backward compatibility constructor - falls back to singletons
-    public MyWidget()
-        : this(
-            Logger.Instance,
-            ThemeManager.Instance,
-            ConfigurationManager.Instance,
-            Core.Services.TaskService.Instance)
-    { }
 
     public override void Initialize()
     {
-        // Services already injected, just use them
-        // No .Instance calls needed here
+        // Services already injected, build UI
+        BuildContent();
     }
 
     protected override void OnDispose()
@@ -313,40 +315,40 @@ pwsh SuperTUI.ps1
 - ❌ PROJECT_STATUS.md before 2025-10-26 updates (outdated metrics)
 
 ### Development Guidelines
-- All new widgets MUST use DI constructors with interface parameters
+- All new panes MUST inherit from PaneBase and use DI constructors
 - All new services MUST have interfaces (follow ITaskService pattern)
 - All IDisposable resources MUST be disposed in OnDispose()
 - All errors MUST use ErrorHandlingPolicy
 - Security errors ALWAYS Fatal (exit app)
 - Never hardcode colors (use ThemeManager)
 - Always use interfaces (ILogger, IThemeManager, ITaskService, etc.)
-- WidgetFactory resolves dependencies - don't call .Instance in Initialize()
-- Backward compatibility constructors use .Instance (acceptable)
+- PaneFactory resolves dependencies - don't call .Instance in pane code
+- Panes should implement SaveState/RestoreState for workspace persistence
 
 ---
 
 ## Success Criteria
 
-**Current Achievement (2025-10-26):**
-- [x] Build succeeds (0 errors, 0 warnings) ✅
+**Current Achievement (2025-10-30):**
+- [x] Build succeeds (0 errors, warnings only) ✅
 - [x] Security hardened ✅
 - [x] Reliability improved ✅
-- [x] DI migration complete (widgets + domain services) ✅
-- [x] WidgetFactory implements real constructor injection ✅
+- [x] DI migration complete (panes + domain services) ✅
+- [x] PaneFactory implements constructor injection ✅
 - [x] Domain service interfaces created (4 services) ✅
-- [x] All widgets updated to use service interfaces ✅
-- [x] Memory leaks fixed (17/17 widgets with OnDispose) ✅
+- [x] All panes use DI with proper cleanup ✅
+- [x] Memory leaks fixed (5/5 components with OnDispose) ✅
 - [x] Error handling standardized ✅
-- [x] Documentation updated with accurate metrics ✅
+- [x] Documentation updated to reflect pane architecture ✅
 - [ ] Tests executed (requires Windows) ⏳
 
 **Production Deployment Checklist:**
-- [x] Build quality perfect (0 errors, 0 warnings)
+- [x] Build quality (0 errors)
 - [x] Security mode Strict
-- [x] All widgets use DI (100%)
+- [x] All panes use DI (100%)
 - [x] All domain services have interfaces (100%)
-- [x] WidgetFactory resolves dependencies properly
-- [x] Resource cleanup implemented (17/17)
+- [x] PaneFactory resolves dependencies properly
+- [x] Resource cleanup implemented (5/5)
 - [x] Error handling standardized
 - [ ] Tests run on Windows
 - [ ] External security audit (recommended)
@@ -355,27 +357,35 @@ pwsh SuperTUI.ps1
 
 ## Honest Assessment
 
-**Before October 26, 2025:**
-- Claims: 100% DI → Reality: WidgetFactory was a stub
-- Claims: Domain services use DI → Reality: No interfaces existed
-- Claims: 5 singleton calls → Reality: 413 .Instance calls
-- Claims: Memory leaks fixed → Reality: 7/17 widgets had OnDispose()
+**Architecture Transition (October 2025):**
+- **From:** Widget-based system with 15+ widgets
+- **To:** Pane-based system with 4 specialized panes
+- **Legacy:** StatusBarWidget remains (only widget still in use)
+- **Reason:** Panes better suited for terminal-style tiling UX
 
-**After October 26, 2025 Remediation:**
-- **WidgetFactory:** Real constructor injection (verified, not stub)
-- **Domain Services:** 4 interfaces matching actual implementations (ITaskService, IProjectService, ITimeTrackingService, ITagService)
-- **Widget DI:** 100% adoption - all 15 widgets + 9 domain service users
-- **Resource Cleanup:** 17/17 widgets with OnDispose()
-- **Build Quality:** 0 errors, 0 warnings (2.28s)
-- **Singleton Usage:** Documented honestly (413 calls, 17 declarations)
-- **Tests:** Written but not run (documented)
+**Current Reality (October 30, 2025):**
+- **PaneFactory:** Real constructor injection for all panes ✅
+- **Domain Services:** 4 interfaces (ITaskService, IProjectService, ITimeTrackingService, ITagService) ✅
+- **Active Components:** 4 panes + 1 widget, all with DI ✅
+- **Resource Cleanup:** 5/5 components with OnDispose() ✅
+- **Build Quality:** 0 errors, warnings only (from .Instance deprecation) ✅
+- **Singleton Usage:** ~395 calls in infrastructure only ✅
+- **Tests:** Written but not run (require Windows) ⏳
 
-**This project now has genuinely complete DI implementation, not aspirational claims.**
+**Known Gaps:**
+- ShortcutManager infrastructure unused (shortcuts hardcoded in event handlers)
+- StatePersistenceManager.CaptureState/RestoreState disabled during pane migration
+- EventBus memory leak risk (strong references by default)
+- No resizable splitters in TilingLayoutEngine
+- TaskListPane missing date picker and tag editor UI
+- NotesPane no markdown rendering or content search
+
+**This project has a solid pane-based foundation with specific feature gaps documented above.**
 
 ---
 
-**Last Verified:** 2025-10-26
+**Last Verified:** 2025-10-30
 **Build Status:** ✅ 0 Errors, ⚠️ 325 Warnings (9.31s)
 **Warnings:** Obsolete .Instance in layout engines/infrastructure (intentional deprecation warnings)
-**DI Implementation:** ✅ 100% Complete (widgets + domain services + WidgetFactory)
-**Recommendation:** APPROVED for production deployment
+**Architecture:** Pane-based system (4 panes + 1 legacy widget)
+**Recommendation:** Production-ready for internal tools; feature gaps documented for future work

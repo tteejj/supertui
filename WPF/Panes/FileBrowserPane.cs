@@ -288,7 +288,7 @@ namespace SuperTUI.Panes
             {
                 Text = "Quick Access",
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 FontWeight = FontWeights.Bold,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -313,7 +313,7 @@ namespace SuperTUI.Panes
                 {
                     Content = $"{bookmark.Icon} {bookmark.Name}",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 9,
+                    FontSize = 18,
                     Padding = new Thickness(8, 4, 8, 4),
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     HorizontalContentAlignment = HorizontalAlignment.Left,
@@ -344,7 +344,7 @@ namespace SuperTUI.Panes
             directoryTree = new TreeView
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(4)
             };
@@ -375,7 +375,7 @@ namespace SuperTUI.Panes
             searchBox = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 BorderThickness = new Thickness(0),
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -398,7 +398,7 @@ namespace SuperTUI.Panes
             fileListBox = new ListBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
             };
@@ -435,7 +435,7 @@ namespace SuperTUI.Panes
             {
                 Text = "Details",
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10,
+                FontSize = 18,
                 FontWeight = FontWeights.Bold
             };
 
@@ -455,7 +455,7 @@ namespace SuperTUI.Panes
             infoWarningText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 FontWeight = FontWeights.Bold,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 0, 0, 12),
@@ -468,7 +468,7 @@ namespace SuperTUI.Panes
             infoPathText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 4, 0, 12),
                 Text = "No selection"
@@ -480,7 +480,7 @@ namespace SuperTUI.Panes
             infoTypeText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Margin = new Thickness(0, 4, 0, 12),
                 Text = "-"
             };
@@ -491,7 +491,7 @@ namespace SuperTUI.Panes
             infoSizeText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Margin = new Thickness(0, 4, 0, 12),
                 Text = "-"
             };
@@ -502,7 +502,7 @@ namespace SuperTUI.Panes
             infoModifiedText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Margin = new Thickness(0, 4, 0, 12),
                 Text = "-"
             };
@@ -513,7 +513,7 @@ namespace SuperTUI.Panes
             infoPermissionsText = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 Margin = new Thickness(0, 4, 0, 12),
                 Text = "-"
             };
@@ -532,7 +532,7 @@ namespace SuperTUI.Panes
             {
                 Text = text,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 FontWeight = FontWeights.Bold,
                 Opacity = 0.7
             };
@@ -551,7 +551,7 @@ namespace SuperTUI.Panes
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 9,
+                FontSize = 18,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = "Enter: Select | Backspace: Up | Ctrl+H: Hidden | Esc: Cancel | /: Jump to path | ~: Home"
             };
@@ -572,11 +572,11 @@ namespace SuperTUI.Panes
             var theme = themeManager.CurrentTheme;
             if (theme == null) return;
 
-            var background = theme.GetColor("Background");
-            var surface = theme.GetColor("Surface");
-            var foreground = theme.GetColor("Foreground");
-            var border = theme.GetColor("Border");
-            var accent = theme.GetColor("Primary");
+            var background = theme.Background;
+            var surface = theme.Surface;
+            var foreground = theme.Foreground;
+            var border = theme.Border;
+            var accent = theme.Primary;
 
             // Apply to breadcrumb border
             if (breadcrumbBorder != null)
@@ -861,7 +861,7 @@ namespace SuperTUI.Panes
                     {
                         Text = currentFiles.Any() ? "No matching files" : "Empty directory",
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         FontStyle = FontStyles.Italic,
                         Opacity = 0.5,
                         TextAlignment = TextAlignment.Center,
@@ -880,7 +880,7 @@ namespace SuperTUI.Panes
                     {
                         Text = GetFileIcon(item) + " ",
                         FontFamily = new FontFamily("Segoe UI Emoji, JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         VerticalAlignment = VerticalAlignment.Center
                     };
                     stackPanel.Children.Add(icon);
@@ -890,7 +890,7 @@ namespace SuperTUI.Panes
                     {
                         Text = item.Name,
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         VerticalAlignment = VerticalAlignment.Center
                     };
 
@@ -947,7 +947,7 @@ namespace SuperTUI.Panes
                     {
                         Content = i == 0 && part.Length <= 3 ? part : (part.Length > 20 ? part.Substring(0, 17) + "..." : part),
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 10,
+                        FontSize = 18,
                         Padding = new Thickness(6, 2, 6, 2),
                         Margin = new Thickness(0, 0, 4, 0),
                         BorderThickness = new Thickness(0),
@@ -965,7 +965,7 @@ namespace SuperTUI.Panes
                         {
                             Text = "›",
                             FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                            FontSize = 10,
+                            FontSize = 18,
                             Opacity = 0.5,
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(0, 0, 4, 0)
@@ -1015,7 +1015,7 @@ namespace SuperTUI.Panes
                 Header = displayName,
                 Tag = path,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 10
+                FontSize = 18
             };
 
             // Add dummy child to show expand arrow
@@ -1308,7 +1308,7 @@ namespace SuperTUI.Panes
             {
                 Text = currentPath,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
+                FontSize = 18,
                 Padding = new Thickness(8)
             };
 

@@ -34,6 +34,7 @@ namespace SuperTUI.Core.Infrastructure
         private readonly IProjectService projectService;
         private readonly ITimeTrackingService timeTrackingService;
         private readonly ITagService tagService;
+        private readonly IEventBus eventBus;
 
         private readonly Dictionary<string, PaneMetadata> paneRegistry;
 
@@ -46,7 +47,8 @@ namespace SuperTUI.Core.Infrastructure
             ITaskService taskService,
             IProjectService projectService,
             ITimeTrackingService timeTrackingService,
-            ITagService tagService)
+            ITagService tagService,
+            IEventBus eventBus)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
@@ -57,6 +59,7 @@ namespace SuperTUI.Core.Infrastructure
             this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             this.timeTrackingService = timeTrackingService ?? throw new ArgumentNullException(nameof(timeTrackingService));
             this.tagService = tagService ?? throw new ArgumentNullException(nameof(tagService));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             paneRegistry = new Dictionary<string, PaneMetadata>(StringComparer.OrdinalIgnoreCase)
             {
@@ -65,14 +68,14 @@ namespace SuperTUI.Core.Infrastructure
                     Name = "tasks",
                     Description = "View and manage tasks",
                     Icon = "✓",
-                    Creator = () => new TaskListPane(logger, themeManager, projectContext, taskService)
+                    Creator = () => new TaskListPane(logger, themeManager, projectContext, taskService, eventBus)
                 },
                 ["notes"] = new PaneMetadata
                 {
                     Name = "notes",
                     Description = "Browse and edit notes",
                     Icon = "📝",
-                    Creator = () => new NotesPane(logger, themeManager, projectContext, configManager)
+                    Creator = () => new NotesPane(logger, themeManager, projectContext, configManager, eventBus)
                 },
                 ["files"] = new PaneMetadata
                 {
