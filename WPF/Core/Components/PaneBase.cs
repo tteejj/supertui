@@ -42,7 +42,7 @@ namespace SuperTUI.Core.Components
         public string PaneName { get; protected set; }
         public string PaneIcon { get; protected set; }  // Optional emoji/icon
         public bool IsActive { get; private set; }
-        public bool IsFocused { get; internal set; }  // Set by PaneManager
+        public new bool IsFocused { get; internal set; }  // Set by PaneManager (hides UIElement.IsFocused)
         public virtual PaneSizePreference SizePreference => PaneSizePreference.Flex;
 
         // Constructor

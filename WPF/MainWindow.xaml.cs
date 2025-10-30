@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Controls;
+using System.Windows.Media;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Services;
 using SuperTUI.DI;
@@ -43,6 +44,14 @@ namespace SuperTUI
 
             // Apply terminal theme
             themeManager.ApplyTheme("Terminal");
+
+            // Apply theme colors to MainWindow
+            var theme = themeManager.CurrentTheme;
+            this.Background = new SolidColorBrush(theme.Background);
+            RootContainer.Background = new SolidColorBrush(theme.Background);
+            PaneCanvas.Background = new SolidColorBrush(theme.Background);
+            StatusBarContainer.Background = new SolidColorBrush(theme.Surface);
+            StatusBarContainer.BorderBrush = new SolidColorBrush(theme.Border);
 
             // Initialize components
             InitializeWorkspaceManager();

@@ -4,8 +4,7 @@
         Title="SuperTUI"
         Width="1400"
         Height="900"
-        WindowStartupLocation="CenterScreen"
-        Background="#0A0E14">
+        WindowStartupLocation="CenterScreen">
     <Grid x:Name="RootContainer">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -16,7 +15,7 @@
         <Grid x:Name="PaneCanvas" Grid.Row="0" Margin="0"/>
 
         <!-- Status bar at bottom -->
-        <Border x:Name="StatusBarContainer" Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#1F2430"/>
+        <Border x:Name="StatusBarContainer" Grid.Row="1" BorderThickness="0,1,0,0"/>
 
         <!-- Modal overlay container (spans all rows, appears on top) -->
         <Grid x:Name="ModalOverlay" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="1000"/>
