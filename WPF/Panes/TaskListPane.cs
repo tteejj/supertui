@@ -143,6 +143,7 @@ namespace SuperTUI.Panes
             var grid = new Grid();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Column headers
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
 
@@ -253,6 +254,84 @@ namespace SuperTUI.Panes
             Grid.SetRow(filterBar, 1);
             grid.Children.Add(filterBar);
 
+            // Column headers
+            var headerGrid = new Grid
+            {
+                Background = surfaceBrush,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Checkbox space
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Indent space
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Expand space
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Title
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120, GridUnitType.Pixel) }); // Due Date
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150, GridUnitType.Pixel) }); // Tags
+
+            // Checkbox space (empty)
+            var checkboxSpace = new TextBlock { Width = 30 };
+            Grid.SetColumn(checkboxSpace, 0);
+            headerGrid.Children.Add(checkboxSpace);
+
+            // Priority header
+            var priorityHeader = new TextBlock
+            {
+                Text = "P",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = dimBrush,
+                Margin = new Thickness(0, 4, 6, 4),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(priorityHeader, 3);
+            headerGrid.Children.Add(priorityHeader);
+
+            // Title header
+            var titleHeader = new TextBlock
+            {
+                Text = "Title",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = dimBrush,
+                Margin = new Thickness(0, 4, 0, 4),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(titleHeader, 4);
+            headerGrid.Children.Add(titleHeader);
+
+            // Due Date header
+            var dueDateHeader = new TextBlock
+            {
+                Text = "Due Date",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = dimBrush,
+                Margin = new Thickness(8, 4, 0, 4),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(dueDateHeader, 5);
+            headerGrid.Children.Add(dueDateHeader);
+
+            // Tags header
+            var tagsHeader = new TextBlock
+            {
+                Text = "Tags",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = dimBrush,
+                Margin = new Thickness(8, 4, 0, 4),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(tagsHeader, 6);
+            headerGrid.Children.Add(tagsHeader);
+
+            Grid.SetRow(headerGrid, 2);
+            grid.Children.Add(headerGrid);
+
             // Task list with virtualization enabled
             taskListBox = new ListBox
             {
@@ -280,7 +359,7 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(taskListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(taskListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(taskListBox, 2);
+            Grid.SetRow(taskListBox, 3);
             grid.Children.Add(taskListBox);
 
             // Status bar
@@ -291,7 +370,7 @@ namespace SuperTUI.Panes
                 Foreground = dimBrush,
                 Margin = new Thickness(0, 8, 0, 0)
             };
-            Grid.SetRow(statusBar, 3);
+            Grid.SetRow(statusBar, 4);
             grid.Children.Add(statusBar);
 
             return grid;

@@ -61,6 +61,9 @@ namespace SuperTUI.Panes
         private const int AUTOSAVE_DEBOUNCE_MS = 1000;
         private const string BACKUP_EXTENSION = ".bak";
 
+        // Events
+        public event EventHandler<string> FileBrowserRequested;
+
         #endregion
 
         #region Constructor
@@ -880,13 +883,44 @@ namespace SuperTUI.Panes
 
         private void OpenExternalNote()
         {
-            // Request parent window to open FileBrowser pane in FILE mode
-            // The FileBrowser should fire FileSelected event when user picks a .txt file
-            ShowStatus("Open external note: Use Ctrl+Shift+F to open file browser, select .txt file");
-            Log("OpenExternalNote: User should open FileBrowser and select .txt file");
+            // Request FileBrowser from parent
+            FileBrowserRequested?.Invoke(this, currentNotesFolder);
+            ShowStatus("Select a .txt file to open...");
+            Log("OpenExternalNote: Requested FileBrowser");
+        }
 
-            // TODO: This needs inter-pane communication via events or PaneManager
-            // For now, user must manually open FileBrowser and we'll listen for file selection
+        public void OnFileBrowserFileSelected(string filePath)
+        {
+            // Called by parent when FileBrowser selects a file
+            if (!File.Exists(filePath) || !filePath.EndsWith(".txt"))
+            {
+                ShowStatus($"Invalid file: {Path.GetFileName(filePath)}");
+                return;
+            }
+
+            try
+            {
+                // Load the external note
+                var noteName = Path.GetFileNameWithoutExtension(filePath);
+                var note = new NoteMetadata
+                {
+                    Name = noteName,
+                    FullPath = filePath,
+                    LastModified = File.GetLastWriteTime(filePath),
+                    Extension = Path.GetExtension(filePath)
+                };
+
+                currentNote = note;
+                hasUnsavedChanges = false;
+                noteEditor.Text = File.ReadAllText(filePath);
+                ShowStatus($"Opened: {noteName}");
+                Log($"Loaded external note: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                ShowStatus($"ERROR: {ex.Message}");
+                Log($"Failed to load external note: {ex.Message}");
+            }
         }
 
         private void CloseNoteEditor()
@@ -1127,44 +1161,8 @@ namespace SuperTUI.Panes
 
         private void OnNotesListKeyDown(object sender, KeyEventArgs e)
         {
-            // A - New note
-            if (e.Key == Key.A)
-            {
-                CreateNewNote();
-                e.Handled = true;
-            }
-            // E - Edit (focus editor)
-            else if (e.Key == Key.E && notesListBox.SelectedItem != null)
-            {
-                noteEditor.Focus();
-                e.Handled = true;
-            }
-            // D - Delete note
-            else if (e.Key == Key.D && currentNote != null)
-            {
-                DeleteCurrentNote();
-                e.Handled = true;
-            }
-            // S - Search (focus search box)
-            else if (e.Key == Key.S)
-            {
-                searchBox.Focus();
-                searchBox.SelectAll();
-                e.Handled = true;
-            }
-            // F - Clear filter (same as S for now)
-            else if (e.Key == Key.F)
-            {
-                searchBox.Focus();
-                searchBox.SelectAll();
-                e.Handled = true;
-            }
-            // Enter - Focus editor
-            else if (e.Key == Key.Enter && notesListBox.SelectedItem != null)
-            {
-                noteEditor.Focus();
-                e.Handled = true;
-            }
+            // Arrow keys for navigation
+            // Other keys handled in OnPreviewKeyDown
         }
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -1200,8 +1198,9 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            // Single-key shortcuts when notes list is focused (not in text input)
-            if (notesListBox.IsFocused && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            // Single-key shortcuts (work anywhere in pane except when typing in text fields)
+            bool isTyping = e.OriginalSource is TextBox && ((TextBox)e.OriginalSource) != searchBox;
+            if (!isTyping && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 switch (e.Key)
                 {
@@ -1214,15 +1213,30 @@ namespace SuperTUI.Panes
                         e.Handled = true;
                         break;
                     case Key.D:
-                        DeleteCurrentNote();
+                        if (currentNote != null)
+                        {
+                            DeleteCurrentNote();
+                            e.Handled = true;
+                        }
+                        break;
+                    case Key.S:
+                    case Key.F:
+                        // Focus search box
+                        searchBox.Focus();
+                        searchBox.SelectAll();
                         e.Handled = true;
                         break;
                     case Key.E:
                     case Key.Enter:
-                        // Open selected note for editing
+                        // Open selected note for editing or focus editor if note already open
                         if (notesListBox.SelectedItem is NoteMetadata note)
                         {
                             _ = LoadNoteAsync(note);
+                            e.Handled = true;
+                        }
+                        else if (currentNote != null)
+                        {
+                            noteEditor.Focus();
                             e.Handled = true;
                         }
                         break;

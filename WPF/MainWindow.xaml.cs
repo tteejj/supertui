@@ -261,6 +261,15 @@ namespace SuperTUI
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            // Help overlay: ? (Shift+/) when not in text box
+            if (e.Key == Key.OemQuestion && e.KeyboardDevice.Modifiers == ModifierKeys.Shift &&
+                !(Keyboard.FocusedElement is TextBox))
+            {
+                ShowHelpOverlay();
+                e.Handled = true;
+                return;
+            }
+
             // Command palette: : (colon) when not in text box
             if (e.Key == Key.OemSemicolon && e.KeyboardDevice.Modifiers == ModifierKeys.Shift &&
                 !(Keyboard.FocusedElement is TextBox))
@@ -438,6 +447,53 @@ namespace SuperTUI
 
                 logger.Log(LogLevel.Debug, "MainWindow", "Command palette closed");
             }
+        }
+
+        private void ShowHelpOverlay()
+        {
+            var helpText = @"SuperTUI Keyboard Shortcuts
+
+WORKSPACES:
+  Ctrl+1-9          Switch to workspace 1-9
+  F12               Toggle move pane mode (then use arrows to move focused pane)
+
+PANE NAVIGATION:
+  Ctrl+Shift+←→↑↓   Focus pane in direction
+  Ctrl+Shift+T      Open Tasks pane
+  Ctrl+Shift+N      Open Notes pane
+  Ctrl+Shift+Q      Close focused pane
+
+COMMAND PALETTE:
+  : (colon)         Open command palette
+  ? (question)      Show this help
+
+TASK PANE:
+  A                 Add new task (form: Title | DueDate | Priority)
+  S                 Create subtask (2 levels max)
+  E / Enter         Edit task inline
+  D                 Delete task
+  Space             Toggle complete
+  Shift+D           Edit due date
+  Shift+T           Edit tags
+  PageUp/PageDown   Reorder tasks
+
+NOTES PANE:
+  A                 New note
+  E                 Edit note
+  D                 Delete note
+  S / F             Search/filter
+  Ctrl+S            Save note
+
+PROJECTS PANE:
+  A                 Add project
+  D                 Delete project
+  K                 Set project context
+  X                 Export T2020
+  Click field       Edit inline
+
+Press Escape or ? to close this help.";
+
+            MessageBox.Show(helpText, "SuperTUI Help", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
