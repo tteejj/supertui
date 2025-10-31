@@ -46,6 +46,14 @@ namespace SuperTUI.Panes
             PaneIcon = "?";
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+        }
+
         protected override UIElement BuildContent()
         {
             var theme = themeManager.CurrentTheme;
@@ -439,8 +447,43 @@ namespace SuperTUI.Panes
             }
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            var theme = themeManager.CurrentTheme;
+
+            // Update all controls
+            if (searchBox != null)
+            {
+                searchBox.Foreground = new SolidColorBrush(theme.Foreground);
+            }
+
+            if (shortcutsPanel != null)
+            {
+                // Rebuild display to apply new theme colors
+                RefreshDisplay();
+            }
+
+            if (contentScrollViewer != null)
+            {
+                // Nothing specific needed - background managed by parent
+            }
+
+            this.InvalidateVisual();
+        }
+
         protected override void OnDispose()
         {
+            // Unsubscribe from theme changes
+            themeManager.ThemeChanged -= OnThemeChanged;
+
             // Clean up if needed
             base.OnDispose();
         }

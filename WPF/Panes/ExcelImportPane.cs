@@ -71,11 +71,24 @@ namespace SuperTUI.Panes
             // Initialize ExcelMappingService
             excelMappingService.Initialize();
 
+            // Register pane-specific shortcuts
+            RegisterPaneShortcuts();
+
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
             // Set initial focus
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 clipboardTextBox?.Focus();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+            shortcuts.RegisterForPane(PaneName, Key.I, ModifierKeys.None, () => ImportFromClipboard(), "Import from clipboard");
+            shortcuts.RegisterForPane(PaneName, Key.P, ModifierKeys.None, () => CycleProfile(), "Cycle mapping profile");
         }
 
         protected override UIElement BuildContent()
@@ -90,7 +103,7 @@ namespace SuperTUI.Panes
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Preview
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status
             mainLayout.Background = bgBrush;
-            mainLayout.KeyDown += MainLayout_KeyDown;
+            mainLayout.PreviewKeyDown += MainLayout_PreviewKeyDown;
             mainLayout.Focusable = true;
 
             // Header
@@ -307,7 +320,7 @@ namespace SuperTUI.Panes
             logger.Log(LogLevel.Debug, "ExcelImport", $"Cycled to profile: {availableProfiles[currentProfileIndex].Name}");
         }
 
-        private void MainLayout_KeyDown(object sender, KeyEventArgs e)
+        private void MainLayout_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             // Block shortcuts when typing in textboxes
             bool isTypingInClipboard = clipboardTextBox != null && clipboardTextBox.IsFocused;
@@ -318,16 +331,10 @@ namespace SuperTUI.Panes
                 return; // Let text input work normally
             }
 
-            // I to import
-            if (e.Key == Key.I && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            // Dispatch to ShortcutManager
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
-                ImportFromClipboard();
-                e.Handled = true;
-            }
-            // P to cycle profile
-            else if (e.Key == Key.P && e.KeyboardDevice.Modifiers == ModifierKeys.None)
-            {
-                CycleProfile();
                 e.Handled = true;
             }
         }
@@ -512,8 +519,44 @@ namespace SuperTUI.Panes
             }
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            CacheThemeColors();
+
+            // Update all controls
+            if (clipboardTextBox != null)
+            {
+                clipboardTextBox.Background = surfaceBrush;
+                clipboardTextBox.Foreground = fgBrush;
+                clipboardTextBox.BorderBrush = borderBrush;
+            }
+
+            if (previewText != null)
+            {
+                previewText.Foreground = fgBrush;
+                previewText.Background = surfaceBrush;
+            }
+
+            if (statusLabel != null)
+            {
+                statusLabel.Foreground = fgBrush;
+                statusLabel.Background = surfaceBrush;
+            }
+
+            this.InvalidateVisual();
+        }
+
         protected override void OnDispose()
         {
+            themeManager.ThemeChanged -= OnThemeChanged;
             base.OnDispose();
         }
     }

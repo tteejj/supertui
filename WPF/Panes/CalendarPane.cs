@@ -26,6 +26,14 @@ namespace SuperTUI.Panes
         // Services
         private readonly ITaskService taskService;
         private readonly IProjectService projectService;
+        private readonly IEventBus eventBus;
+
+        // Event handlers (stored for unsubscription)
+        private Action<Core.Events.ProjectSelectedEvent> projectSelectedHandler;
+        private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
+        private Action<Core.Events.TaskCreatedEvent> taskCreatedHandler;
+        private Action<Core.Events.TaskUpdatedEvent> taskUpdatedHandler;
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
         // UI Components
         private Grid mainLayout;
@@ -39,6 +47,7 @@ namespace SuperTUI.Panes
         private CalendarViewMode viewMode = CalendarViewMode.Month;
         private DateTime? selectedDate;
         private List<TaskItem> allTasks = new List<TaskItem>();
+        private Guid? highlightedTaskId; // For highlighting a specific task's due date
 
         // Theme colors (cached)
         private SolidColorBrush bgBrush;
@@ -60,11 +69,13 @@ namespace SuperTUI.Panes
             IThemeManager themeManager,
             IProjectContextManager projectContext,
             ITaskService taskService,
-            IProjectService projectService)
+            IProjectService projectService,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
             this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
             this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             PaneName = "Calendar";
             PaneIcon = "📅";
             currentMonth = DateTime.Today;
@@ -79,16 +90,134 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
+            // Register pane-specific shortcuts
+            RegisterPaneShortcuts();
+
             // Subscribe to task events
             taskService.TaskAdded += OnTaskChanged;
             taskService.TaskUpdated += OnTaskChanged;
             taskService.TaskDeleted += OnTaskDeleted;
+
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Subscribe to EventBus events for cross-pane communication
+            projectSelectedHandler = OnProjectSelected;
+            eventBus.Subscribe(projectSelectedHandler);
+
+            taskSelectedHandler = OnTaskSelected;
+            eventBus.Subscribe(taskSelectedHandler);
+
+            taskCreatedHandler = OnTaskCreated;
+            eventBus.Subscribe(taskCreatedHandler);
+
+            taskUpdatedHandler = OnTaskUpdatedEvent;
+            eventBus.Subscribe(taskUpdatedHandler);
+
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
 
             // Set initial focus
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 this.Focus();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+
+            // Navigation shortcuts
+            shortcuts.RegisterForPane(PaneName, Key.Left, ModifierKeys.None,
+                () => {
+                    if (viewMode == CalendarViewMode.Month)
+                    {
+                        currentMonth = currentMonth.AddMonths(-1);
+                    }
+                    else
+                    {
+                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(-7);
+                    }
+                    RenderCalendar();
+                },
+                "Previous month/week");
+
+            shortcuts.RegisterForPane(PaneName, Key.Right, ModifierKeys.None,
+                () => {
+                    if (viewMode == CalendarViewMode.Month)
+                    {
+                        currentMonth = currentMonth.AddMonths(1);
+                    }
+                    else
+                    {
+                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(7);
+                    }
+                    RenderCalendar();
+                },
+                "Next month/week");
+
+            shortcuts.RegisterForPane(PaneName, Key.Up, ModifierKeys.None,
+                () => {
+                    if (selectedDate.HasValue)
+                    {
+                        selectedDate = selectedDate.Value.AddDays(-7);
+                        RenderCalendar();
+                    }
+                },
+                "Move selection up one week");
+
+            shortcuts.RegisterForPane(PaneName, Key.Down, ModifierKeys.None,
+                () => {
+                    if (selectedDate.HasValue)
+                    {
+                        selectedDate = selectedDate.Value.AddDays(7);
+                        RenderCalendar();
+                    }
+                },
+                "Move selection down one week");
+
+            // View mode shortcuts
+            shortcuts.RegisterForPane(PaneName, Key.M, ModifierKeys.None,
+                () => {
+                    viewMode = CalendarViewMode.Month;
+                    RenderCalendar();
+                },
+                "Switch to month view");
+
+            shortcuts.RegisterForPane(PaneName, Key.W, ModifierKeys.None,
+                () => {
+                    viewMode = CalendarViewMode.Week;
+                    RenderCalendar();
+                },
+                "Switch to week view");
+
+            // Action shortcuts
+            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+                () => {
+                    if (selectedDate.HasValue)
+                    {
+                        ShowTasksForDate(selectedDate.Value);
+                    }
+                },
+                "Show tasks for selected date");
+
+            shortcuts.RegisterForPane(PaneName, Key.T, ModifierKeys.Control,
+                () => {
+                    if (selectedDate.HasValue)
+                    {
+                        CreateTaskForDate(selectedDate.Value);
+                    }
+                },
+                "Create new task for selected date");
+
+            shortcuts.RegisterForPane(PaneName, Key.Home, ModifierKeys.None,
+                () => {
+                    currentMonth = DateTime.Today;
+                    selectedDate = DateTime.Today;
+                    RenderCalendar();
+                },
+                "Jump to today");
         }
 
         protected override UIElement BuildContent()
@@ -442,12 +571,17 @@ namespace SuperTUI.Panes
                 .ThenBy(t => t.Title)
                 .ToList();
 
-            // Cell container
+            // Check if this date contains the highlighted task
+            var hasHighlightedTask = highlightedTaskId.HasValue &&
+                                    tasksForDate.Any(t => t.Id == highlightedTaskId.Value);
+
+            // Cell container with visual highlight for selected task
             var cellBorder = new Border
             {
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(0.5),
+                BorderBrush = hasHighlightedTask ? accentBrush : borderBrush,
+                BorderThickness = hasHighlightedTask ? new Thickness(2) : new Thickness(0.5),
                 Background = isSelected ? new SolidColorBrush(theme.Surface) :
+                             hasHighlightedTask ? new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B)) :
                              isToday ? new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B)) :
                              bgBrush,
                 Padding = new Thickness(4),
@@ -577,103 +711,9 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            bool handled = false;
-
-            switch (e.Key)
-            {
-                // Navigation
-                case Key.Left:
-                    if (viewMode == CalendarViewMode.Month)
-                    {
-                        currentMonth = currentMonth.AddMonths(-1);
-                        RenderCalendar();
-                    }
-                    else
-                    {
-                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(-7);
-                        RenderCalendar();
-                    }
-                    handled = true;
-                    break;
-
-                case Key.Right:
-                    if (viewMode == CalendarViewMode.Month)
-                    {
-                        currentMonth = currentMonth.AddMonths(1);
-                        RenderCalendar();
-                    }
-                    else
-                    {
-                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(7);
-                        RenderCalendar();
-                    }
-                    handled = true;
-                    break;
-
-                case Key.Up:
-                    if (selectedDate.HasValue)
-                    {
-                        selectedDate = selectedDate.Value.AddDays(-7);
-                        RenderCalendar();
-                    }
-                    handled = true;
-                    break;
-
-                case Key.Down:
-                    if (selectedDate.HasValue)
-                    {
-                        selectedDate = selectedDate.Value.AddDays(7);
-                        RenderCalendar();
-                    }
-                    handled = true;
-                    break;
-
-                // View mode switching
-                case Key.M:
-                    if (e.KeyboardDevice.Modifiers == ModifierKeys.None)
-                    {
-                        viewMode = CalendarViewMode.Month;
-                        RenderCalendar();
-                        handled = true;
-                    }
-                    break;
-
-                case Key.W:
-                    if (e.KeyboardDevice.Modifiers == ModifierKeys.None)
-                    {
-                        viewMode = CalendarViewMode.Week;
-                        RenderCalendar();
-                        handled = true;
-                    }
-                    break;
-
-                // Actions
-                case Key.Enter:
-                    if (selectedDate.HasValue)
-                    {
-                        ShowTasksForDate(selectedDate.Value);
-                        handled = true;
-                    }
-                    break;
-
-                case Key.T:
-                    if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && selectedDate.HasValue)
-                    {
-                        CreateTaskForDate(selectedDate.Value);
-                        handled = true;
-                    }
-                    break;
-
-                case Key.Home:
-                    // Jump to today
-                    currentMonth = DateTime.Today;
-                    selectedDate = DateTime.Today;
-                    RenderCalendar();
-                    handled = true;
-                    break;
-            }
-
-            if (handled)
+            // Dispatch to ShortcutManager
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
                 e.Handled = true;
             }
@@ -699,6 +739,20 @@ namespace SuperTUI.Panes
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 return;
+            }
+
+            // If there's only one task, publish TaskSelectedEvent for cross-pane communication
+            if (tasksForDate.Count == 1)
+            {
+                var task = tasksForDate[0];
+                eventBus.Publish(new Core.Events.TaskSelectedEvent
+                {
+                    TaskId = task.Id,
+                    ProjectId = task.ProjectId,
+                    Task = task,
+                    SourceWidget = PaneName
+                });
+                Log($"Published TaskSelectedEvent for task: {task.Title}");
             }
 
             // Build task list
@@ -905,14 +959,161 @@ namespace SuperTUI.Panes
 
         #endregion
 
+        #region EventBus Handlers
+
+        /// <summary>
+        /// Handle ProjectSelectedEvent - filter calendar to show only project tasks
+        /// </summary>
+        private void OnProjectSelected(Core.Events.ProjectSelectedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                if (evt.Project != null)
+                {
+                    Log($"Project selected via EventBus: {evt.Project.Name}");
+                    // ProjectContext will be updated separately, just refresh calendar
+                    LoadTasks();
+                    RenderCalendar();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Handle TaskSelectedEvent - highlight the selected task's due date on calendar
+        /// </summary>
+        private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                if (evt.Task != null && evt.Task.DueDate.HasValue)
+                {
+                    Log($"Task selected via EventBus: {evt.Task.Title}");
+                    highlightedTaskId = evt.TaskId;
+
+                    // Navigate to the month containing the task's due date
+                    currentMonth = new DateTime(evt.Task.DueDate.Value.Year, evt.Task.DueDate.Value.Month, 1);
+                    selectedDate = evt.Task.DueDate.Value.Date;
+
+                    RenderCalendar();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Handle TaskCreatedEvent - refresh calendar when tasks are created
+        /// </summary>
+        private void OnTaskCreated(Core.Events.TaskCreatedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                Log($"Task created via EventBus: {evt.Title}");
+                LoadTasks();
+                RenderCalendar();
+            });
+        }
+
+        /// <summary>
+        /// Handle TaskUpdatedEvent - refresh calendar when tasks are updated
+        /// </summary>
+        private void OnTaskUpdatedEvent(Core.Events.TaskUpdatedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                if (evt.Task != null)
+                {
+                    Log($"Task updated via EventBus: {evt.Task.Title}");
+                    LoadTasks();
+                    RenderCalendar();
+                }
+            });
+        }
+
+        #endregion
+
         #region Cleanup
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            CacheThemeColors();
+
+            // Update all controls
+            if (calendarGrid != null)
+            {
+                // Calendar cells will be updated in RenderCalendar()
+                RenderCalendar();
+            }
+
+            if (monthYearLabel != null)
+            {
+                monthYearLabel.Foreground = accentBrush;
+            }
+
+            if (statusBar != null)
+            {
+                statusBar.Foreground = dimBrush;
+            }
+
+            this.InvalidateVisual();
+        }
 
         protected override void OnDispose()
         {
+            // Unsubscribe from EventBus to prevent memory leaks
+            if (projectSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(projectSelectedHandler);
+            }
+
+            if (taskSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(taskSelectedHandler);
+            }
+
+            if (taskCreatedHandler != null)
+            {
+                eventBus.Unsubscribe(taskCreatedHandler);
+            }
+
+            if (taskUpdatedHandler != null)
+            {
+                eventBus.Unsubscribe(taskUpdatedHandler);
+            }
+
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+            }
+
+            // Unsubscribe from task service events
             taskService.TaskAdded -= OnTaskChanged;
             taskService.TaskUpdated -= OnTaskChanged;
             taskService.TaskDeleted -= OnTaskDeleted;
+
+            // Unsubscribe from theme changes
+            themeManager.ThemeChanged -= OnThemeChanged;
+
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - reload tasks and re-render calendar
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                LoadTasks();
+                RenderCalendar();
+                Log("CalendarPane refreshed (RefreshRequestedEvent)");
+            });
         }
 
         #endregion

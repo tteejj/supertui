@@ -390,6 +390,22 @@ namespace SuperTUI.Core.Events
         public string SourceWidget { get; set; }
     }
 
+    public class ProjectChangedEvent
+    {
+        public Guid ProjectId { get; set; }
+        public string ProjectName { get; set; }
+        public ProjectChangeType ChangeType { get; set; }
+        public string Source { get; set; }
+        public Core.Models.Project Project { get; set; }
+    }
+
+    public enum ProjectChangeType
+    {
+        Created,
+        Updated,
+        Deleted
+    }
+
     public class RefreshRequestedEvent
     {
         public string TargetWidget { get; set; } // null = all widgets

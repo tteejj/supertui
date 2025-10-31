@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Interfaces;
@@ -25,6 +26,10 @@ namespace SuperTUI.Panes
         private readonly PaneFactory paneFactory;
         private readonly PaneManager paneManager;
         private readonly IConfigurationManager configManager;
+        private readonly IEventBus eventBus;
+
+        // Event handlers (store references for proper unsubscription)
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
         // UI Components
         private TextBox searchBox;
@@ -57,12 +62,14 @@ namespace SuperTUI.Panes
             IProjectContextManager projectContext,
             IConfigurationManager configManager,
             PaneFactory paneFactory,
-            PaneManager paneManager)
+            PaneManager paneManager,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
             this.configManager = configManager ?? throw new ArgumentNullException(nameof(configManager));
             this.paneFactory = paneFactory ?? throw new ArgumentNullException(nameof(paneFactory));
             this.paneManager = paneManager ?? throw new ArgumentNullException(nameof(paneManager));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             PaneName = "Command Palette";
             Width = 600;
@@ -210,6 +217,13 @@ namespace SuperTUI.Panes
         public override void Initialize()
         {
             base.Initialize();
+
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Subscribe to EventBus for cross-pane communication
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
 
             // Auto-focus search box when palette opens
             Loaded += (s, e) =>
@@ -595,12 +609,29 @@ namespace SuperTUI.Panes
                         var pane = paneFactory.CreatePane(item.Name);
                         paneManager.OpenPane(pane);
                         Log($"Opened pane: {item.Name}");
+
+                        // Publish event for pane coordination
+                        eventBus.Publish(new Core.Events.CommandExecutedFromPaletteEvent
+                        {
+                            CommandName = item.Name,
+                            CommandCategory = "Pane",
+                            ExecutedAt = DateTime.Now
+                        });
+
                         Result = ModalResult.OK;
                         CloseRequested?.Invoke(this, new ModalClosedEventArgs(Result));
                         break;
 
                     case PaletteItemType.Command:
                         ExecuteSystemCommand(item.Name, fullCommand);
+
+                        // Publish event for command coordination
+                        eventBus.Publish(new Core.Events.CommandExecutedFromPaletteEvent
+                        {
+                            CommandName = item.Name,
+                            CommandCategory = "System",
+                            ExecutedAt = DateTime.Now
+                        });
                         break;
                 }
             }
@@ -678,10 +709,79 @@ namespace SuperTUI.Panes
             });
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            var theme = themeManager.CurrentTheme;
+
+            var bgBrush = new SolidColorBrush(theme.Background);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var surfaceBrush = new SolidColorBrush(theme.Surface);
+            var borderActiveBrush = new SolidColorBrush(theme.BorderActive);
+
+            // Update all controls
+            if (overlayBorder != null)
+            {
+                overlayBorder.Background = new SolidColorBrush(Color.FromArgb(204, theme.Background.R, theme.Background.G, theme.Background.B));
+            }
+
+            if (searchBox != null)
+            {
+                searchBox.Foreground = fgBrush;
+                searchBox.Background = Brushes.Transparent;
+            }
+
+            if (resultsListBox != null)
+            {
+                resultsListBox.Foreground = fgBrush;
+                resultsListBox.Background = Brushes.Transparent;
+            }
+
+            this.InvalidateVisual();
+        }
+
         protected override void OnDispose()
         {
+            // Unsubscribe from EventBus to prevent memory leaks
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+                refreshRequestedHandler = null;
+            }
+
+            // Unsubscribe from theme changes
+            themeManager.ThemeChanged -= OnThemeChanged;
+
             // Clean up if needed
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - rebuild palette items
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                RefreshCommands();
+                Log("CommandPalettePane refreshed (RefreshRequestedEvent)");
+            });
+        }
+
+        /// <summary>
+        /// Refresh commands by rebuilding palette items
+        /// </summary>
+        private void RefreshCommands()
+        {
+            BuildPaletteItems();
+            RefreshResults(searchBox?.Text?.Trim() ?? "");
         }
 
         // IModal interface methods

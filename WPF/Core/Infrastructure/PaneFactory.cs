@@ -106,7 +106,7 @@ namespace SuperTUI.Core.Infrastructure
                     Icon = "📁",
                     Creator = () =>
                     {
-                        var pane = new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager);
+                        var pane = new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager, eventBus);
                         SetFocusHistory(pane);
                         return pane;
                     },
@@ -155,7 +155,7 @@ namespace SuperTUI.Core.Infrastructure
                     Icon = "📅",
                     Creator = () =>
                     {
-                        var pane = new CalendarPane(logger, themeManager, projectContext, taskService, projectService);
+                        var pane = new CalendarPane(logger, themeManager, projectContext, taskService, projectService, eventBus);
                         SetFocusHistory(pane);
                         return pane;
                     }

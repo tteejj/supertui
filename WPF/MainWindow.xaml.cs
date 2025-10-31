@@ -204,6 +204,11 @@ namespace SuperTUI
                 () => RedoLastCommand(),
                 "Redo last command");
 
+            // Refresh all panes: Ctrl+R
+            shortcuts.RegisterGlobal(Key.R, ModifierKeys.Control,
+                () => RefreshAllPanes(),
+                "Refresh all panes");
+
             logger.Log(LogLevel.Info, "MainWindow", "Registered all keyboard shortcuts with ShortcutManager");
         }
 
@@ -279,6 +284,29 @@ namespace SuperTUI
             {
                 logger.Log(LogLevel.Error, "MainWindow", $"Failed to redo: {ex.Message}", ex);
                 MessageBox.Show($"Failed to redo: {ex.Message}", "Redo Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Refresh all panes (Ctrl+R)
+        /// Publishes RefreshRequestedEvent to all subscribed panes
+        /// </summary>
+        private void RefreshAllPanes()
+        {
+            try
+            {
+                var eventBus = serviceContainer.GetRequiredService<IEventBus>();
+                eventBus.Publish(new Core.Events.RefreshRequestedEvent
+                {
+                    TargetWidget = null, // null = all panes
+                    Reason = "User requested refresh (Ctrl+R)"
+                });
+
+                logger.Log(LogLevel.Info, "MainWindow", "Published RefreshRequestedEvent to all panes");
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Error, "MainWindow", $"Failed to refresh panes: {ex.Message}", ex);
             }
         }
 
@@ -602,7 +630,8 @@ namespace SuperTUI
                     projectContext,
                     serviceContainer.GetRequiredService<IConfigurationManager>(),
                     paneFactory,
-                    paneManager
+                    paneManager,
+                    serviceContainer.GetRequiredService<IEventBus>()
                 );
 
                 commandPalette.Initialize();

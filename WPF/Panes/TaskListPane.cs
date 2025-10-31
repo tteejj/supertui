@@ -28,6 +28,11 @@ namespace SuperTUI.Panes
         private readonly IEventBus eventBus;
         private readonly CommandHistory commandHistory;
 
+        // Event handlers
+        private Action<Core.Events.ProjectSelectedEvent> projectSelectedHandler;
+        private Action<Core.Events.CommandExecutedFromPaletteEvent> commandExecutedHandler;
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
+
         // UI Components
         private Grid mainLayout;
         private ListBox taskListBox;
@@ -107,11 +112,79 @@ namespace SuperTUI.Panes
             // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
             RegisterPaneShortcuts();
 
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Subscribe to ProjectSelectedEvent for cross-pane project context awareness
+            projectSelectedHandler = OnProjectSelected;
+            eventBus.Subscribe(projectSelectedHandler);
+
+            // Subscribe to CommandExecutedFromPaletteEvent for command palette coordination
+            commandExecutedHandler = OnCommandExecutedFromPalette;
+            eventBus.Subscribe(commandExecutedHandler);
+
+            // Subscribe to RefreshRequestedEvent for global refresh (Ctrl+R)
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
+
             // Set initial focus to task list
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 taskListBox?.Focus();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// Handle ProjectSelectedEvent from other panes (e.g., ProjectsPane)
+        /// Filters tasks to show only those belonging to the selected project
+        /// </summary>
+        private void OnProjectSelected(Core.Events.ProjectSelectedEvent evt)
+        {
+            if (evt?.Project == null) return;
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // Update project context (inherited from PaneBase)
+                // This will trigger OnProjectContextChanged which calls RefreshTaskList()
+                // The RefreshTaskList() method already filters by projectContext.CurrentProject
+
+                logger.Log(LogLevel.Info, "TaskListPane",
+                    $"Project selected from {evt.SourceWidget}: {evt.Project.Name}");
+
+                // The filtering happens automatically in RefreshTaskList() via OnProjectContextChanged
+                // No additional code needed here - just log for debugging
+            });
+        }
+
+        /// <summary>
+        /// Handle CommandExecutedFromPaletteEvent from command palette
+        /// Responds to specific commands by refreshing and selecting tasks
+        /// </summary>
+        private void OnCommandExecutedFromPalette(Core.Events.CommandExecutedFromPaletteEvent evt)
+        {
+            if (evt == null) return;
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // Check if command is related to task creation
+                var commandLower = evt.CommandName?.ToLower() ?? "";
+                if (commandLower == "tasks" || commandLower == "create task" || commandLower == "new task")
+                {
+                    logger.Log(LogLevel.Info, "TaskListPane",
+                        $"Command palette executed '{evt.CommandName}' - refreshing and selecting newest task");
+
+                    // Refresh task list
+                    RefreshTaskList();
+
+                    // Select newest task (first in list after refresh)
+                    if (taskListBox.Items.Count > 0)
+                    {
+                        taskListBox.SelectedIndex = 0;
+                        taskListBox.ScrollIntoView(taskListBox.Items[0]);
+                        taskListBox.Focus();
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -801,16 +874,24 @@ namespace SuperTUI.Panes
             Grid.SetColumn(priorityIcon, 3);
             grid.Children.Add(priorityIcon);
 
-            // Title
+            // Title with search highlighting
             var title = new TextBlock
             {
-                Text = vm.Task.Title,
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
                 Foreground = GetTaskForeground(vm.Task),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                AddHighlightedText(title, vm.Task.Title, searchQuery);
+            }
+            else
+            {
+                title.Text = vm.Task.Title;
+            }
 
             if (vm.Task.Status == TaskStatus.Completed)
             {
@@ -1320,51 +1401,110 @@ namespace SuperTUI.Panes
             if (selectedTask == null)
                 return;
 
-            // Find the selected item in the ListBox
-            var selectedIndex = taskListBox.SelectedIndex;
-            if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
-                return;
-
-            // Store the original item
-            var originalItem = taskListBox.Items[selectedIndex];
-
-            // Create NEW date edit box each time (avoid parenting error)
-            dateEditBox = new TextBox
+            var newDate = ShowDatePicker(selectedTask.Task.DueDate);
+            if (newDate != selectedTask.Task.DueDate)
             {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Padding = new Thickness(6, 2, 6, 2),
-                Background = surfaceBrush,
-                Foreground = accentBrush,
-                BorderThickness = new Thickness(1),
-                BorderBrush = accentBrush,
-                Tag = originalItem  // Store original to restore on cancel
+                var task = taskService.GetTask(selectedTask.Task.Id);
+                if (task != null)
+                {
+                    task.DueDate = newDate;
+                    task.UpdatedAt = DateTime.Now;
+                    taskService.UpdateTask(task);
+                    RefreshTaskList();
+                }
+            }
+            taskListBox.Focus();
+        }
+
+        private DateTime? ShowDatePicker(DateTime? currentDate)
+        {
+            var theme = themeManager.CurrentTheme;
+            DateTime? selectedDate = null;
+            bool dialogResult = false;
+
+            // Create overlay
+            var overlay = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(204, 0, 0, 0)),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
-            dateEditBox.KeyDown += DateEditBox_KeyDown;
-            dateEditBox.LostFocus += DateEditBox_LostFocus;
 
-            dateEditingTask = selectedTask;
-
-            // Show current due date or placeholder
-            if (selectedTask.Task.DueDate.HasValue)
+            // Create calendar
+            var calendar = new System.Windows.Controls.Calendar
             {
-                dateEditBox.Text = selectedTask.Task.DueDate.Value.ToString("yyyy-MM-dd");
-            }
-            else
+                DisplayDate = currentDate ?? DateTime.Today,
+                SelectedDate = currentDate,
+                Width = 250,
+                Height = 250
+            };
+
+            // Create buttons
+            var btnOk = new Button { Content = "OK", Width = 80, Margin = new Thickness(5) };
+            var btnClear = new Button { Content = "Clear", Width = 80, Margin = new Thickness(5) };
+            var btnCancel = new Button { Content = "Cancel", Width = 80, Margin = new Thickness(5) };
+
+            btnOk.Click += (s, e) => {
+                selectedDate = calendar.SelectedDate;
+                dialogResult = true;
+                ((Panel)overlay.Parent).Children.Remove(overlay);
+            };
+
+            btnClear.Click += (s, e) => {
+                selectedDate = null;
+                dialogResult = true;
+                ((Panel)overlay.Parent).Children.Remove(overlay);
+            };
+
+            btnCancel.Click += (s, e) => {
+                ((Panel)overlay.Parent).Children.Remove(overlay);
+            };
+
+            // Build dialog
+            var dialog = new Border
             {
-                dateEditBox.Text = "2d, tomorrow, 2025-12-25, next friday, none";
+                Background = new SolidColorBrush(theme.Background),
+                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(8),
+                Width = 300,
+                Height = 350,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "Select Due Date",
+                            FontSize = 16,
+                            FontWeight = FontWeights.Bold,
+                            Foreground = new SolidColorBrush(theme.Primary),
+                            Margin = new Thickness(10)
+                        },
+                        calendar,
+                        new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(10),
+                            Children = { btnOk, btnClear, btnCancel }
+                        }
+                    }
+                }
+            };
+
+            overlay.Child = dialog;
+
+            // Add to parent (find mainLayout or similar)
+            var parent = this.Parent as Panel;
+            if (parent != null)
+            {
+                parent.Children.Add(overlay);
             }
 
-            // Remove old item and insert edit box (avoids parenting error)
-            taskListBox.Items.RemoveAt(selectedIndex);
-            taskListBox.Items.Insert(selectedIndex, dateEditBox);
-            taskListBox.SelectedIndex = selectedIndex;
-
-            dateEditBox.Focus();
-            dateEditBox.SelectAll();
-
-            // Update status bar with hints
-            statusBar.Text = "📅 Date formats: 2d, tomorrow, 2025-12-25, next friday, mon, none (to clear) | Enter: save | Esc: cancel";
+            return dialogResult ? selectedDate : currentDate;
         }
 
         private void DateEditBox_KeyDown(object sender, KeyEventArgs e)
@@ -1518,6 +1658,33 @@ namespace SuperTUI.Panes
                 daysUntilTarget = 7;
 
             return today.AddDays(daysUntilTarget);
+        }
+
+        private void AddHighlightedText(TextBlock textBlock, string text, string searchQuery)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var theme = themeManager.CurrentTheme;
+            var highlightBrush = new SolidColorBrush(theme.Success);
+            var normalBrush = new SolidColorBrush(theme.Foreground);
+
+            int queryIndex = 0;
+            for (int i = 0; i < text.Length && queryIndex < searchQuery.Length; i++)
+            {
+                bool isMatch = char.ToLower(text[i]) == char.ToLower(searchQuery[queryIndex]);
+
+                var run = new System.Windows.Documents.Run(text[i].ToString())
+                {
+                    Foreground = isMatch ? highlightBrush : normalBrush,
+                    FontWeight = isMatch ? FontWeights.Bold : FontWeights.Normal
+                };
+
+                if (isMatch) queryIndex++;
+                textBlock.Inlines.Add(run);
+            }
         }
 
         // Tag editing methods
@@ -2072,13 +2239,113 @@ namespace SuperTUI.Panes
             return null;
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            CacheThemeColors();
+
+            // Update all controls
+            if (searchBox != null)
+            {
+                searchBox.Foreground = fgBrush;
+                searchBox.Background = surfaceBrush;
+                searchBox.BorderBrush = borderBrush;
+            }
+
+            if (quickAddForm != null)
+            {
+                quickAddForm.Background = surfaceBrush;
+            }
+
+            if (quickAddTitle != null)
+            {
+                quickAddTitle.Background = surfaceBrush;
+                quickAddTitle.Foreground = fgBrush;
+                quickAddTitle.BorderBrush = accentBrush;
+            }
+
+            if (quickAddDueDate != null)
+            {
+                quickAddDueDate.Background = surfaceBrush;
+                quickAddDueDate.Foreground = fgBrush;
+                quickAddDueDate.BorderBrush = accentBrush;
+            }
+
+            if (quickAddPriority != null)
+            {
+                quickAddPriority.Background = surfaceBrush;
+                quickAddPriority.Foreground = fgBrush;
+                quickAddPriority.BorderBrush = accentBrush;
+            }
+
+            if (filterLabel != null)
+            {
+                filterLabel.Foreground = accentBrush;
+            }
+
+            if (taskListBox != null)
+            {
+                taskListBox.Background = Brushes.Transparent;
+            }
+
+            if (statusBar != null)
+            {
+                statusBar.Foreground = dimBrush;
+            }
+
+            // Refresh the task list to update all task items with new colors
+            RefreshTaskList();
+
+            this.InvalidateVisual();
+        }
+
         protected override void OnDispose()
         {
+            // Unsubscribe from task service events
             taskService.TaskAdded -= OnTaskChanged;
             taskService.TaskUpdated -= OnTaskChanged;
             taskService.TaskDeleted -= OnTaskDeleted;
             taskService.TaskRestored -= OnTaskChanged;
+
+            // Unsubscribe from theme changes
+            themeManager.ThemeChanged -= OnThemeChanged;
+
+            // Unsubscribe from event bus to prevent memory leaks
+            if (projectSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(projectSelectedHandler);
+            }
+
+            if (commandExecutedHandler != null)
+            {
+                eventBus.Unsubscribe(commandExecutedHandler);
+            }
+
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+            }
+
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - refresh task list
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                RefreshTaskList();
+                Log("TaskListPane refreshed (RefreshRequestedEvent)");
+            });
         }
     }
 

@@ -48,6 +48,12 @@ namespace SuperTUI.Panes
 
         private readonly IConfigurationManager config;
         private readonly ISecurityManager security;
+        private readonly IEventBus eventBus;
+
+        // Event handlers (store references for proper unsubscription)
+        private Action<Core.Events.ProjectSelectedEvent> projectSelectedHandler;
+        private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
         // UI Components - Three-panel layout
         private Grid mainLayout;
@@ -67,6 +73,8 @@ namespace SuperTUI.Panes
         private TextBlock infoTypeText;
         private TextBlock infoPermissionsText;
         private TextBlock infoWarningText;
+        private Border previewBorder;
+        private TextBox previewTextBox;
 
         // Theme-aware UI elements (need to track for ApplyTheme)
         private List<Button> bookmarkButtons = new List<Button>();
@@ -95,6 +103,7 @@ namespace SuperTUI.Panes
 
         // Constants
         private const int MAX_RECENT_LOCATIONS = 10;
+        private const string SEARCH_PLACEHOLDER = "Filter files... (Ctrl+F)";
 
         #endregion
 
@@ -124,11 +133,13 @@ namespace SuperTUI.Panes
             IThemeManager themeManager,
             IProjectContextManager projectContext,
             IConfigurationManager config,
-            ISecurityManager security)
+            ISecurityManager security,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
             this.config = config ?? throw new ArgumentNullException(nameof(config));
             this.security = security ?? throw new ArgumentNullException(nameof(security));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             PaneName = "File Browser";
             PaneIcon = "📁";
@@ -164,6 +175,16 @@ namespace SuperTUI.Panes
 
             // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
             RegisterPaneShortcuts();
+
+            // Subscribe to EventBus for cross-pane communication
+            projectSelectedHandler = OnProjectSelected;
+            eventBus.Subscribe(projectSelectedHandler);
+
+            taskSelectedHandler = OnTaskSelected;
+            eventBus.Subscribe(taskSelectedHandler);
+
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
         }
 
         /// <summary>
@@ -458,9 +479,9 @@ namespace SuperTUI.Panes
                 VerticalAlignment = VerticalAlignment.Center
             };
             searchBox.TextChanged += OnSearchTextChanged;
-            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == "Filter files... (Ctrl+F)" ? "" : searchBox.Text;
-            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? "Filter files... (Ctrl+F)" : searchBox.Text;
-            searchBox.Text = "Filter files... (Ctrl+F)";
+            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == SEARCH_PLACEHOLDER ? "" : searchBox.Text;
+            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? SEARCH_PLACEHOLDER : searchBox.Text;
+            searchBox.Text = SEARCH_PLACEHOLDER;
 
             searchBorder.Child = searchBox;
             Grid.SetRow(searchBorder, 0);
@@ -596,6 +617,31 @@ namespace SuperTUI.Panes
                 Text = "-"
             };
             infoStack.Children.Add(infoPermissionsText);
+
+            // Preview section
+            AddInfoLabel(infoStack, "Preview:");
+            previewBorder = new Border
+            {
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8),
+                Margin = new Thickness(0, 4, 0, 0),
+                MaxHeight = 300,
+                Visibility = Visibility.Collapsed
+            };
+
+            previewTextBox = new TextBox
+            {
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 12,
+                IsReadOnly = true,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                BorderThickness = new Thickness(0)
+            };
+
+            previewBorder.Child = previewTextBox;
+            infoStack.Children.Add(previewBorder);
 
             infoBorder.Child = infoStack;
             Grid.SetRow(infoBorder, 1);
@@ -826,6 +872,9 @@ namespace SuperTUI.Panes
 
         private async Task LoadFilesAsync(CancellationToken token)
         {
+            // Show loading indicator
+            ShowStatus("Loading files...");
+
             try
             {
                 var files = new List<FileSystemItem>();
@@ -903,6 +952,7 @@ namespace SuperTUI.Panes
                     {
                         currentFiles = files;
                         FilterFiles();
+                        ShowStatus($"Loaded {files.Count} items");
                         UpdateStatus();
                     }
                 });
@@ -923,7 +973,7 @@ namespace SuperTUI.Panes
                             $"Loading files from directory '{currentPath}'",
                             logger);
 
-                        ShowStatus($"Error loading directory: {ex.Message}", isError: true);
+                        ShowStatus($"Error: {ex.Message}", isError: true);
                     });
                 }
             }
@@ -933,7 +983,7 @@ namespace SuperTUI.Panes
         {
             var query = searchBox.Text;
 
-            if (string.IsNullOrEmpty(query) || query == "Filter files... (Ctrl+F)")
+            if (string.IsNullOrEmpty(query) || query == SEARCH_PLACEHOLDER)
             {
                 filteredFiles = currentFiles.ToList();
             }
@@ -988,18 +1038,27 @@ namespace SuperTUI.Panes
                     };
                     stackPanel.Children.Add(icon);
 
-                    // Name
+                    // Name with search highlighting
                     var nameBlock = new TextBlock
                     {
-                        Text = item.Name,
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                         FontSize = 18,
                         VerticalAlignment = VerticalAlignment.Center
                     };
 
+                    var query = searchBox.Text;
+                    if (!string.IsNullOrWhiteSpace(query) && query != SEARCH_PLACEHOLDER)
+                    {
+                        AddHighlightedText(nameBlock, item.Name, query);
+                    }
+                    else
+                    {
+                        nameBlock.Text = item.Name;
+                    }
+
                     if (item.IsSymlink)
                     {
-                        nameBlock.Text += " →";
+                        nameBlock.Inlines.Add(new System.Windows.Documents.Run(" →"));
                         nameBlock.FontStyle = FontStyles.Italic;
                     }
 
@@ -1255,6 +1314,103 @@ namespace SuperTUI.Panes
 
         #endregion
 
+        #region EventBus Handlers
+
+        /// <summary>
+        /// Handle ProjectSelectedEvent - navigate to project directory when project selected
+        /// </summary>
+        private void OnProjectSelected(Core.Events.ProjectSelectedEvent evt)
+        {
+            if (evt?.Project == null) return;
+
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                // Try to get working directory from CustomFields
+                string projectPath = null;
+                if (evt.Project.CustomFields != null && evt.Project.CustomFields.TryGetValue("WorkingDirectory", out projectPath))
+                {
+                    if (!string.IsNullOrEmpty(projectPath) && Directory.Exists(projectPath))
+                    {
+                        NavigateToDirectory(projectPath);
+                        Log($"Navigated to project directory: {projectPath}");
+                        ShowStatus($"Project: {evt.Project.Name}");
+                        return;
+                    }
+                }
+
+                Log($"Project {evt.Project.Name} has no valid working directory in CustomFields", LogLevel.Info);
+            });
+        }
+
+        /// <summary>
+        /// Handle TaskSelectedEvent - navigate to task files if task has file metadata
+        /// </summary>
+        private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
+        {
+            if (evt?.Task == null) return;
+
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                // Check if task description contains a file path (simple heuristic)
+                // This is a simple implementation - can be enhanced based on actual task metadata structure
+                var description = evt.Task.Description;
+                if (!string.IsNullOrEmpty(description))
+                {
+                    // Try to extract file paths from description using simple pattern matching
+                    // Look for absolute paths (starting with / or drive letter)
+                    var lines = description.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var line in lines)
+                    {
+                        var trimmed = line.Trim();
+                        // Check if line looks like a file path
+                        if ((trimmed.StartsWith("/") || (trimmed.Length > 3 && trimmed[1] == ':')) && File.Exists(trimmed))
+                        {
+                            var directoryPath = Path.GetDirectoryName(trimmed);
+                            if (!string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
+                            {
+                                NavigateToDirectory(directoryPath);
+
+                                // Try to select the file
+                                SelectFileByPath(trimmed);
+
+                                Log($"Navigated to task file directory: {directoryPath}");
+                                ShowStatus($"Task: {evt.Task.Title}");
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                Log($"Task {evt.Task.Title} has no associated file path in description", LogLevel.Info);
+            });
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - refresh current directory
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                RefreshCurrentDirectory();
+                Log("FileBrowserPane refreshed (RefreshRequestedEvent)");
+            });
+        }
+
+        /// <summary>
+        /// Refresh current directory without changing navigation
+        /// </summary>
+        private void RefreshCurrentDirectory()
+        {
+            if (!string.IsNullOrEmpty(currentPath) && Directory.Exists(currentPath))
+            {
+                NavigateToDirectory(currentPath);
+                ShowStatus("Directory refreshed");
+            }
+        }
+
+        #endregion
+
         #region Actions
 
         private void HandleSelection()
@@ -1284,6 +1440,17 @@ namespace SuperTUI.Panes
                 {
                     // Select file
                     FileSelected?.Invoke(this, new FileSelectedEventArgs { Path = selectedItem.FullPath });
+
+                    // Publish FileSelectedEvent to EventBus for cross-pane communication
+                    eventBus.Publish(new Core.Events.FileSelectedEvent
+                    {
+                        FilePath = selectedItem.FullPath,
+                        FileName = selectedItem.Name,
+                        FileSize = selectedItem.Size,
+                        SelectedAt = DateTime.Now
+                    });
+
+                    Log($"Published FileSelectedEvent: {selectedItem.FullPath}");
                 }
             }
         }
@@ -1322,10 +1489,11 @@ namespace SuperTUI.Panes
         private void ToggleBookmarks()
         {
             showBookmarks = !showBookmarks;
-            // Rebuild layout
-            var content = BuildContent();
-            contentArea.Content = content;
-            // ApplyTheme is called in BuildContent via ApplyFileBrowserTheme
+            // BUG FIX: contentArea is undefined - rebuild requires pane reconstruction
+            // TODO: Implement proper layout toggle without full rebuild
+            logger.Log(LogLevel.Warning, "FileBrowserPane",
+                "ToggleBookmarks not yet implemented - requires pane reconstruction");
+            ShowStatus("Bookmark toggle not yet implemented", isError: true);
         }
 
         private void JumpToBookmark(int index)
@@ -1421,6 +1589,9 @@ namespace SuperTUI.Panes
             {
                 infoWarningText.Visibility = Visibility.Collapsed;
             }
+
+            // Show file preview
+            ShowFilePreview(item);
         }
 
         private void ClearInfoPanel()
@@ -1431,6 +1602,77 @@ namespace SuperTUI.Panes
             infoModifiedText.Text = "-";
             infoPermissionsText.Text = "-";
             infoWarningText.Visibility = Visibility.Collapsed;
+            previewBorder.Visibility = Visibility.Collapsed;
+            previewTextBox.Text = string.Empty;
+        }
+
+        private void ShowFilePreview(FileSystemItem item)
+        {
+            if (item == null || item.IsDirectory)
+            {
+                previewBorder.Visibility = Visibility.Collapsed;
+                previewTextBox.Text = string.Empty;
+                return;
+            }
+
+            var theme = themeManager.CurrentTheme;
+
+            // Check if file is text-based and not too large
+            if (!IsTextFile(item.FullPath))
+            {
+                previewBorder.Visibility = Visibility.Collapsed;
+                previewTextBox.Text = string.Empty;
+                return;
+            }
+
+            if (item.Size > 100 * 1024) // > 100KB
+            {
+                previewBorder.Visibility = Visibility.Visible;
+                previewBorder.Background = new SolidColorBrush(theme.Surface);
+                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
+                previewTextBox.Foreground = new SolidColorBrush(theme.ForegroundSecondary);
+                previewTextBox.Background = new SolidColorBrush(theme.Surface);
+                previewTextBox.Text = $"File too large for preview ({FormatFileSize(item.Size)})";
+                return;
+            }
+
+            try
+            {
+                var content = File.ReadAllText(item.FullPath);
+                var preview = content.Length > 1000
+                    ? content.Substring(0, 1000) + "\n\n... (truncated)"
+                    : content;
+
+                previewBorder.Visibility = Visibility.Visible;
+                previewBorder.Background = new SolidColorBrush(theme.Surface);
+                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
+                previewTextBox.Foreground = new SolidColorBrush(theme.Foreground);
+                previewTextBox.Background = new SolidColorBrush(theme.Surface);
+                previewTextBox.Text = preview;
+            }
+            catch (Exception ex)
+            {
+                previewBorder.Visibility = Visibility.Visible;
+                previewBorder.Background = new SolidColorBrush(theme.Surface);
+                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
+                previewTextBox.Foreground = new SolidColorBrush(theme.Error);
+                previewTextBox.Background = new SolidColorBrush(theme.Surface);
+                previewTextBox.Text = $"Cannot preview file: {ex.Message}";
+            }
+        }
+
+        private bool IsTextFile(string path)
+        {
+            var ext = Path.GetExtension(path).ToLower();
+            var textExtensions = new[]
+            {
+                ".txt", ".md", ".cs", ".json", ".xml", ".xaml", ".config",
+                ".log", ".ini", ".yaml", ".yml", ".toml", ".csv",
+                ".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".cpp", ".c", ".h",
+                ".css", ".scss", ".less", ".html", ".htm", ".svg",
+                ".sh", ".bash", ".ps1", ".bat", ".cmd"
+            };
+            return textExtensions.Contains(ext);
         }
 
         #endregion
@@ -1688,6 +1930,33 @@ namespace SuperTUI.Panes
             });
         }
 
+        private void AddHighlightedText(TextBlock textBlock, string text, string searchQuery)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var theme = themeManager.CurrentTheme;
+            var highlightBrush = new SolidColorBrush(theme.Success);
+            var normalBrush = new SolidColorBrush(theme.Foreground);
+
+            int queryIndex = 0;
+            for (int i = 0; i < text.Length && queryIndex < searchQuery.Length; i++)
+            {
+                bool isMatch = char.ToLower(text[i]) == char.ToLower(searchQuery[queryIndex]);
+
+                var run = new System.Windows.Documents.Run(text[i].ToString())
+                {
+                    Foreground = isMatch ? highlightBrush : normalBrush,
+                    FontWeight = isMatch ? FontWeights.Bold : FontWeights.Normal
+                };
+
+                if (isMatch) queryIndex++;
+                textBlock.Inlines.Add(run);
+            }
+        }
+
         #endregion
 
         #region Public API
@@ -1741,7 +2010,7 @@ namespace SuperTUI.Panes
                     ["CurrentPath"] = currentPath,
                     ["SelectedFilePath"] = selectedItem?.FullPath,
                     ["ShowHiddenFiles"] = showHiddenFiles,
-                    ["SearchFilter"] = (searchBox?.Text != "Filter files... (Ctrl+F)") ? searchBox?.Text : null
+                    ["SearchFilter"] = (searchBox?.Text != SEARCH_PLACEHOLDER) ? searchBox?.Text : null
                 }
             };
         }
@@ -1850,6 +2119,25 @@ namespace SuperTUI.Panes
         {
             // Cancel all async operations FIRST
             disposalCancellation?.Cancel();
+
+            // Unsubscribe from EventBus to prevent memory leaks
+            if (projectSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(projectSelectedHandler);
+                projectSelectedHandler = null;
+            }
+
+            if (taskSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(taskSelectedHandler);
+                taskSelectedHandler = null;
+            }
+
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+                refreshRequestedHandler = null;
+            }
 
             // Unsubscribe from theme events
             themeManager.ThemeChanged -= OnThemeChanged;

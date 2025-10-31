@@ -29,6 +29,10 @@ namespace SuperTUI.Panes
         private readonly IConfigurationManager config;
         private readonly IEventBus eventBus;
         private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
+        private Action<Core.Events.ProjectSelectedEvent> projectSelectedHandler;
+        private Action<Core.Events.FileSelectedEvent> fileSelectedHandler;
+        private Action<Core.Events.CommandExecutedFromPaletteEvent> commandExecutedHandler;
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
         // UI Components - Three-panel layout
         private Grid mainLayout;
@@ -578,11 +582,28 @@ namespace SuperTUI.Panes
 
                     var nameBlock = new TextBlock
                     {
-                        Text = note.Name,
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                         FontSize = 18,
                         FontWeight = FontWeights.Bold
                     };
+
+                    // Add unsaved indicator and use highlighting for note name
+                    string displayName = note.Name;
+                    if (currentNote == note && hasUnsavedChanges)
+                    {
+                        displayName = "* " + displayName;
+                    }
+
+                    var query = searchBox.Text;
+                    if (!string.IsNullOrWhiteSpace(query) && query != "Search notes... (S or F)")
+                    {
+                        AddHighlightedText(nameBlock, displayName, query);
+                    }
+                    else
+                    {
+                        nameBlock.Text = displayName;
+                    }
+
                     stackPanel.Children.Add(nameBlock);
 
                     var infoBlock = new TextBlock
@@ -1681,6 +1702,33 @@ namespace SuperTUI.Panes
             return SanitizeFileName(name);
         }
 
+        private void AddHighlightedText(TextBlock textBlock, string text, string searchQuery)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var theme = themeManager.CurrentTheme;
+            var highlightBrush = new SolidColorBrush(theme.Success);
+            var normalBrush = new SolidColorBrush(theme.Foreground);
+
+            int queryIndex = 0;
+            for (int i = 0; i < text.Length && queryIndex < searchQuery.Length; i++)
+            {
+                bool isMatch = char.ToLower(text[i]) == char.ToLower(searchQuery[queryIndex]);
+
+                var run = new System.Windows.Documents.Run(text[i].ToString())
+                {
+                    Foreground = isMatch ? highlightBrush : normalBrush,
+                    FontWeight = isMatch ? FontWeights.Bold : FontWeights.Normal
+                };
+
+                if (isMatch) queryIndex++;
+                textBlock.Inlines.Add(run);
+            }
+        }
+
         #endregion
 
         #region Overrides
@@ -1692,9 +1740,28 @@ namespace SuperTUI.Panes
             // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
             RegisterPaneShortcuts();
 
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
             // Subscribe to TaskSelectedEvent for cross-pane communication
             taskSelectedHandler = OnTaskSelected;
             eventBus.Subscribe(taskSelectedHandler);
+
+            // Subscribe to ProjectSelectedEvent for project context awareness
+            projectSelectedHandler = OnProjectSelected;
+            eventBus.Subscribe(projectSelectedHandler);
+
+            // Subscribe to FileSelectedEvent for seamless file browsing → note editing workflow
+            fileSelectedHandler = OnFileSelected;
+            eventBus.Subscribe(fileSelectedHandler);
+
+            // Subscribe to CommandExecutedFromPaletteEvent for command palette coordination
+            commandExecutedHandler = OnCommandExecutedFromPalette;
+            eventBus.Subscribe(commandExecutedHandler);
+
+            // Subscribe to RefreshRequestedEvent for global refresh (Ctrl+R)
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
 
             // Set initial focus to notes list for keyboard-first navigation
             Application.Current?.Dispatcher.InvokeAsync(() =>
@@ -1830,6 +1897,130 @@ namespace SuperTUI.Panes
                     searchBox.Text = evt.Task.Title;
                     FilterNotes();
                     Log($"Filtered notes for task: {evt.Task.Title}");
+                }
+            });
+        }
+
+        /// <summary>
+        /// Handle ProjectSelectedEvent from other panes (e.g., ProjectsPane)
+        /// Switches the notes folder to the project's folder
+        /// </summary>
+        private void OnProjectSelected(Core.Events.ProjectSelectedEvent evt)
+        {
+            if (evt?.Project == null) return;
+
+            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                logger.Log(LogLevel.Info, "NotesPane",
+                    $"Project selected from {evt.SourceWidget}: {evt.Project.Name}");
+
+                // Save current note if needed before switching
+                if (hasUnsavedChanges && currentNote != null)
+                {
+                    await SaveCurrentNoteAsync();
+                }
+
+                // The project context will be updated by PaneBase
+                // which will trigger OnProjectContextChanged
+                // That method will call UpdateNotesFolder() and reload notes
+
+                // Show status message
+                ShowStatus($"Switched to project: {evt.Project.Name}");
+            });
+        }
+
+        /// <summary>
+        /// Handle CommandExecutedFromPaletteEvent from command palette
+        /// Opens new note editor when "New Note" command is executed
+        /// </summary>
+        private void OnCommandExecutedFromPalette(Core.Events.CommandExecutedFromPaletteEvent evt)
+        {
+            if (evt == null) return;
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // Check if command is related to note creation
+                var commandLower = evt.CommandName?.ToLower() ?? "";
+                if (commandLower == "notes" || commandLower == "new note" || commandLower == "create note")
+                {
+                    logger.Log(LogLevel.Info, "NotesPane",
+                        $"Command palette executed '{evt.CommandName}' - opening new note editor");
+
+                    // Open new note editor
+                    CreateNewNote();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Handle FileSelectedEvent from FileBrowserPane
+        /// Opens text files (.md, .txt) in the editor, shows message for other types
+        /// </summary>
+        private void OnFileSelected(Core.Events.FileSelectedEvent evt)
+        {
+            if (evt == null || string.IsNullOrEmpty(evt.FilePath)) return;
+
+            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                logger.Log(LogLevel.Info, "NotesPane",
+                    $"File selected from FileBrowser: {evt.FileName}");
+
+                // Get file extension
+                var extension = Path.GetExtension(evt.FilePath)?.ToLowerInvariant();
+
+                // Check if it's a text file we can open
+                if (extension == ".md" || extension == ".txt")
+                {
+                    try
+                    {
+                        // Save current note if needed before switching
+                        if (hasUnsavedChanges && currentNote != null)
+                        {
+                            var result = MessageBox.Show(
+                                $"Save changes to '{currentNote.Name}'?",
+                                "Unsaved Changes",
+                                MessageBoxButton.YesNoCancel,
+                                MessageBoxImage.Question);
+
+                            if (result == MessageBoxResult.Cancel)
+                            {
+                                return; // Don't open new file
+                            }
+                            else if (result == MessageBoxResult.Yes)
+                            {
+                                await SaveCurrentNoteAsync();
+                            }
+                        }
+
+                        // Load the selected file
+                        var note = new NoteMetadata
+                        {
+                            Name = Path.GetFileNameWithoutExtension(evt.FilePath),
+                            FullPath = evt.FilePath,
+                            LastModified = File.GetLastWriteTime(evt.FilePath),
+                            Extension = extension
+                        };
+
+                        await LoadNoteAsync(note);
+                        ShowStatus($"Opened: {evt.FileName}");
+                        Log($"Loaded file from FileBrowser: {evt.FilePath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.IO,
+                            ex,
+                            $"Loading file from FileBrowser: '{evt.FilePath}'",
+                            logger);
+
+                        ShowStatus($"ERROR: Failed to open file", isError: true);
+                    }
+                }
+                else
+                {
+                    // Not a text file we can open
+                    ShowStatus($"Cannot open {extension} files in notes editor", isError: false);
+                    Log($"File type {extension} not supported in NotesPane");
                 }
             });
         }
@@ -2135,6 +2326,51 @@ namespace SuperTUI.Panes
             return null;
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            var theme = themeManager.CurrentTheme;
+
+            var bgBrush = new SolidColorBrush(theme.Background);
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var borderBrush = new SolidColorBrush(theme.Border);
+            var surfaceBrush = new SolidColorBrush(theme.Surface);
+            var accentBrush = new SolidColorBrush(theme.Primary);
+
+            // Update all controls
+            if (searchBox != null)
+            {
+                searchBox.Foreground = fgBrush;
+                searchBox.Background = Brushes.Transparent;
+            }
+
+            if (notesListBox != null)
+            {
+                notesListBox.Foreground = fgBrush;
+                notesListBox.Background = Brushes.Transparent;
+            }
+
+            if (noteEditor != null)
+            {
+                noteEditor.Foreground = fgBrush;
+                noteEditor.Background = Brushes.Transparent;
+            }
+
+            if (statusBar != null)
+            {
+                statusBar.Foreground = fgBrush;
+            }
+
+            this.InvalidateVisual();
+        }
+
         protected override void OnDispose()
         {
             // Cancel all async operations FIRST
@@ -2145,6 +2381,29 @@ namespace SuperTUI.Panes
             {
                 eventBus.Unsubscribe(taskSelectedHandler);
             }
+
+            if (projectSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(projectSelectedHandler);
+            }
+
+            if (fileSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(fileSelectedHandler);
+            }
+
+            if (commandExecutedHandler != null)
+            {
+                eventBus.Unsubscribe(commandExecutedHandler);
+            }
+
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+            }
+
+            // Unsubscribe from theme changes
+            themeManager.ThemeChanged -= OnThemeChanged;
 
             // Save on close if needed (synchronous to ensure it completes)
             if (hasUnsavedChanges && currentNote != null && !disposalCancellation.IsCancellationRequested)
@@ -2179,6 +2438,18 @@ namespace SuperTUI.Panes
             disposalCancellation?.Dispose();
 
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - reload all notes from disk
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                LoadAllNotes();
+                Log("NotesPane refreshed (RefreshRequestedEvent)");
+            });
         }
 
         #endregion

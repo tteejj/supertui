@@ -27,6 +27,10 @@ namespace SuperTUI.Panes
         private readonly IEventBus eventBus;
         private readonly IConfigurationManager configManager;
 
+        // Event handlers (store references for proper unsubscription)
+        private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
+        private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
+
         // UI Components - Two column layout
         private Grid mainLayout;
         private ListBox projectListBox;           // Left column: project list
@@ -47,6 +51,7 @@ namespace SuperTUI.Panes
         private FilterMode currentFilter = FilterMode.Active;
         private bool isInternalCommand = false;
         private string searchQuery = string.Empty;
+        private HashSet<string> modifiedFields = new HashSet<string>();
 
         // Theme colors (cached)
         private SolidColorBrush bgBrush;
@@ -89,11 +94,36 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
+            // Register pane-specific shortcuts with ShortcutManager
+            RegisterPaneShortcuts();
+
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Subscribe to TaskSelectedEvent for cross-pane communication
+            taskSelectedHandler = OnTaskSelected;
+            eventBus.Subscribe(taskSelectedHandler);
+
+            // Subscribe to RefreshRequestedEvent for global refresh (Ctrl+R)
+            refreshRequestedHandler = OnRefreshRequested;
+            eventBus.Subscribe(refreshRequestedHandler);
+
             // Set initial focus to project list
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 projectListBox?.Focus();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control, () => { searchBox?.Focus(); searchBox?.SelectAll(); }, "Focus search box");
+            shortcuts.RegisterForPane(PaneName, Key.A, ModifierKeys.None, () => ShowQuickAdd(), "Show quick add");
+            shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None, () => { if (selectedProject != null) DeleteCurrentProject(); }, "Delete selected project");
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.None, () => CycleFilter(), "Cycle filter mode");
+            shortcuts.RegisterForPane(PaneName, Key.K, ModifierKeys.None, () => { if (selectedProject != null) { projectContext.SetProject(selectedProject); logger.Log(LogLevel.Info, "ProjectsPane", $"Set project context: {selectedProject.Name}"); UpdateStatusBar(); } }, "Set project as context");
+            shortcuts.RegisterForPane(PaneName, Key.X, ModifierKeys.None, () => { if (selectedProject != null) ExportT2020(selectedProject); }, "Export T2020");
         }
 
         protected override UIElement BuildContent()
@@ -317,96 +347,129 @@ namespace SuperTUI.Panes
                 // Clear detail panel
                 fieldsPanel.Children.Clear();
                 fieldEditors.Clear();
+                modifiedFields.Clear();
                 return;
             }
             fieldsPanel.Children.Clear();
             fieldEditors.Clear();
+            modifiedFields.Clear();
 
-            // Section 1: Core Identity
-            AddSectionHeader(fieldsPanel, "Core Identity");
-            AddField(fieldsPanel, "Name", project.Name ?? "");
-            AddField(fieldsPanel, "Nickname", project.Nickname ?? "");
-            AddField(fieldsPanel, "ID2 (CAS Case)", project.ID2 ?? "");
-            AddField(fieldsPanel, "Id1 (Audit Case)", project.Id1 ?? "");
-            AddField(fieldsPanel, "Full Project Name", project.FullProjectName ?? "");
+            // Section 1: Core Identity (Expanded by default)
+            var coreSection = CreateCollapsibleSection("Core Identity", true);
+            var coreContent = (StackPanel)coreSection.Content;
+            AddField(coreContent, "Name", project.Name ?? "");
+            AddField(coreContent, "Nickname", project.Nickname ?? "");
+            AddField(coreContent, "ID2 (CAS Case)", project.ID2 ?? "");
+            AddField(coreContent, "Id1 (Audit Case)", project.Id1 ?? "");
+            AddField(coreContent, "Full Project Name", project.FullProjectName ?? "");
+            AddFieldReadOnly(coreContent, "Status", project.Status.ToString());
+            AddFieldReadOnly(coreContent, "Priority", project.Priority.ToString());
+            fieldsPanel.Children.Add(coreSection);
 
-            // Section 2: Status
-            AddSectionHeader(fieldsPanel, "Status & Priority");
-            AddFieldReadOnly(fieldsPanel, "Status", project.Status.ToString());
-            AddFieldReadOnly(fieldsPanel, "Priority", project.Priority.ToString());
+            // Section 2: Dates (Collapsed)
+            var datesSection = CreateCollapsibleSection("Important Dates", false);
+            var datesContent = (StackPanel)datesSection.Content;
+            AddDateField(datesContent, "Date Assigned", project.DateAssigned);
+            AddDateField(datesContent, "Request Date", project.RequestDate);
+            AddDateField(datesContent, "Start Date", project.StartDate);
+            AddDateField(datesContent, "End Date", project.EndDate);
+            AddDateField(datesContent, "Audit Period From", project.AuditPeriodFrom);
+            AddDateField(datesContent, "Audit Period To", project.AuditPeriodTo);
+            fieldsPanel.Children.Add(datesSection);
 
-            // Section 3: Dates
-            AddSectionHeader(fieldsPanel, "Important Dates");
-            AddDateField(fieldsPanel, "Date Assigned", project.DateAssigned);
-            AddDateField(fieldsPanel, "Request Date", project.RequestDate);
-            AddDateField(fieldsPanel, "Start Date", project.StartDate);
-            AddDateField(fieldsPanel, "End Date", project.EndDate);
-            AddDateField(fieldsPanel, "Audit Period From", project.AuditPeriodFrom);
-            AddDateField(fieldsPanel, "Audit Period To", project.AuditPeriodTo);
+            // Section 3: Client Info (Collapsed)
+            var clientSection = CreateCollapsibleSection("Taxpayer/Client Information", false);
+            var clientContent = (StackPanel)clientSection.Content;
+            AddField(clientContent, "Client ID", project.ClientID ?? "");
+            AddField(clientContent, "TaxID", project.TaxID ?? "");
+            AddField(clientContent, "CAS Number", project.CASNumber ?? "");
+            AddField(clientContent, "Address", project.Address ?? "");
+            AddField(clientContent, "City", project.City ?? "");
+            AddField(clientContent, "Province", project.Province ?? "");
+            AddField(clientContent, "Postal Code", project.PostalCode ?? "");
+            AddField(clientContent, "Country", project.Country ?? "");
+            AddField(clientContent, "TP Email", project.TPEmailAddress ?? "");
+            AddField(clientContent, "TP Phone", project.TPPhoneNumber ?? "");
+            AddField(clientContent, "Ship To Address", project.ShipToAddress ?? "");
+            fieldsPanel.Children.Add(clientSection);
 
-            // Section 4: Taxpayer/Client Info
-            AddSectionHeader(fieldsPanel, "Taxpayer/Client Information");
-            AddField(fieldsPanel, "Client ID", project.ClientID ?? "");
-            AddField(fieldsPanel, "TaxID", project.TaxID ?? "");
-            AddField(fieldsPanel, "CAS Number", project.CASNumber ?? "");
-            AddField(fieldsPanel, "Address", project.Address ?? "");
-            AddField(fieldsPanel, "City", project.City ?? "");
-            AddField(fieldsPanel, "Province", project.Province ?? "");
-            AddField(fieldsPanel, "Postal Code", project.PostalCode ?? "");
-            AddField(fieldsPanel, "Country", project.Country ?? "");
-            AddField(fieldsPanel, "TP Email", project.TPEmailAddress ?? "");
-            AddField(fieldsPanel, "TP Phone", project.TPPhoneNumber ?? "");
-            AddField(fieldsPanel, "Ship To Address", project.ShipToAddress ?? "");
+            // Section 4: Project Details (Collapsed)
+            var projectSection = CreateCollapsibleSection("Project Details", false);
+            var projectContent = (StackPanel)projectSection.Content;
+            AddField(projectContent, "Audit Type", project.AuditType ?? "");
+            AddField(projectContent, "Audit Program", project.AuditProgram ?? "");
+            AddField(projectContent, "Auditor Name", project.AuditorName ?? "");
+            AddField(projectContent, "Description", project.Description ?? "");
+            AddField(projectContent, "Comments", project.Comments ?? "");
+            AddField(projectContent, "FX Info", project.FXInfo ?? "");
+            AddField(projectContent, "Email Reference", project.EmailReference ?? "");
+            fieldsPanel.Children.Add(projectSection);
 
-            // Section 5: Project Details
-            AddSectionHeader(fieldsPanel, "Project Details");
-            AddField(fieldsPanel, "Audit Type", project.AuditType ?? "");
-            AddField(fieldsPanel, "Audit Program", project.AuditProgram ?? "");
-            AddField(fieldsPanel, "Auditor Name", project.AuditorName ?? "");
-            AddField(fieldsPanel, "Description", project.Description ?? "");
-            AddField(fieldsPanel, "Comments", project.Comments ?? "");
-            AddField(fieldsPanel, "FX Info", project.FXInfo ?? "");
-            AddField(fieldsPanel, "Email Reference", project.EmailReference ?? "");
+            // Section 5: Contacts (Collapsed)
+            var contactsSection = CreateCollapsibleSection("Contacts", false);
+            var contactsContent = (StackPanel)contactsSection.Content;
+            AddField(contactsContent, "Contact 1 Name", project.Contact1Name ?? "");
+            AddField(contactsContent, "Contact 1 Title", project.Contact1Title ?? "");
+            AddField(contactsContent, "Contact 1 Phone", project.Contact1Phone ?? "");
+            AddField(contactsContent, "Contact 1 Ext", project.Contact1Ext ?? "");
+            AddField(contactsContent, "Contact 1 Address", project.Contact1Address ?? "");
+            AddField(contactsContent, "Contact 2 Name", project.Contact2Name ?? "");
+            AddField(contactsContent, "Contact 2 Title", project.Contact2Title ?? "");
+            AddField(contactsContent, "Contact 2 Phone", project.Contact2Phone ?? "");
+            AddField(contactsContent, "Contact 2 Ext", project.Contact2Ext ?? "");
+            AddField(contactsContent, "Contact 2 Address", project.Contact2Address ?? "");
+            fieldsPanel.Children.Add(contactsSection);
 
-            // Section 6: Contacts
-            AddSectionHeader(fieldsPanel, "Contacts");
-            AddField(fieldsPanel, "Contact 1 Name", project.Contact1Name ?? "");
-            AddField(fieldsPanel, "Contact 1 Title", project.Contact1Title ?? "");
-            AddField(fieldsPanel, "Contact 1 Phone", project.Contact1Phone ?? "");
-            AddField(fieldsPanel, "Contact 1 Ext", project.Contact1Ext ?? "");
-            AddField(fieldsPanel, "Contact 1 Address", project.Contact1Address ?? "");
-            AddField(fieldsPanel, "Contact 2 Name", project.Contact2Name ?? "");
-            AddField(fieldsPanel, "Contact 2 Title", project.Contact2Title ?? "");
-            AddField(fieldsPanel, "Contact 2 Phone", project.Contact2Phone ?? "");
-            AddField(fieldsPanel, "Contact 2 Ext", project.Contact2Ext ?? "");
-            AddField(fieldsPanel, "Contact 2 Address", project.Contact2Address ?? "");
+            // Section 6: Software (Collapsed)
+            var softwareSection = CreateCollapsibleSection("Accounting Software", false);
+            var softwareContent = (StackPanel)softwareSection.Content;
+            AddField(softwareContent, "Software 1", project.AccountingSoftware1 ?? "");
+            AddField(softwareContent, "Software 1 Other", project.AccountingSoftware1Other ?? "");
+            AddField(softwareContent, "Software 1 Type", project.AccountingSoftware1Type ?? "");
+            AddField(softwareContent, "Software 2", project.AccountingSoftware2 ?? "");
+            AddField(softwareContent, "Software 2 Other", project.AccountingSoftware2Other ?? "");
+            AddField(softwareContent, "Software 2 Type", project.AccountingSoftware2Type ?? "");
+            fieldsPanel.Children.Add(softwareSection);
 
-            // Section 7: Software
-            AddSectionHeader(fieldsPanel, "Accounting Software");
-            AddField(fieldsPanel, "Software 1", project.AccountingSoftware1 ?? "");
-            AddField(fieldsPanel, "Software 1 Other", project.AccountingSoftware1Other ?? "");
-            AddField(fieldsPanel, "Software 1 Type", project.AccountingSoftware1Type ?? "");
-            AddField(fieldsPanel, "Software 2", project.AccountingSoftware2 ?? "");
-            AddField(fieldsPanel, "Software 2 Other", project.AccountingSoftware2Other ?? "");
-            AddField(fieldsPanel, "Software 2 Type", project.AccountingSoftware2Type ?? "");
+            // Section 7: File Locations (Collapsed)
+            var filesSection = CreateCollapsibleSection("File Locations", false);
+            var filesContent = (StackPanel)filesSection.Content;
+            AddField(filesContent, "Project Folder", project.CustomFields.ContainsKey("ProjectFolder") ? project.CustomFields["ProjectFolder"] : "");
+            AddField(filesContent, "CAA File", project.CustomFields.ContainsKey("CAAFile") ? project.CustomFields["CAAFile"] : "");
+            AddField(filesContent, "Request File", project.CustomFields.ContainsKey("RequestFile") ? project.CustomFields["RequestFile"] : "");
+            AddField(filesContent, "T2020 File", project.CustomFields.ContainsKey("T2020File") ? project.CustomFields["T2020File"] : "");
+            fieldsPanel.Children.Add(filesSection);
 
-            // Section 8: File Locations
-            AddSectionHeader(fieldsPanel, "File Locations");
-            AddField(fieldsPanel, "Project Folder", project.CustomFields.ContainsKey("ProjectFolder") ? project.CustomFields["ProjectFolder"] : "");
-            AddField(fieldsPanel, "CAA File", project.CustomFields.ContainsKey("CAAFile") ? project.CustomFields["CAAFile"] : "");
-            AddField(fieldsPanel, "Request File", project.CustomFields.ContainsKey("RequestFile") ? project.CustomFields["RequestFile"] : "");
-            AddField(fieldsPanel, "T2020 File", project.CustomFields.ContainsKey("T2020File") ? project.CustomFields["T2020File"] : "");
+            // Section 8: Budget (Collapsed)
+            var budgetSection = CreateCollapsibleSection("Budget", false);
+            var budgetContent = (StackPanel)budgetSection.Content;
+            AddField(budgetContent, "Budget Hours", project.BudgetHours?.ToString() ?? "");
+            AddField(budgetContent, "Budget Amount", project.BudgetAmount?.ToString("C") ?? "");
+            fieldsPanel.Children.Add(budgetSection);
 
-            // Section 9: Budget
-            AddSectionHeader(fieldsPanel, "Budget");
-            AddField(fieldsPanel, "Budget Hours", project.BudgetHours?.ToString() ?? "");
-            AddField(fieldsPanel, "Budget Amount", project.BudgetAmount?.ToString("C") ?? "");
+            // Section 9: Metadata (Collapsed)
+            var metadataSection = CreateCollapsibleSection("Metadata", false);
+            var metadataContent = (StackPanel)metadataSection.Content;
+            AddFieldReadOnly(metadataContent, "Created", project.CreatedAt.ToString("yyyy-MM-dd HH:mm"));
+            AddFieldReadOnly(metadataContent, "Updated", project.UpdatedAt.ToString("yyyy-MM-dd HH:mm"));
+            AddFieldReadOnly(metadataContent, "Archived", project.Archived ? "Yes" : "No");
+            fieldsPanel.Children.Add(metadataSection);
+        }
 
-            // Section 10: Metadata
-            AddSectionHeader(fieldsPanel, "Metadata");
-            AddFieldReadOnly(fieldsPanel, "Created", project.CreatedAt.ToString("yyyy-MM-dd HH:mm"));
-            AddFieldReadOnly(fieldsPanel, "Updated", project.UpdatedAt.ToString("yyyy-MM-dd HH:mm"));
-            AddFieldReadOnly(fieldsPanel, "Archived", project.Archived ? "Yes" : "No");
+        private Expander CreateCollapsibleSection(string title, bool isExpanded)
+        {
+            var theme = themeManager.CurrentTheme;
+            return new Expander
+            {
+                Header = title,
+                IsExpanded = isExpanded,
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Primary),
+                Margin = new Thickness(0, 8, 0, 8),
+                Content = new StackPanel { Margin = new Thickness(16, 4, 0, 0) }
+            };
         }
 
         private void AddSectionHeader(StackPanel panel, string title)
@@ -560,13 +623,17 @@ namespace SuperTUI.Panes
             // Map field name to project property and update
             UpdateProjectField(selectedProject, editingFieldName, newValue);
 
+            // Track modification
+            modifiedFields.Add(editingFieldName);
+
             // Save to service
             projectService.UpdateProject(selectedProject);
             logger.Log(LogLevel.Info, "ProjectsPane", $"Updated field '{editingFieldName}' for project {selectedProject.Name}");
 
-            // Refresh display
+            // Refresh display and status bar
             DisplayProjectDetails(selectedProject);
             RefreshProjectList();
+            UpdateStatusBar();
             editingFieldName = null;
         }
 
@@ -581,8 +648,71 @@ namespace SuperTUI.Panes
             }
         }
 
+        private (bool isValid, string errorMessage) ValidateField(string fieldName, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                if (fieldName == "Name" || fieldName == "ID2 (CAS Case)")
+                    return (false, $"{fieldName} is required");
+                return (true, null);
+            }
+
+            switch (fieldName)
+            {
+                case "TP Email":
+                    if (!value.Contains("@") || !value.Contains("."))
+                        return (false, "Invalid email format");
+                    break;
+
+                case "TP Phone":
+                case "Contact 1 Phone":
+                case "Contact 2 Phone":
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[\d\-\(\)\s\+]+$"))
+                        return (false, "Phone should contain only digits, spaces, and ()-.+ characters");
+                    break;
+
+                case "Budget Hours":
+                case "Budget Amount":
+                    if (!decimal.TryParse(value.Replace("$", "").Replace(",", ""), out decimal numValue) || numValue < 0)
+                        return (false, "Must be a positive number");
+                    break;
+
+                case "Date Assigned":
+                case "Request Date":
+                case "Start Date":
+                case "End Date":
+                case "Audit Period From":
+                case "Audit Period To":
+                    if (ParseDateInput(value) == null && value != "none" && !string.IsNullOrWhiteSpace(value))
+                        return (false, "Invalid date format");
+                    break;
+
+                case "ID2 (CAS Case)":
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^\d{4}$"))
+                        return (false, "ID2 must be 4 digits");
+                    break;
+
+                case "Postal Code":
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[A-Z]\d[A-Z]\s?\d[A-Z]\d$",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                        return (false, "Invalid Canadian postal code format (A1A 1A1)");
+                    break;
+            }
+
+            return (true, null);
+        }
+
         private void UpdateProjectField(Project project, string fieldName, string value)
         {
+            var (isValid, errorMessage) = ValidateField(fieldName, value);
+            if (!isValid)
+            {
+                UpdateStatusBar($"Validation error: {errorMessage}");
+                logger.Log(LogLevel.Warning, "ProjectsPane",
+                    $"Validation failed for {fieldName}: {errorMessage}");
+                return;
+            }
+
             switch (fieldName)
             {
                 case "Name": project.Name = value; break;
@@ -779,14 +909,50 @@ namespace SuperTUI.Panes
             run2.Foreground = accentBrush;
             run2.FontWeight = FontWeights.Bold;
 
-            var run3 = new Run($" {project.Name}");
-            run3.Foreground = fgBrush;
-
             tb.Inlines.Add(run1);
             tb.Inlines.Add(run2);
-            tb.Inlines.Add(run3);
+            tb.Inlines.Add(new Run(" "));
+
+            // Use highlighting for project name
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                AddHighlightedText(tb, project.Name, searchQuery);
+            }
+            else
+            {
+                var run3 = new Run(project.Name);
+                run3.Foreground = fgBrush;
+                tb.Inlines.Add(run3);
+            }
 
             return tb;
+        }
+
+        private void AddHighlightedText(TextBlock textBlock, string text, string searchQuery)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var theme = themeManager.CurrentTheme;
+            var highlightBrush = new SolidColorBrush(theme.Success);
+            var normalBrush = new SolidColorBrush(theme.Foreground);
+
+            int queryIndex = 0;
+            for (int i = 0; i < text.Length && queryIndex < searchQuery.Length; i++)
+            {
+                bool isMatch = char.ToLower(text[i]) == char.ToLower(searchQuery[queryIndex]);
+
+                var run = new Run(text[i].ToString())
+                {
+                    Foreground = isMatch ? highlightBrush : normalBrush,
+                    FontWeight = isMatch ? FontWeights.Bold : FontWeights.Normal
+                };
+
+                if (isMatch) queryIndex++;
+                textBlock.Inlines.Add(run);
+            }
         }
 
         private SolidColorBrush GetStatusColor(ProjectStatus status)
@@ -819,47 +985,11 @@ namespace SuperTUI.Panes
 
         private void ProjectListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            // Ctrl+F: Focus search box
-            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                searchBox.Focus();
-                searchBox.SelectAll();
-                e.Handled = true;
+            if (Keyboard.Modifiers == ModifierKeys.None && Keyboard.FocusedElement is TextBox)
                 return;
-            }
-
-            // Quick add (A)
-            if (e.Key == Key.A && Keyboard.Modifiers == ModifierKeys.None)
-            {
-                ShowQuickAdd();
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
                 e.Handled = true;
-            }
-            // Delete (D)
-            else if (e.Key == Key.D && selectedProject != null)
-            {
-                DeleteCurrentProject();
-                e.Handled = true;
-            }
-            // Cycle filter (F)
-            else if (e.Key == Key.F)
-            {
-                CycleFilter();
-                e.Handled = true;
-            }
-            // Set as context (K for Kontext)
-            else if (e.Key == Key.K && selectedProject != null)
-            {
-                projectContext.SetProject(selectedProject);
-                logger.Log(LogLevel.Info, "ProjectsPane", $"Set project context: {selectedProject.Name}");
-                UpdateStatusBar();
-                e.Handled = true;
-            }
-            // Export T2020 (X for eXport)
-            else if (e.Key == Key.X && selectedProject != null)
-            {
-                ExportT2020(selectedProject);
-                e.Handled = true;
-            }
         }
 
         private void QuickAddBox_KeyDown(object sender, KeyEventArgs e)
@@ -1070,6 +1200,48 @@ namespace SuperTUI.Panes
             UpdateStatusBar();
         }
 
+        /// <summary>
+        /// Handle TaskSelectedEvent - highlight the parent project of the selected task
+        /// </summary>
+        private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
+        {
+            if (evt?.Task == null) return;
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // Find the parent project of the selected task
+                if (evt.ProjectId.HasValue)
+                {
+                    var project = projectService.GetProject(evt.ProjectId.Value);
+                    if (project != null)
+                    {
+                        // Select the project in the list
+                        for (int i = 0; i < projectListBox.Items.Count; i++)
+                        {
+                            if (projectListBox.Items[i] is TextBlock tb && tb.Tag is Project p && p.Id == project.Id)
+                            {
+                                projectListBox.SelectedIndex = i;
+                                projectListBox.ScrollIntoView(projectListBox.SelectedItem);
+                                logger.Log(LogLevel.Info, "ProjectsPane",
+                                    $"Highlighted project '{project.Name}' for task '{evt.Task.Title}'");
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.Log(LogLevel.Warning, "ProjectsPane",
+                            $"Task '{evt.Task.Title}' has ProjectId but project not found");
+                    }
+                }
+                else
+                {
+                    logger.Log(LogLevel.Debug, "ProjectsPane",
+                        $"Task '{evt.Task.Title}' has no associated project");
+                }
+            });
+        }
+
         private void UpdateStatusBar(string customMessage = null)
         {
             if (customMessage != null)
@@ -1087,16 +1259,106 @@ namespace SuperTUI.Panes
                 ? $" | Context: {projectContext.CurrentProject.Name}"
                 : "";
 
-            return $"{allProjects.Count} projects | A:Add D:Delete F:Filter K:SetContext X:ExportT2020 Click:Edit{contextInfo}";
+            var modIndicator = modifiedFields.Count > 0 ? $" | {modifiedFields.Count} modified" : "";
+
+            return $"{allProjects.Count} projects{modIndicator} | A:Add D:Delete F:Filter K:SetContext X:ExportT2020 Click:Edit{contextInfo}";
+        }
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                ApplyTheme();
+            });
+        }
+
+        private void ApplyTheme()
+        {
+            CacheThemeColors();
+
+            // Update all controls
+            if (searchBox != null)
+            {
+                searchBox.Background = surfaceBrush;
+                searchBox.Foreground = fgBrush;
+                searchBox.BorderBrush = borderBrush;
+            }
+
+            if (quickAddBox != null)
+            {
+                quickAddBox.Background = surfaceBrush;
+                quickAddBox.Foreground = fgBrush;
+                quickAddBox.BorderBrush = borderBrush;
+            }
+
+            if (filterLabel != null)
+            {
+                filterLabel.Foreground = accentBrush;
+                filterLabel.Background = surfaceBrush;
+            }
+
+            if (projectListBox != null)
+            {
+                projectListBox.Background = bgBrush;
+                projectListBox.Foreground = fgBrush;
+            }
+
+            if (detailScroll != null)
+            {
+                detailScroll.Background = bgBrush;
+            }
+
+            if (statusBar != null)
+            {
+                statusBar.Foreground = dimBrush;
+                statusBar.Background = surfaceBrush;
+            }
+
+            // Refresh project list and details to update colors
+            RefreshProjectList();
+            if (selectedProject != null)
+            {
+                DisplayProjectDetails(selectedProject);
+            }
+
+            this.InvalidateVisual();
         }
 
         protected override void OnDispose()
         {
+            // Unsubscribe from EventBus to prevent memory leaks
+            if (taskSelectedHandler != null)
+            {
+                eventBus.Unsubscribe(taskSelectedHandler);
+                taskSelectedHandler = null;
+            }
+
+            if (refreshRequestedHandler != null)
+            {
+                eventBus.Unsubscribe(refreshRequestedHandler);
+                refreshRequestedHandler = null;
+            }
+
+            // Unsubscribe from service events
             projectService.ProjectAdded -= OnProjectAdded;
             projectService.ProjectUpdated -= OnProjectUpdated;
             projectService.ProjectDeleted -= OnProjectDeleted;
             projectContext.ProjectContextChanged -= OnProjectContextChanged;
+            themeManager.ThemeChanged -= OnThemeChanged;
+
             base.OnDispose();
+        }
+
+        /// <summary>
+        /// Handle RefreshRequestedEvent - reload projects from service
+        /// </summary>
+        private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                RefreshProjectList();
+                Log("ProjectsPane refreshed (RefreshRequestedEvent)");
+            });
         }
     }
 }
