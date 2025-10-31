@@ -1,5 +1,6 @@
 using System;
 using SuperTUI.Core;
+using SuperTUI.Core.Commands;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Services;
 using SuperTUI.Infrastructure;
@@ -50,7 +51,10 @@ namespace SuperTUI.DI
             container.RegisterSingleton<IProjectContextManager, ProjectContextManager>(ProjectContextManager.Instance);
             // HotReloadManager not yet implemented - skip for now
 
-            Logger.Instance.Info("DI", $"✅ Registered {11} infrastructure services");
+            // Register CommandHistory for undo/redo operations
+            container.RegisterSingleton<CommandHistory>(sp => new CommandHistory(Logger.Instance, maxHistorySize: 50));
+
+            Logger.Instance.Info("DI", $"✅ Registered {12} infrastructure services");
 
             // Register domain services with their interfaces
             container.RegisterSingleton<ITaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);

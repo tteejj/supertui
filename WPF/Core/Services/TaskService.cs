@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Infrastructure;
 
@@ -36,6 +37,7 @@ namespace SuperTUI.Core.Services
         public event Action<TaskItem> TaskAdded;
         public event Action<TaskItem> TaskUpdated;
         public event Action<Guid> TaskDeleted;
+        public event Action<TaskItem> TaskRestored;
         public event Action TasksReloaded;
 
         private TaskService()
@@ -312,6 +314,37 @@ namespace SuperTUI.Core.Services
                 return true;
             }
         }
+        /// <summary>
+        /// Restore a deleted task (undo delete operation)
+        /// </summary>
+        public void RestoreTask(TaskItem task)
+        {
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+
+            lock (lockObject)
+            {
+                task.Deleted = false;
+                task.UpdatedAt = DateTime.Now;
+                tasks[task.Id] = task;
+
+                // Rebuild subtask index if this is a subtask
+                if (task.ParentTaskId.HasValue)
+                {
+                    if (!subtaskIndex.ContainsKey(task.ParentTaskId.Value))
+                        subtaskIndex[task.ParentTaskId.Value] = new List<Guid>();
+
+                    if (!subtaskIndex[task.ParentTaskId.Value].Contains(task.Id))
+                        subtaskIndex[task.ParentTaskId.Value].Add(task.Id);
+                }
+
+                ScheduleSave();
+                TaskRestored?.Invoke(task);
+
+                Logger.Instance?.Info("TaskService", $"Restored task: {task.Title} (ID: {task.Id})");
+            }
+        }
+
 
         /// <summary>
         /// Toggle task completion status
@@ -575,7 +608,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("TaskService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -609,7 +646,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to save tasks: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving tasks to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -641,7 +682,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("TaskService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -675,7 +720,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to save tasks: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving tasks to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -720,7 +769,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to load tasks: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading tasks from '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -1116,7 +1169,12 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to export to Markdown: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Exporting tasks to Markdown file '{filePath}'",
+                    Logger.Instance);
+
                 return false;
             }
         }
@@ -1203,7 +1261,12 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to export to CSV: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Exporting tasks to CSV file '{filePath}'",
+                    Logger.Instance);
+
                 return false;
             }
         }
@@ -1247,7 +1310,12 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TaskService", $"Failed to export to JSON: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Exporting tasks to JSON file '{filePath}'",
+                    Logger.Instance);
+
                 return false;
             }
         }

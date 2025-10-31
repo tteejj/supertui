@@ -122,6 +122,9 @@ namespace SuperTUI.Core.Components
             // Subscribe to project context changes
             projectContext.ProjectContextChanged += OnProjectContextChanged;
 
+            // Subscribe to theme changes for automatic re-theming
+            themeManager.ThemeChanged += OnThemeChanged;
+
             // Build pane-specific content
             var content = BuildContent();
             if (content != null)
@@ -147,6 +150,27 @@ namespace SuperTUI.Core.Components
         protected virtual void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
         {
             // Default: do nothing, let subclasses handle
+        }
+
+        /// <summary>
+        /// Handle theme changes and automatically re-apply theme
+        /// </summary>
+        private void OnThemeChanged(object sender, ThemeChangedEventArgs e)
+        {
+            // Re-apply theme on theme change
+            ApplyTheme();
+
+            // Notify subclasses of theme change
+            OnThemeChangedOverride(e);
+        }
+
+        /// <summary>
+        /// Override to handle theme changes in subclasses
+        /// Base class already calls ApplyTheme(), so this is for additional logic
+        /// </summary>
+        protected virtual void OnThemeChangedOverride(ThemeChangedEventArgs e)
+        {
+            // Default: do nothing, let subclasses handle if needed
         }
 
         /// <summary>
@@ -200,6 +224,7 @@ namespace SuperTUI.Core.Components
 
         /// <summary>
         /// Apply terminal theme to pane
+        /// FIX 4: Enhanced active pane border indicator
         /// </summary>
         public void ApplyTheme()
         {
@@ -207,16 +232,33 @@ namespace SuperTUI.Core.Components
             if (theme == null) return;
 
             var background = theme.Background;
-            var headerBg = theme.Surface;
+            var headerBg = IsFocused ? theme.BorderActive : theme.Surface;  // Change header bg when focused
             var foreground = theme.Foreground;
             var border = IsFocused ? theme.BorderActive : theme.Border;
 
             // Container with focus indicator
             containerBorder.Background = new SolidColorBrush(background);
             containerBorder.BorderBrush = new SolidColorBrush(border);
-            containerBorder.BorderThickness = new Thickness(IsFocused ? 2 : 1);  // Thicker border when focused
+            containerBorder.BorderThickness = new Thickness(IsFocused ? 3 : 1);  // Much thicker border when focused (3px vs 1px)
 
-            // Header
+            // Add drop shadow effect when focused
+            if (IsFocused)
+            {
+                containerBorder.Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    Color = border,
+                    Direction = 0,
+                    ShadowDepth = 0,
+                    BlurRadius = 12,
+                    Opacity = 0.8
+                };
+            }
+            else
+            {
+                containerBorder.Effect = null;
+            }
+
+            // Header - change background color when focused for maximum visibility
             headerBorder.Background = new SolidColorBrush(headerBg);
             headerBorder.BorderBrush = new SolidColorBrush(border);
             headerText.Foreground = new SolidColorBrush(foreground);  // Always use foreground, border shows focus
@@ -243,6 +285,7 @@ namespace SuperTUI.Core.Components
             {
                 // Unsubscribe from events
                 projectContext.ProjectContextChanged -= OnProjectContextChanged;
+                themeManager.ThemeChanged -= OnThemeChanged;
 
                 // Let subclasses clean up
                 OnDispose();

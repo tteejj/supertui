@@ -181,9 +181,9 @@ namespace SuperTUI.Panes
                 VerticalAlignment = VerticalAlignment.Center
             };
             searchBox.TextChanged += OnSearchTextChanged;
-            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == "Search notes... (Ctrl+F)" ? "" : searchBox.Text;
-            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? "Search notes... (Ctrl+F)" : searchBox.Text;
-            searchBox.Text = "Search notes... (Ctrl+F)";
+            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == "Search notes... (S or F)" ? "" : searchBox.Text;
+            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? "Search notes... (S or F)" : searchBox.Text;
+            searchBox.Text = "Search notes... (S or F)";
 
             searchContainer.Child = searchBox;
             Grid.SetRow(searchContainer, 0);
@@ -253,7 +253,7 @@ namespace SuperTUI.Panes
                 AcceptsReturn = true,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Text = "No note selected\n\nPress Ctrl+N to create a new note\nPress Ctrl+: for command palette"
+                Text = "No note selected\n\nPress A to create a new note\nPress O to open a file\nPress : for command palette"
             };
             noteEditor.TextChanged += OnEditorTextChanged;
             noteEditor.IsEnabled = false;
@@ -394,7 +394,12 @@ namespace SuperTUI.Panes
                 }
                 catch (Exception ex)
                 {
-                    Log($"Failed to create notes folder '{currentNotesFolder}': {ex.Message}", LogLevel.Error);
+                    ErrorHandlingPolicy.Handle(
+                        ErrorCategory.IO,
+                        ex,
+                        $"Creating notes folder '{currentNotesFolder}'",
+                        logger);
+
                     ShowStatus($"ERROR: Could not create notes folder - {ex.Message}", isError: true);
 
                     // Fallback to a known-good path
@@ -408,7 +413,12 @@ namespace SuperTUI.Panes
                     }
                     catch (Exception fallbackEx)
                     {
-                        Log($"Failed to create fallback notes folder: {fallbackEx.Message}", LogLevel.Error);
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.IO,
+                            fallbackEx,
+                            "Creating fallback notes folder in temp directory",
+                            logger);
+
                         ShowStatus($"CRITICAL: Cannot create notes folder anywhere", isError: true);
                     }
                 }
@@ -452,7 +462,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to load notes: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading notes from folder '{currentNotesFolder}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to load notes", isError: true);
             }
 
@@ -463,15 +478,46 @@ namespace SuperTUI.Panes
         {
             var query = searchBox.Text;
 
-            if (string.IsNullOrEmpty(query) || query == "Search notes... (Ctrl+F)")
+            if (string.IsNullOrEmpty(query) || query == "Search notes... (S or F)")
             {
                 filteredNotes = allNotes.ToList();
             }
             else
             {
-                // Fuzzy search
+                // Full-text search: title + content
+                var queryLower = query.ToLower();
                 filteredNotes = allNotes
-                    .Select(note => new { Note = note, Score = CalculateFuzzyScore(query.ToLower(), note.Name.ToLower()) })
+                    .Select(note =>
+                    {
+                        int score = 0;
+
+                        // Title match (fuzzy)
+                        var titleScore = CalculateFuzzyScore(queryLower, note.Name.ToLower());
+                        score += titleScore * 2; // Title matches worth 2x
+
+                        // Content match (full-text)
+                        try
+                        {
+                            if (File.Exists(note.FullPath))
+                            {
+                                string content = File.ReadAllText(note.FullPath);
+                                if (content.ToLower().Contains(queryLower))
+                                {
+                                    score += 10; // Base score for content match
+
+                                    // Count occurrences for relevance
+                                    int occurrences = (content.Length - content.Replace(queryLower, "", StringComparison.OrdinalIgnoreCase).Length) / queryLower.Length;
+                                    score += occurrences * 5;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Skip files that can't be read
+                        }
+
+                        return new { Note = note, Score = score };
+                    })
                     .Where(x => x.Score > 0)
                     .OrderByDescending(x => x.Score)
                     .Select(x => x.Note)
@@ -492,7 +538,7 @@ namespace SuperTUI.Panes
                 {
                     var placeholder = new TextBlock
                     {
-                        Text = allNotes.Any() ? "No matching notes" : "No notes yet\nPress Ctrl+N to create one",
+                        Text = allNotes.Any() ? "No matching notes" : "No notes yet\nPress A to create one",
                         FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                         FontSize = 18,
                         FontStyle = FontStyles.Italic,
@@ -608,7 +654,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to load note: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading note from '{note.FullPath}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to load note", isError: true);
             }
             finally
@@ -768,7 +819,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to create note: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Creating note file '{noteName}.md'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to create note", isError: true);
                 MessageBox.Show(
                     $"Failed to create note: {ex.Message}",
@@ -811,7 +867,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to save note: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving note '{currentNote.Name}' to '{currentNote.FullPath}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to save note", isError: true);
                 MessageBox.Show(
                     $"Failed to save note: {ex.Message}",
@@ -864,14 +925,19 @@ namespace SuperTUI.Panes
                 currentNote = null;
                 hasUnsavedChanges = false;
 
-                noteEditor.Text = "Note deleted\n\nPress Ctrl+N to create a new note";
+                noteEditor.Text = "Note deleted\n\nPress A to create a new note";
                 noteEditor.IsEnabled = false;
 
                 FilterNotes();
             }
             catch (Exception ex)
             {
-                Log($"Failed to delete note: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Deleting note '{currentNote.Name}' from '{currentNote.FullPath}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to delete note", isError: true);
                 MessageBox.Show(
                     $"Failed to delete note: {ex.Message}",
@@ -918,8 +984,13 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading external note from '{filePath}'",
+                    logger);
+
                 ShowStatus($"ERROR: {ex.Message}");
-                Log($"Failed to load external note: {ex.Message}");
             }
         }
 
@@ -990,7 +1061,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to save temp file: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving note as temporary file in '{currentNotesFolder}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to save temp file", isError: true);
                 MessageBox.Show(
                     $"Failed to save temp file: {ex.Message}",
@@ -1127,7 +1203,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to rename note: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Renaming note from '{currentNote.Name}' to '{newName}'",
+                    logger);
+
                 ShowStatus($"ERROR: Failed to rename note", isError: true);
                 MessageBox.Show(
                     $"Failed to rename note: {ex.Message}",
@@ -1167,11 +1248,14 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Ctrl+S always saves when editor has focus
+            // Ctrl+S to save (works everywhere)
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.S)
             {
-                _ = SaveCurrentNoteAsync();
-                e.Handled = true;
+                if (currentNote != null && hasUnsavedChanges)
+                {
+                    _ = SaveCurrentNoteAsync();
+                    e.Handled = true;
+                }
                 return;
             }
 
@@ -1198,9 +1282,9 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            // Single-key shortcuts (work anywhere in pane except when typing in text fields)
-            bool isTyping = e.OriginalSource is TextBox && ((TextBox)e.OriginalSource) != searchBox;
-            if (!isTyping && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            // Single-key shortcuts work UNLESS actively typing in the note editor
+            bool isTypingInEditor = noteEditor != null && noteEditor.IsFocused && e.OriginalSource == noteEditor;
+            if (!isTypingInEditor && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 switch (e.Key)
                 {
@@ -1225,6 +1309,14 @@ namespace SuperTUI.Panes
                         searchBox.Focus();
                         searchBox.SelectAll();
                         e.Handled = true;
+                        break;
+                    case Key.W:
+                        // Save current note
+                        if (currentNote != null && hasUnsavedChanges)
+                        {
+                            _ = SaveCurrentNoteAsync();
+                            e.Handled = true;
+                        }
                         break;
                     case Key.E:
                     case Key.Enter:
@@ -1435,7 +1527,11 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to setup file watcher: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Internal,
+                    ex,
+                    $"Setting up file watcher for '{currentNotesFolder}'",
+                    logger);
             }
         }
 
@@ -1469,7 +1565,7 @@ namespace SuperTUI.Panes
         {
             if (currentNote == null)
             {
-                statusBar.Text = $"{filteredNotes.Count} notes | A:New E:Edit D:Delete S:Search F:Filter";
+                statusBar.Text = $"{filteredNotes.Count} notes | A:New O:Open E:Edit D:Delete S:Search F:Filter";
                 return;
             }
 
@@ -1477,7 +1573,7 @@ namespace SuperTUI.Panes
             var charCount = noteEditor.Text.Length;
             var modifiedIndicator = hasUnsavedChanges ? " •" : "";
 
-            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | {wordCount} words | {charCount} chars | A:New E:Edit D:Delete S:Search";
+            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | {wordCount}w {charCount}c | Ctrl+S:Save A:New O:Open D:Delete S:Search Esc:Close";
         }
 
         private void ShowStatus(string message, bool isError = false)
@@ -1622,6 +1718,100 @@ namespace SuperTUI.Panes
             });
         }
 
+        public override PaneState SaveState()
+        {
+            return new PaneState
+            {
+                PaneType = "NotesPane",
+                CustomData = new Dictionary<string, object>
+                {
+                    ["SelectedNotePath"] = currentNote?.FullPath,
+                    ["SearchFilter"] = (searchBox?.Text != "Search notes... (S or F)") ? searchBox?.Text : null,
+                    ["ScrollPosition"] = GetScrollPosition()
+                }
+            };
+        }
+
+        public override void RestoreState(PaneState state)
+        {
+            if (state?.CustomData == null) return;
+
+            var data = state.CustomData as Dictionary<string, object>;
+            if (data == null) return;
+
+            // Restore search filter
+            if (data.TryGetValue("SearchFilter", out var searchFilter) && searchFilter != null)
+            {
+                var filterText = searchFilter.ToString();
+                if (!string.IsNullOrEmpty(filterText))
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        searchBox.Text = filterText;
+                        FilterNotes();
+                    });
+                }
+            }
+
+            // Restore selected note after notes load
+            if (data.TryGetValue("SelectedNotePath", out var notePath) && notePath != null)
+            {
+                var notePathStr = notePath.ToString();
+                if (!string.IsNullOrEmpty(notePathStr) && File.Exists(notePathStr))
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(async () =>
+                    {
+                        var note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
+                        if (note != null)
+                        {
+                            await LoadNoteAsync(note);
+
+                            // Restore scroll position after note loads
+                            if (data.TryGetValue("ScrollPosition", out var scrollPos))
+                            {
+                                SetScrollPosition(scrollPos);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        private double GetScrollPosition()
+        {
+            if (noteEditor == null) return 0;
+
+            var scrollViewer = FindScrollViewer(noteEditor);
+            return scrollViewer?.VerticalOffset ?? 0;
+        }
+
+        private void SetScrollPosition(object scrollPos)
+        {
+            if (noteEditor == null || scrollPos == null) return;
+
+            var offset = Convert.ToDouble(scrollPos);
+            var scrollViewer = FindScrollViewer(noteEditor);
+            scrollViewer?.ScrollToVerticalOffset(offset);
+        }
+
+        private ScrollViewer FindScrollViewer(DependencyObject obj)
+        {
+            if (obj == null) return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child is ScrollViewer scrollViewer)
+                    return scrollViewer;
+
+                var result = FindScrollViewer(child);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
         protected override void OnDispose()
         {
             // Unsubscribe from event bus to prevent memory leaks
@@ -1640,7 +1830,11 @@ namespace SuperTUI.Panes
                 }
                 catch (Exception ex)
                 {
-                    Log($"Failed to auto-save on close: {ex.Message}", LogLevel.Error);
+                    ErrorHandlingPolicy.Handle(
+                        ErrorCategory.IO,
+                        ex,
+                        $"Auto-saving note '{currentNote.Name}' on pane close",
+                        logger);
                 }
             }
 

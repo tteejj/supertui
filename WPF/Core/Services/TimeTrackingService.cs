@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Infrastructure;
 
@@ -534,7 +535,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("TimeTrackingService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -558,7 +563,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TimeTrackingService", $"Failed to save time entries: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving time entries to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -590,7 +599,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("TimeTrackingService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -614,7 +627,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TimeTrackingService", $"Failed to save time entries: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving time entries to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -656,7 +673,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TimeTrackingService", $"Failed to load time entries: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading time entries from '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -712,7 +733,12 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("TimeTrackingService", $"Failed to export to JSON: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Exporting time entries to JSON file '{filePath}'",
+                    Logger.Instance);
+
                 return false;
             }
         }

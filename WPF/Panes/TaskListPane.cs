@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Documents;
 using System.Globalization;
 using SuperTUI.Core;
+using SuperTUI.Core.Commands;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
@@ -25,6 +26,7 @@ namespace SuperTUI.Panes
         // Services
         private readonly ITaskService taskService;
         private readonly IEventBus eventBus;
+        private readonly CommandHistory commandHistory;
 
         // UI Components
         private Grid mainLayout;
@@ -35,6 +37,7 @@ namespace SuperTUI.Panes
         private TextBox quickAddPriority;
         private TextBlock statusBar;
         private TextBlock filterLabel;
+        private TextBox searchBox;
 
         // Inline editing
         private TextBox inlineEditBox;
@@ -51,6 +54,7 @@ namespace SuperTUI.Panes
         private SortMode currentSort = SortMode.Priority;
         private bool isInternalCommand = false;
         private string commandBuffer = string.Empty;
+        private string searchQuery = string.Empty;
 
         // Theme colors (cached for performance)
         private SolidColorBrush bgBrush;
@@ -86,11 +90,13 @@ namespace SuperTUI.Panes
             IThemeManager themeManager,
             IProjectContextManager projectContext,
             ITaskService taskService,
-            IEventBus eventBus)
+            IEventBus eventBus,
+            CommandHistory commandHistory)
             : base(logger, themeManager, projectContext)
         {
             this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
             this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            this.commandHistory = commandHistory ?? throw new ArgumentNullException(nameof(commandHistory));
             PaneName = "Tasks";
         }
 
@@ -141,11 +147,41 @@ namespace SuperTUI.Panes
         private Grid BuildTaskListPanel()
         {
             var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search box
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Column headers
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
+
+            // Search box
+            searchBox = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Width = 250,
+                Foreground = fgBrush,
+                Background = surfaceBrush,
+                BorderBrush = borderBrush,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 0, 4),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Text = "Search... (Ctrl+F)"
+            };
+            searchBox.GotFocus += (s, e) =>
+            {
+                if (searchBox.Text == "Search... (Ctrl+F)")
+                    searchBox.Text = "";
+            };
+            searchBox.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(searchBox.Text))
+                    searchBox.Text = "Search... (Ctrl+F)";
+            };
+            searchBox.TextChanged += OnSearchTextChanged;
+            Grid.SetRow(searchBox, 0);
+            grid.Children.Add(searchBox);
 
             // Quick add form (hidden by default)
             quickAddForm = new Grid
@@ -232,7 +268,7 @@ namespace SuperTUI.Panes
             Grid.SetColumn(quickAddPriority, 4);
             quickAddForm.Children.Add(quickAddPriority);
 
-            Grid.SetRow(quickAddForm, 0);
+            Grid.SetRow(quickAddForm, 1);
             grid.Children.Add(quickAddForm);
 
             // Filter bar
@@ -251,7 +287,7 @@ namespace SuperTUI.Panes
             };
             filterBar.Children.Add(filterLabel);
 
-            Grid.SetRow(filterBar, 1);
+            Grid.SetRow(filterBar, 2);
             grid.Children.Add(filterBar);
 
             // Column headers
@@ -329,7 +365,7 @@ namespace SuperTUI.Panes
             Grid.SetColumn(tagsHeader, 6);
             headerGrid.Children.Add(tagsHeader);
 
-            Grid.SetRow(headerGrid, 2);
+            Grid.SetRow(headerGrid, 3);
             grid.Children.Add(headerGrid);
 
             // Task list with virtualization enabled
@@ -359,7 +395,7 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(taskListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(taskListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(taskListBox, 3);
+            Grid.SetRow(taskListBox, 4);
             grid.Children.Add(taskListBox);
 
             // Status bar
@@ -370,10 +406,23 @@ namespace SuperTUI.Panes
                 Foreground = dimBrush,
                 Margin = new Thickness(0, 8, 0, 0)
             };
-            Grid.SetRow(statusBar, 4);
+            Grid.SetRow(statusBar, 5);
             grid.Children.Add(statusBar);
 
             return grid;
+        }
+
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchQuery = searchBox.Text;
+
+            // Skip placeholder text
+            if (searchQuery == "Search... (Ctrl+F)")
+            {
+                searchQuery = string.Empty;
+            }
+
+            RefreshTaskList();
         }
 
         private void SubscribeToTaskEvents()
@@ -381,6 +430,7 @@ namespace SuperTUI.Panes
             taskService.TaskAdded += OnTaskChanged;
             taskService.TaskUpdated += OnTaskChanged;
             taskService.TaskDeleted += OnTaskDeleted;
+            taskService.TaskRestored += OnTaskChanged;
         }
 
         private void OnTaskChanged(TaskItem task)
@@ -425,13 +475,18 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Error refreshing task list: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.Internal,
+                    ex,
+                    "Refreshing task list from service",
+                    logger);
             }
         }
 
         private List<TaskItem> ApplyFilter(List<TaskItem> tasks)
         {
-            return currentFilter switch
+            // Apply filter mode first
+            var filtered = currentFilter switch
             {
                 FilterMode.Active => tasks.Where(t => t.Status != TaskStatus.Completed && t.Status != TaskStatus.Cancelled).ToList(),
                 FilterMode.Today => tasks.Where(t => t.IsDueToday && t.Status != TaskStatus.Completed).ToList(),
@@ -440,6 +495,20 @@ namespace SuperTUI.Panes
                 FilterMode.HighPriority => tasks.Where(t => (t.Priority == TaskPriority.High || t.Priority == TaskPriority.Today) && t.Status != TaskStatus.Completed).ToList(),
                 _ => tasks
             };
+
+            // Apply search query if present
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var query = searchQuery.ToLower();
+                filtered = filtered.Where(t =>
+                    t.Title.ToLower().Contains(query) ||
+                    (t.Description != null && t.Description.ToLower().Contains(query)) ||
+                    (t.Tags != null && t.Tags.Any(tag => tag.ToLower().Contains(query))) ||
+                    (t.Notes != null && t.Notes.Any(note => note.Content != null && note.Content.ToLower().Contains(query)))
+                ).ToList();
+            }
+
+            return filtered;
         }
 
         private List<TaskItemViewModel> BuildTaskHierarchy(List<TaskItem> tasks)
@@ -793,6 +862,15 @@ namespace SuperTUI.Panes
 
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
         {
+            // Ctrl+F: Focus search box
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                searchBox.Focus();
+                searchBox.SelectAll();
+                e.Handled = true;
+                return;
+            }
+
             // Check for internal command mode (Ctrl+:)
             if (e.Key == Key.OemSemicolon && Keyboard.Modifiers == ModifierKeys.Control)
             {
@@ -1425,9 +1503,9 @@ namespace SuperTUI.Panes
                 FontSize = 18,
                 Padding = new Thickness(6, 2, 6, 2),
                 Background = surfaceBrush,
-                Foreground = new SolidColorBrush(Colors.Cyan),  // Cyan for tags
+                Foreground = new SolidColorBrush(themeManager.CurrentTheme.Info),  // Theme-aware tag color
                 BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush(Colors.Cyan),
+                BorderBrush = new SolidColorBrush(themeManager.CurrentTheme.Info),
                 Tag = originalItem  // Store original to restore on cancel
             };
             tagEditBox.KeyDown += TagEditBox_KeyDown;
@@ -1615,17 +1693,134 @@ namespace SuperTUI.Panes
                 return;
 
             var result = MessageBox.Show(
-                $"Delete task '{selectedTask.Task.Title}'?",
+                $"Delete task '{selectedTask.Task.Title}'?\n\nYou can undo with Ctrl+Z.",
                 "Confirm Delete",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
-                taskService.DeleteTask(selectedTask.Task.Id);
+                // Use command pattern for undo support
+                var deleteCommand = new DeleteTaskCommand(taskService, selectedTask.Task);
+                commandHistory.Execute(deleteCommand);
+
                 RefreshTaskList();
                 taskListBox.Focus();
             }
+        }
+
+        public override PaneState SaveState()
+        {
+            return new PaneState
+            {
+                PaneType = "TaskListPane",
+                CustomData = new Dictionary<string, object>
+                {
+                    ["SelectedTaskId"] = selectedTask?.Task.Id.ToString(),
+                    ["FilterMode"] = currentFilter.ToString(),
+                    ["SortMode"] = currentSort.ToString(),
+                    ["ScrollPosition"] = GetScrollPosition()
+                }
+            };
+        }
+
+        public override void RestoreState(PaneState state)
+        {
+            if (state?.CustomData == null) return;
+
+            var data = state.CustomData as Dictionary<string, object>;
+            if (data == null) return;
+
+            // Restore filter
+            if (data.TryGetValue("FilterMode", out var filterStr))
+            {
+                if (Enum.TryParse<FilterMode>(filterStr?.ToString(), out var filter))
+                {
+                    currentFilter = filter;
+                    filterLabel.Text = GetFilterText();
+                }
+            }
+
+            // Restore sort
+            if (data.TryGetValue("SortMode", out var sortStr))
+            {
+                if (Enum.TryParse<SortMode>(sortStr?.ToString(), out var sort))
+                {
+                    currentSort = sort;
+                    filterLabel.Text = GetFilterText();
+                }
+            }
+
+            // Refresh with new filter/sort
+            RefreshTaskList();
+
+            // Restore selection after tasks load
+            if (data.TryGetValue("SelectedTaskId", out var taskIdStr))
+            {
+                if (Guid.TryParse(taskIdStr?.ToString(), out var taskId))
+                {
+                    Dispatcher.BeginInvoke(new Action(() => SelectTaskById(taskId)));
+                }
+            }
+
+            // Restore scroll position
+            if (data.TryGetValue("ScrollPosition", out var scrollPos))
+            {
+                Dispatcher.BeginInvoke(new Action(() => SetScrollPosition(scrollPos)));
+            }
+        }
+
+        private double GetScrollPosition()
+        {
+            if (taskListBox == null) return 0;
+
+            var scrollViewer = FindScrollViewer(taskListBox);
+            return scrollViewer?.VerticalOffset ?? 0;
+        }
+
+        private void SetScrollPosition(object scrollPos)
+        {
+            if (taskListBox == null || scrollPos == null) return;
+
+            var offset = Convert.ToDouble(scrollPos);
+            var scrollViewer = FindScrollViewer(taskListBox);
+            scrollViewer?.ScrollToVerticalOffset(offset);
+        }
+
+        private void SelectTaskById(Guid taskId)
+        {
+            if (taskListBox == null) return;
+
+            foreach (var item in taskListBox.Items)
+            {
+                if (item is Grid grid && grid.Tag is TaskItemViewModel vm)
+                {
+                    if (vm.Task.Id == taskId)
+                    {
+                        taskListBox.SelectedItem = item;
+                        taskListBox.ScrollIntoView(item);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private ScrollViewer FindScrollViewer(DependencyObject obj)
+        {
+            if (obj == null) return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child is ScrollViewer scrollViewer)
+                    return scrollViewer;
+
+                var result = FindScrollViewer(child);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
         }
 
         protected override void OnDispose()
@@ -1633,6 +1828,7 @@ namespace SuperTUI.Panes
             taskService.TaskAdded -= OnTaskChanged;
             taskService.TaskUpdated -= OnTaskChanged;
             taskService.TaskDeleted -= OnTaskDeleted;
+            taskService.TaskRestored -= OnTaskChanged;
             base.OnDispose();
         }
     }

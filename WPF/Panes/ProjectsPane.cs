@@ -33,6 +33,7 @@ namespace SuperTUI.Panes
         private ScrollViewer detailScroll;        // Right column: project details
         private Grid detailPanel;                 // Detail form
         private TextBox quickAddBox;              // Quick add (Name, DateAssigned, ID2)
+        private TextBox searchBox;                // Search box
         private TextBlock statusBar;
         private TextBlock filterLabel;
 
@@ -45,6 +46,7 @@ namespace SuperTUI.Panes
         private Project selectedProject = null;
         private FilterMode currentFilter = FilterMode.Active;
         private bool isInternalCommand = false;
+        private string searchQuery = string.Empty;
 
         // Theme colors (cached)
         private SolidColorBrush bgBrush;
@@ -158,10 +160,38 @@ namespace SuperTUI.Panes
         private Grid BuildProjectListPanel()
         {
             var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search box
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Project list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
+
+            // Search box
+            searchBox = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 16,
+                Background = surfaceBrush,
+                Foreground = fgBrush,
+                BorderBrush = borderBrush,
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(8),
+                VerticalAlignment = VerticalAlignment.Top,
+                Text = "Search... (Ctrl+F)"
+            };
+            searchBox.GotFocus += (s, e) =>
+            {
+                if (searchBox.Text == "Search... (Ctrl+F)")
+                    searchBox.Text = "";
+            };
+            searchBox.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(searchBox.Text))
+                    searchBox.Text = "Search... (Ctrl+F)";
+            };
+            searchBox.TextChanged += OnSearchTextChanged;
+            Grid.SetRow(searchBox, 0);
+            grid.Children.Add(searchBox);
 
             // Quick add box (Name, DateAssigned, ID2)
             quickAddBox = new TextBox
@@ -177,7 +207,7 @@ namespace SuperTUI.Panes
                 Visibility = Visibility.Collapsed
             };
             quickAddBox.KeyDown += QuickAddBox_KeyDown;
-            Grid.SetRow(quickAddBox, 0);
+            Grid.SetRow(quickAddBox, 1);
             grid.Children.Add(quickAddBox);
 
             // Filter label
@@ -190,7 +220,7 @@ namespace SuperTUI.Panes
                 Background = surfaceBrush,
                 Text = $"Filter: {currentFilter}"
             };
-            Grid.SetRow(filterLabel, 1);
+            Grid.SetRow(filterLabel, 2);
             grid.Children.Add(filterLabel);
 
             // Project list
@@ -212,7 +242,7 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(projectListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(projectListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(projectListBox, 2);
+            Grid.SetRow(projectListBox, 3);
             grid.Children.Add(projectListBox);
 
             // Status bar
@@ -225,10 +255,23 @@ namespace SuperTUI.Panes
                 Padding = new Thickness(8, 4, 8, 4),
                 Text = GetStatusBarText()
             };
-            Grid.SetRow(statusBar, 3);
+            Grid.SetRow(statusBar, 4);
             grid.Children.Add(statusBar);
 
             return grid;
+        }
+
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchQuery = searchBox.Text;
+
+            // Skip placeholder text
+            if (searchQuery == "Search... (Ctrl+F)")
+            {
+                searchQuery = string.Empty;
+            }
+
+            RefreshProjectList();
         }
 
         private Grid BuildProjectDetailPanel()
@@ -654,6 +697,7 @@ namespace SuperTUI.Panes
         {
             allProjects = projectService.GetAllProjects()
                 .Where(ApplyFilter)
+                .Where(ApplySearch)
                 .OrderBy(p => p.Name)
                 .ToList();
 
@@ -664,6 +708,42 @@ namespace SuperTUI.Panes
             }
 
             UpdateStatusBar();
+        }
+
+        private bool ApplySearch(Project project)
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
+                return true;
+
+            var query = searchQuery.ToLower();
+
+            // Search across all major fields
+            return (project.Name != null && project.Name.ToLower().Contains(query)) ||
+                   (project.Nickname != null && project.Nickname.ToLower().Contains(query)) ||
+                   (project.ID2 != null && project.ID2.ToLower().Contains(query)) ||
+                   (project.Id1 != null && project.Id1.ToLower().Contains(query)) ||
+                   (project.FullProjectName != null && project.FullProjectName.ToLower().Contains(query)) ||
+                   (project.ClientID != null && project.ClientID.ToLower().Contains(query)) ||
+                   (project.TaxID != null && project.TaxID.ToLower().Contains(query)) ||
+                   (project.CASNumber != null && project.CASNumber.ToLower().Contains(query)) ||
+                   (project.Address != null && project.Address.ToLower().Contains(query)) ||
+                   (project.City != null && project.City.ToLower().Contains(query)) ||
+                   (project.Province != null && project.Province.ToLower().Contains(query)) ||
+                   (project.PostalCode != null && project.PostalCode.ToLower().Contains(query)) ||
+                   (project.Country != null && project.Country.ToLower().Contains(query)) ||
+                   (project.TPEmailAddress != null && project.TPEmailAddress.ToLower().Contains(query)) ||
+                   (project.TPPhoneNumber != null && project.TPPhoneNumber.ToLower().Contains(query)) ||
+                   (project.AuditType != null && project.AuditType.ToLower().Contains(query)) ||
+                   (project.AuditProgram != null && project.AuditProgram.ToLower().Contains(query)) ||
+                   (project.AuditorName != null && project.AuditorName.ToLower().Contains(query)) ||
+                   (project.Description != null && project.Description.ToLower().Contains(query)) ||
+                   (project.Comments != null && project.Comments.ToLower().Contains(query)) ||
+                   (project.FXInfo != null && project.FXInfo.ToLower().Contains(query)) ||
+                   (project.EmailReference != null && project.EmailReference.ToLower().Contains(query)) ||
+                   (project.Contact1Name != null && project.Contact1Name.ToLower().Contains(query)) ||
+                   (project.Contact2Name != null && project.Contact2Name.ToLower().Contains(query)) ||
+                   (project.AccountingSoftware1 != null && project.AccountingSoftware1.ToLower().Contains(query)) ||
+                   (project.AccountingSoftware2 != null && project.AccountingSoftware2.ToLower().Contains(query));
         }
 
         private bool ApplyFilter(Project project)
@@ -739,6 +819,15 @@ namespace SuperTUI.Panes
 
         private void ProjectListBox_KeyDown(object sender, KeyEventArgs e)
         {
+            // Ctrl+F: Focus search box
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                searchBox.Focus();
+                searchBox.SelectAll();
+                e.Handled = true;
+                return;
+            }
+
             // Quick add (A)
             if (e.Key == Key.A && Keyboard.Modifiers == ModifierKeys.None)
             {

@@ -75,11 +75,18 @@ PANE NAVIGATION:
   Ctrl+Shift+N      Open Notes pane
   Ctrl+Shift+P      Open Projects pane
   Ctrl+Shift+E      Open Excel Import pane
+  Ctrl+Shift+C      Open Calendar pane
   Ctrl+Shift+Q      Close focused pane
 
 COMMAND PALETTE:
   : (Shift+;)       Open command palette
   ? (Shift+/)       Show this help
+
+GLOBAL COMMANDS:
+  Ctrl+Z            Undo last action (delete, etc.)
+  Ctrl+Y            Redo last undone action
+  Ctrl+F            Focus search box (when in pane)
+  Ctrl+Shift+D      Toggle debug overlay
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -100,11 +107,11 @@ TASK PANE:
 
 NOTES PANE:
   A                 New note
+  O                 Open external .txt file (via FileBrowser)
   E                 Edit note (focus editor)
   D                 Delete note
   S / F             Search/filter
-  O                 Open external .txt file (via FileBrowser)
-  Ctrl+S            Save note
+  W                 Save note
 
 PROJECTS PANE:
   A                 Add project (quick: Name | DateAssigned | ID2)
@@ -120,6 +127,14 @@ EXCEL IMPORT PANE:
                     3. Copy (Ctrl+C)
                     4. Paste in textbox (system paste)
                     5. Press I to import
+
+CALENDAR PANE:
+  M                 Switch to Month view
+  W                 Switch to Week view
+  Arrow Keys        Navigate dates
+  Home              Jump to today
+  Enter             View tasks for selected date
+  Ctrl+T            Create task for selected date
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

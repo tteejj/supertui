@@ -731,7 +731,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to navigate: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Navigating to directory '{path}'",
+                    logger);
+
                 ShowStatus($"Error: {ex.Message}", isError: true);
             }
         }
@@ -820,7 +825,12 @@ namespace SuperTUI.Panes
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Log($"Failed to load directory: {ex.Message}", LogLevel.Error);
+                    ErrorHandlingPolicy.Handle(
+                        ErrorCategory.IO,
+                        ex,
+                        $"Loading files from directory '{currentPath}'",
+                        logger);
+
                     ShowStatus($"Error loading directory: {ex.Message}", isError: true);
                 });
             }
@@ -1064,7 +1074,11 @@ namespace SuperTUI.Panes
                 }
                 catch (Exception ex)
                 {
-                    Log($"Failed to expand tree item: {ex.Message}", LogLevel.Warning);
+                    ErrorHandlingPolicy.Handle(
+                        ErrorCategory.IO,
+                        ex,
+                        $"Expanding directory tree for '{path}'",
+                        logger);
                 }
             }
         }
@@ -1257,7 +1271,12 @@ namespace SuperTUI.Panes
             }
             catch (Exception ex)
             {
-                Log($"Failed to navigate up: {ex.Message}", LogLevel.Error);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Navigating up from directory '{currentPath}'",
+                    logger);
+
                 ShowStatus("Cannot navigate up", isError: true);
             }
         }
@@ -1675,6 +1694,94 @@ namespace SuperTUI.Panes
         public void SetSelectionMode(FileSelectionMode mode)
         {
             selectionMode = mode;
+        }
+
+        #endregion
+
+        #region State Persistence
+
+        public override PaneState SaveState()
+        {
+            return new PaneState
+            {
+                PaneType = "FileBrowserPane",
+                CustomData = new Dictionary<string, object>
+                {
+                    ["CurrentPath"] = currentPath,
+                    ["SelectedFilePath"] = selectedItem?.FullPath,
+                    ["ShowHiddenFiles"] = showHiddenFiles,
+                    ["SearchFilter"] = (searchBox?.Text != "Filter files... (Ctrl+F)") ? searchBox?.Text : null
+                }
+            };
+        }
+
+        public override void RestoreState(PaneState state)
+        {
+            if (state?.CustomData == null) return;
+
+            var data = state.CustomData as Dictionary<string, object>;
+            if (data == null) return;
+
+            // Restore show hidden files toggle
+            if (data.TryGetValue("ShowHiddenFiles", out var showHidden))
+            {
+                showHiddenFiles = Convert.ToBoolean(showHidden);
+            }
+
+            // Restore current directory
+            if (data.TryGetValue("CurrentPath", out var path) && path != null)
+            {
+                var pathStr = path.ToString();
+                if (!string.IsNullOrEmpty(pathStr) && Directory.Exists(pathStr))
+                {
+                    NavigateToDirectory(pathStr);
+                }
+            }
+
+            // Restore search filter
+            if (data.TryGetValue("SearchFilter", out var searchFilter) && searchFilter != null)
+            {
+                var filterText = searchFilter.ToString();
+                if (!string.IsNullOrEmpty(filterText))
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        searchBox.Text = filterText;
+                        FilterFiles();
+                    });
+                }
+            }
+
+            // Restore selected file after directory loads
+            if (data.TryGetValue("SelectedFilePath", out var selectedPath) && selectedPath != null)
+            {
+                var selectedPathStr = selectedPath.ToString();
+                if (!string.IsNullOrEmpty(selectedPathStr))
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        SelectFileByPath(selectedPathStr);
+                    }, System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+        }
+
+        private void SelectFileByPath(string filePath)
+        {
+            if (fileListBox == null || string.IsNullOrEmpty(filePath)) return;
+
+            foreach (var item in fileListBox.Items)
+            {
+                if (item is ListBoxItem listItem && listItem.Tag is FileSystemItem fsItem)
+                {
+                    if (fsItem.FullPath == filePath)
+                    {
+                        fileListBox.SelectedItem = listItem;
+                        fileListBox.ScrollIntoView(listItem);
+                        break;
+                    }
+                }
+            }
         }
 
         #endregion

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SuperTUI.Core.Commands;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Services;
 using SuperTUI.Infrastructure;
@@ -37,6 +38,7 @@ namespace SuperTUI.Core.Infrastructure
         private readonly ITimeTrackingService timeTrackingService;
         private readonly ITagService tagService;
         private readonly IEventBus eventBus;
+        private readonly CommandHistory commandHistory;
 
         private readonly Dictionary<string, PaneMetadata> paneRegistry;
 
@@ -50,7 +52,8 @@ namespace SuperTUI.Core.Infrastructure
             IProjectService projectService,
             ITimeTrackingService timeTrackingService,
             ITagService tagService,
-            IEventBus eventBus)
+            IEventBus eventBus,
+            CommandHistory commandHistory)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
@@ -62,6 +65,7 @@ namespace SuperTUI.Core.Infrastructure
             this.timeTrackingService = timeTrackingService ?? throw new ArgumentNullException(nameof(timeTrackingService));
             this.tagService = tagService ?? throw new ArgumentNullException(nameof(tagService));
             this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            this.commandHistory = commandHistory ?? throw new ArgumentNullException(nameof(commandHistory));
 
             paneRegistry = new Dictionary<string, PaneMetadata>(StringComparer.OrdinalIgnoreCase)
             {
@@ -70,7 +74,7 @@ namespace SuperTUI.Core.Infrastructure
                     Name = "tasks",
                     Description = "View and manage tasks",
                     Icon = "✓",
-                    Creator = () => new TaskListPane(logger, themeManager, projectContext, taskService, eventBus)
+                    Creator = () => new TaskListPane(logger, themeManager, projectContext, taskService, eventBus, commandHistory)
                 },
                 ["notes"] = new PaneMetadata
                 {
@@ -107,6 +111,13 @@ namespace SuperTUI.Core.Infrastructure
                     Description = "Keyboard shortcuts reference",
                     Icon = "⌨️",
                     Creator = () => new HelpPane(logger, themeManager, projectContext)
+                },
+                ["calendar"] = new PaneMetadata
+                {
+                    Name = "calendar",
+                    Description = "Calendar view of tasks by due date",
+                    Icon = "📅",
+                    Creator = () => new CalendarPane(logger, themeManager, projectContext, taskService, projectService)
                 }
             };
         }

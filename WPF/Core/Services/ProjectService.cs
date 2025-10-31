@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Infrastructure;
 
@@ -651,7 +652,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("ProjectService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -675,7 +680,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ProjectService", $"Failed to save projects: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving projects to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -707,7 +716,11 @@ namespace SuperTUI.Core.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance?.Warning("ProjectService", $"Failed to delete old backup {oldBackup}: {ex.Message}");
+                            ErrorHandlingPolicy.Handle(
+                                ErrorCategory.IO,
+                                ex,
+                                $"Deleting old backup file '{oldBackup}'",
+                                Logger.Instance);
                         }
                     }
                 }
@@ -731,7 +744,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ProjectService", $"Failed to save projects: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Saving projects to '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -774,7 +791,11 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ProjectService", $"Failed to load projects: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Loading projects from '{dataFilePath}'",
+                    Logger.Instance);
             }
         }
 
@@ -831,7 +852,12 @@ namespace SuperTUI.Core.Services
             }
             catch (Exception ex)
             {
-                Logger.Instance?.Error("ProjectService", $"Failed to export to JSON: {ex.Message}", ex);
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Exporting projects to JSON file '{filePath}'",
+                    Logger.Instance);
+
                 return false;
             }
         }

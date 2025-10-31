@@ -14,6 +14,7 @@ namespace SuperTUI.Infrastructure
         event Action<TaskItem> TaskAdded;
         event Action<TaskItem> TaskUpdated;
         event Action<Guid> TaskDeleted;
+        event Action<TaskItem> TaskRestored;
         event Action TasksReloaded;
 
         // Initialization
@@ -36,6 +37,7 @@ namespace SuperTUI.Infrastructure
         TaskItem AddTask(TaskItem task);
         bool UpdateTask(TaskItem task);
         bool DeleteTask(Guid id, bool hardDelete = false);
+        void RestoreTask(TaskItem task);
         bool ToggleTaskCompletion(Guid id);
         bool CyclePriority(Guid id);
         void MoveTaskUp(Guid taskId);
