@@ -63,6 +63,9 @@ namespace SuperTUI.Core.Components
         /// </summary>
         private void BuildPaneStructure()
         {
+            // CRITICAL FIX: Make pane focusable to receive keyboard events
+            this.Focusable = true;
+
             // Main grid: header + content
             mainGrid = new Grid();
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(30) }); // Header
@@ -210,6 +213,32 @@ namespace SuperTUI.Core.Components
         /// Override to handle active state changes
         /// </summary>
         protected virtual void OnActiveChanged(bool isActive)
+        {
+            // When pane becomes active, subclasses should focus their primary control
+            if (isActive)
+            {
+                OnPaneGainedFocus();
+            }
+            else
+            {
+                OnPaneLostFocus();
+            }
+        }
+
+        /// <summary>
+        /// Called when pane gains focus - override to focus specific child control
+        /// </summary>
+        protected virtual void OnPaneGainedFocus()
+        {
+            // Default: Let WPF find first focusable child
+            this.MoveFocus(new System.Windows.Input.TraversalRequest(
+                System.Windows.Input.FocusNavigationDirection.First));
+        }
+
+        /// <summary>
+        /// Called when pane loses focus - override to handle cleanup
+        /// </summary>
+        protected virtual void OnPaneLostFocus()
         {
             // Default: do nothing, let subclasses handle
         }

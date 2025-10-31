@@ -1715,6 +1715,33 @@ namespace SuperTUI.Panes
             };
         }
 
+        /// <summary>
+        /// Override to handle when pane gains focus - focus appropriate control
+        /// </summary>
+        protected override void OnPaneGainedFocus()
+        {
+            // Determine which control should have focus based on current state
+            if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
+                searchBox.Text != "Search files...")
+            {
+                // If searching, return focus to search box
+                searchBox.Focus();
+                System.Windows.Input.Keyboard.Focus(searchBox);
+            }
+            else if (fileListBox != null && fileListBox.Items.Count > 0)
+            {
+                // If files are shown, focus the file list
+                fileListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(fileListBox);
+            }
+            else if (directoryTree != null)
+            {
+                // Otherwise focus the directory tree
+                directoryTree.Focus();
+                System.Windows.Input.Keyboard.Focus(directoryTree);
+            }
+        }
+
         public override void RestoreState(PaneState state)
         {
             if (state?.CustomData == null) return;

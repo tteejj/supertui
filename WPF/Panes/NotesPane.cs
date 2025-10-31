@@ -694,8 +694,7 @@ namespace SuperTUI.Panes
             currentNote = new NoteMetadata
             {
                 Name = "Untitled",
-                FullPath = null,  // NULL = unsaved
-                IsNew = true
+                FullPath = null  // NULL = unsaved
             };
 
             // Clear editor and FOCUS it immediately
@@ -1618,6 +1617,39 @@ namespace SuperTUI.Panes
             }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
+        /// <summary>
+        /// Override to handle when pane gains focus - focus appropriate control
+        /// </summary>
+        protected override void OnPaneGainedFocus()
+        {
+            // Determine which control should have focus based on current state
+            if (isCommandPaletteVisible && commandInput != null)
+            {
+                // If command palette is open, focus command input
+                commandInput.Focus();
+                System.Windows.Input.Keyboard.Focus(commandInput);
+            }
+            else if (noteEditor != null && noteEditor.IsEnabled && currentNote != null)
+            {
+                // If editing a note, return focus to editor
+                noteEditor.Focus();
+                System.Windows.Input.Keyboard.Focus(noteEditor);
+            }
+            else if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
+                     searchBox.Text != "Search notes... (S or F)")
+            {
+                // If searching, return focus to search box
+                searchBox.Focus();
+                System.Windows.Input.Keyboard.Focus(searchBox);
+            }
+            else if (notesListBox != null)
+            {
+                // Default: focus the notes list
+                notesListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(notesListBox);
+            }
+        }
+
         private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
         {
             // Filter notes when a task is selected
@@ -1656,17 +1688,88 @@ namespace SuperTUI.Panes
 
         public override PaneState SaveState()
         {
+            var state = new Dictionary<string, object>
+            {
+                // Basic state
+                ["SelectedNotePath"] = currentNote?.FullPath,
+                ["SelectedNoteName"] = currentNote?.Name,
+                ["SelectedNoteIndex"] = notesListBox?.SelectedIndex ?? -1,
+                ["SearchFilter"] = (searchBox?.Text != "Search notes... (S or F)") ? searchBox?.Text : null,
+                ["ScrollPosition"] = GetScrollPosition(),
+
+                // FOCUS MEMORY - Track exact user state
+                ["FocusedControl"] = GetCurrentFocusedControl(),
+                ["IsSearchFocused"] = searchBox?.IsFocused ?? false,
+                ["IsEditorFocused"] = noteEditor?.IsFocused ?? false,
+
+                // EDITOR STATE - Remember everything about the editor
+                ["EditorText"] = noteEditor?.Text,
+                ["EditorCursorPos"] = noteEditor?.CaretIndex ?? 0,
+                ["EditorSelectionStart"] = noteEditor?.SelectionStart ?? 0,
+                ["EditorSelectionLength"] = noteEditor?.SelectionLength ?? 0,
+                ["EditorScrollPosition"] = GetEditorScrollPosition(),
+                ["HasUnsavedChanges"] = hasUnsavedChanges,
+
+                // COMMAND PALETTE STATE
+                ["IsCommandPaletteVisible"] = isCommandPaletteVisible,
+                ["CommandText"] = commandInput?.Text,
+                ["CommandCursorPos"] = commandInput?.CaretIndex ?? 0,
+
+                // LIST STATE
+                ["NotesListScrollPosition"] = GetNotesListScrollPosition(),
+                ["FilteredNoteCount"] = filteredNotes?.Count ?? 0,
+
+                // AUTO-SAVE STATE
+                ["LastAutoSaveTime"] = lastAutoSaveTime
+            };
+
             return new PaneState
             {
                 PaneType = "NotesPane",
-                CustomData = new Dictionary<string, object>
-                {
-                    ["SelectedNotePath"] = currentNote?.FullPath,
-                    ["SearchFilter"] = (searchBox?.Text != "Search notes... (S or F)") ? searchBox?.Text : null,
-                    ["ScrollPosition"] = GetScrollPosition()
-                }
+                CustomData = state
             };
         }
+
+        private string GetCurrentFocusedControl()
+        {
+            if (searchBox?.IsFocused == true) return "SearchBox";
+            if (noteEditor?.IsFocused == true) return "Editor";
+            if (commandInput?.IsFocused == true) return "CommandInput";
+            if (notesListBox?.IsFocused == true) return "NotesList";
+            return "None";
+        }
+
+        private double GetEditorScrollPosition()
+        {
+            if (noteEditor == null) return 0;
+            // TextBox doesn't have built-in scroll position, but we can approximate
+            // based on line index
+            var lineIndex = noteEditor.GetLineIndexFromCharacterIndex(noteEditor.CaretIndex);
+            return lineIndex;
+        }
+
+        private double GetNotesListScrollPosition()
+        {
+            if (notesListBox == null) return 0;
+            var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
+            return scrollViewer?.VerticalOffset ?? 0;
+        }
+
+        private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T typedChild)
+                    return typedChild;
+                var result = FindVisualChild<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        private DateTime lastAutoSaveTime = DateTime.MinValue;
 
         public override void RestoreState(PaneState state)
         {
@@ -1675,40 +1778,155 @@ namespace SuperTUI.Panes
             var data = state.CustomData as Dictionary<string, object>;
             if (data == null) return;
 
-            // Restore search filter
+            // Store for deferred restoration
+            pendingRestoreData = data;
+
+            // Restore search filter first
             if (data.TryGetValue("SearchFilter", out var searchFilter) && searchFilter != null)
             {
                 var filterText = searchFilter.ToString();
                 if (!string.IsNullOrEmpty(filterText))
                 {
-                    Application.Current?.Dispatcher.InvokeAsync(() =>
-                    {
-                        searchBox.Text = filterText;
-                        FilterNotes();
-                    });
+                    searchBox.Text = filterText;
+                    FilterNotes();
                 }
             }
 
-            // Restore selected note after notes load
-            if (data.TryGetValue("SelectedNotePath", out var notePath) && notePath != null)
+            // Restore unsaved changes flag
+            if (data.TryGetValue("HasUnsavedChanges", out var hasChanges))
+            {
+                hasUnsavedChanges = (bool)hasChanges;
+            }
+
+            // Use dispatcher to ensure UI is ready
+            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                await RestoreDetailedStateAsync(data);
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private Dictionary<string, object> pendingRestoreData;
+
+        private async Task RestoreDetailedStateAsync(Dictionary<string, object> data)
+        {
+            // Restore note selection by index first (more reliable)
+            if (data.TryGetValue("SelectedNoteIndex", out var indexObj))
+            {
+                var index = Convert.ToInt32(indexObj);
+                if (index >= 0 && index < notesListBox.Items.Count)
+                {
+                    notesListBox.SelectedIndex = index;
+
+                    // Load the selected note
+                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
+                    {
+                        await LoadNoteAsync(note);
+                    }
+                }
+            }
+            // Fallback to path-based selection
+            else if (data.TryGetValue("SelectedNotePath", out var notePath) && notePath != null)
             {
                 var notePathStr = notePath.ToString();
-                if (!string.IsNullOrEmpty(notePathStr) && File.Exists(notePathStr))
+                if (!string.IsNullOrEmpty(notePathStr))
                 {
-                    Application.Current?.Dispatcher.InvokeAsync(async () =>
+                    NoteMetadata note = null;
+
+                    // Check if it's an unsaved note
+                    if (data.TryGetValue("SelectedNoteName", out var noteName) && notePathStr == null)
                     {
-                        var note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
+                        // Create unsaved note placeholder
+                        currentNote = new NoteMetadata
+                        {
+                            Name = noteName?.ToString() ?? "Untitled",
+                            FullPath = null
+                        };
+                        noteEditor.IsEnabled = true;
+                    }
+                    else if (File.Exists(notePathStr))
+                    {
+                        note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
                         if (note != null)
                         {
                             await LoadNoteAsync(note);
-
-                            // Restore scroll position after note loads
-                            if (data.TryGetValue("ScrollPosition", out var scrollPos))
-                            {
-                                SetScrollPosition(scrollPos);
-                            }
                         }
-                    });
+                    }
+                }
+            }
+
+            // Restore editor state
+            if (data.TryGetValue("EditorText", out var editorText))
+            {
+                noteEditor.Text = editorText?.ToString() ?? "";
+
+                // Restore cursor and selection
+                if (data.TryGetValue("EditorCursorPos", out var cursorPos))
+                    noteEditor.CaretIndex = Convert.ToInt32(cursorPos);
+                if (data.TryGetValue("EditorSelectionStart", out var selStart))
+                    noteEditor.SelectionStart = Convert.ToInt32(selStart);
+                if (data.TryGetValue("EditorSelectionLength", out var selLen))
+                    noteEditor.SelectionLength = Convert.ToInt32(selLen);
+
+                // Restore scroll position
+                if (data.TryGetValue("EditorScrollPosition", out var editorScrollPos))
+                {
+                    var lineIndex = Convert.ToInt32(editorScrollPos);
+                    if (lineIndex > 0)
+                    {
+                        var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
+                        noteEditor.ScrollToLine(lineIndex);
+                    }
+                }
+            }
+
+            // Restore command palette state
+            if (data.TryGetValue("IsCommandPaletteVisible", out var isPaletteVisible) && (bool)isPaletteVisible)
+            {
+                ShowCommandPalette();
+
+                if (data.TryGetValue("CommandText", out var cmdText))
+                    commandInput.Text = cmdText?.ToString() ?? "";
+                if (data.TryGetValue("CommandCursorPos", out var cmdCursor))
+                    commandInput.CaretIndex = Convert.ToInt32(cmdCursor);
+            }
+
+            // Restore list scroll position
+            if (data.TryGetValue("NotesListScrollPosition", out var listScroll))
+            {
+                var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
+                scrollViewer?.ScrollToVerticalOffset(Convert.ToDouble(listScroll));
+            }
+
+            // Restore main scroll position
+            if (data.TryGetValue("ScrollPosition", out var scrollPos))
+            {
+                SetScrollPosition(scrollPos);
+            }
+
+            // Finally, restore focus to the correct control
+            if (data.TryGetValue("FocusedControl", out var focusedControl))
+            {
+                await Task.Delay(100); // Small delay to ensure UI is ready
+
+                switch (focusedControl?.ToString())
+                {
+                    case "SearchBox":
+                        searchBox?.Focus();
+                        System.Windows.Input.Keyboard.Focus(searchBox);
+                        break;
+                    case "Editor":
+                        noteEditor?.Focus();
+                        System.Windows.Input.Keyboard.Focus(noteEditor);
+                        break;
+                    case "CommandInput":
+                        commandInput?.Focus();
+                        System.Windows.Input.Keyboard.Focus(commandInput);
+                        break;
+                    case "NotesList":
+                    default:
+                        notesListBox?.Focus();
+                        System.Windows.Input.Keyboard.Focus(notesListBox);
+                        break;
                 }
             }
         }

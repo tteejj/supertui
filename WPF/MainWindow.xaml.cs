@@ -27,6 +27,7 @@ namespace SuperTUI
         private readonly IProjectContextManager projectContext;
         private readonly IStatePersistenceManager statePersistence;
         private readonly CommandHistory commandHistory;
+        private readonly FocusHistoryManager focusHistory;
 
         private PaneManager paneManager;
         private PaneFactory paneFactory;
@@ -46,6 +47,7 @@ namespace SuperTUI
             projectContext = serviceContainer.GetRequiredService<IProjectContextManager>();
             statePersistence = serviceContainer.GetRequiredService<IStatePersistenceManager>();
             commandHistory = serviceContainer.GetRequiredService<CommandHistory>();
+            focusHistory = serviceContainer.GetRequiredService<FocusHistoryManager>();
 
             InitializeComponent();
 
@@ -77,6 +79,11 @@ namespace SuperTUI
             // Keyboard handlers
             this.KeyDown += MainWindow_KeyDown;
             Closing += MainWindow_Closing;
+
+            // CRITICAL FIX: Handle window activation/deactivation for focus management
+            this.Activated += MainWindow_Activated;
+            this.Deactivated += MainWindow_Deactivated;
+            this.Loaded += MainWindow_Loaded;
 
             logger.Log(LogLevel.Info, "MainWindow", "Initialized with blank canvas");
         }
@@ -283,6 +290,9 @@ namespace SuperTUI
             state.OpenPaneTypes = paneState.OpenPaneTypes;
             state.FocusedPaneIndex = paneState.FocusedPaneIndex;
 
+            // CRITICAL: Save focus state for perfect restoration
+            state.FocusState = focusHistory.SaveWorkspaceState();
+
             // Save project context
             if (projectContext.CurrentProject != null)
             {
@@ -369,6 +379,23 @@ namespace SuperTUI
                     FocusedPaneIndex = state.FocusedPaneIndex
                 };
                 paneManager.RestoreState(paneState, panesToRestore);
+
+                // CRITICAL: Restore focus history after panes are loaded
+                if (state.FocusState != null)
+                {
+                    focusHistory.RestoreWorkspaceState(state.FocusState);
+
+                    // Restore focus to the previously focused pane
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (paneManager.FocusedPane != null)
+                        {
+                            var paneName = paneManager.FocusedPane.PaneName;
+                            focusHistory.RestorePaneFocus(paneName);
+                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {paneName} after workspace switch");
+                        }
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
             }
 
             UpdateStatusBarContext();
@@ -559,6 +586,13 @@ namespace SuperTUI
                     {
                         ModalOverlay.Visibility = Visibility.Collapsed;
                         ModalOverlay.Children.Clear();
+
+                        // CRITICAL FIX: Return focus to the previously focused pane
+                        if (paneManager?.FocusedPane != null)
+                        {
+                            logger.Log(LogLevel.Debug, "MainWindow", $"Returning focus to {paneManager.FocusedPane.PaneName} after closing command palette");
+                            paneManager.FocusPane(paneManager.FocusedPane);
+                        }
                     });
                 });
 
@@ -569,6 +603,55 @@ namespace SuperTUI
         private void ShowHelpOverlay()
         {
             OpenPane("help");
+        }
+
+        /// <summary>
+        /// Handle window activation (Alt+Tab back, clicking on window, etc.)
+        /// </summary>
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            // Restore focus to the currently focused pane
+            if (paneManager?.FocusedPane != null)
+            {
+                logger.Log(LogLevel.Debug, "MainWindow", $"Window activated, restoring focus to {paneManager.FocusedPane.PaneName}");
+
+                // Use dispatcher to ensure focus is set after activation completes
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    paneManager.FocusPane(paneManager.FocusedPane);
+                }), System.Windows.Threading.DispatcherPriority.Input);
+            }
+        }
+
+        /// <summary>
+        /// Handle window deactivation (Alt+Tab away, clicking outside, etc.)
+        /// </summary>
+        private void MainWindow_Deactivated(object sender, EventArgs e)
+        {
+            // Log but don't change anything - we'll restore focus when activated
+            logger.Log(LogLevel.Debug, "MainWindow", "Window deactivated");
+        }
+
+        /// <summary>
+        /// Handle window loaded event - set initial focus
+        /// </summary>
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            logger.Log(LogLevel.Debug, "MainWindow", "Window loaded, setting initial focus");
+
+            // Set initial focus to first pane if any exist
+            if (paneManager?.PaneCount > 0 && paneManager.FocusedPane != null)
+            {
+                var firstPane = paneManager.FocusedPane;
+                if (firstPane != null)
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        paneManager.FocusPane(firstPane);
+                        logger.Log(LogLevel.Debug, "MainWindow", $"Initial focus set to {firstPane.PaneName}");
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+            }
         }
 
         /// <summary>

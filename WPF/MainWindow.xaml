@@ -11,8 +11,11 @@
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
 
-        <!-- Main pane area -->
-        <Grid x:Name="PaneCanvas" Grid.Row="0" Margin="0"/>
+        <!-- Main pane area with focus scope for proper focus management -->
+        <Grid x:Name="PaneCanvas" Grid.Row="0" Margin="0"
+              FocusManager.IsFocusScope="True"
+              KeyboardNavigation.TabNavigation="Cycle"
+              KeyboardNavigation.DirectionalNavigation="Cycle"/>
 
         <!-- Status bar at bottom -->
         <Border x:Name="StatusBarContainer" Grid.Row="1" BorderThickness="0,1,0,0"/>

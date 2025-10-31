@@ -111,6 +111,33 @@ namespace SuperTUI.Panes
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
+        /// <summary>
+        /// Override to handle when pane gains focus - focus appropriate control
+        /// </summary>
+        protected override void OnPaneGainedFocus()
+        {
+            // Determine which control should have focus based on current state
+            if (inlineEditBox != null && inlineEditBox.Visibility == Visibility.Visible)
+            {
+                // If editing, return focus to edit box
+                inlineEditBox.Focus();
+                System.Windows.Input.Keyboard.Focus(inlineEditBox);
+            }
+            else if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
+                     searchBox.Text != "Search tasks... (Press F to focus)")
+            {
+                // If searching, return focus to search box
+                searchBox.Focus();
+                System.Windows.Input.Keyboard.Focus(searchBox);
+            }
+            else if (taskListBox != null)
+            {
+                // Default: focus the task list
+                taskListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(taskListBox);
+            }
+        }
+
         protected override UIElement BuildContent()
         {
             // Cache theme colors
@@ -911,6 +938,12 @@ namespace SuperTUI.Panes
             // Single-key shortcuts (no modifiers, when list focused NOT in text input)
             if (Keyboard.Modifiers == ModifierKeys.None)
             {
+                // CRITICAL FIX: Don't process single-key shortcuts if typing in a TextBox
+                if (System.Windows.Input.Keyboard.FocusedElement is TextBox)
+                {
+                    return; // Let the TextBox handle the key
+                }
+
                 switch (e.Key)
                 {
                     case Key.A:
@@ -1711,17 +1744,73 @@ namespace SuperTUI.Panes
 
         public override PaneState SaveState()
         {
+            var state = new Dictionary<string, object>
+            {
+                ["SelectedTaskId"] = selectedTask?.Task.Id.ToString(),
+                ["SelectedIndex"] = taskListBox?.SelectedIndex ?? -1,
+                ["FilterMode"] = currentFilter.ToString(),
+                ["SortMode"] = currentSort.ToString(),
+                ["ScrollPosition"] = GetScrollPosition(),
+
+                // FOCUS MEMORY - Track exactly what the user was doing
+                ["FocusedControl"] = GetCurrentFocusedControl(),
+                ["SearchText"] = searchBox?.Text,
+                ["IsSearchFocused"] = searchBox?.IsFocused ?? false,
+
+                // INLINE EDIT STATE - Remember if user was editing
+                ["IsInlineEditing"] = inlineEditBox?.Visibility == Visibility.Visible,
+                ["InlineEditTaskId"] = inlineEditBox?.Tag?.ToString(),
+                ["InlineEditText"] = inlineEditBox?.Text,
+                ["InlineEditCursorPos"] = inlineEditBox?.CaretIndex ?? 0,
+                ["InlineEditSelectionStart"] = inlineEditBox?.SelectionStart ?? 0,
+                ["InlineEditSelectionLength"] = inlineEditBox?.SelectionLength ?? 0,
+
+                // QUICK ADD STATE
+                ["IsQuickAdding"] = quickAddTitle?.Visibility == Visibility.Visible,
+                ["QuickAddText"] = quickAddTitle?.Text,
+                ["QuickAddCursorPos"] = quickAddTitle?.CaretIndex ?? 0,
+
+                // DATE/TAG EDIT STATE
+                ["IsDateEditing"] = dateEditBox?.Visibility == Visibility.Visible,
+                ["DateEditTaskId"] = dateEditBox?.Tag?.ToString(),
+                ["DateEditText"] = dateEditBox?.Text,
+                ["IsTagEditing"] = tagEditBox?.Visibility == Visibility.Visible,
+                ["TagEditTaskId"] = tagEditBox?.Tag?.ToString(),
+                ["TagEditText"] = tagEditBox?.Text,
+
+                // EXPANDED STATE for subtasks
+                ["ExpandedTasks"] = GetExpandedTaskIds()
+            };
+
             return new PaneState
             {
                 PaneType = "TaskListPane",
-                CustomData = new Dictionary<string, object>
-                {
-                    ["SelectedTaskId"] = selectedTask?.Task.Id.ToString(),
-                    ["FilterMode"] = currentFilter.ToString(),
-                    ["SortMode"] = currentSort.ToString(),
-                    ["ScrollPosition"] = GetScrollPosition()
-                }
+                CustomData = state
             };
+        }
+
+        private string GetCurrentFocusedControl()
+        {
+            if (searchBox?.IsFocused == true) return "SearchBox";
+            if (inlineEditBox?.IsFocused == true) return "InlineEdit";
+            if (quickAddTitle?.IsFocused == true) return "QuickAdd";
+            if (dateEditBox?.IsFocused == true) return "DateEdit";
+            if (tagEditBox?.IsFocused == true) return "TagEdit";
+            if (taskListBox?.IsFocused == true) return "TaskList";
+            return "None";
+        }
+
+        private List<string> GetExpandedTaskIds()
+        {
+            var expanded = new List<string>();
+            foreach (var item in taskListBox.Items)
+            {
+                if (item is Grid grid && grid.Tag is TaskItemViewModel vm && vm.IsExpanded)
+                {
+                    expanded.Add(vm.Task.Id.ToString());
+                }
+            }
+            return expanded;
         }
 
         public override void RestoreState(PaneState state)
@@ -1730,6 +1819,9 @@ namespace SuperTUI.Panes
 
             var data = state.CustomData as Dictionary<string, object>;
             if (data == null) return;
+
+            // Store state for deferred restoration after list loads
+            pendingRestoreData = data;
 
             // Restore filter
             if (data.TryGetValue("FilterMode", out var filterStr))
@@ -1751,22 +1843,174 @@ namespace SuperTUI.Panes
                 }
             }
 
+            // Restore search text BEFORE refreshing
+            if (data.TryGetValue("SearchText", out var searchText))
+            {
+                searchBox.Text = searchText?.ToString() ?? "";
+            }
+
             // Refresh with new filter/sort
             RefreshTaskList();
 
-            // Restore selection after tasks load
-            if (data.TryGetValue("SelectedTaskId", out var taskIdStr))
+            // Use dispatcher with Loaded priority to ensure list is built
+            Dispatcher.BeginInvoke(new Action(() => RestoreDetailedState(data)),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private Dictionary<string, object> pendingRestoreData;
+
+        private void RestoreDetailedState(Dictionary<string, object> data)
+        {
+            // Restore selection by index first (more reliable)
+            if (data.TryGetValue("SelectedIndex", out var indexObj))
+            {
+                var index = Convert.ToInt32(indexObj);
+                if (index >= 0 && index < taskListBox.Items.Count)
+                {
+                    taskListBox.SelectedIndex = index;
+                    selectedTask = GetTaskViewModelAtIndex(index);
+                }
+            }
+            // Fallback to ID-based selection
+            else if (data.TryGetValue("SelectedTaskId", out var taskIdStr))
             {
                 if (Guid.TryParse(taskIdStr?.ToString(), out var taskId))
                 {
-                    Dispatcher.BeginInvoke(new Action(() => SelectTaskById(taskId)));
+                    SelectTaskById(taskId);
+                }
+            }
+
+            // Restore expanded tasks
+            if (data.TryGetValue("ExpandedTasks", out var expandedObj) && expandedObj is List<string> expandedIds)
+            {
+                foreach (var item in taskListBox.Items)
+                {
+                    if (item is Grid grid && grid.Tag is TaskItemViewModel vm)
+                    {
+                        vm.IsExpanded = expandedIds.Contains(vm.Task.Id.ToString());
+                        UpdateSubtaskVisibility(grid, vm);
+                    }
+                }
+            }
+
+            // Restore inline editing state
+            if (data.TryGetValue("IsInlineEditing", out var isEditingObj) && (bool)isEditingObj)
+            {
+                if (data.TryGetValue("InlineEditTaskId", out var editTaskIdStr))
+                {
+                    if (Guid.TryParse(editTaskIdStr?.ToString(), out var editTaskId))
+                    {
+                        // Find the task and start inline edit
+                        foreach (var item in taskListBox.Items)
+                        {
+                            if (item is Grid grid && grid.Tag is TaskItemViewModel vm && vm.Task.Id == editTaskId)
+                            {
+                                StartInlineEditForGrid(grid);
+
+                                // Restore text and cursor
+                                if (inlineEditBox != null)
+                                {
+                                    if (data.TryGetValue("InlineEditText", out var text))
+                                        inlineEditBox.Text = text?.ToString() ?? "";
+                                    if (data.TryGetValue("InlineEditCursorPos", out var cursorPos))
+                                        inlineEditBox.CaretIndex = Convert.ToInt32(cursorPos);
+                                    if (data.TryGetValue("InlineEditSelectionStart", out var selStart))
+                                        inlineEditBox.SelectionStart = Convert.ToInt32(selStart);
+                                    if (data.TryGetValue("InlineEditSelectionLength", out var selLen))
+                                        inlineEditBox.SelectionLength = Convert.ToInt32(selLen);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Restore quick add state
+            if (data.TryGetValue("IsQuickAdding", out var isQuickAddingObj) && (bool)isQuickAddingObj)
+            {
+                ShowQuickAdd();
+                if (quickAddTitle != null)
+                {
+                    if (data.TryGetValue("QuickAddText", out var text))
+                        quickAddTitle.Text = text?.ToString() ?? "";
+                    if (data.TryGetValue("QuickAddCursorPos", out var cursorPos))
+                        quickAddTitle.CaretIndex = Convert.ToInt32(cursorPos);
                 }
             }
 
             // Restore scroll position
             if (data.TryGetValue("ScrollPosition", out var scrollPos))
             {
-                Dispatcher.BeginInvoke(new Action(() => SetScrollPosition(scrollPos)));
+                SetScrollPosition(scrollPos);
+            }
+
+            // Finally, restore focus to the correct control
+            if (data.TryGetValue("FocusedControl", out var focusedControl))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    switch (focusedControl?.ToString())
+                    {
+                        case "SearchBox":
+                            searchBox?.Focus();
+                            System.Windows.Input.Keyboard.Focus(searchBox);
+                            break;
+                        case "InlineEdit":
+                            inlineEditBox?.Focus();
+                            System.Windows.Input.Keyboard.Focus(inlineEditBox);
+                            break;
+                        case "QuickAdd":
+                            quickAddTitle?.Focus();
+                            System.Windows.Input.Keyboard.Focus(quickAddTitle);
+                            break;
+                        case "DateEdit":
+                            dateEditBox?.Focus();
+                            System.Windows.Input.Keyboard.Focus(dateEditBox);
+                            break;
+                        case "TagEdit":
+                            tagEditBox?.Focus();
+                            System.Windows.Input.Keyboard.Focus(tagEditBox);
+                            break;
+                        case "TaskList":
+                        default:
+                            taskListBox?.Focus();
+                            System.Windows.Input.Keyboard.Focus(taskListBox);
+                            break;
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Input);
+            }
+        }
+
+        private TaskItemViewModel GetTaskViewModelAtIndex(int index)
+        {
+            if (index < 0 || index >= taskListBox.Items.Count) return null;
+            var item = taskListBox.Items[index];
+            if (item is Grid grid && grid.Tag is TaskItemViewModel vm)
+                return vm;
+            return null;
+        }
+
+        private void StartInlineEditForGrid(Grid taskGrid)
+        {
+            // Implementation to start inline edit for a specific grid
+            // This needs to be extracted from existing StartInlineEdit method
+            if (taskGrid?.Tag is TaskItemViewModel vm)
+            {
+                selectedTask = vm;
+                taskListBox.SelectedItem = taskGrid;
+                StartInlineEdit();
+            }
+        }
+
+        private void UpdateSubtaskVisibility(Grid grid, TaskItemViewModel vm)
+        {
+            // Find and update the subtask container visibility
+            var subtaskContainer = grid.Children.OfType<StackPanel>()
+                .FirstOrDefault(sp => sp.Name == "SubtaskContainer");
+            if (subtaskContainer != null)
+            {
+                subtaskContainer.Visibility = vm.IsExpanded ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 

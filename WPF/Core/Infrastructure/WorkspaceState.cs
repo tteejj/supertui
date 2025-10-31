@@ -19,6 +19,7 @@ namespace SuperTUI.Core.Infrastructure
         public int FocusedPaneIndex { get; set; } = -1;
         public Guid? CurrentProjectId { get; set; }
         public DateTime LastModified { get; set; }
+        public Dictionary<string, object> FocusState { get; set; } = new Dictionary<string, object>();
 
         public PaneWorkspaceState()
         {

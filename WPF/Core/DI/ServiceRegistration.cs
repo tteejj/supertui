@@ -54,7 +54,10 @@ namespace SuperTUI.DI
             // Register CommandHistory for undo/redo operations
             container.RegisterSingleton<CommandHistory>(sp => new CommandHistory(Logger.Instance, maxHistorySize: 50));
 
-            Logger.Instance.Info("DI", $"✅ Registered {12} infrastructure services");
+            // CRITICAL: Register FocusHistoryManager for perfect focus tracking
+            container.RegisterSingleton<FocusHistoryManager>(sp => new FocusHistoryManager(Logger.Instance));
+
+            Logger.Instance.Info("DI", $"✅ Registered {13} infrastructure services");
 
             // Register domain services with their interfaces
             container.RegisterSingleton<ITaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);

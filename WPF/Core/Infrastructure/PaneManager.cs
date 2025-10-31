@@ -144,6 +144,32 @@ namespace SuperTUI.Core.Infrastructure
             focusedPane.IsFocused = true;
             focusedPane.OnFocusChanged();
 
+            // CRITICAL FIX: Actually set WPF keyboard focus
+            // This ensures keyboard events route to the focused pane
+            if (!pane.IsFocused) // Check WPF's actual IsFocused
+            {
+                pane.Focus(); // Request logical focus
+            }
+
+            // Force keyboard focus to the pane or its first focusable child
+            pane.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (!pane.IsKeyboardFocusWithin)
+                {
+                    // Try to focus the pane itself first
+                    if (pane.Focusable && pane.Focus())
+                    {
+                        System.Windows.Input.Keyboard.Focus(pane);
+                    }
+                    else
+                    {
+                        // If pane isn't focusable, focus first focusable child
+                        pane.MoveFocus(new System.Windows.Input.TraversalRequest(
+                            System.Windows.Input.FocusNavigationDirection.First));
+                    }
+                }
+            }), System.Windows.Threading.DispatcherPriority.Input);
+
             PaneFocusChanged?.Invoke(this, new PaneEventArgs(pane));
         }
 
