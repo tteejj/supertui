@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core.Interfaces;
+using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core.Infrastructure
 {
@@ -336,7 +337,8 @@ namespace SuperTUI.Core.Infrastructure
                     try
                     {
                         // Check element is still valid before focusing
-                        if (previousFocus is UIElement element && element.IsLoaded)
+                        if (previousFocus != null &&
+                            (!(previousFocus is FrameworkElement fe) || fe.IsLoaded))
                         {
                             Keyboard.Focus(previousFocus);
                             logger.Log(LogLevel.Debug, "ModalManager", $"Restored focus to: {previousFocus.GetType().Name}");

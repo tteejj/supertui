@@ -197,6 +197,20 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
+        /// Apply focus to a pane using the fallback chain
+        /// Attempts to focus the pane element itself, falling back through a chain
+        /// to ensure focus is never lost
+        /// Public API for PaneManager to use when setting focus
+        /// </summary>
+        /// <param name="pane">The pane to focus</param>
+        /// <returns>True if focus was applied successfully (or via fallback)</returns>
+        public bool ApplyFocusToPane(Components.PaneBase pane)
+        {
+            if (pane == null) return false;
+            return ApplyFocusWithFallback(pane, pane.PaneName, "ApplyFocusToPane");
+        }
+
+        /// <summary>
         /// Attempts to apply focus with a fallback chain:
         /// 1. Try the requested element (if available and valid)
         /// 2. Try the first focusable child of the pane

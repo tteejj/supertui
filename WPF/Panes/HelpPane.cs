@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
@@ -8,158 +11,448 @@ using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
 {
+    /// <summary>
+    /// Help pane displaying all keyboard shortcuts dynamically from ShortcutManager
+    /// Keyboard: ? or Shift+/ to open
+    /// Features: Grouped by category (Global, Pane-specific), searchable
+    /// </summary>
     public class HelpPane : PaneBase
     {
-        private TextBlock helpContent;
-        private SolidColorBrush bgBrush;
-        private SolidColorBrush fgBrush;
-        private SolidColorBrush accentBrush;
-        private SolidColorBrush dimBrush;
+        private readonly IShortcutManager shortcutManager;
+        private readonly IConfigurationManager configManager;
+
+        // UI Components
+        private TextBox searchBox;
+        private ScrollViewer contentScrollViewer;
+        private StackPanel shortcutsPanel;
+        private TextBlock helpHeaderText;
+
+        // Data
+        private List<ShortcutGroup> allGroups;
+        private string searchQuery = "";
 
         public HelpPane(
             ILogger logger,
             IThemeManager themeManager,
-            IProjectContextManager projectContext)
+            IProjectContextManager projectContext,
+            IShortcutManager shortcutManager,
+            IConfigurationManager configManager)
             : base(logger, themeManager, projectContext)
         {
-            PaneName = "Help";
-        }
+            this.shortcutManager = shortcutManager ?? throw new ArgumentNullException(nameof(shortcutManager));
+            this.configManager = configManager ?? throw new ArgumentNullException(nameof(configManager));
 
-        public override void Initialize()
-        {
-            base.Initialize();
+            PaneName = "Keyboard Shortcuts";
+            PaneIcon = "?";
         }
 
         protected override UIElement BuildContent()
         {
-            CacheThemeColors();
+            var theme = themeManager.CurrentTheme;
 
-            var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
-            grid.Background = bgBrush;
+            // Main container
+            var container = new Grid();
+            container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Title
+            container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search
+            container.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
 
-            // Header
-            var header = new TextBlock
+            // Title header
+            var titleHeader = new Border
             {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 24,
-                FontWeight = FontWeights.Bold,
-                Foreground = accentBrush,
-                Padding = new Thickness(16, 16, 16, 8),
-                Text = "⌨️  Keyboard Shortcuts"
-            };
-            Grid.SetRow(header, 0);
-            grid.Children.Add(header);
-
-            // Scrollable content
-            var scrollViewer = new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Padding = new Thickness(16)
+                Background = new SolidColorBrush(theme.Surface),
+                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(16, 12, 16, 12)
             };
 
-            helpContent = new TextBlock
+            helpHeaderText = new TextBlock
             {
+                Text = "⌨️  Keyboard Shortcuts Reference",
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 16,
-                Foreground = fgBrush,
-                TextWrapping = TextWrapping.Wrap,
-                Text = @"WORKSPACES:
-  Ctrl+1-9          Switch to workspace 1-9
-  F12               Toggle move pane mode (use arrows to move panes)
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Primary)
+            };
+            titleHeader.Child = helpHeaderText;
+            Grid.SetRow(titleHeader, 0);
+            container.Children.Add(titleHeader);
 
-PANE NAVIGATION:
-  Ctrl+Shift+←→↑↓   Focus pane in direction
-  Ctrl+Shift+T      Open Tasks pane
-  Ctrl+Shift+N      Open Notes pane
-  Ctrl+Shift+P      Open Projects pane
-  Ctrl+Shift+E      Open Excel Import pane
-  Ctrl+Shift+C      Open Calendar pane
-  Ctrl+Shift+Q      Close focused pane
-
-COMMAND PALETTE:
-  : (Shift+;)       Open command palette
-  ? (Shift+/)       Show this help
-
-GLOBAL COMMANDS:
-  Ctrl+Z            Undo last action (delete, etc.)
-  Ctrl+Y            Redo last undone action
-  Ctrl+F            Focus search box (when in pane)
-  Ctrl+Shift+D      Toggle debug overlay
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-TASK PANE:
-  A                 Add new task (form: Title | DueDate | Priority)
-                    - Tab cycles between fields
-                    - Priority: 1=High, 2=Medium, 3=Low
-                    - Dates: 2d, tomorrow, next friday, 2025-12-31
-  S                 Create subtask (max 2 levels: Parent → Child)
-                    - S on child creates sibling, NOT grandchild
-  E / Enter         Edit task title inline
-  D                 Delete task
-  Space             Toggle complete
-  Shift+D           Edit due date inline
-  Shift+T           Edit tags inline
-  PageUp/Down       Reorder task (change sort position)
-  Ctrl+1/2/3        Set priority (High/Medium/Low)
-
-NOTES PANE:
-  A                 New note
-  O                 Open external .txt file (via FileBrowser)
-  E                 Edit note (focus editor)
-  D                 Delete note
-  S / F             Search/filter
-  W                 Save note
-
-PROJECTS PANE:
-  A                 Add project (quick: Name | DateAssigned | ID2)
-  D                 Delete project
-  K                 Set project context (filters all panes)
-  X                 Export T2020 text file to Desktop
-  Click field       Edit any field inline
-
-EXCEL IMPORT PANE:
-  I                 Import from clipboard
-                    1. Open Excel SVI-CAS form
-                    2. Select cells W3:W130 (48 fields)
-                    3. Copy (Ctrl+C)
-                    4. Paste in textbox (system paste)
-                    5. Press I to import
-
-CALENDAR PANE:
-  M                 Switch to Month view
-  W                 Switch to Week view
-  Arrow Keys        Navigate dates
-  Home              Jump to today
-  Enter             View tasks for selected date
-  Ctrl+T            Create task for selected date
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Press Escape or Ctrl+Shift+Q to close this pane."
+            // Search box
+            var searchContainer = new Border
+            {
+                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(12, 8, 12, 8),
+                Background = new SolidColorBrush(theme.Surface)
             };
 
-            scrollViewer.Content = helpContent;
-            Grid.SetRow(scrollViewer, 1);
-            grid.Children.Add(scrollViewer);
+            var searchGrid = new Grid();
+            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var searchIcon = new TextBlock
+            {
+                Text = "🔍 ",
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            Grid.SetColumn(searchIcon, 0);
+            searchGrid.Children.Add(searchIcon);
+
+            searchBox = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(theme.Foreground),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                CaretBrush = new SolidColorBrush(theme.Primary),
+                Text = ""
+            };
+            searchBox.TextChanged += OnSearchTextChanged;
+            searchBox.PreviewKeyDown += OnSearchBoxKeyDown;
+            Grid.SetColumn(searchBox, 1);
+            searchGrid.Children.Add(searchBox);
+
+            searchContainer.Child = searchGrid;
+            Grid.SetRow(searchContainer, 1);
+            container.Children.Add(searchContainer);
+
+            // Shortcuts content (scrollable)
+            contentScrollViewer = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Padding = new Thickness(16, 16, 16, 16)
+            };
+
+            shortcutsPanel = new StackPanel();
+            contentScrollViewer.Content = shortcutsPanel;
+
+            Grid.SetRow(contentScrollViewer, 2);
+            container.Children.Add(contentScrollViewer);
+
+            // Build shortcuts display
+            BuildShortcutsDisplay();
+
+            return container;
+        }
+
+        /// <summary>
+        /// Build the shortcuts display grouped by category
+        /// </summary>
+        private void BuildShortcutsDisplay()
+        {
+            allGroups = new List<ShortcutGroup>();
+
+            // Get all shortcuts from ShortcutManager
+            var globalShortcuts = shortcutManager.GetGlobalShortcuts();
+
+            // Group 1: Global Shortcuts
+            if (globalShortcuts.Count > 0)
+            {
+                allGroups.Add(new ShortcutGroup
+                {
+                    Title = "Global Shortcuts",
+                    Description = "Available anywhere in the application",
+                    Shortcuts = globalShortcuts.ToList()
+                });
+            }
+
+            // Group 2: Pane-Specific Shortcuts
+            // Get pane shortcuts for all known panes
+            var knownPanes = new[] { "Tasks", "Notes", "Files", "FileBrowser", "Projects", "CommandPalette", "Help", "Calendar", "ExcelImport" };
+            foreach (var paneName in knownPanes)
+            {
+                var paneShortcuts = shortcutManager.GetPaneShortcuts(paneName);
+                if (paneShortcuts.Count > 0)
+                {
+                    allGroups.Add(new ShortcutGroup
+                    {
+                        Title = $"{paneName} Pane",
+                        Description = $"Available when {paneName} pane is focused",
+                        Shortcuts = paneShortcuts.ToList()
+                    });
+                }
+            }
+
+            // Add footer note
+            var footerNote = "Press Ctrl+F to search, Esc or Ctrl+Shift+Q to close this pane";
+
+            // Render the groups
+            RefreshDisplay(footerNote);
+        }
+
+        /// <summary>
+        /// Refresh the display with current search filter
+        /// </summary>
+        private void RefreshDisplay(string footerNote = null)
+        {
+            shortcutsPanel.Children.Clear();
+
+            var theme = themeManager.CurrentTheme;
+            int visibleGroupCount = 0;
+
+            foreach (var group in allGroups)
+            {
+                // Filter shortcuts based on search
+                var filteredShortcuts = string.IsNullOrWhiteSpace(searchQuery)
+                    ? group.Shortcuts
+                    : group.Shortcuts.Where(s =>
+                        s.Description?.ToLower().Contains(searchQuery.ToLower()) == true ||
+                        FormatShortcutKeys(s).ToLower().Contains(searchQuery.ToLower()) == true).ToList();
+
+                if (filteredShortcuts.Count == 0)
+                    continue;
+
+                visibleGroupCount++;
+
+                // Group header
+                var groupHeader = new TextBlock
+                {
+                    Text = group.Title,
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(theme.Primary),
+                    Margin = new Thickness(0, 0, 0, 4)
+                };
+
+                // Add top margin only after first group
+                if (visibleGroupCount > 1)
+                {
+                    groupHeader.Margin = new Thickness(0, 20, 0, 4);
+                }
+
+                shortcutsPanel.Children.Add(groupHeader);
+
+                // Group description
+                var groupDesc = new TextBlock
+                {
+                    Text = group.Description,
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(
+                        (byte)(theme.Foreground.R * 0.7),
+                        (byte)(theme.Foreground.G * 0.7),
+                        (byte)(theme.Foreground.B * 0.7)
+                    )),
+                    Margin = new Thickness(0, 0, 0, 8)
+                };
+                shortcutsPanel.Children.Add(groupDesc);
+
+                // Shortcuts list
+                foreach (var shortcut in filteredShortcuts.OrderBy(s => s.ToString()))
+                {
+                    var shortcutItem = BuildShortcutItem(shortcut);
+                    shortcutsPanel.Children.Add(shortcutItem);
+                }
+            }
+
+            // No results message
+            if (visibleGroupCount == 0)
+            {
+                var noResults = new TextBlock
+                {
+                    Text = string.IsNullOrWhiteSpace(searchQuery)
+                        ? "No shortcuts registered"
+                        : "No shortcuts found matching your search",
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(Color.FromRgb(
+                        (byte)(theme.Foreground.R * 0.6),
+                        (byte)(theme.Foreground.G * 0.6),
+                        (byte)(theme.Foreground.B * 0.6)
+                    )),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 32, 0, 0)
+                };
+                shortcutsPanel.Children.Add(noResults);
+            }
+
+            // Footer note
+            if (!string.IsNullOrWhiteSpace(footerNote) && visibleGroupCount > 0)
+            {
+                var separator = new Border
+                {
+                    Height = 1,
+                    Background = new SolidColorBrush(theme.Border),
+                    Margin = new Thickness(0, 20, 0, 12)
+                };
+                shortcutsPanel.Children.Add(separator);
+
+                var footer = new TextBlock
+                {
+                    Text = footerNote,
+                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                    FontSize = 10,
+                    FontStyle = FontStyles.Italic,
+                    Foreground = new SolidColorBrush(Color.FromRgb(
+                        (byte)(theme.Foreground.R * 0.6),
+                        (byte)(theme.Foreground.G * 0.6),
+                        (byte)(theme.Foreground.B * 0.6)
+                    )),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 16)
+                };
+                shortcutsPanel.Children.Add(footer);
+            }
+        }
+
+        /// <summary>
+        /// Build UI for a single shortcut item
+        /// </summary>
+        private UIElement BuildShortcutItem(KeyboardShortcut shortcut)
+        {
+            var theme = themeManager.CurrentTheme;
+
+            var grid = new Grid
+            {
+                Margin = new Thickness(0, 2, 0, 2)
+            };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // Shortcut keys (monospace, highlighted)
+            var keysText = new TextBlock
+            {
+                Text = FormatShortcutKeys(shortcut),
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(theme.Success),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(keysText, 0);
+            grid.Children.Add(keysText);
+
+            // Description
+            var descText = new TextBlock
+            {
+                Text = shortcut.Description ?? "(No description)",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 10,
+                Foreground = new SolidColorBrush(theme.Foreground),
+                VerticalAlignment = VerticalAlignment.Center,
+                TextWrapping = TextWrapping.Wrap
+            };
+            Grid.SetColumn(descText, 1);
+            grid.Children.Add(descText);
 
             return grid;
         }
 
-        private void CacheThemeColors()
+        /// <summary>
+        /// Format shortcut keys in a readable way
+        /// </summary>
+        private string FormatShortcutKeys(KeyboardShortcut shortcut)
         {
-            var theme = themeManager.CurrentTheme;
-            bgBrush = new SolidColorBrush(theme.Background);
-            fgBrush = new SolidColorBrush(theme.Foreground);
-            accentBrush = new SolidColorBrush(theme.Primary);
-            dimBrush = new SolidColorBrush(theme.ForegroundSecondary);
+            var parts = new List<string>();
+
+            if ((shortcut.Modifiers & ModifierKeys.Control) != 0)
+                parts.Add("Ctrl");
+            if ((shortcut.Modifiers & ModifierKeys.Alt) != 0)
+                parts.Add("Alt");
+            if ((shortcut.Modifiers & ModifierKeys.Shift) != 0)
+                parts.Add("Shift");
+            if ((shortcut.Modifiers & ModifierKeys.Windows) != 0)
+                parts.Add("Win");
+
+            // Format the key nicely
+            var keyName = FormatKeyName(shortcut.Key);
+            parts.Add(keyName);
+
+            return string.Join(" + ", parts);
+        }
+
+        /// <summary>
+        /// Format key name in a user-friendly way
+        /// </summary>
+        private string FormatKeyName(Key key)
+        {
+            // Handle special keys
+            return key switch
+            {
+                Key.OemQuestion => "?",
+                Key.OemSemicolon => ";",
+                Key.OemComma => ",",
+                Key.OemPeriod => ".",
+                Key.OemMinus => "-",
+                Key.OemPlus => "+",
+                Key.OemTilde => "~",
+                //                 Key.Oem5 => "\\",
+                Key.OemOpenBrackets => "[",
+                Key.OemCloseBrackets => "]",
+                Key.Space => "Space",
+                Key.Enter => "Enter",
+                Key.Escape => "Esc",
+                Key.Back => "Backspace",
+                Key.Delete => "Del",
+                Key.Tab => "Tab",
+                Key.PageUp => "PgUp",
+                Key.PageDown => "PgDn",
+                Key.Home => "Home",
+                Key.End => "End",
+                Key.Left => "←",
+                Key.Right => "→",
+                Key.Up => "↑",
+                Key.Down => "↓",
+                Key.D1 => "1",
+                Key.D2 => "2",
+                Key.D3 => "3",
+                Key.D4 => "4",
+                Key.D5 => "5",
+                Key.D6 => "6",
+                Key.D7 => "7",
+                Key.D8 => "8",
+                Key.D9 => "9",
+                Key.D0 => "0",
+                _ => key.ToString()
+            };
+        }
+
+        /// <summary>
+        /// Handle search text changes
+        /// </summary>
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchQuery = searchBox.Text.Trim();
+            RefreshDisplay();
+        }
+
+        /// <summary>
+        /// Handle keyboard in search box
+        /// </summary>
+        private void OnSearchBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                // Clear search if there's text, otherwise do nothing (let global handler close pane)
+                if (!string.IsNullOrWhiteSpace(searchBox.Text))
+                {
+                    searchBox.Text = "";
+                    e.Handled = true;
+                }
+            }
         }
 
         protected override void OnDispose()
         {
+            // Clean up if needed
             base.OnDispose();
         }
+    }
+
+    /// <summary>
+    /// Grouped shortcuts for display
+    /// </summary>
+    internal class ShortcutGroup
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public List<KeyboardShortcut> Shortcuts { get; set; }
     }
 }

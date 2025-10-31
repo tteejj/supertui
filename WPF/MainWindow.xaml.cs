@@ -455,8 +455,9 @@ namespace SuperTUI
 
         private void InitializePaneSystem()
         {
-            // Create pane manager (blank canvas)
-            paneManager = new PaneManager(logger, themeManager);
+            // Create pane manager (blank canvas) with config for navigation feedback
+            var config = serviceContainer.GetRequiredService<IConfigurationManager>();
+            paneManager = new PaneManager(logger, themeManager, focusHistory, config);
 
             // Check if container is already added (prevents "logical parent" error)
             if (!PaneCanvas.Children.Contains(paneManager.Container))
@@ -471,6 +472,7 @@ namespace SuperTUI
                 projectContext,
                 serviceContainer.GetRequiredService<IConfigurationManager>(),
                 serviceContainer.GetRequiredService<ISecurityManager>(),
+                serviceContainer.GetRequiredService<IShortcutManager>(),
                 serviceContainer.GetRequiredService<ITaskService>(),
                 serviceContainer.GetRequiredService<IProjectService>(),
                 serviceContainer.GetRequiredService<ITimeTrackingService>(),
@@ -965,6 +967,9 @@ namespace SuperTUI
 
                 // Close all panes
                 paneManager?.CloseAll();
+
+                // Cleanup pane manager resources (navigation feedback, etc.)
+                paneManager?.Cleanup();
 
                 // Dispose status bar
                 statusBar?.Dispose();

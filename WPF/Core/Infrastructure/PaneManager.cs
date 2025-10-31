@@ -20,6 +20,9 @@ namespace SuperTUI.Core.Infrastructure
         private readonly TilingLayoutEngine tilingEngine;
         private readonly ILogger logger;
         private readonly IThemeManager themeManager;
+        private readonly IConfigurationManager config;
+        private readonly NavigationFeedbackManager feedbackManager;
+        private readonly FocusHistoryManager focusHistory;
         private readonly List<PaneBase> openPanes = new List<PaneBase>();
         private PaneBase focusedPane;
 
@@ -32,11 +35,19 @@ namespace SuperTUI.Core.Infrastructure
         public event EventHandler<PaneEventArgs> PaneClosed;
         public event EventHandler<PaneEventArgs> PaneFocusChanged;
 
-        public PaneManager(ILogger logger, IThemeManager themeManager)
+        public PaneManager(ILogger logger, IThemeManager themeManager, FocusHistoryManager focusHistory, IConfigurationManager config = null)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+            this.config = config;
+            this.focusHistory = focusHistory ?? throw new ArgumentNullException(nameof(focusHistory));
             this.tilingEngine = new TilingLayoutEngine(logger, themeManager);
+
+            // Initialize feedback manager if config is provided
+            if (config != null)
+            {
+                this.feedbackManager = new NavigationFeedbackManager(logger, config, themeManager);
+            }
 
             logger.Log(LogLevel.Info, "PaneManager", "Initialized with blank canvas");
         }
@@ -142,28 +153,21 @@ namespace SuperTUI.Core.Infrastructure
             focusedPane.SetActive(true);
             focusedPane.OnFocusChanged();
 
-            // CRITICAL FIX: Actually set WPF keyboard focus
-            // This ensures keyboard events route to the focused pane
-            if (!pane.IsFocused) // Check WPF's actual IsFocused
-            {
-                pane.Focus(); // Request logical focus
-            }
-
-            // Force keyboard focus to the pane or its first focusable child
+            // Use FocusHistoryManager's fallback chain to ensure focus is never lost
+            // This replaces manual focus attempts with a robust 4-level fallback:
+            // 1. Try the pane itself
+            // 2. Try first focusable child
+            // 3. Try pane again
+            // 4. Try main window as last resort
             pane.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (!pane.IsKeyboardFocusWithin)
                 {
-                    // Try to focus the pane itself first
-                    if (pane.Focusable && pane.Focus())
+                    bool focusApplied = focusHistory.ApplyFocusToPane(pane);
+                    if (!focusApplied)
                     {
-                        System.Windows.Input.Keyboard.Focus(pane);
-                    }
-                    else
-                    {
-                        // If pane isn't focusable, focus first focusable child
-                        pane.MoveFocus(new System.Windows.Input.TraversalRequest(
-                            System.Windows.Input.FocusNavigationDirection.First));
+                        logger.Log(LogLevel.Warning, "PaneManager", 
+                            $"Failed to apply focus to pane {pane.PaneName} even with fallback chain");
                     }
                 }
             }), System.Windows.Threading.DispatcherPriority.Input);
@@ -184,6 +188,12 @@ namespace SuperTUI.Core.Infrastructure
             {
                 FocusPane(targetPane);
                 logger.Log(LogLevel.Debug, "PaneManager", $"Focus moved {direction} to {targetPane.PaneName}");
+            }
+            else
+            {
+                // Navigation hit edge - show feedback
+                feedbackManager?.ShowNavigationEdgeFeedback(focusedPane, direction);
+                logger.Log(LogLevel.Debug, "PaneManager", $"Navigation blocked: at edge in direction {direction}");
             }
         }
 
@@ -238,6 +248,15 @@ namespace SuperTUI.Core.Infrastructure
             }
 
             logger.Log(LogLevel.Info, "PaneManager", $"Restored {panesToRestore.Count} panes");
+        }
+
+        /// <summary>
+        /// Cleanup resources on application shutdown
+        /// </summary>
+        public void Cleanup()
+        {
+            feedbackManager?.Cleanup();
+            logger.Log(LogLevel.Debug, "PaneManager", "Cleanup complete");
         }
     }
 

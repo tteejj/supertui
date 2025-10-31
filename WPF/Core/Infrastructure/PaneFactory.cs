@@ -33,6 +33,7 @@ namespace SuperTUI.Core.Infrastructure
         private readonly IProjectContextManager projectContext;
         private readonly IConfigurationManager configManager;
         private readonly ISecurityManager securityManager;
+        private readonly IShortcutManager shortcutManager;
         private readonly ITaskService taskService;
         private readonly IProjectService projectService;
         private readonly ITimeTrackingService timeTrackingService;
@@ -49,6 +50,7 @@ namespace SuperTUI.Core.Infrastructure
             IProjectContextManager projectContext,
             IConfigurationManager configManager,
             ISecurityManager securityManager,
+            IShortcutManager shortcutManager,
             ITaskService taskService,
             IProjectService projectService,
             ITimeTrackingService timeTrackingService,
@@ -62,6 +64,7 @@ namespace SuperTUI.Core.Infrastructure
             this.projectContext = projectContext ?? throw new ArgumentNullException(nameof(projectContext));
             this.configManager = configManager ?? throw new ArgumentNullException(nameof(configManager));
             this.securityManager = securityManager ?? throw new ArgumentNullException(nameof(securityManager));
+            this.shortcutManager = shortcutManager ?? throw new ArgumentNullException(nameof(shortcutManager));
             this.taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
             this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             this.timeTrackingService = timeTrackingService ?? throw new ArgumentNullException(nameof(timeTrackingService));
@@ -140,7 +143,7 @@ namespace SuperTUI.Core.Infrastructure
                     Icon = "⌨️",
                     Creator = () =>
                     {
-                        var pane = new HelpPane(logger, themeManager, projectContext);
+                        var pane = new HelpPane(logger, themeManager, projectContext, shortcutManager, configManager);
                         SetFocusHistory(pane);
                         return pane;
                     }

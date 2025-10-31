@@ -41,7 +41,13 @@ namespace SuperTUI.Panes
 
         // State
         public event EventHandler<string> CommandExecuted;
-        public event EventHandler CloseRequested;
+
+        // IModal implementation
+        public ModalResult Result { get; private set; } = ModalResult.None;
+        public object CustomResult { get; private set; }
+        public UIElement ModalElement => this;
+        public string ModalName => "CommandPalette";
+        public event EventHandler<ModalClosedEventArgs> CloseRequested;
 
         public override PaneSizePreference SizePreference => PaneSizePreference.Fixed;
 
@@ -481,7 +487,8 @@ namespace SuperTUI.Panes
             switch (e.Key)
             {
                 case Key.Escape:
-                    CloseRequested?.Invoke(this, EventArgs.Empty);
+                    Result = ModalResult.Cancel;
+                    CloseRequested?.Invoke(this, new ModalClosedEventArgs(Result));
                     e.Handled = true;
                     break;
 
@@ -525,7 +532,8 @@ namespace SuperTUI.Panes
             switch (e.Key)
             {
                 case Key.Escape:
-                    CloseRequested?.Invoke(this, EventArgs.Empty);
+                    Result = ModalResult.Cancel;
+                    CloseRequested?.Invoke(this, new ModalClosedEventArgs(Result));
                     e.Handled = true;
                     break;
 
@@ -587,7 +595,8 @@ namespace SuperTUI.Panes
                         var pane = paneFactory.CreatePane(item.Name);
                         paneManager.OpenPane(pane);
                         Log($"Opened pane: {item.Name}");
-                        CloseRequested?.Invoke(this, EventArgs.Empty);
+                        Result = ModalResult.OK;
+                        CloseRequested?.Invoke(this, new ModalClosedEventArgs(Result));
                         break;
 
                     case PaletteItemType.Command:
@@ -612,7 +621,8 @@ namespace SuperTUI.Panes
                 case "close":
                     paneManager.CloseFocusedPane();
                     Log("Closed focused pane");
-                    CloseRequested?.Invoke(this, EventArgs.Empty);
+                    Result = ModalResult.OK;
+                    CloseRequested?.Invoke(this, new ModalClosedEventArgs(Result));
                     break;
 
                 case "quit":
@@ -672,6 +682,31 @@ namespace SuperTUI.Panes
         {
             // Clean up if needed
             base.OnDispose();
+        }
+
+        // IModal interface methods
+        public void Show()
+        {
+            AnimateOpen();
+            searchBox?.Focus();
+        }
+
+        public void Hide()
+        {
+            AnimateClose(null);
+        }
+
+        public bool OnEscape()
+        {
+            Result = ModalResult.Cancel;
+            return true; // Allow close
+        }
+
+        public bool OnEnter()
+        {
+            ExecuteSelected();
+            Result = ModalResult.OK;
+            return true; // Allow close
         }
 
         /// <summary>
