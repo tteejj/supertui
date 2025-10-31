@@ -134,14 +134,12 @@ namespace SuperTUI.Core.Infrastructure
             if (focusedPane != null && focusedPane != pane)
             {
                 focusedPane.SetActive(false);
-                focusedPane.IsFocused = false;
                 focusedPane.OnFocusChanged();
             }
 
             // Focus new
             focusedPane = pane;
             focusedPane.SetActive(true);
-            focusedPane.IsFocused = true;
             focusedPane.OnFocusChanged();
 
             // CRITICAL FIX: Actually set WPF keyboard focus

@@ -130,6 +130,12 @@ namespace SuperTUI.Infrastructure
             Register("Backup.Interval", 3600, "Backup interval in seconds", "Backup", value => (int)value >= 60);
             Register("Backup.MaxBackups", 10, "Maximum number of backups to keep", "Backup", value => (int)value >= 1);
             Register("Backup.CompressBackups", true, "Compress backup files", "Backup");
+
+            // Navigation settings
+            Register("Navigation.EnableVisualFeedback", true, "Show visual feedback when navigation hits grid edge", "Navigation");
+            Register("Navigation.EnableAudioFeedback", true, "Play system beep when navigation hits grid edge", "Navigation");
+            Register("Navigation.FeedbackDurationMs", 200, "Duration of visual feedback in milliseconds", "Navigation", value => (int)value >= 100 && (int)value <= 1000);
+            Register("Navigation.EnableWraparound", false, "Enable wraparound navigation (cycle to opposite edge)", "Navigation");
         }
 
         // Interface-compliant non-generic Register method

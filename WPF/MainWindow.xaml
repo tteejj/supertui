@@ -11,9 +11,8 @@
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
 
-        <!-- Main pane area with focus scope for proper focus management -->
+        <!-- Main pane area - focus scope removed to allow Tab navigation to reach modal and status bar -->
         <Grid x:Name="PaneCanvas" Grid.Row="0" Margin="0"
-              FocusManager.IsFocusScope="True"
               KeyboardNavigation.TabNavigation="Cycle"
               KeyboardNavigation.DirectionalNavigation="Cycle"/>
 

@@ -104,11 +104,98 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
+            // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
+            RegisterPaneShortcuts();
+
             // Set initial focus to task list
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 taskListBox?.Focus();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// Register all TaskListPane shortcuts with ShortcutManager
+        /// These shortcuts only execute when this pane is focused
+        /// </summary>
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+
+            // Ctrl+F: Focus search box
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control,
+                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
+                "Focus search box");
+
+            // Ctrl+: (OemSemicolon) - Enter command mode
+            shortcuts.RegisterForPane(PaneName, Key.OemSemicolon, ModifierKeys.Control,
+                () => { isInternalCommand = true; commandBuffer = ":"; UpdateStatusBar(); },
+                "Enter command mode");
+
+            // Shift+D: Edit due date
+            shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.Shift,
+                () => { if (selectedTask != null) StartDateEdit(); },
+                "Edit task due date");
+
+            // Shift+T: Edit tags
+            shortcuts.RegisterForPane(PaneName, Key.T, ModifierKeys.Shift,
+                () => { if (selectedTask != null) StartTagEdit(); },
+                "Edit task tags");
+
+            // A (no modifiers): Show quick add form
+            shortcuts.RegisterForPane(PaneName, Key.A, ModifierKeys.None,
+                () => ShowQuickAdd(),
+                "Show quick add form");
+
+            // E (no modifiers): Start inline edit
+            shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
+                () => { if (selectedTask != null) StartInlineEdit(); },
+                "Start inline edit");
+
+            // Enter (no modifiers): Start inline edit
+            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+                () => { if (selectedTask != null) StartInlineEdit(); },
+                "Start inline edit");
+
+            // D (no modifiers): Delete selected task
+            shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None,
+                () => DeleteSelectedTask(),
+                "Delete selected task");
+
+            // S (no modifiers): Create subtask
+            shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.None,
+                () => { if (selectedTask != null) CreateSubtask(); },
+                "Create subtask");
+
+            // C (no modifiers): Toggle complete
+            shortcuts.RegisterForPane(PaneName, Key.C, ModifierKeys.None,
+                () => { if (selectedTask != null) ToggleTaskComplete(selectedTask.Task.Id); },
+                "Toggle task completion");
+
+            // Space (no modifiers): Toggle complete
+            shortcuts.RegisterForPane(PaneName, Key.Space, ModifierKeys.None,
+                () => { if (selectedTask != null) ToggleTaskComplete(selectedTask.Task.Id); },
+                "Toggle task completion");
+
+            // PageUp (no modifiers): Move selected task up
+            shortcuts.RegisterForPane(PaneName, Key.PageUp, ModifierKeys.None,
+                () => MoveSelectedTaskUp(),
+                "Move task up");
+
+            // PageDown (no modifiers): Move selected task down
+            shortcuts.RegisterForPane(PaneName, Key.PageDown, ModifierKeys.None,
+                () => MoveSelectedTaskDown(),
+                "Move task down");
+
+            // Ctrl+Z: Undo (handled via command history)
+            shortcuts.RegisterForPane(PaneName, Key.Z, ModifierKeys.Control,
+                () => commandHistory?.Undo(),
+                "Undo last command");
+
+            // Ctrl+Y: Redo (handled via command history)
+            shortcuts.RegisterForPane(PaneName, Key.Y, ModifierKeys.Control,
+                () => commandHistory?.Redo(),
+                "Redo last command");
         }
 
         /// <summary>
@@ -889,110 +976,28 @@ namespace SuperTUI.Panes
 
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            // Ctrl+F: Focus search box
-            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                searchBox.Focus();
-                searchBox.SelectAll();
-                e.Handled = true;
-                return;
-            }
-
-            // Check for internal command mode (Ctrl+:)
-            if (e.Key == Key.OemSemicolon && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                isInternalCommand = true;
-                commandBuffer = ":";
-                e.Handled = true;
-                return;
-            }
-
+            // Handle command mode separately (Ctrl+: puts us in command mode)
             if (isInternalCommand)
             {
                 HandleInternalCommand(e);
                 return;
             }
 
-            // Shift+D: Edit due date
-            if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Shift)
+            // Check if we're typing in a TextBox (single-key shortcuts shouldn't fire during editing)
+            if (Keyboard.Modifiers == ModifierKeys.None && System.Windows.Input.Keyboard.FocusedElement is TextBox)
             {
-                if (selectedTask != null)
-                {
-                    StartDateEdit();
-                    e.Handled = true;
-                }
+                return; // Let the TextBox handle the key
+            }
+
+            // Try to handle via ShortcutManager (all registered pane shortcuts)
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, Keyboard.Modifiers, null, PaneName))
+            {
+                e.Handled = true;
                 return;
             }
 
-            // Shift+T: Edit tags
-            if (e.Key == Key.T && Keyboard.Modifiers == ModifierKeys.Shift)
-            {
-                if (selectedTask != null)
-                {
-                    StartTagEdit();
-                    e.Handled = true;
-                }
-                return;
-            }
-
-            // Single-key shortcuts (no modifiers, when list focused NOT in text input)
-            if (Keyboard.Modifiers == ModifierKeys.None)
-            {
-                // CRITICAL FIX: Don't process single-key shortcuts if typing in a TextBox
-                if (System.Windows.Input.Keyboard.FocusedElement is TextBox)
-                {
-                    return; // Let the TextBox handle the key
-                }
-
-                switch (e.Key)
-                {
-                    case Key.A:
-                        ShowQuickAdd();
-                        e.Handled = true;
-                        break;
-                    case Key.E:
-                    case Key.Enter:
-                        if (selectedTask != null)
-                        {
-                            StartInlineEdit();
-                            e.Handled = true;
-                        }
-                        break;
-                    case Key.D:
-                        DeleteSelectedTask();
-                        e.Handled = true;
-                        break;
-                    case Key.S:
-                        if (selectedTask != null)
-                        {
-                            CreateSubtask();
-                            e.Handled = true;
-                        }
-                        break;
-                    case Key.C:
-                        if (selectedTask != null)
-                        {
-                            ToggleTaskComplete(selectedTask.Task.Id);
-                            e.Handled = true;
-                        }
-                        break;
-                    case Key.Space:
-                        if (selectedTask != null)
-                        {
-                            ToggleTaskComplete(selectedTask.Task.Id);
-                            e.Handled = true;
-                        }
-                        break;
-                    case Key.PageUp:
-                        MoveSelectedTaskUp();
-                        e.Handled = true;
-                        break;
-                    case Key.PageDown:
-                        MoveSelectedTaskDown();
-                        e.Handled = true;
-                        break;
-                }
-            }
+            // If not handled by ShortcutManager, leave for default handling
         }
 
         private void HandleInternalCommand(KeyEventArgs e)

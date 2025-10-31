@@ -146,21 +146,22 @@ namespace SuperTUI
                     $"Switch to workspace {workspace}");
             }
 
-            // Pane navigation: Ctrl+Shift+Arrows (only when not typing)
+            // Pane navigation: Ctrl+Shift+Arrows
+            // Context checking now handled by ShortcutManager itself
             shortcuts.RegisterGlobal(Key.Left, ModifierKeys.Control | ModifierKeys.Shift,
-                () => { if (!IsTypingInTextBox()) paneManager.NavigateFocus(FocusDirection.Left); },
+                () => paneManager.NavigateFocus(FocusDirection.Left),
                 "Focus pane left");
 
             shortcuts.RegisterGlobal(Key.Right, ModifierKeys.Control | ModifierKeys.Shift,
-                () => { if (!IsTypingInTextBox()) paneManager.NavigateFocus(FocusDirection.Right); },
+                () => paneManager.NavigateFocus(FocusDirection.Right),
                 "Focus pane right");
 
             shortcuts.RegisterGlobal(Key.Up, ModifierKeys.Control | ModifierKeys.Shift,
-                () => { if (!IsTypingInTextBox()) paneManager.NavigateFocus(FocusDirection.Up); },
+                () => paneManager.NavigateFocus(FocusDirection.Up),
                 "Focus pane up");
 
             shortcuts.RegisterGlobal(Key.Down, ModifierKeys.Control | ModifierKeys.Shift,
-                () => { if (!IsTypingInTextBox()) paneManager.NavigateFocus(FocusDirection.Down); },
+                () => paneManager.NavigateFocus(FocusDirection.Down),
                 "Focus pane down");
 
             // Pane opening shortcuts: Ctrl+Shift+Key
@@ -380,19 +381,68 @@ namespace SuperTUI
                 };
                 paneManager.RestoreState(paneState, panesToRestore);
 
-                // CRITICAL: Restore focus history after panes are loaded
+                // CRITICAL FIX: Restore focus history after panes are loaded
+                // RACE CONDITION FIX: Wait for pane to be fully loaded before restoring focus
+                // Without this, focus restoration can trigger NullReferenceException because
+                // pane controls may not be initialized yet during workspace switch
                 if (state.FocusState != null)
                 {
                     focusHistory.RestoreWorkspaceState(state.FocusState);
 
                     // Restore focus to the previously focused pane
+                    // Use DispatcherPriority.Loaded to ensure pane is fully initialized
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        if (paneManager.FocusedPane != null)
+                        try
                         {
-                            var paneName = paneManager.FocusedPane.PaneName;
-                            focusHistory.RestorePaneFocus(paneName);
-                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {paneName} after workspace switch");
+                            var focusedPane = paneManager.FocusedPane;
+
+                            // CRITICAL: Check if pane exists and is loaded
+                            if (focusedPane == null)
+                            {
+                                logger.Log(LogLevel.Debug, "MainWindow", "No focused pane to restore focus to after workspace switch");
+                                return;
+                            }
+
+                            // RACE CONDITION FIX: Check if pane is fully loaded before restoring focus
+                            if (!focusedPane.IsLoaded)
+                            {
+                                logger.Log(LogLevel.Debug, "MainWindow", $"Pane {focusedPane.PaneName} not loaded yet, waiting for Loaded event");
+
+                                // Wait for pane to be fully loaded before restoring focus
+                                RoutedEventHandler loadedHandler = null;
+                                loadedHandler = (s, e) =>
+                                {
+                                    focusedPane.Loaded -= loadedHandler;
+
+                                    // Now pane is fully loaded, safe to restore focus
+                                    Dispatcher.BeginInvoke(new Action(() =>
+                                    {
+                                        try
+                                        {
+                                            focusHistory.RestorePaneFocus(focusedPane.PaneName);
+                                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {focusedPane.PaneName} after pane loaded");
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after pane loaded: {ex.Message}");
+                                        }
+                                    }), System.Windows.Threading.DispatcherPriority.Input);
+                                };
+
+                                focusedPane.Loaded += loadedHandler;
+                            }
+                            else
+                            {
+                                // Pane already loaded, safe to restore focus immediately
+                                var paneName = focusedPane.PaneName;
+                                focusHistory.RestorePaneFocus(paneName);
+                                logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {paneName} after workspace switch");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after workspace switch: {ex.Message}");
                         }
                     }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
@@ -426,7 +476,8 @@ namespace SuperTUI
                 serviceContainer.GetRequiredService<ITimeTrackingService>(),
                 serviceContainer.GetRequiredService<ITagService>(),
                 serviceContainer.GetRequiredService<IEventBus>(),
-                commandHistory
+                commandHistory,
+                focusHistory
             );
 
             // Subscribe to pane events
@@ -536,6 +587,7 @@ namespace SuperTUI
 
         /// <summary>
         /// Show command palette as modal overlay
+        /// CRITICAL FIX: Block input to background panes to prevent accidental actions
         /// </summary>
         private void ShowCommandPalette()
         {
@@ -564,16 +616,23 @@ namespace SuperTUI
                 ModalOverlay.Children.Add(commandPalette);
             }
 
+            // CRITICAL FIX: Block input to background panes when modal is shown
+            // This prevents users from accidentally triggering actions in background panes
+            PaneCanvas.IsHitTestVisible = false;
+            PaneCanvas.Focusable = false;
+
             ModalOverlay.Visibility = Visibility.Visible;
 
             // Animate opening
             commandPalette.AnimateOpen();
 
-            logger.Log(LogLevel.Debug, "MainWindow", "Command palette opened");
+            logger.Log(LogLevel.Debug, "MainWindow", "Command palette opened (background input blocked)");
         }
 
         /// <summary>
         /// Hide command palette modal overlay
+        /// CRITICAL FIX: Re-enable input to background panes when modal closes
+        /// RACE CONDITION FIX: Wait for pane to be loaded before restoring focus
         /// </summary>
         private void HideCommandPalette()
         {
@@ -587,16 +646,47 @@ namespace SuperTUI
                         ModalOverlay.Visibility = Visibility.Collapsed;
                         ModalOverlay.Children.Clear();
 
+                        // CRITICAL FIX: Re-enable input to background panes when modal closes
+                        PaneCanvas.IsHitTestVisible = true;
+                        PaneCanvas.Focusable = true;
+
                         // CRITICAL FIX: Return focus to the previously focused pane
-                        if (paneManager?.FocusedPane != null)
+                        // RACE CONDITION FIX: Check pane is loaded before focusing
+                        var focusedPane = paneManager?.FocusedPane;
+                        if (focusedPane != null)
                         {
-                            logger.Log(LogLevel.Debug, "MainWindow", $"Returning focus to {paneManager.FocusedPane.PaneName} after closing command palette");
-                            paneManager.FocusPane(paneManager.FocusedPane);
+                            try
+                            {
+                                // Check pane is loaded before attempting to focus
+                                if (!focusedPane.IsLoaded)
+                                {
+                                    logger.Log(LogLevel.Debug, "MainWindow", $"Pane {focusedPane.PaneName} not loaded yet, deferring focus restoration");
+
+                                    // Wait for pane to load
+                                    RoutedEventHandler loadedHandler = null;
+                                    loadedHandler = (s, e) =>
+                                    {
+                                        focusedPane.Loaded -= loadedHandler;
+                                        paneManager.FocusPane(focusedPane);
+                                        logger.Log(LogLevel.Debug, "MainWindow", $"Returned focus to {focusedPane.PaneName} after pane loaded");
+                                    };
+                                    focusedPane.Loaded += loadedHandler;
+                                }
+                                else
+                                {
+                                    logger.Log(LogLevel.Debug, "MainWindow", $"Returning focus to {focusedPane.PaneName} after closing command palette");
+                                    paneManager.FocusPane(focusedPane);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after closing command palette: {ex.Message}");
+                            }
                         }
                     });
                 });
 
-                logger.Log(LogLevel.Debug, "MainWindow", "Command palette closed");
+                logger.Log(LogLevel.Debug, "MainWindow", "Command palette closed (background input restored)");
             }
         }
 
@@ -607,20 +697,35 @@ namespace SuperTUI
 
         /// <summary>
         /// Handle window activation (Alt+Tab back, clicking on window, etc.)
+        /// CRITICAL FIX: Wait for pane to be loaded before restoring focus
         /// </summary>
         private void MainWindow_Activated(object sender, EventArgs e)
         {
-            // Restore focus to the currently focused pane
-            if (paneManager?.FocusedPane != null)
-            {
-                logger.Log(LogLevel.Debug, "MainWindow", $"Window activated, restoring focus to {paneManager.FocusedPane.PaneName}");
+            // RACE CONDITION FIX: Check pane exists and is loaded before restoring focus
+            var focusedPane = paneManager?.FocusedPane;
+            if (focusedPane == null) return;
 
-                // Use dispatcher to ensure focus is set after activation completes
-                Dispatcher.BeginInvoke(new Action(() =>
+            logger.Log(LogLevel.Debug, "MainWindow", $"Window activated, restoring focus to {focusedPane.PaneName}");
+
+            // Use dispatcher to ensure focus is set after activation completes
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
                 {
-                    paneManager.FocusPane(paneManager.FocusedPane);
-                }), System.Windows.Threading.DispatcherPriority.Input);
-            }
+                    // CRITICAL: Check pane is still valid and loaded
+                    if (focusedPane == null || !focusedPane.IsLoaded)
+                    {
+                        logger.Log(LogLevel.Debug, "MainWindow", "Cannot restore focus - pane not loaded or no longer valid");
+                        return;
+                    }
+
+                    paneManager.FocusPane(focusedPane);
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus on window activation: {ex.Message}");
+                }
+            }), System.Windows.Threading.DispatcherPriority.Input);
         }
 
         /// <summary>
@@ -634,12 +739,13 @@ namespace SuperTUI
 
         /// <summary>
         /// Handle window loaded event - set initial focus
+        /// CRITICAL FIX: Wait for pane to be loaded before setting focus
         /// </summary>
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             logger.Log(LogLevel.Debug, "MainWindow", "Window loaded, setting initial focus");
 
-            // Set initial focus to first pane if any exist
+            // RACE CONDITION FIX: Check panes exist and are loaded before setting focus
             if (paneManager?.PaneCount > 0 && paneManager.FocusedPane != null)
             {
                 var firstPane = paneManager.FocusedPane;
@@ -647,8 +753,22 @@ namespace SuperTUI
                 {
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        paneManager.FocusPane(firstPane);
-                        logger.Log(LogLevel.Debug, "MainWindow", $"Initial focus set to {firstPane.PaneName}");
+                        try
+                        {
+                            // CRITICAL: Check pane is still valid and loaded
+                            if (firstPane == null || !firstPane.IsLoaded)
+                            {
+                                logger.Log(LogLevel.Debug, "MainWindow", "Cannot set initial focus - pane not loaded or no longer valid");
+                                return;
+                            }
+
+                            paneManager.FocusPane(firstPane);
+                            logger.Log(LogLevel.Debug, "MainWindow", $"Initial focus set to {firstPane.PaneName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Log(LogLevel.Warning, "MainWindow", $"Failed to set initial focus: {ex.Message}");
+                        }
                     }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
             }
@@ -657,6 +777,7 @@ namespace SuperTUI
         /// <summary>
         /// Show move pane mode visual feedback overlay
         /// FIX 2: Add visual feedback for F12 move mode
+        /// CRITICAL FIX: Block input to background panes during move mode
         /// </summary>
         private void ShowMovePaneModeOverlay()
         {
@@ -717,11 +838,17 @@ namespace SuperTUI
             ModalOverlay.Children.Add(overlay);
             ModalOverlay.Visibility = Visibility.Visible;
 
-            logger.Log(LogLevel.Debug, "MainWindow", "Move pane mode overlay shown");
+            // CRITICAL FIX: Block input to background panes during move mode
+            // This prevents accidental input to panes while rearranging layout
+            PaneCanvas.IsHitTestVisible = false;
+            PaneCanvas.Focusable = false;
+
+            logger.Log(LogLevel.Debug, "MainWindow", "Move pane mode overlay shown (background input blocked)");
         }
 
         /// <summary>
         /// Hide move pane mode visual feedback overlay
+        /// CRITICAL FIX: Re-enable input to background panes when move mode exits
         /// </summary>
         private void HideMovePaneModeOverlay()
         {
@@ -731,13 +858,17 @@ namespace SuperTUI
             {
                 ModalOverlay.Children.Remove(existingOverlay);
 
-                // If no more overlays, hide the modal overlay container
+                // If no more overlays, hide the modal overlay container and re-enable input
                 if (ModalOverlay.Children.Count == 0)
                 {
                     ModalOverlay.Visibility = Visibility.Collapsed;
+
+                    // CRITICAL FIX: Re-enable input to background panes when all modals closed
+                    PaneCanvas.IsHitTestVisible = true;
+                    PaneCanvas.Focusable = true;
                 }
 
-                logger.Log(LogLevel.Debug, "MainWindow", "Move pane mode overlay hidden");
+                logger.Log(LogLevel.Debug, "MainWindow", "Move pane mode overlay hidden (background input restored)");
             }
         }
 
@@ -761,6 +892,7 @@ namespace SuperTUI
 
         /// <summary>
         /// Show debug overlay with performance and diagnostic info
+        /// CRITICAL FIX: Block input to background panes during debug mode
         /// </summary>
         private void ShowDebugOverlay()
         {
@@ -779,11 +911,17 @@ namespace SuperTUI
             ModalOverlay.Children.Add(debugOverlay);
             ModalOverlay.Visibility = Visibility.Visible;
 
-            logger.Log(LogLevel.Debug, "MainWindow", "Debug overlay shown");
+            // CRITICAL FIX: Block input to background panes during debug mode
+            // This prevents accidental actions while viewing debug information
+            PaneCanvas.IsHitTestVisible = false;
+            PaneCanvas.Focusable = false;
+
+            logger.Log(LogLevel.Debug, "MainWindow", "Debug overlay shown (background input blocked)");
         }
 
         /// <summary>
         /// Hide debug overlay
+        /// CRITICAL FIX: Re-enable input to background panes when debug mode exits
         /// </summary>
         private void HideDebugOverlay()
         {
@@ -793,13 +931,17 @@ namespace SuperTUI
                 existingOverlay.Stop();
                 ModalOverlay.Children.Remove(existingOverlay);
 
-                // If no more overlays, hide the modal overlay container
+                // If no more overlays, hide the modal overlay container and re-enable input
                 if (ModalOverlay.Children.Count == 0)
                 {
                     ModalOverlay.Visibility = Visibility.Collapsed;
+
+                    // CRITICAL FIX: Re-enable input to background panes when all modals closed
+                    PaneCanvas.IsHitTestVisible = true;
+                    PaneCanvas.Focusable = true;
                 }
 
-                logger.Log(LogLevel.Debug, "MainWindow", "Debug overlay hidden");
+                logger.Log(LogLevel.Debug, "MainWindow", "Debug overlay hidden (background input restored)");
             }
 
             debugOverlay = null;

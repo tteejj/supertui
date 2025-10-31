@@ -7,6 +7,7 @@ namespace SuperTUI.Infrastructure
 {
     /// <summary>
     /// Interface for keyboard shortcut management
+    /// Supports global, workspace-specific, and pane-context shortcuts
     /// </summary>
     public interface IShortcutManager
     {
@@ -21,9 +22,14 @@ namespace SuperTUI.Infrastructure
         void RegisterForWorkspace(string workspaceName, Key key, ModifierKeys modifiers, Action action, string description = "");
 
         /// <summary>
+        /// Register a pane-context shortcut (only executes when specified pane is focused)
+        /// </summary>
+        void RegisterForPane(string paneName, Key key, ModifierKeys modifiers, Action action, string description = "");
+
+        /// <summary>
         /// Handle a key press event
         /// </summary>
-        bool HandleKeyPress(Key key, ModifierKeys modifiers, string currentWorkspace = null);
+        bool HandleKeyPress(Key key, ModifierKeys modifiers, string currentWorkspace = null, string focusedPaneName = null);
 
         /// <summary>
         /// Get all global shortcuts
@@ -36,6 +42,16 @@ namespace SuperTUI.Infrastructure
         IReadOnlyList<KeyboardShortcut> GetWorkspaceShortcuts(string workspaceName);
 
         /// <summary>
+        /// Get shortcuts for a specific pane
+        /// </summary>
+        IReadOnlyList<KeyboardShortcut> GetPaneShortcuts(string paneName);
+
+        /// <summary>
+        /// Get all shortcuts for all contexts
+        /// </summary>
+        List<KeyboardShortcut> GetAllShortcuts();
+
+        /// <summary>
         /// Clear all shortcuts
         /// </summary>
         void ClearAll();
@@ -44,5 +60,15 @@ namespace SuperTUI.Infrastructure
         /// Clear shortcuts for a specific workspace
         /// </summary>
         void ClearWorkspace(string workspaceName);
+
+        /// <summary>
+        /// Clear shortcuts for a specific pane
+        /// </summary>
+        void ClearPane(string paneName);
+
+        /// <summary>
+        /// Utility: Check if user is typing in a text input control
+        /// </summary>
+        bool IsUserTyping();
     }
 }

@@ -39,6 +39,7 @@ namespace SuperTUI.Core.Infrastructure
         private readonly ITagService tagService;
         private readonly IEventBus eventBus;
         private readonly CommandHistory commandHistory;
+        private readonly FocusHistoryManager focusHistory;
 
         private readonly Dictionary<string, PaneMetadata> paneRegistry;
 
@@ -53,7 +54,8 @@ namespace SuperTUI.Core.Infrastructure
             ITimeTrackingService timeTrackingService,
             ITagService tagService,
             IEventBus eventBus,
-            CommandHistory commandHistory)
+            CommandHistory commandHistory,
+            FocusHistoryManager focusHistory)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
@@ -66,6 +68,7 @@ namespace SuperTUI.Core.Infrastructure
             this.tagService = tagService ?? throw new ArgumentNullException(nameof(tagService));
             this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             this.commandHistory = commandHistory ?? throw new ArgumentNullException(nameof(commandHistory));
+            this.focusHistory = focusHistory ?? throw new ArgumentNullException(nameof(focusHistory));
 
             paneRegistry = new Dictionary<string, PaneMetadata>(StringComparer.OrdinalIgnoreCase)
             {
@@ -74,21 +77,36 @@ namespace SuperTUI.Core.Infrastructure
                     Name = "tasks",
                     Description = "View and manage tasks",
                     Icon = "✓",
-                    Creator = () => new TaskListPane(logger, themeManager, projectContext, taskService, eventBus, commandHistory)
+                    Creator = () =>
+                    {
+                        var pane = new TaskListPane(logger, themeManager, projectContext, taskService, eventBus, commandHistory);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 },
                 ["notes"] = new PaneMetadata
                 {
                     Name = "notes",
                     Description = "Browse and edit notes",
                     Icon = "📝",
-                    Creator = () => new NotesPane(logger, themeManager, projectContext, configManager, eventBus)
+                    Creator = () =>
+                    {
+                        var pane = new NotesPane(logger, themeManager, projectContext, configManager, eventBus);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 },
                 ["files"] = new PaneMetadata
                 {
                     Name = "files",
                     Description = "Browse and select files/directories (internal use only)",
                     Icon = "📁",
-                    Creator = () => new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager),
+                    Creator = () =>
+                    {
+                        var pane = new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager);
+                        SetFocusHistory(pane);
+                        return pane;
+                    },
                     HiddenFromPalette = true
                 },
                 ["projects"] = new PaneMetadata
@@ -96,30 +114,63 @@ namespace SuperTUI.Core.Infrastructure
                     Name = "projects",
                     Description = "Manage projects with full CRUD and Excel integration",
                     Icon = "📊",
-                    Creator = () => new ProjectsPane(logger, themeManager, projectContext, configManager, projectService, eventBus)
+                    Creator = () =>
+                    {
+                        var pane = new ProjectsPane(logger, themeManager, projectContext, configManager, projectService, eventBus);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 },
                 ["excel-import"] = new PaneMetadata
                 {
                     Name = "excel-import",
                     Description = "Import projects from Excel clipboard",
                     Icon = "📋",
-                    Creator = () => new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus)
+                    Creator = () =>
+                    {
+                        var pane = new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 },
                 ["help"] = new PaneMetadata
                 {
                     Name = "help",
                     Description = "Keyboard shortcuts reference",
                     Icon = "⌨️",
-                    Creator = () => new HelpPane(logger, themeManager, projectContext)
+                    Creator = () =>
+                    {
+                        var pane = new HelpPane(logger, themeManager, projectContext);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 },
                 ["calendar"] = new PaneMetadata
                 {
                     Name = "calendar",
                     Description = "Calendar view of tasks by due date",
                     Icon = "📅",
-                    Creator = () => new CalendarPane(logger, themeManager, projectContext, taskService, projectService)
+                    Creator = () =>
+                    {
+                        var pane = new CalendarPane(logger, themeManager, projectContext, taskService, projectService);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 }
             };
+        }
+
+        /// <summary>
+        /// Set focus history on a pane using reflection (since focusHistory is optional in PaneBase constructor)
+        /// </summary>
+        private void SetFocusHistory(PaneBase pane)
+        {
+            var field = typeof(PaneBase).GetField("focusHistory",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null)
+            {
+                field.SetValue(pane, focusHistory);
+            }
         }
 
         /// <summary>

@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
@@ -82,6 +83,7 @@ namespace SuperTUI.Panes
         private HashSet<string> fileTypeFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private List<string> recentLocations = new List<string>();
         private CancellationTokenSource loadCancellation;
+        private CancellationTokenSource disposalCancellation;
 
         // Bookmarks
         private List<Bookmark> bookmarks = new List<Bookmark>();
@@ -131,6 +133,9 @@ namespace SuperTUI.Panes
             PaneName = "File Browser";
             PaneIcon = "📁";
 
+            // Initialize cancellation token
+            disposalCancellation = new CancellationTokenSource();
+
             // Initialize debounce timer
             searchDebounceTimer = new DispatcherTimer
             {
@@ -147,6 +152,79 @@ namespace SuperTUI.Panes
 
             // Set initial path to user's home directory
             currentPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        }
+
+        #endregion
+
+        #region Initialization
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
+            RegisterPaneShortcuts();
+        }
+
+        /// <summary>
+        /// Register all FileBrowserPane shortcuts with ShortcutManager
+        /// These shortcuts only execute when this pane is focused
+        /// </summary>
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+
+            // Enter: Select item or navigate
+            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+                () => { if (selectedItem != null) HandleSelection(); },
+                "Select or navigate");
+
+            // Escape: Cancel selection
+            shortcuts.RegisterForPane(PaneName, Key.Escape, ModifierKeys.None,
+                () => SelectionCancelled?.Invoke(this, EventArgs.Empty),
+                "Cancel selection");
+
+            // Backspace: Go up one directory
+            shortcuts.RegisterForPane(PaneName, Key.Back, ModifierKeys.None,
+                () => { if (!searchBox.IsFocused) NavigateUp(); },
+                "Go up one directory");
+
+            // ~ (OemTilde): Jump to home directory
+            shortcuts.RegisterForPane(PaneName, Key.OemTilde, ModifierKeys.None,
+                () =>
+                {
+                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    NavigateToDirectory(home);
+                },
+                "Go to home directory");
+
+            // / (Oem2): Jump to path
+            shortcuts.RegisterForPane(PaneName, Key.Oem2, ModifierKeys.None,
+                () => { if (!searchBox.IsFocused) PromptForPath(); },
+                "Jump to path");
+
+            // Ctrl+B: Toggle bookmarks
+            shortcuts.RegisterForPane(PaneName, Key.B, ModifierKeys.Control,
+                () => ToggleBookmarks(),
+                "Toggle bookmarks panel");
+
+            // Ctrl+F: Focus search box
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control,
+                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
+                "Focus search box");
+
+            // Ctrl+1, Ctrl+2, Ctrl+3: Jump to bookmarks
+            shortcuts.RegisterForPane(PaneName, Key.D1, ModifierKeys.Control,
+                () => JumpToBookmark(0),
+                "Jump to bookmark 1");
+
+            shortcuts.RegisterForPane(PaneName, Key.D2, ModifierKeys.Control,
+                () => JumpToBookmark(1),
+                "Jump to bookmark 2");
+
+            shortcuts.RegisterForPane(PaneName, Key.D3, ModifierKeys.Control,
+                () => JumpToBookmark(2),
+                "Jump to bookmark 3");
         }
 
         #endregion
@@ -703,7 +781,12 @@ namespace SuperTUI.Panes
             // Cancel any ongoing load
             loadCancellation?.Cancel();
             loadCancellation = new CancellationTokenSource();
-            var token = loadCancellation.Token;
+
+            // Link load cancellation to disposal cancellation
+            var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                loadCancellation.Token,
+                disposalCancellation.Token);
+            var token = linkedCts.Token;
 
             // Validate path
             if (!ValidatePath(path, out string errorMessage))
@@ -813,26 +896,36 @@ namespace SuperTUI.Panes
 
                 if (token.IsCancellationRequested) return;
 
-                // Update UI on main thread
+                // Update UI on main thread - check cancellation before UI update
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    currentFiles = files;
-                    FilterFiles();
-                    UpdateStatus();
+                    if (!token.IsCancellationRequested)
+                    {
+                        currentFiles = files;
+                        FilterFiles();
+                        UpdateStatus();
+                    }
                 });
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during cancellation, ignore
             }
             catch (Exception ex)
             {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                if (!token.IsCancellationRequested)
                 {
-                    ErrorHandlingPolicy.Handle(
-                        ErrorCategory.IO,
-                        ex,
-                        $"Loading files from directory '{currentPath}'",
-                        logger);
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.IO,
+                            ex,
+                            $"Loading files from directory '{currentPath}'",
+                            logger);
 
-                    ShowStatus($"Error loading directory: {ex.Message}", isError: true);
-                });
+                        ShowStatus($"Error loading directory: {ex.Message}", isError: true);
+                    });
+                }
             }
         }
 
@@ -1149,77 +1242,15 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Escape: Cancel
-            if (e.Key == Key.Escape)
+            // Try to handle via ShortcutManager (all registered pane shortcuts)
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
-                SelectionCancelled?.Invoke(this, EventArgs.Empty);
                 e.Handled = true;
                 return;
             }
 
-            // Backspace: Go up one directory
-            if (e.Key == Key.Back && !searchBox.IsFocused)
-            {
-                NavigateUp();
-                e.Handled = true;
-                return;
-            }
-
-            // Tilde: Home directory
-            if (e.Key == Key.OemTilde && e.KeyboardDevice.Modifiers == ModifierKeys.None)
-            {
-                var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                NavigateToDirectory(home);
-                e.Handled = true;
-                return;
-            }
-
-            // Slash: Jump to path
-            if (e.Key == Key.Oem2 && e.KeyboardDevice.Modifiers == ModifierKeys.None && !searchBox.IsFocused)
-            {
-                PromptForPath();
-                e.Handled = true;
-                return;
-            }
-
-            // Keyboard shortcuts with Ctrl
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                switch (e.Key)
-                {
-                    // H key removed - hidden files are always hidden
-                    // case Key.H:
-                    //     ToggleHiddenFiles();
-                    //     e.Handled = true;
-                    //     break;
-
-                    case Key.B:
-                        ToggleBookmarks();
-                        e.Handled = true;
-                        break;
-
-                    case Key.F:
-                        searchBox.Focus();
-                        searchBox.SelectAll();
-                        e.Handled = true;
-                        break;
-
-                    case Key.D1:
-                        JumpToBookmark(0);
-                        e.Handled = true;
-                        break;
-
-                    case Key.D2:
-                        JumpToBookmark(1);
-                        e.Handled = true;
-                        break;
-
-                    case Key.D3:
-                        JumpToBookmark(2);
-                        e.Handled = true;
-                        break;
-                }
-            }
+            // If not handled by ShortcutManager, leave for default handling
         }
 
         #endregion
@@ -1817,6 +1848,9 @@ namespace SuperTUI.Panes
 
         protected override void OnDispose()
         {
+            // Cancel all async operations FIRST
+            disposalCancellation?.Cancel();
+
             // Unsubscribe from theme events
             themeManager.ThemeChanged -= OnThemeChanged;
 
@@ -1826,6 +1860,9 @@ namespace SuperTUI.Panes
 
             // Stop timers
             searchDebounceTimer?.Stop();
+
+            // Dispose cancellation token source
+            disposalCancellation?.Dispose();
 
             base.OnDispose();
         }

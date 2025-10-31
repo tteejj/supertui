@@ -12,14 +12,17 @@ namespace SuperTUI.Core.Infrastructure
     /// <summary>
     /// Manages focus history across the application for perfect focus restoration
     /// Tracks what control had focus in each pane and maintains a history stack
+    /// UNIFIED FOCUS: Uses WPF's native focus events as single source of truth
     /// </summary>
-    public class FocusHistoryManager
+    public class FocusHistoryManager : IDisposable
     {
         private readonly ILogger logger;
         private readonly Stack<FocusRecord> focusHistory = new Stack<FocusRecord>();
         private readonly Dictionary<string, FocusRecord> paneFocusMap = new Dictionary<string, FocusRecord>();
+        private readonly Dictionary<string, List<WeakReference>> trackedPanes = new Dictionary<string, List<WeakReference>>();
         private readonly int maxHistorySize = 50;
         private bool isTrackingEnabled = true;
+        private bool isDisposed = false;
         private FocusRecord currentFocus;
 
         public event EventHandler<FocusChangedEventArgs> FocusChanged;
@@ -28,7 +31,8 @@ namespace SuperTUI.Core.Infrastructure
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // Hook into global focus changes
+            // UNIFIED FOCUS: Hook into WPF's native global focus events (single source of truth)
+            // This ensures we observe actual keyboard focus changes, not custom tracking
             EventManager.RegisterClassHandler(typeof(UIElement),
                 UIElement.GotFocusEvent,
                 new RoutedEventHandler(OnElementGotFocus));
@@ -81,6 +85,100 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
+        /// Register a pane for tracking. This allows the manager to clean up when the pane is disposed.
+        /// </summary>
+        public void TrackPane(Components.PaneBase pane)
+        {
+            if (pane == null) throw new ArgumentNullException(nameof(pane));
+            if (isDisposed) return;
+
+            string paneId = pane.PaneName;
+            if (string.IsNullOrEmpty(paneId))
+            {
+                logger.Log(LogLevel.Warning, "FocusHistory",
+                    "Cannot track pane with empty name");
+                return;
+            }
+
+            // Store weak reference to avoid keeping pane alive
+            if (!trackedPanes.ContainsKey(paneId))
+            {
+                trackedPanes[paneId] = new List<WeakReference>();
+            }
+
+            // Check if already tracking this specific instance
+            bool alreadyTracked = false;
+            trackedPanes[paneId].RemoveAll(wr => !wr.IsAlive); // Clean up dead references
+            foreach (var weakRef in trackedPanes[paneId])
+            {
+                if (weakRef.IsAlive && ReferenceEquals(weakRef.Target, pane))
+                {
+                    alreadyTracked = true;
+                    break;
+                }
+            }
+
+            if (!alreadyTracked)
+            {
+                trackedPanes[paneId].Add(new WeakReference(pane));
+                logger.Log(LogLevel.Debug, "FocusHistory",
+                    $"Now tracking pane: {paneId} (total instances: {trackedPanes[paneId].Count})");
+            }
+        }
+
+        /// <summary>
+        /// Unregister a pane from tracking and clean up its focus history.
+        /// This should be called when a pane is disposed to prevent memory leaks.
+        /// </summary>
+        public void UntrackPane(Components.PaneBase pane)
+        {
+            if (pane == null) return;
+
+            string paneId = pane.PaneName;
+            UntrackPane(paneId);
+        }
+
+        /// <summary>
+        /// Unregister a pane by ID from tracking and clean up its focus history.
+        /// This should be called when a pane is disposed to prevent memory leaks.
+        /// </summary>
+        public void UntrackPane(string paneId)
+        {
+            if (string.IsNullOrEmpty(paneId)) return;
+            if (isDisposed) return;
+
+            // Remove from tracked panes
+            if (trackedPanes.ContainsKey(paneId))
+            {
+                trackedPanes[paneId].RemoveAll(wr => !wr.IsAlive); // Clean up dead references
+                if (trackedPanes[paneId].Count == 0)
+                {
+                    trackedPanes.Remove(paneId);
+                }
+            }
+
+            // Check if any other instances of this pane ID are still alive
+            bool hasLiveInstances = false;
+            if (trackedPanes.TryGetValue(paneId, out var instances))
+            {
+                hasLiveInstances = instances.Any(wr => wr.IsAlive);
+            }
+
+            // Only clear history if no live instances remain
+            if (!hasLiveInstances)
+            {
+                ClearPaneHistory(paneId);
+                logger.Log(LogLevel.Debug, "FocusHistory",
+                    $"Untracked and cleared history for pane: {paneId}");
+            }
+            else
+            {
+                logger.Log(LogLevel.Debug, "FocusHistory",
+                    $"Untracked pane instance: {paneId} (other instances still alive)");
+            }
+        }
+
+        /// <summary>
         /// Get the last focused control for a specific pane
         /// </summary>
         public UIElement GetLastFocusedControl(string paneId)
@@ -99,17 +197,245 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
-        /// Restore focus to the last focused control in a pane
+        /// Attempts to apply focus with a fallback chain:
+        /// 1. Try the requested element (if available and valid)
+        /// 2. Try the first focusable child of the pane
+        /// 3. Try the pane itself (if focusable)
+        /// 4. Try the main window as last resort
+        /// This ensures focus never gets "lost" - there's always something focused
         /// </summary>
-        public bool RestorePaneFocus(string paneId)
+        private bool ApplyFocusWithFallback(UIElement requestedElement, string paneId, string source)
         {
-            var element = GetLastFocusedControl(paneId);
+            // Attempt 1: Try the requested element
+            if (requestedElement != null)
+            {
+                if (TryFocusElement(requestedElement))
+                {
+                    logger.Log(LogLevel.Debug, "FocusHistory",
+                        $"[{source}] Focus applied to requested element: {requestedElement.GetType().Name}");
+                    return true;
+                }
+            }
+
+            // Attempt 2: Find the pane and try its first focusable child
+            if (!string.IsNullOrEmpty(paneId))
+            {
+                var paneElement = FindPaneById(paneId);
+                if (paneElement != null)
+                {
+                    var firstFocusable = FindFirstFocusableChild(paneElement);
+                    if (firstFocusable != null && TryFocusElement(firstFocusable))
+                    {
+                        logger.Log(LogLevel.Debug, "FocusHistory",
+                            $"[{source}] Focus fallback #1: Focused first child of {paneId}: {firstFocusable.GetType().Name}");
+                        return true;
+                    }
+
+                    // Attempt 3: Try the pane itself
+                    if (TryFocusElement(paneElement))
+                    {
+                        logger.Log(LogLevel.Debug, "FocusHistory",
+                            $"[{source}] Focus fallback #2: Focused pane itself: {paneId}");
+                        return true;
+                    }
+                }
+            }
+
+            // Attempt 4: Try the main window as last resort
+            var mainWindow = Application.Current?.MainWindow;
+            if (mainWindow != null && TryFocusElement(mainWindow))
+            {
+                logger.Log(LogLevel.Warning, "FocusHistory",
+                    $"[{source}] Focus fallback #3: Focused MainWindow (all other attempts failed)");
+                return true;
+            }
+
+            logger.Log(LogLevel.Warning, "FocusHistory",
+                $"[{source}] Focus fallback exhausted: Could not focus any element for {paneId}");
+            return false;
+        }
+
+        /// <summary>
+        /// Safely attempt to focus an element with validation
+        /// </summary>
+        private bool TryFocusElement(UIElement element)
+        {
             if (element == null) return false;
 
             try
             {
+                // Check if it's a FrameworkElement and verify it's loaded
+                var frameworkElement = element as FrameworkElement;
+                if (frameworkElement != null && !frameworkElement.IsLoaded)
+                {
+                    return false;
+                }
+
+                // Attempt to focus
                 element.Focus();
                 Keyboard.Focus(element);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Debug, "FocusHistory",
+                    $"Failed to focus element {element.GetType().Name}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Find the first focusable child in the visual tree
+        /// </summary>
+        private UIElement FindFirstFocusableChild(UIElement parent)
+        {
+            if (parent == null) return null;
+
+            var queue = new Queue<UIElement>();
+            queue.Enqueue(parent);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+                // Check if this element can be focused
+                if (current.Focusable)
+                {
+                    // Check if it's loaded (FrameworkElement)
+                    var frameworkElement = current as FrameworkElement;
+                    if (frameworkElement == null || frameworkElement.IsLoaded)
+                    {
+                        return current;
+                    }
+                }
+
+                // Add children to queue for depth-first search
+                int childCount = VisualTreeHelper.GetChildrenCount(current);
+                for (int i = 0; i < childCount; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(current, i) as UIElement;
+                    if (child != null)
+                    {
+                        queue.Enqueue(child);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find a pane in the visual tree by its name
+        /// </summary>
+        private Components.PaneBase FindPaneById(string paneId)
+        {
+            if (string.IsNullOrEmpty(paneId)) return null;
+
+            // Search through tracked panes first (most reliable)
+            if (trackedPanes.TryGetValue(paneId, out var instances))
+            {
+                foreach (var weakRef in instances)
+                {
+                    if (weakRef.IsAlive)
+                    {
+                        var pane = weakRef.Target as Components.PaneBase;
+                        if (pane != null)
+                        {
+                            return pane;
+                        }
+                    }
+                }
+            }
+
+            // Fallback: search visual tree from main window
+            var mainWindow = Application.Current?.MainWindow;
+            if (mainWindow != null)
+            {
+                return FindPaneInVisualTree(mainWindow, paneId);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively search visual tree for a pane by ID
+        /// </summary>
+        private Components.PaneBase FindPaneInVisualTree(DependencyObject parent, string paneId)
+        {
+            if (parent == null) return null;
+
+            var pane = parent as Components.PaneBase;
+            if (pane != null && pane.PaneName == paneId)
+            {
+                return pane;
+            }
+
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                var result = FindPaneInVisualTree(child, paneId);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Restore focus to the last focused control in a pane
+        /// Uses ApplyFocusWithFallback to ensure focus never gets lost
+        /// </summary>
+        public bool RestorePaneFocus(string paneId)
+        {
+            var element = GetLastFocusedControl(paneId);
+
+            // RACE CONDITION FIX: Check element is valid and loaded before focusing
+            if (element == null)
+            {
+                logger.Log(LogLevel.Debug, "FocusHistory", $"No focused control found for pane {paneId}, using fallback chain");
+                // Use fallback chain when no history exists
+                return ApplyFocusWithFallback(null, paneId, "RestorePaneFocus");
+            }
+
+            // CRITICAL: Check if element is loaded before trying to focus
+            // Without this check, we can trigger NullReferenceException during workspace switch
+            // Cast to FrameworkElement to access IsLoaded property (UIElement doesn't have it)
+            var frameworkElement = element as FrameworkElement;
+            if (frameworkElement != null && !frameworkElement.IsLoaded)
+            {
+                logger.Log(LogLevel.Debug, "FocusHistory", $"Element not loaded yet for pane {paneId}, deferring focus");
+
+                // Wait for element to be loaded before focusing
+                RoutedEventHandler loadedHandler = null;
+                loadedHandler = (s, e) =>
+                {
+                    frameworkElement.Loaded -= loadedHandler;
+                    logger.Log(LogLevel.Debug, "FocusHistory", $"Element now loaded for pane {paneId}, restoring focus");
+                    RestorePaneFocus(paneId); // Recursive call now that element is loaded
+                };
+                frameworkElement.Loaded += loadedHandler;
+                return false; // Not restored yet, waiting for load
+            }
+
+            try
+            {
+                // RACE CONDITION FIX: Double-check element is still valid
+                if (element == null || (frameworkElement != null && !frameworkElement.IsLoaded))
+                {
+                    logger.Log(LogLevel.Debug, "FocusHistory", $"Element no longer valid for pane {paneId}, using fallback chain");
+                    // Element was GC'd or unloaded - use fallback chain
+                    return ApplyFocusWithFallback(null, paneId, "RestorePaneFocus_GCRecovery");
+                }
+
+                // Try to focus the element with full fallback chain support
+                if (!ApplyFocusWithFallback(element, paneId, "RestorePaneFocus"))
+                {
+                    logger.Log(LogLevel.Warning, "FocusHistory", $"Failed to restore focus for pane {paneId}");
+                    return false;
+                }
 
                 // Restore control state if possible
                 if (paneFocusMap.TryGetValue(paneId, out var record))
@@ -124,13 +450,15 @@ namespace SuperTUI.Core.Infrastructure
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Warning, "FocusHistory",
-                    $"Failed to restore focus: {ex.Message}");
-                return false;
+                    $"Failed to restore focus: {ex.Message}, using fallback chain");
+                // Even if restoration fails, try fallback chain
+                return ApplyFocusWithFallback(null, paneId, "RestorePaneFocus_Exception");
             }
         }
 
         /// <summary>
         /// Go back in focus history
+        /// RACE CONDITION FIX: Check element is loaded before focusing
         /// </summary>
         public bool NavigateBack()
         {
@@ -145,9 +473,45 @@ namespace SuperTUI.Core.Infrastructure
                 if (previous.Element.IsAlive)
                 {
                     var element = previous.Element.Target as UIElement;
-                    element?.Focus();
-                    Keyboard.Focus(element);
-                    return true;
+
+                    // RACE CONDITION FIX: Check element is valid and loaded before focusing
+                    if (element == null)
+                    {
+                        logger.Log(LogLevel.Debug, "FocusHistory", "Previous element is null, cannot navigate back");
+                        return false;
+                    }
+
+                    // CRITICAL: Check if element is loaded before trying to focus
+                    // Cast to FrameworkElement to access IsLoaded property
+                    var frameworkElement = element as FrameworkElement;
+                    if (frameworkElement != null && !frameworkElement.IsLoaded)
+                    {
+                        logger.Log(LogLevel.Debug, "FocusHistory", "Previous element not loaded yet, deferring focus");
+
+                        // Wait for element to load
+                        RoutedEventHandler loadedHandler = null;
+                        loadedHandler = (s, e) =>
+                        {
+                            frameworkElement.Loaded -= loadedHandler;
+                            element.Focus();
+                            Keyboard.Focus(element);
+                            logger.Log(LogLevel.Debug, "FocusHistory", "Previous element now loaded, focus restored");
+                        };
+                        frameworkElement.Loaded += loadedHandler;
+                        return false;
+                    }
+
+                    try
+                    {
+                        element.Focus();
+                        Keyboard.Focus(element);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Log(LogLevel.Warning, "FocusHistory", $"Failed to navigate back: {ex.Message}");
+                        return false;
+                    }
                 }
             }
 
@@ -161,6 +525,7 @@ namespace SuperTUI.Core.Infrastructure
         {
             if (string.IsNullOrEmpty(paneId)) return;
 
+            // Remove from pane focus map
             paneFocusMap.Remove(paneId);
 
             // Remove from history stack
@@ -168,6 +533,15 @@ namespace SuperTUI.Core.Infrastructure
             focusHistory.Clear();
             foreach (var item in newHistory)
                 focusHistory.Push(item);
+
+            // Clear current focus if it belongs to this pane
+            if (currentFocus?.PaneId == paneId)
+            {
+                currentFocus = null;
+            }
+
+            logger.Log(LogLevel.Debug, "FocusHistory",
+                $"Cleared focus history for pane: {paneId}");
         }
 
         /// <summary>
@@ -225,11 +599,34 @@ namespace SuperTUI.Core.Infrastructure
             return new TrackingResumer(() => isTrackingEnabled = true);
         }
 
+        /// <summary>
+        /// Clean up all tracked panes and event handlers
+        /// </summary>
+        public void Dispose()
+        {
+            if (isDisposed) return;
+
+            isDisposed = true;
+            isTrackingEnabled = false;
+
+            // Clear all focus history
+            focusHistory.Clear();
+            paneFocusMap.Clear();
+            trackedPanes.Clear();
+            currentFocus = null;
+
+            // Clear event subscribers
+            FocusChanged = null;
+
+            logger.Log(LogLevel.Info, "FocusHistory",
+                "FocusHistoryManager disposed, all event handlers cleared");
+        }
+
         #region Private Methods
 
         private void OnElementGotFocus(object sender, RoutedEventArgs e)
         {
-            if (!isTrackingEnabled) return;
+            if (!isTrackingEnabled || isDisposed) return;
 
             var element = e.OriginalSource as UIElement;
             if (element != null && ShouldTrackElement(element))
@@ -240,6 +637,7 @@ namespace SuperTUI.Core.Infrastructure
 
         private void OnElementLostFocus(object sender, RoutedEventArgs e)
         {
+            if (isDisposed) return;
             // Can be used to save state before focus leaves
         }
 

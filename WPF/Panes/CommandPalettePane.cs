@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
+using SuperTUI.Core.Interfaces;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -16,8 +17,9 @@ namespace SuperTUI.Panes
     /// Modal command palette for discovering and opening panes
     /// Features: Fuzzy search, keyboard navigation, command support
     /// Keyboard: : or Ctrl+Space to open, Escape to close, arrows to navigate, Enter to execute
+    /// Implements IModal for proper modal management
     /// </summary>
-    public class CommandPalettePane : PaneBase
+    public class CommandPalettePane : PaneBase, IModal
     {
         // Services
         private readonly PaneFactory paneFactory;

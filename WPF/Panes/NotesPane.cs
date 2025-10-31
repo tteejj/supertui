@@ -46,6 +46,8 @@ namespace SuperTUI.Panes
         private bool hasUnsavedChanges;
         private bool isLoadingNote;
 
+        // Simple notepad-style editor - no modal editing
+
         // Command palette
         private Border commandPaletteBorder;
         private TextBox commandInput;
@@ -55,6 +57,9 @@ namespace SuperTUI.Panes
         // Debouncing
         private DispatcherTimer searchDebounceTimer;
         private DispatcherTimer autoSaveDebounceTimer;
+
+        // Cancellation for async operations
+        private CancellationTokenSource disposalCancellation;
 
         // Constants
         private const int SEARCH_DEBOUNCE_MS = 150;
@@ -81,6 +86,9 @@ namespace SuperTUI.Panes
             PaneName = "Notes";
             PaneIcon = "📝";
 
+            // Initialize cancellation token
+            disposalCancellation = new CancellationTokenSource();
+
             // Initialize timers
             searchDebounceTimer = new DispatcherTimer
             {
@@ -99,7 +107,19 @@ namespace SuperTUI.Panes
             autoSaveDebounceTimer.Tick += async (s, e) =>
             {
                 autoSaveDebounceTimer.Stop();
-                await AutoSaveCurrentNoteAsync();
+
+                // Check if disposed before auto-saving
+                if (!disposalCancellation.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await AutoSaveCurrentNoteAsync();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected during disposal, ignore
+                    }
+                }
             };
         }
 
@@ -253,9 +273,11 @@ namespace SuperTUI.Panes
                 AcceptsReturn = true,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Text = "No note selected\n\nPress A to create a new note\nPress O to open a file\nPress : for command palette"
+                Text = "-- NORMAL MODE --\n\nPress i to enter INSERT mode\nPress a to APPEND\nPress o to open new line\n\nPress A to create a new note\nPress O to open a file\nPress : for command palette",
+                IsReadOnly = true  // Start in Normal mode (read-only)
             };
             noteEditor.TextChanged += OnEditorTextChanged;
+            noteEditor.PreviewKeyDown += OnEditorPreviewKeyDown;
             noteEditor.IsEnabled = false;
 
             Grid.SetRow(noteEditor, 0);
@@ -639,18 +661,32 @@ namespace SuperTUI.Panes
                     return;
                 }
 
-                var content = await Task.Run(() => File.ReadAllText(note.FullPath));
+                // Use cancellation token for async operation
+                var content = await Task.Run(() => File.ReadAllText(note.FullPath), disposalCancellation.Token);
+
+                // Check if cancelled before updating UI
+                if (disposalCancellation.IsCancellationRequested)
+                    return;
 
                 Application.Current?.Dispatcher.Invoke(() =>
                 {
-                    currentNote = note;
-                    noteEditor.Text = content;
-                    noteEditor.IsEnabled = true;
-                    hasUnsavedChanges = false;
-                    UpdateStatusBar();
+                    // Double-check not cancelled before UI update
+                    if (!disposalCancellation.IsCancellationRequested)
+                    {
+                        currentNote = note;
+                        noteEditor.Text = content;
+                        noteEditor.IsEnabled = true;
+                        noteEditor.IsReadOnly = false;  // Always editable in notepad style
+                        hasUnsavedChanges = false;
+                        UpdateStatusBar();
+                    }
                 });
 
                 Log($"Loaded note: {note.Name}");
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during disposal, ignore
             }
             catch (Exception ex)
             {
@@ -700,6 +736,7 @@ namespace SuperTUI.Panes
             // Clear editor and FOCUS it immediately
             noteEditor.Text = "";
             noteEditor.IsEnabled = true;
+            noteEditor.IsReadOnly = false;  // New notes are always editable
             hasUnsavedChanges = false;
 
             // FOCUS THE EDITOR so user can start typing RIGHT NOW
@@ -728,7 +765,11 @@ namespace SuperTUI.Panes
                     return;
                 }
 
-                await Task.Run(() => File.WriteAllText(fullPath, $"# {noteName}\n\n"));
+                await Task.Run(() => File.WriteAllText(fullPath, $"# {noteName}\n\n"), disposalCancellation.Token);
+
+                // Check if cancelled before updating UI
+                if (disposalCancellation.IsCancellationRequested)
+                    return;
 
                 var note = new NoteMetadata
                 {
@@ -751,6 +792,10 @@ namespace SuperTUI.Panes
 
                 Log($"Created note: {noteName}");
                 ShowStatus($"Created note: {noteName}");
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during disposal, ignore
             }
             catch (Exception ex)
             {
@@ -790,7 +835,11 @@ namespace SuperTUI.Panes
                     }
 
                     File.Move(tempPath, currentNote.FullPath, true);
-                });
+                }, disposalCancellation.Token);
+
+                // Check if cancelled before updating UI
+                if (disposalCancellation.IsCancellationRequested)
+                    return;
 
                 currentNote.LastModified = DateTime.Now;
                 hasUnsavedChanges = false;
@@ -799,6 +848,10 @@ namespace SuperTUI.Panes
 
                 Log($"Saved note: {currentNote.Name}");
                 ShowStatus($"Saved: {currentNote.Name}");
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during disposal, ignore
             }
             catch (Exception ex)
             {
@@ -851,7 +904,11 @@ namespace SuperTUI.Panes
                     {
                         File.Delete(backupPath);
                     }
-                });
+                }, disposalCancellation.Token);
+
+                // Check if cancelled before updating UI
+                if (disposalCancellation.IsCancellationRequested)
+                    return;
 
                 Log($"Deleted note: {currentNote.Name}");
                 ShowStatus($"Deleted: {currentNote.Name}");
@@ -864,6 +921,10 @@ namespace SuperTUI.Panes
                 noteEditor.IsEnabled = false;
 
                 FilterNotes();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during disposal, ignore
             }
             catch (Exception ex)
             {
@@ -1124,7 +1185,11 @@ namespace SuperTUI.Panes
                     return;
                 }
 
-                await Task.Run(() => File.Move(oldPath, newPath));
+                await Task.Run(() => File.Move(oldPath, newPath), disposalCancellation.Token);
+
+                // Check if cancelled before updating UI
+                if (disposalCancellation.IsCancellationRequested)
+                    return;
 
                 currentNote.Name = newName;
                 currentNote.FullPath = newPath;
@@ -1135,6 +1200,10 @@ namespace SuperTUI.Panes
 
                 Log($"Renamed note to: {newName}");
                 ShowStatus($"Renamed to: {newName}");
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during disposal, ignore
             }
             catch (Exception ex)
             {
@@ -1181,45 +1250,43 @@ namespace SuperTUI.Panes
             // Other keys handled in OnPreviewKeyDown
         }
 
+        private void OnEditorPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Shortcuts in editor are now handled via ShortcutManager
+            // Let the TextBox handle everything (arrow keys, typing, etc.)
+        }
+
+        // Removed all modal mode handlers and vim navigation - no longer needed
+        // NotesPane now uses simple notepad-style editing without modes
+
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Ctrl+S to save (works everywhere)
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.S)
+            // Check if we're typing in a TextBox (single-key shortcuts shouldn't fire during editing)
+            if (System.Windows.Input.Keyboard.FocusedElement is TextBox && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                if (currentNote != null && hasUnsavedChanges)
-                {
-                    _ = SaveCurrentNoteAsync();
-                    e.Handled = true;
-                }
+                return; // Let the TextBox handle the key
+            }
+
+            // Try to handle via ShortcutManager (all registered pane shortcuts)
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
+            {
+                e.Handled = true;
                 return;
             }
 
-            // Escape handling
-            if (e.Key == Key.Escape)
+            // If not handled by ShortcutManager, leave for default handling
+        }
+
+        // Old handler code preserved for reference (now using ShortcutManager)
+        private void OnPreviewKeyDown_Old(object sender, KeyEventArgs e)
+        {
+            if (System.Windows.Input.Keyboard.FocusedElement is TextBox)
             {
-                if (isCommandPaletteVisible)
-                {
-                    HideCommandPalette();
-                    e.Handled = true;
-                }
-                else if (searchBox.IsFocused)
-                {
-                    searchBox.Text = "";
-                    notesListBox.Focus();
-                    e.Handled = true;
-                }
-                else if (noteEditor.IsFocused && currentNote != null)
-                {
-                    // Close editor, prompt if unsaved
-                    CloseNoteEditor();
-                    e.Handled = true;
-                }
-                return;
+                return; // Let the TextBox handle the key
             }
 
-            // Single-key shortcuts work UNLESS actively typing in the note editor
-            bool isTypingInEditor = noteEditor != null && noteEditor.IsFocused && e.OriginalSource == noteEditor;
-            if (!isTypingInEditor && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 switch (e.Key)
                 {
@@ -1504,11 +1571,27 @@ namespace SuperTUI.Panes
                 return;
             }
 
+            // Get line and column info
+            var currentLine = 1;
+            var currentCol = 1;
+            var totalLines = 1;
+
+            if (noteEditor != null && noteEditor.Text != null)
+            {
+                totalLines = noteEditor.LineCount;
+                currentLine = noteEditor.GetLineIndexFromCharacterIndex(noteEditor.CaretIndex) + 1;
+                var lineStart = noteEditor.GetCharacterIndexFromLineIndex(currentLine - 1);
+                currentCol = noteEditor.CaretIndex - lineStart + 1;
+            }
+
+            // Get word and character count
             var wordCount = noteEditor.Text.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
             var charCount = noteEditor.Text.Length;
             var modifiedIndicator = hasUnsavedChanges ? " •" : "";
 
-            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | {wordCount}w {charCount}c | Ctrl+S:Save A:New O:Open D:Delete S:Search Esc:Close";
+            // Simple notepad-style status bar
+            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | Ln {currentLine}/{totalLines} Col {currentCol} | " +
+                $"{wordCount}w {charCount}c | Ctrl+S:Save ESC:Close";
         }
 
         private void ShowStatus(string message, bool isError = false)
@@ -1606,6 +1689,9 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
+            // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
+            RegisterPaneShortcuts();
+
             // Subscribe to TaskSelectedEvent for cross-pane communication
             taskSelectedHandler = OnTaskSelected;
             eventBus.Subscribe(taskSelectedHandler);
@@ -1615,6 +1701,89 @@ namespace SuperTUI.Panes
             {
                 notesListBox?.Focus();
             }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// Register all NotesPane shortcuts with ShortcutManager
+        /// These shortcuts only execute when this pane is focused
+        /// </summary>
+        private void RegisterPaneShortcuts()
+        {
+            var shortcuts = ShortcutManager.Instance;
+
+            // Escape: Close editor or clear search
+            shortcuts.RegisterForPane(PaneName, Key.Escape, ModifierKeys.None,
+                () =>
+                {
+                    if (isCommandPaletteVisible)
+                        HideCommandPalette();
+                    else if (searchBox != null && searchBox.IsFocused)
+                    {
+                        searchBox.Text = "";
+                        notesListBox?.Focus();
+                    }
+                    else if (noteEditor != null && noteEditor.IsFocused && currentNote != null)
+                        CloseNoteEditor();
+                },
+                "Close editor or clear search");
+
+            // Ctrl+S: Save note
+            shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.Control,
+                () =>
+                {
+                    if (currentNote != null && hasUnsavedChanges)
+                        _ = SaveCurrentNoteAsync();
+                },
+                "Save current note");
+
+            // Shift+; (Shift+OemSemicolon): Show command palette
+            shortcuts.RegisterForPane(PaneName, Key.OemSemicolon, ModifierKeys.Shift,
+                () =>
+                {
+                    if (!noteEditor.IsFocused || noteEditor.SelectionStart == 0)
+                        ShowCommandPalette();
+                },
+                "Show command palette");
+
+            // A (no modifiers): Create new note
+            shortcuts.RegisterForPane(PaneName, Key.A, ModifierKeys.None,
+                () => CreateNewNote(),
+                "Create new note");
+
+            // O (no modifiers): Open external note
+            shortcuts.RegisterForPane(PaneName, Key.O, ModifierKeys.None,
+                () => OpenExternalNote(),
+                "Open external note");
+
+            // D (no modifiers): Delete current note
+            shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None,
+                () => { if (currentNote != null) DeleteCurrentNote(); },
+                "Delete current note");
+
+            // S (no modifiers): Focus search box
+            shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.None,
+                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
+                "Focus search box");
+
+            // F (no modifiers): Focus search box (alternative)
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.None,
+                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
+                "Focus search box");
+
+            // W (no modifiers): Save note
+            shortcuts.RegisterForPane(PaneName, Key.W, ModifierKeys.None,
+                () => { if (currentNote != null && hasUnsavedChanges) _ = SaveCurrentNoteAsync(); },
+                "Save current note");
+
+            // E (no modifiers): Edit note
+            shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
+                () => { if (notesListBox.SelectedItem is NoteMetadata note) _ = LoadNoteAsync(note); else if (currentNote != null) noteEditor?.Focus(); },
+                "Edit note");
+
+            // Enter (no modifiers): Edit note
+            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+                () => { if (notesListBox.SelectedItem is NoteMetadata note) _ = LoadNoteAsync(note); else if (currentNote != null) noteEditor?.Focus(); },
+                "Edit note");
         }
 
         /// <summary>
@@ -1968,14 +2137,17 @@ namespace SuperTUI.Panes
 
         protected override void OnDispose()
         {
+            // Cancel all async operations FIRST
+            disposalCancellation?.Cancel();
+
             // Unsubscribe from event bus to prevent memory leaks
             if (taskSelectedHandler != null)
             {
                 eventBus.Unsubscribe(taskSelectedHandler);
             }
 
-            // Save on close if needed
-            if (hasUnsavedChanges && currentNote != null)
+            // Save on close if needed (synchronous to ensure it completes)
+            if (hasUnsavedChanges && currentNote != null && !disposalCancellation.IsCancellationRequested)
             {
                 try
                 {
@@ -2002,6 +2174,9 @@ namespace SuperTUI.Panes
                 fileWatcher.EnableRaisingEvents = false;
                 fileWatcher.Dispose();
             }
+
+            // Dispose cancellation token source
+            disposalCancellation?.Dispose();
 
             base.OnDispose();
         }

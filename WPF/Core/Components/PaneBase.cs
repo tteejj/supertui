@@ -29,6 +29,7 @@ namespace SuperTUI.Core.Components
         protected readonly ILogger logger;
         protected readonly IThemeManager themeManager;
         protected readonly IProjectContextManager projectContext;
+        private readonly Infrastructure.FocusHistoryManager focusHistory;
 
         // UI structure
         protected Border containerBorder;
@@ -42,18 +43,19 @@ namespace SuperTUI.Core.Components
         public string PaneName { get; protected set; }
         public string PaneIcon { get; protected set; }  // Optional emoji/icon
         public bool IsActive { get; private set; }
-        public new bool IsFocused { get; internal set; }  // Set by PaneManager (hides UIElement.IsFocused)
         public virtual PaneSizePreference SizePreference => PaneSizePreference.Flex;
 
         // Constructor
         protected PaneBase(
             ILogger logger,
             IThemeManager themeManager,
-            IProjectContextManager projectContext)
+            IProjectContextManager projectContext,
+            Infrastructure.FocusHistoryManager focusHistory = null)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
             this.projectContext = projectContext ?? throw new ArgumentNullException(nameof(projectContext));
+            this.focusHistory = focusHistory;  // Optional - may be null in tests
 
             BuildPaneStructure();
         }
@@ -122,6 +124,12 @@ namespace SuperTUI.Core.Components
         /// </summary>
         public virtual void Initialize()
         {
+            // Track this pane in FocusHistoryManager for proper cleanup
+            if (focusHistory != null)
+            {
+                focusHistory.TrackPane(this);
+            }
+
             // Subscribe to project context changes
             projectContext.ProjectContextChanged += OnProjectContextChanged;
 
@@ -253,25 +261,28 @@ namespace SuperTUI.Core.Components
 
         /// <summary>
         /// Apply terminal theme to pane
-        /// FIX 4: Enhanced active pane border indicator
+        /// Uses WPF's native focus state (IsKeyboardFocusWithin) as single source of truth
         /// </summary>
         public void ApplyTheme()
         {
             var theme = themeManager.CurrentTheme;
             if (theme == null) return;
 
+            // UNIFIED FOCUS: Use WPF's native focus state as single source of truth
+            bool hasFocus = this.IsKeyboardFocusWithin;
+
             var background = theme.Background;
-            var headerBg = IsFocused ? theme.BorderActive : theme.Surface;  // Change header bg when focused
+            var headerBg = hasFocus ? theme.BorderActive : theme.Surface;  // Change header bg when focused
             var foreground = theme.Foreground;
-            var border = IsFocused ? theme.BorderActive : theme.Border;
+            var border = hasFocus ? theme.BorderActive : theme.Border;
 
             // Container with focus indicator
             containerBorder.Background = new SolidColorBrush(background);
             containerBorder.BorderBrush = new SolidColorBrush(border);
-            containerBorder.BorderThickness = new Thickness(IsFocused ? 3 : 1);  // Much thicker border when focused (3px vs 1px)
+            containerBorder.BorderThickness = new Thickness(hasFocus ? 3 : 1);  // Much thicker border when focused (3px vs 1px)
 
             // Add drop shadow effect when focused
-            if (IsFocused)
+            if (hasFocus)
             {
                 containerBorder.Effect = new System.Windows.Media.Effects.DropShadowEffect
                 {
@@ -312,6 +323,12 @@ namespace SuperTUI.Core.Components
         {
             if (disposing)
             {
+                // Untrack this pane from FocusHistoryManager to prevent memory leaks
+                if (focusHistory != null)
+                {
+                    focusHistory.UntrackPane(this);
+                }
+
                 // Unsubscribe from events
                 projectContext.ProjectContextChanged -= OnProjectContextChanged;
                 themeManager.ThemeChanged -= OnThemeChanged;
