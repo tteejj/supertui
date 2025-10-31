@@ -674,6 +674,7 @@ namespace SuperTUI.Panes
 
         private async void CreateNewNote()
         {
+            // Save existing note if needed
             if (hasUnsavedChanges && currentNote != null)
             {
                 var result = MessageBox.Show(
@@ -689,91 +690,26 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // Prompt for note name
-            var theme = themeManager.CurrentTheme;
-            var dialog = new Window
+            // Create an UNSAVED note (no file yet, like Notepad's "Untitled")
+            currentNote = new NoteMetadata
             {
-                Title = "New Note",
-                Width = 400,
-                Height = 120,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = Window.GetWindow(this),
-                ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(theme.Surface)
+                Name = "Untitled",
+                FullPath = null,  // NULL = unsaved
+                IsNew = true
             };
 
-            var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            // Clear editor and FOCUS it immediately
+            noteEditor.Text = "";
+            noteEditor.IsEnabled = true;
+            hasUnsavedChanges = false;
 
-            var nameInput = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Margin = new Thickness(16),
-                Padding = new Thickness(8),
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
-                Foreground = new SolidColorBrush(theme.Foreground),
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(1)
-            };
+            // FOCUS THE EDITOR so user can start typing RIGHT NOW
+            noteEditor.Focus();
 
-            Grid.SetRow(nameInput, 0);
-            grid.Children.Add(nameInput);
+            UpdateStatusBar();
+            ShowStatus("New note - Ctrl+S to save", isError: false);
 
-            var buttonPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(16, 0, 16, 16)
-            };
-
-            var createBtn = new Button
-            {
-                Content = "Create",
-                Width = 80,
-                Margin = new Thickness(0, 0, 8, 0),
-                Padding = new Thickness(8, 4, 8, 4),
-                FontFamily = new FontFamily("JetBrains Mono, Consolas")
-            };
-            createBtn.Click += async (s, e) =>
-            {
-                var noteName = nameInput.Text.Trim();
-                if (string.IsNullOrEmpty(noteName))
-                {
-                    MessageBox.Show("Note name cannot be empty", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                dialog.DialogResult = true;
-                dialog.Close();
-                await CreateNoteFileAsync(noteName);
-            };
-
-            var cancelBtn = new Button
-            {
-                Content = "Cancel",
-                Width = 80,
-                Padding = new Thickness(8, 4, 8, 4),
-                FontFamily = new FontFamily("JetBrains Mono, Consolas")
-            };
-            cancelBtn.Click += (s, e) => dialog.Close();
-
-            buttonPanel.Children.Add(createBtn);
-            buttonPanel.Children.Add(cancelBtn);
-            Grid.SetRow(buttonPanel, 1);
-            grid.Children.Add(buttonPanel);
-
-            dialog.Content = grid;
-
-            nameInput.KeyDown += (s, e) =>
-            {
-                if (e.Key == Key.Enter) createBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                if (e.Key == Key.Escape) dialog.Close();
-            };
-
-            nameInput.Focus();
-            dialog.ShowDialog();
+            Log("Created new unsaved note");
         }
 
         private async Task CreateNoteFileAsync(string noteName)
