@@ -119,11 +119,16 @@ namespace SuperTUI.Core.Infrastructure
         {
             try
             {
-                var json = JsonSerializer.Serialize(workspaceStates, new JsonSerializerOptions
+                var options = new JsonSerializerOptions
                 {
-                    WriteIndented = true
-                });
+                    WriteIndented = true,
+                    PropertyNameCaseInsensitive = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+                    // This allows proper serialization of Dictionary<string, object>
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                };
 
+                var json = JsonSerializer.Serialize(workspaceStates, options);
                 File.WriteAllText(stateFilePath, json);
                 logger.Log(LogLevel.Info, "WorkspaceStateManager", $"Saved {workspaceStates.Count} workspaces to {stateFilePath}");
             }
@@ -143,7 +148,12 @@ namespace SuperTUI.Core.Infrastructure
                 if (File.Exists(stateFilePath))
                 {
                     var json = File.ReadAllText(stateFilePath);
-                    workspaceStates = JsonSerializer.Deserialize<List<PaneWorkspaceState>>(json) ?? new List<PaneWorkspaceState>();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                    };
+                    workspaceStates = JsonSerializer.Deserialize<List<PaneWorkspaceState>>(json, options) ?? new List<PaneWorkspaceState>();
                     logger.Log(LogLevel.Info, "WorkspaceStateManager", $"Loaded {workspaceStates.Count} workspaces from {stateFilePath}");
                 }
                 else

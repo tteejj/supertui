@@ -1139,17 +1139,7 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // Check if we're typing in THE EDITOR TextBox specifically (not the list box)
-            // Only block shortcuts when actively editing a note, not when browsing the list
-            if (noteEditor != null &&
-                noteEditor.IsFocused &&
-                noteEditor.Visibility == Visibility.Visible &&
-                e.KeyboardDevice.Modifiers == ModifierKeys.None)
-            {
-                return; // Let the editor handle the key
-            }
-
-            // Try to handle via ShortcutManager (all registered pane shortcuts)
+            // Try to handle via ShortcutManager FIRST (pane shortcuts like A, E, D, W, Enter, etc.)
             var shortcuts = ShortcutManager.Instance;
             if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
@@ -1157,7 +1147,16 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            // If not handled by ShortcutManager, leave for default handling
+            // If we're actively typing in the editor (editor focused and visible),
+            // let remaining keys go to the editor for text input
+            // This only blocks keys that weren't handled by shortcuts above
+            if (noteEditor != null &&
+                noteEditor.IsFocused &&
+                noteEditor.Visibility == Visibility.Visible)
+            {
+                // Don't mark as handled - let the editor handle text input
+                return;
+            }
         }
 
         // Old handler code preserved for reference (now using ShortcutManager)
@@ -1677,20 +1676,44 @@ namespace SuperTUI.Panes
             // E (no modifiers): Edit note
             shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
                 () => {
-                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
-                        _ = LoadNoteAsync(note);
-                    else if (currentNote != null)
+                    // If editor is visible, just focus it
+                    if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
+                    {
                         noteEditor?.Focus();
+                        return;
+                    }
+
+                    // Otherwise, try to load selected note from list
+                    if (notesListBox != null && notesListBox.SelectedIndex >= 0 && notesListBox.SelectedIndex < notesListBox.Items.Count)
+                    {
+                        var item = notesListBox.Items[notesListBox.SelectedIndex];
+                        if (item is ListBoxItem listBoxItem && listBoxItem.Tag is NoteMetadata note)
+                        {
+                            _ = LoadNoteAsync(note);
+                        }
+                    }
                 },
                 "Edit note");
 
             // Enter (no modifiers): Edit note
             shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
                 () => {
-                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
-                        _ = LoadNoteAsync(note);
-                    else if (currentNote != null)
+                    // If editor is visible, just focus it
+                    if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
+                    {
                         noteEditor?.Focus();
+                        return;
+                    }
+
+                    // Otherwise, try to load selected note from list
+                    if (notesListBox != null && notesListBox.SelectedIndex >= 0 && notesListBox.SelectedIndex < notesListBox.Items.Count)
+                    {
+                        var item = notesListBox.Items[notesListBox.SelectedIndex];
+                        if (item is ListBoxItem listBoxItem && listBoxItem.Tag is NoteMetadata note)
+                        {
+                            _ = LoadNoteAsync(note);
+                        }
+                    }
                 },
                 "Edit note");
         }
@@ -1953,21 +1976,66 @@ namespace SuperTUI.Panes
 
         private DateTime lastAutoSaveTime = DateTime.MinValue;
 
+        /// <summary>
+        /// Helper to safely extract values from deserialized JSON Dictionary
+        /// Handles both direct values and JsonElement objects
+        /// </summary>
+        private T GetValueOrDefault<T>(Dictionary<string, object> data, string key, T defaultValue = default)
+        {
+            if (!data.TryGetValue(key, out var value) || value == null)
+                return defaultValue;
+
+            // Handle JsonElement from System.Text.Json deserialization
+            if (value is System.Text.Json.JsonElement jsonElement)
+            {
+                try
+                {
+                    if (typeof(T) == typeof(string))
+                        return (T)(object)jsonElement.GetString();
+                    if (typeof(T) == typeof(int))
+                        return (T)(object)jsonElement.GetInt32();
+                    if (typeof(T) == typeof(bool))
+                        return (T)(object)jsonElement.GetBoolean();
+                    if (typeof(T) == typeof(double))
+                        return (T)(object)jsonElement.GetDouble();
+                    if (typeof(T) == typeof(DateTime))
+                        return (T)(object)jsonElement.GetDateTime();
+
+                    // Fallback: try to deserialize
+                    return System.Text.Json.JsonSerializer.Deserialize<T>(jsonElement.GetRawText());
+                }
+                catch
+                {
+                    return defaultValue;
+                }
+            }
+
+            // Direct value - try to cast/convert
+            try
+            {
+                if (value is T directValue)
+                    return directValue;
+
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
         public override void RestoreState(PaneState state)
         {
             if (state?.CustomData == null) return;
 
-            var data = state.CustomData as Dictionary<string, object>;
+            var data = state.CustomData;
             if (data == null) return;
 
             // Store for deferred restoration
             pendingRestoreData = data;
 
             // Restore unsaved changes flag
-            if (data.TryGetValue("HasUnsavedChanges", out var hasChanges))
-            {
-                hasUnsavedChanges = (bool)hasChanges;
-            }
+            hasUnsavedChanges = GetValueOrDefault(data, "HasUnsavedChanges", false);
 
             // Use dispatcher to ensure UI is ready
             Application.Current?.Dispatcher.InvokeAsync(async () =>
@@ -1981,42 +2049,38 @@ namespace SuperTUI.Panes
         private async Task RestoreDetailedStateAsync(Dictionary<string, object> data)
         {
             // Restore note selection by index first (more reliable)
-            if (data.TryGetValue("SelectedNoteIndex", out var indexObj))
+            var index = GetValueOrDefault(data, "SelectedNoteIndex", -1);
+            if (index >= 0 && index < notesListBox.Items.Count)
             {
-                var index = Convert.ToInt32(indexObj);
-                if (index >= 0 && index < notesListBox.Items.Count)
-                {
-                    notesListBox.SelectedIndex = index;
+                notesListBox.SelectedIndex = index;
 
-                    // Load the selected note
-                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
-                    {
-                        await LoadNoteAsync(note);
-                    }
+                // Load the selected note
+                if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
+                {
+                    await LoadNoteAsync(note);
                 }
             }
             // Fallback to path-based selection
-            else if (data.TryGetValue("SelectedNotePath", out var notePath) && notePath != null)
+            else
             {
-                var notePathStr = notePath.ToString();
+                var notePathStr = GetValueOrDefault<string>(data, "SelectedNotePath", null);
                 if (!string.IsNullOrEmpty(notePathStr))
                 {
-                    NoteMetadata note = null;
-
                     // Check if it's an unsaved note
-                    if (data.TryGetValue("SelectedNoteName", out var noteName) && notePathStr == null)
+                    var noteName = GetValueOrDefault<string>(data, "SelectedNoteName", null);
+                    if (noteName != null && notePathStr == null)
                     {
                         // Create unsaved note placeholder
                         currentNote = new NoteMetadata
                         {
-                            Name = noteName?.ToString() ?? "Untitled",
+                            Name = noteName,
                             FullPath = null
                         };
                         noteEditor.IsEnabled = true;
                     }
                     else if (File.Exists(notePathStr))
                     {
-                        note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
+                        var note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
                         if (note != null)
                         {
                             await LoadNoteAsync(note);
@@ -2026,71 +2090,64 @@ namespace SuperTUI.Panes
             }
 
             // Restore editor state
-            if (data.TryGetValue("EditorText", out var editorText))
+            var editorText = GetValueOrDefault<string>(data, "EditorText", null);
+            if (editorText != null)
             {
-                noteEditor.Text = editorText?.ToString() ?? "";
+                noteEditor.Text = editorText;
 
                 // Restore cursor and selection
-                if (data.TryGetValue("EditorCursorPos", out var cursorPos))
-                    noteEditor.CaretIndex = Convert.ToInt32(cursorPos);
-                if (data.TryGetValue("EditorSelectionStart", out var selStart))
-                    noteEditor.SelectionStart = Convert.ToInt32(selStart);
-                if (data.TryGetValue("EditorSelectionLength", out var selLen))
-                    noteEditor.SelectionLength = Convert.ToInt32(selLen);
+                noteEditor.CaretIndex = GetValueOrDefault(data, "EditorCursorPos", 0);
+                noteEditor.SelectionStart = GetValueOrDefault(data, "EditorSelectionStart", 0);
+                noteEditor.SelectionLength = GetValueOrDefault(data, "EditorSelectionLength", 0);
 
                 // Restore scroll position
-                if (data.TryGetValue("EditorScrollPosition", out var editorScrollPos))
+                var lineIndex = GetValueOrDefault(data, "EditorScrollPosition", 0);
+                if (lineIndex > 0)
                 {
-                    var lineIndex = Convert.ToInt32(editorScrollPos);
-                    if (lineIndex > 0)
-                    {
-                        var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
-                        noteEditor.ScrollToLine(lineIndex);
-                    }
+                    var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
+                    noteEditor.ScrollToLine(lineIndex);
                 }
             }
 
             // Restore command palette state
-            if (data.TryGetValue("IsCommandPaletteVisible", out var isPaletteVisible) && (bool)isPaletteVisible)
+            if (GetValueOrDefault(data, "IsCommandPaletteVisible", false))
             {
                 ShowCommandPalette();
 
-                if (data.TryGetValue("CommandText", out var cmdText))
-                    commandInput.Text = cmdText?.ToString() ?? "";
-                if (data.TryGetValue("CommandCursorPos", out var cmdCursor))
-                    commandInput.CaretIndex = Convert.ToInt32(cmdCursor);
+                commandInput.Text = GetValueOrDefault<string>(data, "CommandText", "");
+                commandInput.CaretIndex = GetValueOrDefault(data, "CommandCursorPos", 0);
             }
 
             // Restore list scroll position
-            if (data.TryGetValue("NotesListScrollPosition", out var listScroll))
+            var listScroll = GetValueOrDefault(data, "NotesListScrollPosition", 0.0);
+            if (listScroll > 0)
             {
                 var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
-                scrollViewer?.ScrollToVerticalOffset(Convert.ToDouble(listScroll));
+                scrollViewer?.ScrollToVerticalOffset(listScroll);
             }
 
             // Restore main scroll position
-            if (data.TryGetValue("ScrollPosition", out var scrollPos))
+            var scrollPos = GetValueOrDefault(data, "ScrollPosition", 0.0);
+            if (scrollPos > 0)
             {
                 SetScrollPosition(scrollPos);
             }
 
             // Finally, restore focus to the correct control
-            if (data.TryGetValue("FocusedControl", out var focusedControl))
-            {
-                await Task.Delay(100); // Small delay to ensure UI is ready
+            var focusedControl = GetValueOrDefault<string>(data, "FocusedControl", "NotesList");
+            await Task.Delay(100); // Small delay to ensure UI is ready
 
-                switch (focusedControl?.ToString())
-                {
-                    case "Editor":
-                        noteEditor?.Focus();
-                        System.Windows.Input.Keyboard.Focus(noteEditor);
-                        break;
-                    case "NotesList":
-                    default:
-                        notesListBox?.Focus();
-                        System.Windows.Input.Keyboard.Focus(notesListBox);
-                        break;
-                }
+            switch (focusedControl)
+            {
+                case "Editor":
+                    noteEditor?.Focus();
+                    System.Windows.Input.Keyboard.Focus(noteEditor);
+                    break;
+                case "NotesList":
+                default:
+                    notesListBox?.Focus();
+                    System.Windows.Input.Keyboard.Focus(notesListBox);
+                    break;
             }
         }
 

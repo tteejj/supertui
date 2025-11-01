@@ -454,6 +454,15 @@ namespace SuperTUI
                 };
                 paneManager.RestoreState(paneState, panesToRestore);
 
+                // Subscribe to pane-specific events after restoration
+                foreach (var pane in panesToRestore)
+                {
+                    if (pane is Panes.NotesPane notesPane)
+                    {
+                        notesPane.FileBrowserRequested += OnNotesPaneRequestFileBrowser;
+                    }
+                }
+
                 // Restore individual pane states
                 if (state.PaneStates != null && state.PaneStates.Count > 0)
                 {
@@ -694,11 +703,62 @@ namespace SuperTUI
             {
                 var pane = paneFactory.CreatePane(paneName);
                 paneManager.OpenPane(pane);
+
+                // Subscribe to pane-specific events after opening
+                if (pane is Panes.NotesPane notesPane)
+                {
+                    notesPane.FileBrowserRequested += OnNotesPaneRequestFileBrowser;
+                }
+
                 logger.Log(LogLevel.Info, "MainWindow", $"Opened pane: {paneName}");
             }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Error, "MainWindow", $"Failed to open pane '{paneName}': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle NotesPane requesting file browser to select a note file
+        /// </summary>
+        private void OnNotesPaneRequestFileBrowser(object sender, string notesPath)
+        {
+            try
+            {
+                logger.Log(LogLevel.Info, "MainWindow", $"NotesPane requested FileBrowser for path: {notesPath}");
+
+                // Check if FileBrowser is already open
+                var existingFileBrowser = paneManager.OpenPanes.OfType<Panes.FileBrowserPane>().FirstOrDefault();
+
+                if (existingFileBrowser != null)
+                {
+                    // FileBrowser already open, just navigate to notes folder
+                    existingFileBrowser.SetInitialPath(notesPath);
+                    paneManager.FocusPane(existingFileBrowser);
+                    logger.Log(LogLevel.Debug, "MainWindow", "Navigated existing FileBrowser to notes folder");
+                }
+                else
+                {
+                    // Open new FileBrowser pane
+                    var fileBrowserPane = paneFactory.CreatePane("files") as Panes.FileBrowserPane;
+                    if (fileBrowserPane != null)
+                    {
+                        paneManager.OpenPane(fileBrowserPane);
+
+                        // Set initial path to notes folder after pane is loaded
+                        Application.Current?.Dispatcher.InvokeAsync(() =>
+                        {
+                            fileBrowserPane.SetInitialPath(notesPath);
+                        }, System.Windows.Threading.DispatcherPriority.Loaded);
+
+                        logger.Log(LogLevel.Info, "MainWindow", "Opened FileBrowser pane for notes folder");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Error, "MainWindow", $"Failed to open FileBrowser from NotesPane: {ex.Message}");
+                notificationManager.ShowError($"Failed to open file browser: {ex.Message}", "File Browser Error");
             }
         }
 

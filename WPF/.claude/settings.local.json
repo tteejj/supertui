@@ -30,7 +30,9 @@
       "Bash(Select-Object -First 30)",
       "Bash(Select-String -Pattern \"Build|error CS|warning CS\")",
       "Bash(Select-Object -Last 20)",
-      "Bash(Select-String -Pattern \"Build|error|warning\")"
+      "Bash(Select-String -Pattern \"Build|error|warning\")",
+      "Bash(git show:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

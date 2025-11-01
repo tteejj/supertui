@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -427,6 +428,6 @@ namespace SuperTUI.Core.Components
     public class PaneState
     {
         public string PaneType { get; set; }
-        public object CustomData { get; set; }  // Pane-specific state (JSON-serializable)
+        public Dictionary<string, object> CustomData { get; set; }  // Pane-specific state (JSON-serializable)
     }
 }
