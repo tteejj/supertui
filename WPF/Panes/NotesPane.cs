@@ -141,151 +141,19 @@ namespace SuperTUI.Panes
             var borderActiveBrush = new SolidColorBrush(theme.BorderActive);
 
             mainLayout = new Grid();
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
 
-            // Three-column layout: Search/Filter | Note List | Editor
-            mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(250) }); // Left panel
-            mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Editor
+            // Notes list (shown when not editing)
+            BuildNotesListView();
+            Grid.SetRow(notesListBox, 0);
+            mainLayout.Children.Add(notesListBox);
 
-            // Left panel contains search + note list
-            var leftPanel = BuildLeftPanel();
-            Grid.SetColumn(leftPanel, 0);
-            mainLayout.Children.Add(leftPanel);
-
-            // Editor panel
-            var editorPanel = BuildEditorPanel();
-            Grid.SetColumn(editorPanel, 1);
-            mainLayout.Children.Add(editorPanel);
-
-            // Command palette (overlay)
-            commandPaletteBorder = BuildCommandPalette();
-            commandPaletteBorder.Visibility = Visibility.Collapsed;
-            Grid.SetColumnSpan(commandPaletteBorder, 2);
-            Panel.SetZIndex(commandPaletteBorder, 1000);
-            mainLayout.Children.Add(commandPaletteBorder);
-
-            // Set up keyboard shortcuts
-            this.PreviewKeyDown += OnPreviewKeyDown;
-
-            // Initialize notes
-            UpdateNotesFolder();
-            LoadAllNotes();
-            SetupFileWatcher();
-
-            return mainLayout;
-        }
-
-        private Grid BuildLeftPanel()
-        {
-            var theme = themeManager.CurrentTheme;
-            var bgBrush = new SolidColorBrush(theme.Background);
-            var fgBrush = new SolidColorBrush(theme.Foreground);
-            var borderBrush = new SolidColorBrush(theme.Border);
-            var transparentBrush = new SolidColorBrush(Colors.Transparent);
-
-            var panel = new Grid();
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search
-            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // List
-
-            // Search box
-            var searchContainer = new Border
-            {
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(0, 0, 1, 1),
-                Padding = new Thickness(8),
-                Height = 40
-            };
-
-            searchBox = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = fgBrush,
-                Background = transparentBrush,
-                BorderThickness = new Thickness(0),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            searchBox.TextChanged += OnSearchTextChanged;
-            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == "Search notes... (S or F)" ? "" : searchBox.Text;
-            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? "Search notes... (S or F)" : searchBox.Text;
-            searchBox.Text = "Search notes... (S or F)";
-
-            searchContainer.Child = searchBox;
-            Grid.SetRow(searchContainer, 0);
-            panel.Children.Add(searchContainer);
-
-            // Notes list
-            var listBorder = new Border
-            {
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                Padding = new Thickness(0)
-            };
-
-            notesListBox = new ListBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = fgBrush,
-                Background = transparentBrush,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(0)
-            };
-            notesListBox.SelectionChanged += OnNoteSelected;
-            notesListBox.PreviewKeyDown += OnNotesListKeyDown;
-
-            var itemStyle = new Style(typeof(ListBoxItem));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, transparentBrush));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, fgBrush));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 6, 12, 6)));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
-            notesListBox.ItemContainerStyle = itemStyle;
-
-            // Enable virtualization for large note collections (1000+ notes)
-            VirtualizingPanel.SetIsVirtualizing(notesListBox, true);
-            VirtualizingPanel.SetVirtualizationMode(notesListBox, VirtualizationMode.Recycling);
-            VirtualizingPanel.SetScrollUnit(notesListBox, ScrollUnit.Pixel);
-
-            listBorder.Child = notesListBox;
-            Grid.SetRow(listBorder, 1);
-            panel.Children.Add(listBorder);
-
-            return panel;
-        }
-
-        private Grid BuildEditorPanel()
-        {
-            var theme = themeManager.CurrentTheme;
-            var bgBrush = new SolidColorBrush(theme.Background);
-            var fgBrush = new SolidColorBrush(theme.Foreground);
-            var borderBrush = new SolidColorBrush(theme.Border);
-            var transparentBrush = new SolidColorBrush(Colors.Transparent);
-
-            var panel = new Grid();
-            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Editor
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
-
-            // Editor
-            noteEditor = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = fgBrush,
-                Background = transparentBrush,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(16),
-                TextWrapping = TextWrapping.Wrap,
-                AcceptsReturn = true,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Text = "-- NORMAL MODE --\n\nPress i to enter INSERT mode\nPress a to APPEND\nPress o to open new line\n\nPress A to create a new note\nPress O to open a file\nPress : for command palette",
-                IsReadOnly = true  // Start in Normal mode (read-only)
-            };
-            noteEditor.TextChanged += OnEditorTextChanged;
-            noteEditor.PreviewKeyDown += OnEditorPreviewKeyDown;
-            noteEditor.IsEnabled = false;
-
+            // Editor (shown when editing, hidden by default)
+            BuildEditorView();
+            noteEditor.Visibility = Visibility.Collapsed;
             Grid.SetRow(noteEditor, 0);
-            panel.Children.Add(noteEditor);
+            mainLayout.Children.Add(noteEditor);
 
             // Status bar
             var statusBorder = new Border
@@ -307,9 +175,75 @@ namespace SuperTUI.Panes
 
             statusBorder.Child = statusBar;
             Grid.SetRow(statusBorder, 1);
-            panel.Children.Add(statusBorder);
+            mainLayout.Children.Add(statusBorder);
 
-            return panel;
+            // Set up keyboard shortcuts
+            this.PreviewKeyDown += OnPreviewKeyDown;
+
+            // Initialize notes
+            UpdateNotesFolder();
+            LoadAllNotes();
+            SetupFileWatcher();
+
+            return mainLayout;
+        }
+
+        private void BuildNotesListView()
+        {
+            var theme = themeManager.CurrentTheme;
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+            var accentBrush = new SolidColorBrush(theme.Primary);
+
+            notesListBox = new ListBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 20,
+                Foreground = fgBrush,
+                Background = transparentBrush,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(24)
+            };
+            notesListBox.SelectionChanged += OnNoteSelected;
+
+            var itemStyle = new Style(typeof(ListBoxItem));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, transparentBrush));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, fgBrush));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 8, 12, 8)));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
+
+            // Highlight selected item
+            var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, accentBrush));
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.FontWeightProperty, FontWeights.Bold));
+            itemStyle.Triggers.Add(selectedTrigger);
+
+            notesListBox.ItemContainerStyle = itemStyle;
+
+            VirtualizingPanel.SetIsVirtualizing(notesListBox, true);
+            VirtualizingPanel.SetVirtualizationMode(notesListBox, VirtualizationMode.Recycling);
+        }
+
+        private void BuildEditorView()
+        {
+            var theme = themeManager.CurrentTheme;
+            var fgBrush = new SolidColorBrush(theme.Foreground);
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+
+            noteEditor = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = fgBrush,
+                Background = transparentBrush,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(24),
+                TextWrapping = TextWrapping.Wrap,
+                AcceptsReturn = true,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
+            noteEditor.TextChanged += OnEditorTextChanged;
         }
 
         private Border BuildCommandPalette()
@@ -644,31 +578,10 @@ namespace SuperTUI.Panes
 
         private async Task LoadNoteAsync(NoteMetadata note)
         {
+            // Auto-save current note if needed (no prompts)
             if (hasUnsavedChanges && currentNote != null)
             {
-                var result = MessageBox.Show(
-                    $"Save changes to '{currentNote.Name}'?",
-                    "Unsaved Changes",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Cancel)
-                {
-                    // Reselect current note
-                    isLoadingNote = true;
-                    var currentItem = notesListBox.Items.OfType<ListBoxItem>()
-                        .FirstOrDefault(i => i.Tag is NoteMetadata n && n.FullPath == currentNote.FullPath);
-                    if (currentItem != null)
-                    {
-                        notesListBox.SelectedItem = currentItem;
-                    }
-                    isLoadingNote = false;
-                    return;
-                }
-                else if (result == MessageBoxResult.Yes)
-                {
-                    await SaveCurrentNoteAsync();
-                }
+                await SaveCurrentNoteAsync();
             }
 
             isLoadingNote = true;
@@ -677,28 +590,30 @@ namespace SuperTUI.Panes
             {
                 if (!File.Exists(note.FullPath))
                 {
-                    ShowStatus($"ERROR: Note file not found", isError: true);
+                    ShowStatus($"Note file not found: {note.Name}", isError: true);
                     LoadAllNotes();
                     return;
                 }
 
-                // Use cancellation token for async operation
+                // Load content
                 var content = await Task.Run(() => File.ReadAllText(note.FullPath), disposalCancellation.Token);
 
-                // Check if cancelled before updating UI
                 if (disposalCancellation.IsCancellationRequested)
                     return;
 
                 Application.Current?.Dispatcher.Invoke(() =>
                 {
-                    // Double-check not cancelled before UI update
                     if (!disposalCancellation.IsCancellationRequested)
                     {
                         currentNote = note;
                         noteEditor.Text = content;
-                        noteEditor.IsEnabled = true;
-                        noteEditor.IsReadOnly = false;  // Always editable in notepad style
                         hasUnsavedChanges = false;
+
+                        // Switch to editor mode
+                        notesListBox.Visibility = Visibility.Collapsed;
+                        noteEditor.Visibility = Visibility.Visible;
+                        noteEditor.Focus();
+
                         UpdateStatusBar();
                     }
                 });
@@ -707,7 +622,7 @@ namespace SuperTUI.Panes
             }
             catch (OperationCanceledException)
             {
-                // Expected during disposal, ignore
+                // Expected during disposal
             }
             catch (Exception ex)
             {
@@ -717,7 +632,7 @@ namespace SuperTUI.Panes
                     $"Loading note from '{note.FullPath}'",
                     logger);
 
-                ShowStatus($"ERROR: Failed to load note", isError: true);
+                ShowStatus($"Failed to load note: {note.Name}", isError: true);
             }
             finally
             {
@@ -731,20 +646,10 @@ namespace SuperTUI.Panes
 
         private async void CreateNewNote()
         {
-            // Save existing note if needed
+            // Auto-save current note if needed (no prompts)
             if (hasUnsavedChanges && currentNote != null)
             {
-                var result = MessageBox.Show(
-                    $"Save changes to '{currentNote.Name}'?",
-                    "Unsaved Changes",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Cancel) return;
-                if (result == MessageBoxResult.Yes)
-                {
-                    await SaveCurrentNoteAsync();
-                }
+                await SaveCurrentNoteAsync();
             }
 
             // Create temp file immediately with timestamp
@@ -766,21 +671,19 @@ namespace SuperTUI.Panes
                     Extension = ".txt"
                 };
 
-                // Clear editor and FOCUS it immediately
+                // Switch to editor mode
                 noteEditor.Text = "";
-                noteEditor.IsEnabled = true;
-                noteEditor.IsReadOnly = false;  // New notes are always editable
                 hasUnsavedChanges = false;
+                notesListBox.Visibility = Visibility.Collapsed;
+                noteEditor.Visibility = Visibility.Visible;
+                noteEditor.Focus();
 
                 // Add to notes list
                 allNotes.Insert(0, currentNote);
                 FilterNotes();
 
-                // FOCUS THE EDITOR so user can start typing RIGHT NOW
-                noteEditor.Focus();
-
                 UpdateStatusBar();
-                ShowStatus($"New note created: {tempFileName}", isError: false);
+                ShowStatus($"New note: {tempFileName}");
 
                 Log($"Created new temp file: {tempFileName}");
             }
@@ -792,7 +695,7 @@ namespace SuperTUI.Panes
                     $"Creating new temp note file in '{currentNotesFolder}'",
                     logger);
 
-                ShowStatus($"ERROR: Failed to create note", isError: true);
+                ShowStatus($"Failed to create note", isError: true);
             }
         }
 
@@ -930,20 +833,12 @@ namespace SuperTUI.Panes
         {
             if (currentNote == null) return;
 
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete '{currentNote.Name}'?\n\nThis action cannot be undone.",
-                "Delete Note",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning,
-                MessageBoxResult.No);
-
-            if (result != MessageBoxResult.Yes) return;
+            var noteName = currentNote.Name;
 
             try
             {
                 await Task.Run(() =>
                 {
-                    // Move to recycle bin would be better, but this works
                     File.Delete(currentNote.FullPath);
 
                     // Also delete backup if it exists
@@ -954,40 +849,36 @@ namespace SuperTUI.Panes
                     }
                 }, disposalCancellation.Token);
 
-                // Check if cancelled before updating UI
                 if (disposalCancellation.IsCancellationRequested)
                     return;
 
-                Log($"Deleted note: {currentNote.Name}");
-                ShowStatus($"Deleted: {currentNote.Name}");
+                Log($"Deleted note: {noteName}");
+                ShowStatus($"Deleted: {noteName}");
 
                 allNotes.Remove(currentNote);
                 currentNote = null;
                 hasUnsavedChanges = false;
 
-                noteEditor.Text = "Note deleted\n\nPress A to create a new note";
-                noteEditor.IsEnabled = false;
+                // Return to notes list
+                noteEditor.Visibility = Visibility.Collapsed;
+                notesListBox.Visibility = Visibility.Visible;
+                notesListBox.Focus();
 
                 FilterNotes();
             }
             catch (OperationCanceledException)
             {
-                // Expected during disposal, ignore
+                // Expected during disposal
             }
             catch (Exception ex)
             {
                 ErrorHandlingPolicy.Handle(
                     ErrorCategory.IO,
                     ex,
-                    $"Deleting note '{currentNote.Name}' from '{currentNote.FullPath}'",
+                    $"Deleting note '{noteName}'",
                     logger);
 
-                ShowStatus($"ERROR: Failed to delete note", isError: true);
-                MessageBox.Show(
-                    $"Failed to delete note: {ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ShowStatus($"Failed to delete note: {noteName}", isError: true);
             }
         }
 
@@ -1038,47 +929,24 @@ namespace SuperTUI.Panes
             }
         }
 
-        private void CloseNoteEditor()
+        private async void CloseNoteEditor()
         {
             if (currentNote == null) return;
 
-            // Check for unsaved changes
+            // Auto-save if needed (no prompts)
             if (hasUnsavedChanges)
             {
-                var result = MessageBox.Show(
-                    $"Save changes to '{currentNote.Name}'?\n\nYes = Save normally\nNo = Discard changes\nCancel = Return to editing",
-                    "Unsaved Changes",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Question,
-                    MessageBoxResult.Yes);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    // Check if note has a location set
-                    if (string.IsNullOrEmpty(currentNote.FullPath) || currentNote.Name.StartsWith("Untitled"))
-                    {
-                        // No location - save as temp file
-                        SaveAsTempFile();
-                    }
-                    else
-                    {
-                        _ = SaveCurrentNoteAsync();
-                    }
-                }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    return; // Stay in editor
-                }
-                // No = discard changes, continue closing
+                await SaveCurrentNoteAsync();
             }
 
-            // Close editor, return to list
+            // Switch back to notes list mode
             currentNote = null;
             hasUnsavedChanges = false;
-            noteEditor.Text = "";
-            noteEditor.IsEnabled = false;
+            noteEditor.Visibility = Visibility.Collapsed;
+            notesListBox.Visibility = Visibility.Visible;
             notesListBox.Focus();
-            ShowStatus("Note closed");
+
+            UpdateStatusBar();
         }
 
         private void SaveAsTempFile()
@@ -1309,6 +1177,42 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
+            // Handle critical editor shortcuts FIRST (always work, regardless of focus)
+            if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                // Ctrl+S: Save current note
+                if (currentNote != null && hasUnsavedChanges)
+                {
+                    _ = SaveCurrentNoteAsync();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            if (e.Key == Key.Escape && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                // Esc: Close command palette, clear search, or close editor
+                if (isCommandPaletteVisible)
+                {
+                    HideCommandPalette();
+                    e.Handled = true;
+                    return;
+                }
+                else if (searchBox != null && searchBox.IsFocused)
+                {
+                    searchBox.Text = "";
+                    notesListBox?.Focus();
+                    e.Handled = true;
+                    return;
+                }
+                else if (noteEditor != null && noteEditor.IsFocused && currentNote != null)
+                {
+                    CloseNoteEditor();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             // Check if we're typing in a TextBox (single-key shortcuts shouldn't fire during editing)
             if (System.Windows.Input.Keyboard.FocusedElement is TextBox && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
