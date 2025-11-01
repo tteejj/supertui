@@ -747,26 +747,53 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // Create an UNSAVED note (no file yet, like Notepad's "Untitled")
-            currentNote = new NoteMetadata
+            // Create temp file immediately with timestamp
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var tempFileName = $"temp_{timestamp}.txt";
+            var tempFilePath = Path.Combine(currentNotesFolder, tempFileName);
+
+            try
             {
-                Name = "Untitled",
-                FullPath = null  // NULL = unsaved
-            };
+                // Create empty file
+                await Task.Run(() => File.WriteAllText(tempFilePath, ""), disposalCancellation.Token);
 
-            // Clear editor and FOCUS it immediately
-            noteEditor.Text = "";
-            noteEditor.IsEnabled = true;
-            noteEditor.IsReadOnly = false;  // New notes are always editable
-            hasUnsavedChanges = false;
+                // Create note metadata
+                currentNote = new NoteMetadata
+                {
+                    Name = Path.GetFileNameWithoutExtension(tempFileName),
+                    FullPath = tempFilePath,
+                    LastModified = DateTime.Now,
+                    Extension = ".txt"
+                };
 
-            // FOCUS THE EDITOR so user can start typing RIGHT NOW
-            noteEditor.Focus();
+                // Clear editor and FOCUS it immediately
+                noteEditor.Text = "";
+                noteEditor.IsEnabled = true;
+                noteEditor.IsReadOnly = false;  // New notes are always editable
+                hasUnsavedChanges = false;
 
-            UpdateStatusBar();
-            ShowStatus("New note - Ctrl+S to save", isError: false);
+                // Add to notes list
+                allNotes.Insert(0, currentNote);
+                FilterNotes();
 
-            Log("Created new unsaved note");
+                // FOCUS THE EDITOR so user can start typing RIGHT NOW
+                noteEditor.Focus();
+
+                UpdateStatusBar();
+                ShowStatus($"New note created: {tempFileName}", isError: false);
+
+                Log($"Created new temp file: {tempFileName}");
+            }
+            catch (Exception ex)
+            {
+                ErrorHandlingPolicy.Handle(
+                    ErrorCategory.IO,
+                    ex,
+                    $"Creating new temp note file in '{currentNotesFolder}'",
+                    logger);
+
+                ShowStatus($"ERROR: Failed to create note", isError: true);
+            }
         }
 
         private async Task CreateNoteFileAsync(string noteName)
