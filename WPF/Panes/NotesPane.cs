@@ -34,9 +34,8 @@ namespace SuperTUI.Panes
         private Action<Core.Events.CommandExecutedFromPaletteEvent> commandExecutedHandler;
         private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
-        // UI Components - Three-panel layout
+        // UI Components - Two-mode layout
         private Grid mainLayout;
-        private TextBox searchBox;
         private ListBox notesListBox;
         private TextBox noteEditor;
         private TextBlock statusBar;
@@ -211,12 +210,6 @@ namespace SuperTUI.Panes
             itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, fgBrush));
             itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(12, 8, 12, 8)));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
-
-            // Highlight selected item
-            var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
-            selectedTrigger.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, accentBrush));
-            selectedTrigger.Setters.Add(new Setter(ListBoxItem.FontWeightProperty, FontWeights.Bold));
-            itemStyle.Triggers.Add(selectedTrigger);
 
             notesListBox.ItemContainerStyle = itemStyle;
 
@@ -436,54 +429,8 @@ namespace SuperTUI.Panes
 
         private void FilterNotes()
         {
-            var query = searchBox.Text;
-
-            if (string.IsNullOrEmpty(query) || query == "Search notes... (S or F)")
-            {
-                filteredNotes = allNotes.ToList();
-            }
-            else
-            {
-                // Full-text search: title + content
-                var queryLower = query.ToLower();
-                filteredNotes = allNotes
-                    .Select(note =>
-                    {
-                        int score = 0;
-
-                        // Title match (fuzzy)
-                        var titleScore = CalculateFuzzyScore(queryLower, note.Name.ToLower());
-                        score += titleScore * 2; // Title matches worth 2x
-
-                        // Content match (full-text)
-                        try
-                        {
-                            if (File.Exists(note.FullPath))
-                            {
-                                string content = File.ReadAllText(note.FullPath);
-                                if (content.ToLower().Contains(queryLower))
-                                {
-                                    score += 10; // Base score for content match
-
-                                    // Count occurrences for relevance
-                                    int occurrences = (content.Length - content.Replace(queryLower, "", StringComparison.OrdinalIgnoreCase).Length) / queryLower.Length;
-                                    score += occurrences * 5;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // Skip files that can't be read
-                        }
-
-                        return new { Note = note, Score = score };
-                    })
-                    .Where(x => x.Score > 0)
-                    .OrderByDescending(x => x.Score)
-                    .Select(x => x.Note)
-                    .ToList();
-            }
-
+            // No search - just show all notes sorted by last modified
+            filteredNotes = allNotes.ToList();
             UpdateNotesList();
         }
 
@@ -521,22 +468,14 @@ namespace SuperTUI.Panes
                         FontWeight = FontWeights.Bold
                     };
 
-                    // Add unsaved indicator and use highlighting for note name
+                    // Add unsaved indicator
                     string displayName = note.Name;
                     if (currentNote == note && hasUnsavedChanges)
                     {
                         displayName = "* " + displayName;
                     }
 
-                    var query = searchBox.Text;
-                    if (!string.IsNullOrWhiteSpace(query) && query != "Search notes... (S or F)")
-                    {
-                        AddHighlightedText(nameBlock, displayName, query);
-                    }
-                    else
-                    {
-                        nameBlock.Text = displayName;
-                    }
+                    nameBlock.Text = displayName;
 
                     stackPanel.Children.Add(nameBlock);
 
@@ -1191,21 +1130,8 @@ namespace SuperTUI.Panes
 
             if (e.Key == Key.Escape && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                // Esc: Close command palette, clear search, or close editor
-                if (isCommandPaletteVisible)
-                {
-                    HideCommandPalette();
-                    e.Handled = true;
-                    return;
-                }
-                else if (searchBox != null && searchBox.IsFocused)
-                {
-                    searchBox.Text = "";
-                    notesListBox?.Focus();
-                    e.Handled = true;
-                    return;
-                }
-                else if (noteEditor != null && noteEditor.IsFocused && currentNote != null)
+                // Esc: Close editor
+                if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
                 {
                     CloseNoteEditor();
                     e.Handled = true;
@@ -1256,13 +1182,6 @@ namespace SuperTUI.Panes
                             DeleteCurrentNote();
                             e.Handled = true;
                         }
-                        break;
-                    case Key.S:
-                    case Key.F:
-                        // Focus search box
-                        searchBox.Focus();
-                        searchBox.SelectAll();
-                        e.Handled = true;
                         break;
                     case Key.W:
                         // Save current note
@@ -1442,13 +1361,8 @@ namespace SuperTUI.Panes
                     RenameCurrentNote();
                     break;
 
-                case "search":
-                    searchBox.Focus();
-                    searchBox.SelectAll();
-                    break;
-
                 case "export":
-                    MessageBox.Show("Export feature coming soon!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ShowStatus("Export feature coming soon");
                     break;
             }
         }
@@ -1709,21 +1623,14 @@ namespace SuperTUI.Panes
         {
             var shortcuts = ShortcutManager.Instance;
 
-            // Escape: Close editor or clear search
+            // Escape: Close editor
             shortcuts.RegisterForPane(PaneName, Key.Escape, ModifierKeys.None,
                 () =>
                 {
-                    if (isCommandPaletteVisible)
-                        HideCommandPalette();
-                    else if (searchBox != null && searchBox.IsFocused)
-                    {
-                        searchBox.Text = "";
-                        notesListBox?.Focus();
-                    }
-                    else if (noteEditor != null && noteEditor.IsFocused && currentNote != null)
+                    if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
                         CloseNoteEditor();
                 },
-                "Close editor or clear search");
+                "Close editor");
 
             // Ctrl+S: Save note
             shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.Control,
@@ -1758,16 +1665,6 @@ namespace SuperTUI.Panes
                 () => { if (currentNote != null) DeleteCurrentNote(); },
                 "Delete current note");
 
-            // S (no modifiers): Focus search box
-            shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.None,
-                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
-                "Focus search box");
-
-            // F (no modifiers): Focus search box (alternative)
-            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.None,
-                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
-                "Focus search box");
-
             // W (no modifiers): Save note
             shortcuts.RegisterForPane(PaneName, Key.W, ModifierKeys.None,
                 () => { if (currentNote != null && hasUnsavedChanges) _ = SaveCurrentNoteAsync(); },
@@ -1790,24 +1687,11 @@ namespace SuperTUI.Panes
         protected override void OnPaneGainedFocus()
         {
             // Determine which control should have focus based on current state
-            if (isCommandPaletteVisible && commandInput != null)
-            {
-                // If command palette is open, focus command input
-                commandInput.Focus();
-                System.Windows.Input.Keyboard.Focus(commandInput);
-            }
-            else if (noteEditor != null && noteEditor.IsEnabled && currentNote != null)
+            if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
             {
                 // If editing a note, return focus to editor
                 noteEditor.Focus();
                 System.Windows.Input.Keyboard.Focus(noteEditor);
-            }
-            else if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
-                     searchBox.Text != "Search notes... (S or F)")
-            {
-                // If searching, return focus to search box
-                searchBox.Focus();
-                System.Windows.Input.Keyboard.Focus(searchBox);
             }
             else if (notesListBox != null)
             {
@@ -1819,15 +1703,12 @@ namespace SuperTUI.Panes
 
         private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
         {
-            // Filter notes when a task is selected
+            // Task selected - could filter notes in the future
             Application.Current?.Dispatcher.InvokeAsync(() =>
             {
                 if (evt.Task != null)
                 {
-                    // Search for notes that contain the task title or ID
-                    searchBox.Text = evt.Task.Title;
-                    FilterNotes();
-                    Log($"Filtered notes for task: {evt.Task.Title}");
+                    Log($"Task selected: {evt.Task.Title}");
                 }
             });
         }
@@ -1985,12 +1866,10 @@ namespace SuperTUI.Panes
                 ["SelectedNotePath"] = currentNote?.FullPath,
                 ["SelectedNoteName"] = currentNote?.Name,
                 ["SelectedNoteIndex"] = notesListBox?.SelectedIndex ?? -1,
-                ["SearchFilter"] = (searchBox?.Text != "Search notes... (S or F)") ? searchBox?.Text : null,
                 ["ScrollPosition"] = GetScrollPosition(),
 
                 // FOCUS MEMORY - Track exact user state
                 ["FocusedControl"] = GetCurrentFocusedControl(),
-                ["IsSearchFocused"] = searchBox?.IsFocused ?? false,
                 ["IsEditorFocused"] = noteEditor?.IsFocused ?? false,
 
                 // EDITOR STATE - Remember everything about the editor
@@ -2023,9 +1902,7 @@ namespace SuperTUI.Panes
 
         private string GetCurrentFocusedControl()
         {
-            if (searchBox?.IsFocused == true) return "SearchBox";
             if (noteEditor?.IsFocused == true) return "Editor";
-            if (commandInput?.IsFocused == true) return "CommandInput";
             if (notesListBox?.IsFocused == true) return "NotesList";
             return "None";
         }
@@ -2071,17 +1948,6 @@ namespace SuperTUI.Panes
 
             // Store for deferred restoration
             pendingRestoreData = data;
-
-            // Restore search filter first
-            if (data.TryGetValue("SearchFilter", out var searchFilter) && searchFilter != null)
-            {
-                var filterText = searchFilter.ToString();
-                if (!string.IsNullOrEmpty(filterText))
-                {
-                    searchBox.Text = filterText;
-                    FilterNotes();
-                }
-            }
 
             // Restore unsaved changes flag
             if (data.TryGetValue("HasUnsavedChanges", out var hasChanges))
@@ -2201,17 +2067,9 @@ namespace SuperTUI.Panes
 
                 switch (focusedControl?.ToString())
                 {
-                    case "SearchBox":
-                        searchBox?.Focus();
-                        System.Windows.Input.Keyboard.Focus(searchBox);
-                        break;
                     case "Editor":
                         noteEditor?.Focus();
                         System.Windows.Input.Keyboard.Focus(noteEditor);
-                        break;
-                    case "CommandInput":
-                        commandInput?.Focus();
-                        System.Windows.Input.Keyboard.Focus(commandInput);
                         break;
                     case "NotesList":
                     default:
@@ -2276,12 +2134,6 @@ namespace SuperTUI.Panes
             var accentBrush = new SolidColorBrush(theme.Primary);
 
             // Update all controls
-            if (searchBox != null)
-            {
-                searchBox.Foreground = fgBrush;
-                searchBox.Background = Brushes.Transparent;
-            }
-
             if (notesListBox != null)
             {
                 notesListBox.Foreground = fgBrush;
