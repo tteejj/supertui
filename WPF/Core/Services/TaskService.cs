@@ -106,13 +106,18 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
-        /// Get task by ID
+        /// Get task by ID (excludes soft-deleted tasks)
         /// </summary>
         public TaskItem GetTask(Guid id)
         {
             lock (lockObject)
             {
-                return tasks.ContainsKey(id) ? tasks[id] : null;
+                if (tasks.ContainsKey(id))
+                {
+                    var task = tasks[id];
+                    return task.Deleted ? null : task;
+                }
+                return null;
             }
         }
 

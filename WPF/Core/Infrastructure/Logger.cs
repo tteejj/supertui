@@ -211,14 +211,15 @@ namespace SuperTUI.Infrastructure
                             if (currentWriter != null && !disposed)
                             {
                                 byte[] bytes = Encoding.UTF8.GetBytes(line);
-                                currentFileSize += bytes.Length;
 
-                                if (currentFileSize > maxFileSizeBytes)
+                                // Check if writing this message would exceed max size
+                                if (currentFileSize + bytes.Length > maxFileSizeBytes)
                                 {
                                     OpenNewLogFile();
                                 }
 
                                 currentWriter.Write(line);
+                                currentFileSize += bytes.Length;
                             }
                         }
                     }

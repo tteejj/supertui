@@ -15,20 +15,26 @@ namespace SuperTUI.Tests.Linux
     /// </summary>
     [Trait("Category", "Linux")]
     [Trait("Category", "Critical")]
+    [Collection("SingletonTests")] // Shared collection to prevent parallel execution with other singleton tests
     public class DomainServicesTests : IDisposable
     {
-        private readonly DI.ServiceContainer container;
+        private readonly SuperTUI.DI.ServiceContainer container;
         private readonly ITaskService taskService;
         private readonly IProjectService projectService;
         private readonly ITimeTrackingService timeTrackingService;
 
         public DomainServicesTests()
         {
-            container = DI.ServiceRegistration.RegisterAllServices();
+            container = SuperTUI.DI.ServiceRegistration.RegisterAllServices();
 
             taskService = container.GetService<ITaskService>();
             projectService = container.GetService<IProjectService>();
             timeTrackingService = container.GetService<ITimeTrackingService>();
+
+            // Clear state from previous tests (singleton pollution)
+            taskService.Clear();
+            projectService.Clear();
+            timeTrackingService.Clear();
         }
 
         public void Dispose()

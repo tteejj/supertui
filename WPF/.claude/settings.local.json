@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(find:*)",
+      "Bash(dir:*)",
+      "Bash(for file in TestHelpers/*.cs Panes/*.cs DI/*.cs Infrastructure/*.cs Layout/TilingLayoutEngineTests.cs)",
+      "Bash(do [ -f $file ])",
+      "Bash(wc:*)",
+      "Bash(done)",
+      "Bash(awk:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(pwsh -Command:*)",
+      "Bash(dotnet remove package:*)",
+      "Bash(Select-String -Pattern \"error|warning|succeeded|failed\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(dotnet restore:*)",
+      "Bash(Select-String -Pattern \"Passed!|Failed!|Total tests|Passed:|Failed:|Skipped:\" -Context 0,2)",
+      "Bash(Select-String -Pattern \"(Failed|Error|Expected|Actual|at SuperTUI)\" -Context 2,2)",
+      "Bash(dotnet clean:*)",
+      "Bash(cat:*)",
+      "Bash(Select-String -Pattern \"(Starting test execution|Test Run|Passed!|Failed!|Error Message|Stack Trace)\" -Context 0,2)",
+      "Bash(test_results.txt)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

@@ -183,7 +183,9 @@ namespace SuperTUI.Core.Services
         {
             lock (lockObject)
             {
-                var weekKey = weekEnding.Date.ToString("yyyy-MM-dd");
+                // Normalize to week-ending date before lookup
+                var normalizedWeekEnding = GetWeekEnding(weekEnding);
+                var weekKey = normalizedWeekEnding.Date.ToString("yyyy-MM-dd");
                 if (!weekIndex.ContainsKey(weekKey))
                     return new List<TimeEntry>();
 
@@ -283,24 +285,42 @@ namespace SuperTUI.Core.Services
                     return false;
                 }
 
-                var oldEntry = entries[entry.Id];
+                // Find old week ending by searching the weekIndex
+                // (entry and entries[entry.Id] might be the same object reference, so we can't trust entry.WeekEnding)
+                string oldWeekKey = null;
+                foreach (var kvp in weekIndex)
+                {
+                    if (kvp.Value.Contains(entry.Id))
+                    {
+                        oldWeekKey = kvp.Key;
+                        break;
+                    }
+                }
+
+                // Normalize new week ending
+                var newWeekEnding = GetWeekEnding(entry.WeekEnding).Date;
+                var newWeekKey = newWeekEnding.ToString("yyyy-MM-dd");
+                entry.WeekEnding = newWeekEnding;
 
                 // Handle week ending change
-                if (oldEntry.WeekEnding.Date != entry.WeekEnding.Date)
+                if (oldWeekKey != null && oldWeekKey != newWeekKey)
                 {
                     // Remove from old week index
-                    var oldWeekKey = oldEntry.WeekEnding.ToString("yyyy-MM-dd");
-                    if (weekIndex.ContainsKey(oldWeekKey))
-                        weekIndex[oldWeekKey].Remove(entry.Id);
-
-                    // Ensure new week ending is normalized to Sunday
-                    entry.WeekEnding = GetWeekEnding(entry.WeekEnding).Date;
+                    weekIndex[oldWeekKey].Remove(entry.Id);
 
                     // Add to new week index
-                    var newWeekKey = entry.WeekEnding.ToString("yyyy-MM-dd");
                     if (!weekIndex.ContainsKey(newWeekKey))
                         weekIndex[newWeekKey] = new List<Guid>();
-                    weekIndex[newWeekKey].Add(entry.Id);
+                    if (!weekIndex[newWeekKey].Contains(entry.Id))  // Avoid duplicates
+                        weekIndex[newWeekKey].Add(entry.Id);
+                }
+                else if (oldWeekKey == null)
+                {
+                    // Entry not in any week index yet, add it
+                    if (!weekIndex.ContainsKey(newWeekKey))
+                        weekIndex[newWeekKey] = new List<Guid>();
+                    if (!weekIndex[newWeekKey].Contains(entry.Id))
+                        weekIndex[newWeekKey].Add(entry.Id);
                 }
 
                 entry.UpdatedAt = DateTime.Now;
@@ -408,10 +428,17 @@ namespace SuperTUI.Core.Services
                 var projectEntries = entries.Values
                     .Where(e => !e.Deleted && e.ProjectId == projectId);
 
+                // Normalize dates for proper week-ending comparison
                 if (startDate.HasValue)
-                    projectEntries = projectEntries.Where(e => e.WeekEnding >= startDate.Value.Date);
+                {
+                    var normalizedStart = GetWeekEnding(startDate.Value).Date;
+                    projectEntries = projectEntries.Where(e => e.WeekEnding >= normalizedStart);
+                }
                 if (endDate.HasValue)
-                    projectEntries = projectEntries.Where(e => e.WeekEnding <= endDate.Value.Date);
+                {
+                    var normalizedEnd = GetWeekEnding(endDate.Value).Date;
+                    projectEntries = projectEntries.Where(e => e.WeekEnding <= normalizedEnd);
+                }
 
                 var entriesList = projectEntries.ToList();
 
@@ -622,7 +649,17 @@ namespace SuperTUI.Core.Services
                 // Atomic write: temp → rename pattern
                 string tempFile = dataFilePath + ".tmp";
                 File.WriteAllText(tempFile, json);
-                File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
+
+                // Use File.Replace only if destination exists, otherwise just move
+                if (File.Exists(dataFilePath))
+                {
+                    File.Replace(tempFile, dataFilePath, dataFilePath + ".bak");
+                }
+                else
+                {
+                    File.Move(tempFile, dataFilePath);
+                }
+
                 Logger.Instance?.Debug("TimeTrackingService", $"Saved {entryList.Count} time entries to {dataFilePath}");
             }
             catch (Exception ex)
@@ -726,7 +763,17 @@ namespace SuperTUI.Core.Services
                     // Atomic write: temp → rename pattern
                     string tempFile = filePath + ".tmp";
                     File.WriteAllText(tempFile, json);
-                    File.Replace(tempFile, filePath, filePath + ".bak");
+
+                    // Use File.Replace only if destination exists, otherwise just move
+                    if (File.Exists(filePath))
+                    {
+                        File.Replace(tempFile, filePath, filePath + ".bak");
+                    }
+                    else
+                    {
+                        File.Move(tempFile, filePath);
+                    }
+
                     Logger.Instance?.Info("TimeTrackingService", $"Exported {allEntries.Count} time entries to JSON: {filePath}");
                     return true;
                 }

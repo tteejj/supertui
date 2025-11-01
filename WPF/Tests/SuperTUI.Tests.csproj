@@ -27,21 +27,22 @@
     <!-- Mocking and assertions -->
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Xunit.StaFact" Version="0.3.18" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Reference main project source files directly -->
-    <Compile Include="../Core/**/*.cs"
-             Exclude="../Core/StateMigrationExamples.cs;../Core/DependencyInjection/**/*.cs;../Core/Commands/CommandService.cs" />
-    <Compile Include="../Widgets/**/*.cs"
-             Exclude="../Widgets/TerminalWidget.cs;../Widgets/SystemMonitorWidget.cs;../Widgets/ThemeEditorWidget.cs" />
+    <Compile Include="../Core/**/*.cs" Exclude="../Core/StateMigrationExamples.cs;../Core/DependencyInjection/**/*.cs;../Core/Commands/CommandService.cs;../Core/Infrastructure/ExcelComReader.cs;../Core/Services/ExcelMappingService.cs" />
+    <Compile Include="../Widgets/**/*.cs" Exclude="../Widgets/TerminalWidget.cs;../Widgets/SystemMonitorWidget.cs;../Widgets/ThemeEditorWidget.cs" />
+    <Compile Include="../Panes/**/*.cs" Exclude="../Panes/ExcelImportPane.cs" />
     <!-- Exclude WPF UI files - they require XAML compilation -->
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude tests for non-existent or excluded widgets/features -->
+    <!-- Exclude old widget-based tests (replaced by pane tests) -->
     <Compile Remove="Widgets/**/*.cs" />
     <Compile Remove="Windows/**/*.cs" />
+    <Compile Remove="Linux/WidgetFactoryTests.cs" />
     <Compile Remove="Infrastructure/StateMigrationTests.cs" />
     <Compile Remove="Components/WorkspaceTests.cs" />
     <Compile Remove="Layout/GridLayoutEngineTests.cs" />
@@ -51,5 +52,7 @@
     <Compile Remove="Infrastructure/ConfigurationManagerTests.cs" />
     <Compile Remove="Infrastructure/SecurityManagerTests.cs" />
   </ItemGroup>
+
+  <!-- New pane-based test files are automatically included by SDK -->
 
 </Project>

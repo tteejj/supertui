@@ -1,0 +1,707 @@
+Build started 2025-11-01 12:49:06 PM.
+     1>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\project.assets.json
+         Restored C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj (in 71 ms).
+         
+         NuGet Config files used:
+             C:\Users\jhnhe\AppData\Roaming\NuGet\NuGet.Config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+         All projects are up-to-date for restore.
+     1>Done Building Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (Restore target(s)).
+   1:7>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" on node 1 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (1:7) is building "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (1:8) on node 1 (default targets).
+     1>MainResourcesGeneration:
+       Skipping target "MainResourcesGeneration" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0-windows\SuperTUI.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         SuperTUI -> C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.dll
+     1>Done Building Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.4.1+b9eacec401 (64-bit .NET 8.0.21)
+[xUnit.net 00:00:00.15]   Discovering: SuperTUI
+[xUnit.net 00:00:00.99]   Discovered:  SuperTUI
+[xUnit.net 00:00:00.99]   Starting:    SuperTUI
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithUncPath_PermissiveMode_ShouldReturnTrue [22 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterSingleton_WithInstance_ShouldSucceed [31 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterTransient_WithFactory_ShouldSucceed [5 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Dispose_ScopedService_ShouldCleanup [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_ForwardSlashTraversal_ShouldBlock [19 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DeviceNameAttack_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NullByteInjection_ShouldReturnFalse [8 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_CalledTwice_ShouldThrowException [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MultiplePathTraversalLevels_ShouldReturnFalse [5 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_ShouldPreventFurtherRegistrations [30 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterTransient_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetRequiredService_UnregisteredService_ShouldThrow [1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Transient_ShouldReturnNewInstance [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_AfterRegistration_ShouldStillAllowResolution [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterSingleton_WithFactory_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_WithinScope_ShouldReturnSameInstance [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Singleton_ConcurrentAccess_ShouldReturnSameInstance [10 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_DifferentScopes_ShouldReturnDifferentInstances [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetRequiredService_RegisteredService_ShouldReturn [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterScoped_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_CalledTwice_ShouldNotThrow [1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Dispose_ShouldCleanupSingletons [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Singleton_ShouldReturnSameInstance [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithDevelopmentMode_ShouldSetModeCorrectly [29 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_UnregisteredService_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_FromRootContainer_ShouldThrow [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_CaseSensitivity_ShouldNormalize [6 ms]
+[xUnit.net 00:00:01.17]       Should have write access to test directory
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(278,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions()
+[xUnit.net 00:00:01.18]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.18]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.18]       Subdirectory files should be accessible
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(430,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators()
+[xUnit.net 00:00:01.18]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.18]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DangerousExtensions_ShouldWarn [5 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions [5 ms]
+  Error Message:
+   Should have write access to test directory
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 278
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_VeryLongPath_ShouldHandleGracefully [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithStrictMode_ShouldSetModeCorrectly [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithInvalidCharacters_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_UnicodeTraversal_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.DevelopmentMode_ShouldAllowAllPaths [2 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators [2 ms]
+  Error Message:
+   Subdirectory files should be accessible
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 430
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsWithinDirectory_SubdirectoryFile_ShouldReturnTrue [1 ms]
+[xUnit.net 00:00:01.18]       Assert.True() Failure
+[xUnit.net 00:00:01.18]       Expected: True
+[xUnit.net 00:00:01.18]       Actual:   False
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(127,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue()
+[xUnit.net 00:00:01.18]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.19]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.19]       Assert.True() Failure
+[xUnit.net 00:00:01.19]       Expected: True
+[xUnit.net 00:00:01.19]       Actual:   False
+[xUnit.net 00:00:01.19]       Stack Trace:
+[xUnit.net 00:00:01.19]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(310,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue()
+[xUnit.net 00:00:01.19]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.19]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue [1 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 127
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue [1 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 310
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NullPath_ShouldReturnFalse [53 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_RelativeCurrentDirectory_ShouldBlock [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_PathTraversalAttempt_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsWithinDirectory_OutsideDirectory_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_SymlinkToDisallowedPath_ShouldReturnFalse [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_AlternateDataStream_ShouldValidate [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithDisallowedDirectory_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_WithInvalidChars_ShouldReplaceWithUnderscore [6 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.SecurityMode_Permissive_ShouldAllowMorePaths [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MixedSlashTraversal_ShouldBlock [2 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.HasPaneType_ForInvalidPane_ShouldReturnFalse [151 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_AbsolutePathEscape_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_SimilarNameAttack_ShouldReturnFalse [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ShouldRemoveAllInvalidChars [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_TrailingSpaces_ShouldNormalize [1 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaneMetadata_ForValidPane_ShouldReturnMetadata [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_DefaultMode_ShouldBeStrict [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_EmptyPath_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DoubleSlashTraversal_ShouldBlock [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_EncodedTraversal_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_Create_ShouldSucceed [174 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateScriptExecution_ShouldEnforcePolicy [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WriteToNonExistentDirectory_ShouldReturnFalse [9 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetAllPaneMetadata_ShouldReturnAllMetadata [11 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_TrailingDots_ShouldNormalize [2 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_UpdateLayout_EmptyLayout_ShouldNotThrow [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NetworkPath_StrictMode_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithUncPath_StrictMode_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithPermissiveMode_ShouldSetModeCorrectly [1 ms]
+[xUnit.net 00:00:01.32]       Assert.NotEqual() Failure: Strings are equal
+[xUnit.net 00:00:01.32]       Expected: Not "CON"
+[xUnit.net 00:00:01.32]       Actual:       "CON"
+[xUnit.net 00:00:01.32]       Stack Trace:
+[xUnit.net 00:00:01.32]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(822,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify()
+[xUnit.net 00:00:01.32]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.32]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_8Dot3Name_ShouldValidate [1 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify [7 ms]
+  Error Message:
+   Assert.NotEqual() Failure: Strings are equal
+Expected: Not "CON"
+Actual:       "CON"
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 822
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_JunctionPointAttack_ShouldBlock [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MaxFileSize_ShouldRespectLimit [2 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "files") [149 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "calendar") [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "tasks") [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "help") [9 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "notes") [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "projects") [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaneMetadata_ForInvalidPane_ShouldReturnNull [2 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_SaveState_ShouldCaptureCurrentNote [409 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.HasPaneType_ForValidPane_ShouldReturnTrue [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_Dispose_ShouldClearFocus [196 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaletteVisiblePaneTypes_ShouldExcludeHiddenPanes [11 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_RestoreState_ShouldRestoreSelectedNote [36 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Tall_WithThreePanes_ShouldWork [270 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.PartialRestore_SomePanesFail_ShouldNotBreakOthers [462 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_Disposal_ShouldNotThrow [15 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "calendar") [479 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [491 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_Initialize_ShouldSucceed [25 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.RestoreState_WithValidState_ShouldSucceed [26 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddChild_MultiplePanes_ShouldSucceed [42 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_MultipleDisposal_ShouldNotThrow [21 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "tasks") [44 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.EmptyWorkspace_SaveRestore_ShouldNotThrow [19 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_FullLifecycle_ShouldSucceed [35 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_WithTasks_ShouldDisplay [45 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_EmptyName_ShouldThrow [7 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Auto_WithOnePaneShouldWork [26 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "projects") [25 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.RestoreState_WithNullState_ShouldNotThrow [30 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_FullLifecycle_ShouldSucceed [27 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_MultiplePanes_AllShouldDispose [19 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddChild_SinglePane_ShouldSucceed [30 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [58 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [588 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "notes") [25 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetAvailablePaneTypes_ShouldReturnAllTypes [24 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveRestore_MultiplePanes_ShouldPreserveAllStates [50 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_RestoreState_ShouldNotThrow [40 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_UpdateLayout_WithPanes_ShouldNotThrow [30 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_ProjectContextChange_ShouldNotThrow [31 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_Initialize_ShouldSucceed [38 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_Initialize_ShouldSucceed [27 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "calendar") [52 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_CaseInsensitive_ShouldWork [22 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveState_SinglePane_ShouldCaptureState [29 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_RemoveChild_ShouldSucceed [32 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_ApplyTheme_ShouldNotThrow [28 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_WhitespaceType_ShouldThrowArgumentException [8 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_SaveState_ShouldCaptureCurrentPath [52 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "notes") [34 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskAdded_ShouldNotThrow [37 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.ProjectContextRestore_ShouldPreserveContext [38 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_EmptyType_ShouldThrowArgumentException [10 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "projects") [35 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_Dispose_ShouldStopAutoSaveTimer [36 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_NullType_ShouldThrowArgumentException [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusHistory_UntrackOnDispose_ShouldPreventMemoryLeak [400 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_FilterModes_ShouldNotThrow [30 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_RestoreState_ShouldRestorePath [48 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddRemoveMultiple_ShouldMaintainLayout [77 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveState_MultiplePanes_ShouldCaptureAllStates [38 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_NullCreator_ShouldThrow [11 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "tasks") [30 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_DoubleDispose_ShouldNotThrow [27 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_OnFocusChanged_ShouldUpdateVisualState [27 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskDeleted_ShouldNotThrow [27 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_UnknownType_ShouldThrowArgumentException [7 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_SecurityValidation_ShouldUseSecurityManager [39 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveRestore_RoundTrip_ShouldPreserveState [28 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validator_ShouldPreventInvalidValues [31 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.ResetToDefaults_ShouldRestoreDefaultValues [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Get_WithComplexTypes_ShouldHandleCollections [9 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "tasks") [29 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithMissingKey_ShouldThrowKeyNotFoundException [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_InitialFocus_ShouldBeFalse [35 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetCategory_ShouldReturnOnlyCategoryValues [3 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_Dispose_ShouldUnsubscribeFromTaskService [32 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldReturnNonNullPanes [29 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithWrongType_ShouldThrowInvalidCastException [7 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Set_ShouldUpdateValue [14 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithNullForValueType_ShouldThrowInvalidOperationException [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Register_ShouldStoreConfigValue [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Get_WithNonExistentKey_ShouldReturnDefault [2 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_ApplyTheme_ShouldNotThrow [54 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.SaveAndLoad_ShouldPersistConfiguration [11 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithInvalidValue_ShouldResetToDefault [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithNullValue_ShouldResetToDefault [5 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "projects") [28 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_Focusable_ShouldBeTrue [33 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithExistingKey_ShouldReturnValue [24 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithAllValidValues_ShouldReturnTrue [4 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_CustomPane_ShouldSucceed [20 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_SaveState_ShouldCaptureCurrentState [46 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.WorkspaceSwitch_SaveAndRestore_ShouldMaintainPaneIdentity [97 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_FullLifecycle_ShouldSucceed [53 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_WithPrefix_ShouldReturnMatches [16 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NullTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_ValidTag_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_ExistingTag_ShouldReturnMatchingTasks [7 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_RequireAll_ShouldReturnOnlyTasksWithAllTags [3 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_EmptyPrefix_ShouldReturnRecentTags [8 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagsByUsage_ShouldReturnMostUsedFirst [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_CaseInsensitive_ShouldRemove [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_ExistingTag_ShouldRemoveSuccessfully [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithComma_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_NullList_ShouldReturnEmpty [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetAllTags_WithMultipleTags_ShouldReturnAll [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithSemicolon_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_ValidTag_ShouldAddSuccessfully [< 1 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskUpdated_ShouldNotThrow [34 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.MultiplePanes_OnlyOneShouldHaveFocus [44 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullContext_ShouldNotThrow [4 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "calendar") [49 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.MergeTags_ShouldReplaceSourceWithTarget [15 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_EmptyList_ShouldReturnEmpty [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_InvalidTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NonExistentTask_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_InvalidNewTag_ShouldReturnZero [< 1 ms]
+[xUnit.net 00:00:02.23]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:02.23]       Stack Trace:
+[xUnit.net 00:00:02.23]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(674,0): at SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_Concurrent_ShouldHandleAllRequests()
+[xUnit.net 00:00:02.23]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:02.23]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_DuplicateTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_CaseInsensitive_ShouldReturnMatches [< 1 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_Dispose_ShouldCleanup [42 ms]
+  Failed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_Concurrent_ShouldHandleAllRequests [4 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_Concurrent_ShouldHandleAllRequests() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs:line 674
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Services.TagServiceTests.RebuildTagIndex_AfterManualTagModification_ShouldSync [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WhitespaceOnlyTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_NonExistentTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldRaiseErrorOccurredEvent [18 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RebuildTagIndex_ShouldRecreateIndex [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NormalizedTag_ShouldStoreTrimmed [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_RequireAny_ShouldReturnTasksWithAnyTag [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_WhileModifying_ShouldNotThrow [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.SetTaskTags_TooManyTags_ShouldTruncate [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.SetTaskTags_ValidTags_ShouldReplaceAll [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_SameName_ShouldReturnZero [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_ExistingTag_ShouldRenameAcrossAllTasks [< 1 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "notes") [17 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_ApplyTheme_WhenFocused_ShouldHighlight [18 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SaveState_ShouldIncludePaneType [15 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.ThemeChange_ShouldUpdateAllPanes [19 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Dispose_CalledTwice_ShouldNotThrow [14 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusRestore_AfterWorkspaceSwitch_ShouldWork [14 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.OnFocusChanged_ShouldNotThrow [28 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_ApplyTheme_WhenUnfocused_ShouldNotHighlight [26 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldRetryOnFailure [89 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusChange_ShouldTriggerThemeUpdate [13 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_MultipleConcurrent_ShouldAllComplete [27 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ActionReturnsNull_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusHistory_TrackMultiplePanes_ShouldNotThrow [15 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_MemoryLeak_AddRemove100Panes_ShouldNotLeak [684 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_RemoveChild_NotAdded_ShouldNotThrow [11 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.MemoryLeak_SaveRestore100Times_ShouldNotLeak [527 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Wide_WithTwoPanes_ShouldWork [15 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.MemoryLeak_CreateDispose100Panes_ShouldNotThrow [418 ms]
+[xUnit.net 00:00:02.77]       Expected newTagIndex to be greater than or equal to 0 because new-tag should be in recent tags, but found -1 (difference of -1).
+[xUnit.net 00:00:02.77]       Stack Trace:
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThanOrEqualTo(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.77]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterOrEqualTo(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.77]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(390,0): at SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed()
+[xUnit.net 00:00:02.77]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:02.77]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithProperties_ShouldIncludeInEntry [613 ms]
+  Failed SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed [530 ms]
+  Error Message:
+   Expected newTagIndex to be greater than or equal to 0 because new-tag should be in recent tags, but found -1 (difference of -1).
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThanOrEqualTo(T expected, String because, Object[] becauseArgs)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterOrEqualTo(T expected, String because, Object[] becauseArgs)
+   at SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs:line 390
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithSpaces_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithPipe_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.DeleteTag_ExistingTag_ShouldRemoveFromAllTasks [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_TooLongTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_CaseInsensitiveDuplicate_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagInfo_ExistingTag_ShouldReturnInfo [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_EmptyTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_MaxTagsExceeded_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_NullPrefix_ShouldReturnRecentTags [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagInfo_NonExistentTag_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_NegativeHours_ShouldAllow [8 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeeklyReport_ShouldReturnAllEntriesForWeek [5 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_MultipleEntries_ShouldSum [4 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.IsActive_InitiallyFalse [50 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYear_March_ShouldReturnCurrentYear [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_NonExistentEntry_ShouldReturnFalse [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_NonExistentEntry_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.ExportToJson_ShouldCreateFile [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.SaveToFile_ThenReload_ShouldPersistData [1 s]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekStart_ShouldReturnMonday6DaysBefore [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForProject_ShouldReturnOnlyThatProject [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntryForProjectAndWeek_ExactMatch_ShouldReturn [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetTimeEntriesForTask_ShouldReturnOnlyThatTask [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearSummary_ShouldAggregateFullYear [9 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ZeroHours_ShouldAllow [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYear_April_ShouldReturnNextYear [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Saturday_ShouldReturnNextDay [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ValidEntry_ShouldAddSuccessfully [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_HardDelete_ShouldRemoveCompletely [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.Clear_ShouldRemoveAllEntries [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Monday_ShouldReturnNextSunday [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntry_NonExistentEntry_ShouldReturnNull [1 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_VeryLargeHours_ShouldAllow [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Sunday_ShouldReturnSameDay [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntryForProjectAndWeek_NoMatch_ShouldReturnNull [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearEnd_ShouldReturnMarch31 [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_ChangeWeekEnding_ShouldUpdateIndex [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearStart_ShouldReturnApril1 [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForWeek_EmptyWeek_ShouldReturnEmpty [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_SoftDelete_ShouldMarkAsDeleted [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_Concurrent_ShouldHandleAllRequests [753 ms]
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_98b5d284-4590-4c27-a900-6887128db693.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading tasks from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\tasks.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\tasks.json' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.TimeEntry_TotalHours_ShouldCalculateCorrectly [5 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectAggregate_WithDateRange_ShouldFilterByDates [9 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.Dispose_PendingSave_ShouldFlushData [8 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntry_ExistingEntry_ShouldReturn [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ShouldNormalizeWeekEndingToSunday [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetAllEntries_ExcludeDeleted_ShouldNotIncludeDeleted [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_WhileAdding_ShouldNotCrash [5 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_ExistingEntry_ShouldUpdate [4 ms]
+[xUnit.net 00:00:04.70]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.70]       Stack Trace:
+[xUnit.net 00:00:04.70]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.70]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(287,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete()
+[xUnit.net 00:00:04.70]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.70]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_NoEntries_ShouldReturnZero [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekTotalHours_MultipleProjects_ShouldSum [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForWeek_ShouldReturnOnlyThatWeek [3 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.RestoreState_WithValidState_ShouldNotThrow [53 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_DeleteTask_ShouldRemove [8 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete [6 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 287
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_AddEntry_ShouldSucceed [1 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_GetAllEntries_ShouldReturnList [2 ms]
+[xUnit.net 00:00:04.73]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.73]       Stack Trace:
+[xUnit.net 00:00:04.73]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.73]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.73]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.73]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.73]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.73]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(266,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify()
+[xUnit.net 00:00:04.73]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.73]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.73]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.73]       Stack Trace:
+[xUnit.net 00:00:04.73]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.74]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(408,0): at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork()
+[xUnit.net 00:00:04.74]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.74]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetTasksForProject_ShouldFilter [5 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_ToggleCompletion_ShouldWork [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_GetEntriesForProject_ShouldFilter [3 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_UpdateTask_ShouldModify [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_GetAllProjects_ShouldReturnList [1 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_AddAndRetrieve_ShouldPersist [1 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify [1 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 266
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetAllTasks_ShouldReturnList [2 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork [2 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 408
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.74]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.74]       Stack Trace:
+[xUnit.net 00:00:04.74]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.74]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.74]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(386,0): at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork()
+[xUnit.net 00:00:04.74]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.74]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.75]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.75]       Stack Trace:
+[xUnit.net 00:00:04.75]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.75]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(221,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed()
+[xUnit.net 00:00:04.75]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.75]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.75]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:04.75]       Stack Trace:
+[xUnit.net 00:00:04.75]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:04.75]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:04.75]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(248,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist()
+[xUnit.net 00:00:04.75]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:04.75]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_AddTask_ShouldSucceed [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_AddAndRetrieve_ShouldPersist [2 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork [2 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 386
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetTasks_WithPredicate_ShouldFilter [3 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed [1 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 221
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist [1 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 248
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.ApplyTheme_ShouldUpdateVisualState [86 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Initialize_ShouldBuildUIContent [42 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.RestoreState_WithNullState_ShouldNotThrow [41 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.LifecycleTest_CreateInitializeSaveRestoreDispose_ShouldSucceed [46 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.ApplyTheme_CalledMultipleTimes_ShouldNotThrow [45 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SaveState_ShouldReturnNonNullPaneState [55 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SizePreference_ShouldHaveDefaultValue [46 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.PaneName_ShouldBeSet [39 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Dispose_ShouldUnsubscribeEvents [38 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_ConcurrentWrites_ShouldHandleAllMessages [2 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_NullMessage_ShouldNotThrow [507 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithWarningLevel_ShouldWriteToSink [618 ms]
+[xUnit.net 00:00:08.98]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:08.98]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:08.98]       Actual:   typeof(System.NullReferenceException)
+[xUnit.net 00:00:08.98]       ---- System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:08.98]       Stack Trace:
+[xUnit.net 00:00:08.98]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(316,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately()
+[xUnit.net 00:00:08.98]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.98]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.98]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:08.98]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs(23,0): at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser)
+[xUnit.net 00:00:08.98]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs(81,0): at SuperTUI.Infrastructure.ErrorHandler.ExecuteWithRetry[T](Func`1 action, Int32 maxRetries, Int32 delayMs, String context)
+[xUnit.net 00:00:08.98]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(317,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<>c__DisplayClass17_0.<ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately>b__1()
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_ConcurrentFlush_ShouldNotCrash [1 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.GetTotalDroppedLogs_ShouldAggregateAcrossSinks [507 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ActionThrowsAggregateException_ShouldThrow [6 s]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_EmptyContext_ShouldNotThrow [3 ms]
+  Failed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately [1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(System.NullReferenceException)
+---- System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 316
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+   at SuperTUI.Infrastructure.ErrorHandler.ExecuteWithRetry[T](Func`1 action, Int32 maxRetries, Int32 delayMs, String context) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 81
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<>c__DisplayClass17_0.<ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately>b__1() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 317
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_CancelledException_ShouldThrow [1 s]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithDifferentSeverities_ShouldStoreCorrectSeverity [6 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ShouldRetryOnFailure [52 ms]
+[xUnit.net 00:00:11.16]       Did not expect any exception, but found System.NullReferenceException: Object reference not set to an instance of an object.
+[xUnit.net 00:00:11.16]          at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+[xUnit.net 00:00:11.16]          at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<HandleError_NullException_ShouldNotThrow>b__24_0() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 499
+[xUnit.net 00:00:11.16]          at FluentAssertions.Specialized.ActionAssertions.InvokeSubject()
+[xUnit.net 00:00:11.16]          at FluentAssertions.Specialized.DelegateAssertions`2.InvokeSubjectWithInterception().
+[xUnit.net 00:00:11.16]       Stack Trace:
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Specialized.DelegateAssertionsBase`2.NotThrowInternal(Exception exception, String because, Object[] becauseArgs)
+[xUnit.net 00:00:11.16]            at FluentAssertions.Specialized.DelegateAssertions`2.NotThrow(String because, Object[] becauseArgs)
+[xUnit.net 00:00:11.16]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(500,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow()
+[xUnit.net 00:00:11.16]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:11.16]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ShouldThrowAfterMaxRetries [514 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithCriticalSeverity_ShouldRaiseEvent [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_DifferentExceptionTypes_ShouldRetryAll [95 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_VeryLongDelay_ShouldEventuallyComplete [140 ms]
+  Failed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow [3 ms]
+  Error Message:
+   Did not expect any exception, but found System.NullReferenceException: Object reference not set to an instance of an object.
+   at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<HandleError_NullException_ShouldNotThrow>b__24_0() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 499
+   at FluentAssertions.Specialized.ActionAssertions.InvokeSubject()
+   at FluentAssertions.Specialized.DelegateAssertions`2.InvokeSubjectWithInterception().
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Specialized.DelegateAssertionsBase`2.NotThrowInternal(Exception exception, String because, Object[] becauseArgs)
+   at FluentAssertions.Specialized.DelegateAssertions`2.NotThrow(String because, Object[] becauseArgs)
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 500
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldCaptureException [8 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_MultipleSubscribers_ShouldNotifyAll [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithNestedExceptions_ShouldCaptureOuter [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldReturnResultOnSuccess [16 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithInfoSeverity_ShouldNotShowDialog [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldRotateWhenMaxSizeExceeded [5 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Flush_WithNoSinks_ShouldNotThrow [504 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldCreateLogFile [1 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_Clear_ShouldRemoveAllEntries [616 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithDisabledCategory_ShouldNotWriteToSink [612 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_NullException_ShouldNotThrow [506 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_GetEntriesByLevel_ShouldFilter [617 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_GetQueueDepth_ShouldReturnCurrentDepth [680 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_ShouldRespectMaxEntries [618 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_CriticalLogs_ShouldNeverBeDropped [1 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_BelowMinLevel_ShouldNotWriteToSink [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldLimitMaxFiles [9 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithTraceLevel_ShouldWriteToSink [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithErrorLevel_ShouldWriteToSinkWithException [614 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithDebugLevel_ShouldWriteToSink [612 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithInfoLevel_ShouldWriteToSink [615 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_DisableCategory_ShouldRemoveFromEnabled [615 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithCriticalLevel_ShouldWriteToSinkWithStackTrace [616 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_AfterDispose_ShouldNotCrash [520 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_ShouldStoreLogs [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_EmptyCategory_ShouldNotThrow [506 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithEnabledCategory_ShouldWriteToSink [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.GetDiagnostics_ShouldReturnLoggerState [516 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithException_ShouldIncludeExceptionDetails [617 ms]

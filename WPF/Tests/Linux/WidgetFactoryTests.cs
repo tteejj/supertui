@@ -15,14 +15,14 @@ namespace SuperTUI.Tests.Linux
     [Trait("Category", "Critical")]
     public class WidgetFactoryTests : IDisposable
     {
-        private readonly DI.ServiceContainer container;
-        private readonly DI.WidgetFactory factory;
+        private readonly SuperTUI.DI.ServiceContainer container;
+        private readonly SuperTUI.DI.WidgetFactory factory;
 
         public WidgetFactoryTests()
         {
             // Setup DI container with all services
-            container = DI.ServiceRegistration.RegisterAllServices();
-            factory = container.GetService<DI.WidgetFactory>();
+            container = SuperTUI.DI.ServiceRegistration.RegisterAllServices();
+            factory = container.GetService<SuperTUI.DI.WidgetFactory>();
         }
 
         public void Dispose()
@@ -95,7 +95,7 @@ namespace SuperTUI.Tests.Linux
         public void CreateWidget_NullType_ShouldThrowArgumentNullException()
         {
             // Act
-            Action act = () => factory.CreateWidget(null);
+            Action act = () => factory.CreateWidget((string)null);
 
             // Assert
             act.Should().Throw<ArgumentNullException>();
@@ -204,7 +204,7 @@ namespace SuperTUI.Tests.Linux
         public void ServiceContainer_ShouldHaveWidgetFactory()
         {
             // Assert
-            container.IsRegistered<DI.WidgetFactory>().Should().BeTrue();
+            container.IsRegistered<SuperTUI.DI.WidgetFactory>().Should().BeTrue();
         }
 
         [Fact]

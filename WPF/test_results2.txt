@@ -1,0 +1,873 @@
+Build started 2025-11-01 12:43:16 PM.
+     1>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\project.assets.json
+         Restored C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj (in 79 ms).
+         
+         NuGet Config files used:
+             C:\Users\jhnhe\AppData\Roaming\NuGet\NuGet.Config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+         All projects are up-to-date for restore.
+     1>Done Building Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (Restore target(s)).
+   1:7>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" on node 1 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (1:7) is building "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (1:8) on node 1 (default targets).
+     1>MainResourcesGeneration:
+       Skipping target "MainResourcesGeneration" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0-windows\SuperTUI.sourcelink.json' is up-to-date.
+       CoreCompile:
+         C:\Program Files\dotnet\dotnet.exe exec "C:\Program Files\dotnet\sdk\8.0.415\Roslyn\bincore\csc.dll" /noconfig /unsafe- /checked- /nowarn:1701,1702,1701,1702 /fullpaths /nostdlib+ /errorreport:prompt /warn:8 /define:TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER /highentropyva+ /nullable:disable /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\Accessibility.dll" /reference:C:\Users\jhnhe\.nuget\packages\castle.core\5.1.1\lib\net6.0\Castle.Core.dll /reference:C:\Users\jhnhe\.nuget\packages\fluentassertions\6.12.0\lib\net6.0\FluentAssertions.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\Microsoft.CSharp.dll" /reference:C:\Users\jhnhe\.nuget\packages\microsoft.office.interop.excel\15.0.4795.1001\lib\netstandard2.0\Microsoft.Office.Interop.Excel.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.TestPlatform.CommunicationUtilities.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.TestPlatform.CoreUtilities.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.TestPlatform.CrossPlatEngine.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.TestPlatform.PlatformAbstractions.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.TestPlatform.Utilities.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\Microsoft.VisualBasic.Core.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\Microsoft.VisualBasic.dll" /reference:C:\Users\jhnhe\.nuget\packages\microsoft.codecoverage\17.8.0\lib\netcoreapp3.1\Microsoft.VisualStudio.CodeCoverage.Shim.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.Common.dll /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\Microsoft.Win32.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\Microsoft.Win32.Registry.AccessControl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\Microsoft.Win32.Registry.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\Microsoft.Win32.SystemEvents.dll" /reference:C:\Users\jhnhe\.nuget\packages\moq\4.20.70\lib\net6.0\Moq.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\mscorlib.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\netstandard.dll" /reference:C:\Users\jhnhe\.nuget\packages\newtonsoft.json\13.0.3\lib\net6.0\Newtonsoft.Json.dll /reference:C:\Users\jhnhe\.nuget\packages\nuget.frameworks\6.5.0\lib\netstandard2.0\NuGet.Frameworks.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationCore.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.Aero.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.Aero2.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.AeroLite.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.Classic.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.Luna.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationFramework.Royale.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\PresentationUI.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\ReachFramework.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.AppContext.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Buffers.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.CodeDom.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Collections.Concurrent.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Collections.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Collections.Immutable.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Collections.NonGeneric.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Collections.Specialized.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.Annotations.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.DataAnnotations.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.EventBasedAsync.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ComponentModel.TypeConverter.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Configuration.ConfigurationManager.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Configuration.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Console.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Core.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Data.Common.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Data.DataSetExtensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Data.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.Contracts.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.Debug.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.DiagnosticSource.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.EventLog.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.FileVersionInfo.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.PerformanceCounter.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.Process.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.StackTrace.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.TextWriterTraceListener.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.Tools.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.TraceSource.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Diagnostics.Tracing.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.DirectoryServices.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Drawing.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Drawing.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Dynamic.Runtime.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Formats.Asn1.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Formats.Tar.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Globalization.Calendars.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Globalization.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Globalization.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Compression.Brotli.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Compression.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Compression.FileSystem.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Compression.ZipFile.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.FileSystem.AccessControl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.FileSystem.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.FileSystem.DriveInfo.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.FileSystem.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.FileSystem.Watcher.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.IsolatedStorage.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.MemoryMappedFiles.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.IO.Packaging.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Pipes.AccessControl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.Pipes.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.IO.UnmanagedMemoryStream.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Linq.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Linq.Expressions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Linq.Parallel.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Linq.Queryable.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Memory.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Http.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Http.Json.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.HttpListener.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Mail.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.NameResolution.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.NetworkInformation.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Ping.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Quic.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Requests.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Security.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.ServicePoint.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.Sockets.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.WebClient.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.WebHeaderCollection.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.WebProxy.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.WebSockets.Client.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Net.WebSockets.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Numerics.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Numerics.Vectors.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ObjectModel.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Printing.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.DispatchProxy.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Emit.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Emit.ILGeneration.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Emit.Lightweight.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Metadata.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Reflection.TypeExtensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Resources.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Resources.Reader.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Resources.ResourceManager.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Resources.Writer.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.CompilerServices.Unsafe.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.CompilerServices.VisualC.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Handles.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.InteropServices.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.InteropServices.JavaScript.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.InteropServices.RuntimeInformation.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Intrinsics.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Loader.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Numerics.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Serialization.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Serialization.Formatters.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Serialization.Json.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Serialization.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Runtime.Serialization.Xml.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.AccessControl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Claims.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Algorithms.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Cng.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Csp.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Encoding.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.OpenSsl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Pkcs.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Primitives.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.ProtectedData.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.X509Certificates.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Security.Cryptography.Xml.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Security.Permissions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Principal.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.Principal.Windows.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Security.SecureString.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ServiceModel.Web.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ServiceProcess.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.Encoding.CodePages.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.Encoding.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.Encoding.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.Encodings.Web.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.Json.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Text.RegularExpressions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Threading.AccessControl.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Channels.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Overlapped.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Tasks.Dataflow.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Tasks.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Tasks.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Tasks.Parallel.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Thread.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.ThreadPool.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Threading.Timer.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Transactions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Transactions.Local.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.ValueTuple.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Web.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Web.HttpUtility.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Windows.Controls.Ribbon.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Windows.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Windows.Extensions.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Windows.Input.Manipulations.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Windows.Presentation.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\System.Xaml.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.Linq.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.ReaderWriter.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.Serialization.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.XDocument.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.XmlDocument.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.XmlSerializer.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.XPath.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\ref\net8.0\System.Xml.XPath.XDocument.dll" /reference:C:\Users\jhnhe\.nuget\packages\microsoft.testplatform.testhost\17.8.0\lib\netcoreapp3.1\testhost.dll /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\UIAutomationClient.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\UIAutomationClientSideProviders.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\UIAutomationProvider.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\UIAutomationTypes.dll" /reference:"C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.21\ref\net8.0\WindowsBase.dll" /reference:C:\Users\jhnhe\.nuget\packages\xunit.abstractions\2.0.3\lib\netstandard2.0\xunit.abstractions.dll /reference:C:\Users\jhnhe\.nuget\packages\xunit.assert\2.6.2\lib\net6.0\xunit.assert.dll /reference:C:\Users\jhnhe\.nuget\packages\xunit.extensibility.core\2.6.2\lib\netstandard1.1\xunit.core.dll /reference:C:\Users\jhnhe\.nuget\packages\xunit.extensibility.execution\2.6.2\lib\netstandard1.1\xunit.execution.dotnet.dll /reference:C:\Users\jhnhe\.nuget\packages\xunit.stafact\1.1.11\lib\netcoreapp3.1\Xunit.StaFact.dll /debug+ /debug:portable /filealign:512 /optimize- /out:obj\Debug\net8.0-windows\SuperTUI.dll /refout:obj\Debug\net8.0-windows\refint\SuperTUI.dll /resource:obj\Debug\net8.0-windows\SuperTUI.g.resources /target:exe /warnaserror- /utf8output /deterministic+ /sourcelink:obj\Debug\net8.0-windows\SuperTUI.sourcelink.json /langversion:latest /embed:"Tests\obj\Debug\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" /embed:Tests\obj\Debug\net8.0-windows\SuperTUI.Tests.AssemblyInfo.cs /embed:C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\MainWindow.g.cs /embed:C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\App.g.cs /embed:C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\SuperTUI_Content.g.cs /analyzerconfig:obj\Debug\net8.0-windows\SuperTUI.GeneratedMSBuildEditorConfig.editorconfig /analyzerconfig:"C:\Program Files\dotnet\sdk\8.0.415\Sdks\Microsoft.NET.Sdk\analyzers\build\config\analysislevel_8_default.globalconfig" /analyzer:"C:\Program Files\dotnet\sdk\8.0.415\Sdks\Microsoft.NET.Sdk\targets\..\analyzers\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" /analyzer:"C:\Program Files\dotnet\sdk\8.0.415\Sdks\Microsoft.NET.Sdk\targets\..\analyzers\Microsoft.CodeAnalysis.NetAnalyzers.dll" /analyzer:C:\Users\jhnhe\.nuget\packages\xunit.analyzers\1.6.0\analyzers\dotnet\cs\xunit.analyzers.dll /analyzer:C:\Users\jhnhe\.nuget\packages\xunit.analyzers\1.6.0\analyzers\dotnet\cs\xunit.analyzers.fixes.dll /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/Microsoft.Interop.ComInterfaceGenerator.dll" /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/Microsoft.Interop.JavaScript.JSImportGenerator.dll" /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/Microsoft.Interop.LibraryImportGenerator.dll" /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/Microsoft.Interop.SourceGeneration.dll" /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/System.Text.Json.SourceGeneration.dll" /analyzer:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.21\analyzers/dotnet/cs/System.Text.RegularExpressions.Generator.dll" App.xaml.cs Core\Commands\Command.cs Core\Commands\CommandHistory.cs Core\Commands\DeleteTaskCommand.cs Core\Commands\ICommand.cs Core\Components\CRTEffectsOverlay.cs Core\Components\DebugOverlay.cs Core\Components\EditableListControl.cs Core\Components\NotificationPanel.cs Core\Components\PaneBase.cs Core\Components\QuickJumpOverlay.cs Core\Components\ScreenBase.cs Core\Components\ShortcutOverlay.cs Core\Components\TaskListControl.cs Core\Components\TreeTaskListControl.cs Core\Components\WidgetBase.cs Core\Controls\TUIBox.cs Core\Controls\TUIComboBox.cs Core\Controls\TUIListBox.cs Core\Controls\TUIStatusBar.cs Core\Controls\TUITextInput.cs Core\Dialogs\FilePickerDialog.cs Core\Dialogs\TagEditorDialog.cs Core\DI\ServiceContainer.cs Core\DI\ServiceRegistration.cs Core\Effects\GlowEffectHelper.cs Core\Events\PluginEventArgs.cs Core\Events\StateChangedEventArgs.cs Core\Extensions.cs Core\Infrastructure\ApplicationContext.cs Core\Infrastructure\ConfigurationManager.cs Core\Infrastructure\ErrorHandler.cs Core\Infrastructure\ErrorPolicy.cs Core\Infrastructure\EventBus.cs Core\Infrastructure\Events.cs Core\Infrastructure\ExcelComReader.cs Core\Infrastructure\FocusHistoryManager.cs Core\Infrastructure\HotReloadManager.cs Core\Infrastructure\JsonPersistenceService.cs Core\Infrastructure\Logger.cs Core\Infrastructure\ModalManager.cs Core\Infrastructure\NavigationFeedbackManager.cs Core\Infrastructure\NotificationManager.cs Core\Infrastructure\PaneFactory.cs Core\Infrastructure\PaneManager.cs Core\Infrastructure\ProjectContextManager.cs Core\Infrastructure\SecurityManager.cs Core\Infrastructure\ServiceContainer.cs Core\Infrastructure\ShortcutManager.cs Core\Infrastructure\ThemeChangedWeakEventManager.cs Core\Infrastructure\ThemeManager.cs Core\Infrastructure\WorkspaceState.cs Core\Infrastructure\WorkspaceTemplate.cs Core\Interfaces\IConfigurationManager.cs Core\Interfaces\IErrorHandler.cs Core\Interfaces\IEventBus.cs Core\Interfaces\IExcelAutomationService.cs Core\Interfaces\IExcelMappingService.cs Core\Interfaces\IHotReloadManager.cs Core\Interfaces\ILayoutEngine.cs Core\Interfaces\ILogger.cs Core\Interfaces\IModal.cs Core\Interfaces\IModalManager.cs Core\Interfaces\INotificationManager.cs Core\Interfaces\IPerformanceMonitor.cs Core\Interfaces\IPlugin.cs Core\Interfaces\IPluginManager.cs Core\Interfaces\IProjectService.cs Core\Interfaces\ISecurityManager.cs Core\Interfaces\IServiceContainer.cs Core\Interfaces\IShortcutManager.cs Core\Interfaces\ISmartInputParser.cs Core\Interfaces\IStatePersistenceManager.cs Core\Interfaces\ITagService.cs Core\Interfaces\ITaskService.cs Core\Interfaces\IThemeable.cs Core\Interfaces\IThemeManager.cs Core\Interfaces\ITimeTrackingService.cs Core\Interfaces\IWeeklyTimeTrackingService.cs Core\Interfaces\IWidget.cs Core\Interfaces\IWorkspace.cs Core\Layout\LayoutEngine.cs Core\Layout\TilingLayoutEngine.cs Core\Models\ExcelMappingModels.cs Core\Models\KeyboardShortcut.cs Core\Models\PerformanceCounter.cs Core\Models\PluginContext.cs Core\Models\ProjectModels.cs Core\Models\ServiceData.cs Core\Models\StateSnapshot.cs Core\Models\TaskModels.cs Core\Models\TimeTrackingModels.cs Core\Services\ExcelMappingService.cs Core\Services\ProjectService.cs Core\Services\SmartInputParser.cs Core\Services\TagService.cs Core\Services\TaskService.cs Core\Services\TimeTrackingService.cs Core\Services\ValidationService.cs Core\Services\WeeklyTimeTrackingService.cs Core\ViewModels\TaskViewModel.cs MainWindow.xaml.cs Panes\CalendarPane.cs Panes\CommandPalettePane.cs Panes\ExcelImportPane.cs Panes\FileBrowserPane.cs Panes\HelpPane.cs Panes\NotesPane.cs Panes\ProjectsPane.cs Panes\TaskListPane.cs Tests\DI\ServiceContainerTests.cs Tests\Infrastructure\ConfigurationManagerTests.cs Tests\Infrastructure\ErrorHandlerTests.cs Tests\Infrastructure\FocusManagementTests.cs Tests\Infrastructure\LoggerTests.cs Tests\Infrastructure\SecurityManagerTests.cs Tests\Infrastructure\WorkspaceRestorationTests.cs Tests\Layout\TilingLayoutEngineTests.cs Tests\Linux\DomainServicesTests.cs "Tests\obj\Debug\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" Tests\obj\Debug\net8.0-windows\SuperTUI.Tests.AssemblyInfo.cs Tests\Panes\FileBrowserPaneTests.cs Tests\Panes\NotesPaneTests.cs Tests\Panes\PaneBaseTests.cs Tests\Panes\PaneFactoryTests.cs Tests\Panes\TaskListPaneTests.cs Tests\Services\TagServiceTests.cs Tests\Services\TimeTrackingServiceTests.cs Tests\TestHelpers\MockServiceProvider.cs Tests\TestHelpers\MockServices.cs Tests\TestHelpers\MockThemeManager.cs Tests\TestHelpers\PaneTestBase.cs Widgets\StatusBarWidget.cs C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\MainWindow.g.cs C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\App.g.cs C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\SuperTUI_Content.g.cs /warnaserror+:NU1605,SYSLIB0011
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\CalendarPane.cs(1043,22): warning CS0108: 'CalendarPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\CommandPalettePane.cs(720,22): warning CS0108: 'CommandPalettePane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ExcelImportPane.cs(714,22): warning CS0108: 'ExcelImportPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\HelpPane.cs(458,22): warning CS0108: 'HelpPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\NotesPane.cs(2126,22): warning CS0108: 'NotesPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1275,22): warning CS0108: 'ProjectsPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\TaskListPane.cs(2159,22): warning CS0108: 'TaskListPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\TestHelpers\MockThemeManager.cs(17,58): warning CS0067: The event 'MockThemeManager.ThemeChanged' is never used [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\TaskListPane.cs(48,25): warning CS0649: Field 'TaskListPane.dateEditBox' is never assigned to, and will always have its default value null [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\NotesPane.cs(55,24): warning CS0649: Field 'NotesPane.commandPaletteBorder' is never assigned to, and will always have its default value null [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TimeTrackingServiceTests.cs(715,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TimeTrackingServiceTests.cs(751,40): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs(301,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs(329,40): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(449,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(670,41): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+     1>C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(701,63): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         CompilerServer: server - server processed compilation - SuperTUI (net8.0-windows)
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Building target "_CopyOutOfDateSourceItemsToOutputDirectory" partially, because some output files are out of date with respect to their input files.
+         Copying file from "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\apphost.exe" to "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.exe".
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         Copying file from "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\SuperTUI.dll" to "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.dll".
+         Copying reference assembly from "obj\Debug\net8.0-windows\refint\SuperTUI.dll" to "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\ref\SuperTUI.dll".
+         SuperTUI -> C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.dll
+         Copying file from "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\obj\Debug\net8.0-windows\SuperTUI.pdb" to "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.pdb".
+     1>Done Building Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\SuperTUI.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.4.1+b9eacec401 (64-bit .NET 8.0.21)
+[xUnit.net 00:00:00.18]   Discovering: SuperTUI
+[xUnit.net 00:00:00.95]   Discovered:  SuperTUI
+[xUnit.net 00:00:00.95]   Starting:    SuperTUI
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterSingleton_WithInstance_ShouldSucceed [14 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterTransient_WithFactory_ShouldSucceed [4 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Dispose_ScopedService_ShouldCleanup [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullContext_ShouldNotThrow [32 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_ShouldPreventFurtherRegistrations [18 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterTransient_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldRaiseErrorOccurredEvent [15 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetRequiredService_UnregisteredService_ShouldThrow [2 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Transient_ShouldReturnNewInstance [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_AfterRegistration_ShouldStillAllowResolution [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterSingleton_WithFactory_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_WithinScope_ShouldReturnSameInstance [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Singleton_ConcurrentAccess_ShouldReturnSameInstance [17 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_DifferentScopes_ShouldReturnDifferentInstances [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetRequiredService_RegisteredService_ShouldReturn [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.RegisterScoped_ShouldSucceed [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Lock_CalledTwice_ShouldNotThrow [1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.Dispose_ShouldCleanupSingletons [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Singleton_ShouldReturnSameInstance [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_UnregisteredService_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.DI.ServiceContainerTests.GetService_Scoped_FromRootContainer_ShouldThrow [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validator_ShouldPreventInvalidValues [89 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.ResetToDefaults_ShouldRestoreDefaultValues [5 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_WithPrefix_ShouldReturnMatches [99 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NullTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_ValidTag_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Get_WithComplexTypes_ShouldHandleCollections [7 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithMissingKey_ShouldThrowKeyNotFoundException [5 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_ExistingTag_ShouldReturnMatchingTasks [21 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_RequireAll_ShouldReturnOnlyTasksWithAllTags [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetCategory_ShouldReturnOnlyCategoryValues [20 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_EmptyPrefix_ShouldReturnRecentTags [5 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagsByUsage_ShouldReturnMostUsedFirst [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithWrongType_ShouldThrowInvalidCastException [5 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_CaseInsensitive_ShouldRemove [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_ExistingTag_ShouldRemoveSuccessfully [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithComma_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Set_ShouldUpdateValue [3 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_NullList_ShouldReturnEmpty [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetAllTags_WithMultipleTags_ShouldReturnAll [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithSemicolon_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_ValidTag_ShouldAddSuccessfully [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithNullForValueType_ShouldThrowInvalidOperationException [3 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.MergeTags_ShouldReplaceSourceWithTarget [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_EmptyList_ShouldReturnEmpty [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_InvalidTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Register_ShouldStoreConfigValue [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NonExistentTask_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_InvalidNewTag_ShouldReturnZero [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_DuplicateTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_CaseInsensitive_ShouldReturnMatches [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Get_WithNonExistentKey_ShouldReturnDefault [2 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_Concurrent_ShouldHandleAllRequests [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RebuildTagIndex_AfterManualTagModification_ShouldSync [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WhitespaceOnlyTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RemoveTagFromTask_NonExistentTag_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RebuildTagIndex_ShouldRecreateIndex [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_NormalizedTag_ShouldStoreTrimmed [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTags_RequireAny_ShouldReturnTasksWithAnyTag [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTasksByTag_WhileModifying_ShouldNotThrow [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.SetTaskTags_TooManyTags_ShouldTruncate [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.SetTaskTags_ValidTags_ShouldReplaceAll [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_SameName_ShouldReturnZero [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.RenameTag_ExistingTag_ShouldRenameAcrossAllTasks [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.SaveAndLoad_ShouldPersistConfiguration [61 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithInvalidValue_ShouldResetToDefault [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithNullValue_ShouldResetToDefault [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.GetStrict_WithExistingKey_ShouldReturnValue [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ConfigurationManagerTests.Validate_WithAllValidValues_ShouldReturnTrue [3 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.HasPaneType_ForInvalidPane_ShouldReturnFalse [168 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaneMetadata_ForValidPane_ShouldReturnMetadata [4 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetAllPaneMetadata_ShouldReturnAllMetadata [9 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_Create_ShouldSucceed [158 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_UpdateLayout_EmptyLayout_ShouldNotThrow [3 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "files") [144 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "calendar") [7 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "tasks") [7 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "help") [10 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "notes") [7 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldInstantiate(paneType: "projects") [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaneMetadata_ForInvalidPane_ShouldReturnNull [2 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.HasPaneType_ForValidPane_ShouldReturnTrue [2 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetPaletteVisiblePaneTypes_ShouldExcludeHiddenPanes [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_Dispose_ShouldClearFocus [259 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_Disposal_ShouldNotThrow [11 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_MultipleDisposal_ShouldNotThrow [12 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_EmptyName_ShouldThrow [4 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Tall_WithThreePanes_ShouldWork [268 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [476 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_MultiplePanes_AllShouldDispose [16 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.GetAvailablePaneTypes_ShouldReturnAllTypes [3 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "calendar") [518 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_WithTasks_ShouldDisplay [21 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddChild_MultiplePanes_ShouldSucceed [46 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_CaseInsensitive_ShouldWork [15 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "tasks") [28 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_WhitespaceType_ShouldThrowArgumentException [4 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_FullLifecycle_ShouldSucceed [26 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Auto_WithOnePaneShouldWork [17 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_EmptyType_ShouldThrowArgumentException [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithProperties_ShouldIncludeInEntry [625 ms]
+[xUnit.net 00:00:01.72]     SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed [FAIL]
+[xUnit.net 00:00:01.72]       Expected newTagIndex to be greater than or equal to 0 because new-tag should be in recent tags, but found -1 (difference of -1).
+[xUnit.net 00:00:01.73]       Stack Trace:
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThanOrEqualTo(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:01.73]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterOrEqualTo(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:01.73]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(390,0): at SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed()
+[xUnit.net 00:00:01.73]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.73]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "projects") [17 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [555 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_NullType_ShouldThrowArgumentException [7 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_RestoreState_ShouldNotThrow [44 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddChild_SinglePane_ShouldSucceed [38 ms]
+  Failed SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed [542 ms]
+  Error Message:
+   Expected newTagIndex to be greater than or equal to 0 because new-tag should be in recent tags, but found -1 (difference of -1).
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThanOrEqualTo(T expected, String because, Object[] becauseArgs)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterOrEqualTo(T expected, String because, Object[] becauseArgs)
+   at SuperTUI.Tests.Services.TagServiceTests.GetRecentTags_ShouldReturnLatestUsed() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs:line 390
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithSpaces_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_WithPipe_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.DeleteTag_ExistingTag_ShouldRemoveFromAllTasks [1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_TooLongTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_CaseInsensitiveDuplicate_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagInfo_ExistingTag_ShouldReturnInfo [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.ValidateTag_EmptyTag_ShouldReturnError [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.AddTagToTask_MaxTagsExceeded_ShouldReturnFalse [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagSuggestions_NullPrefix_ShouldReturnRecentTags [< 1 ms]
+  Passed SuperTUI.Tests.Services.TagServiceTests.GetTagInfo_NonExistentTag_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_NegativeHours_ShouldAllow [11 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeeklyReport_ShouldReturnAllEntriesForWeek [6 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_MultipleEntries_ShouldSum [6 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYear_March_ShouldReturnCurrentYear [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_NonExistentEntry_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_NonExistentEntry_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.ExportToJson_ShouldCreateFile [17 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusHistory_UntrackOnDispose_ShouldPreventMemoryLeak [269 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.SaveToFile_ThenReload_ShouldPersistData [1 s]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekStart_ShouldReturnMonday6DaysBefore [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForProject_ShouldReturnOnlyThatProject [5 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntryForProjectAndWeek_ExactMatch_ShouldReturn [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetTimeEntriesForTask_ShouldReturnOnlyThatTask [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearSummary_ShouldAggregateFullYear [12 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ZeroHours_ShouldAllow [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYear_April_ShouldReturnNextYear [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Saturday_ShouldReturnNextDay [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ValidEntry_ShouldAddSuccessfully [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_HardDelete_ShouldRemoveCompletely [3 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.Clear_ShouldRemoveAllEntries [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Monday_ShouldReturnNextSunday [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntry_NonExistentEntry_ShouldReturnNull [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_VeryLargeHours_ShouldAllow [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekEnding_Sunday_ShouldReturnSameDay [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntryForProjectAndWeek_NoMatch_ShouldReturnNull [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearEnd_ShouldReturnMarch31 [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_ChangeWeekEnding_ShouldUpdateIndex [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetFiscalYearStart_ShouldReturnApril1 [1 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForWeek_EmptyWeek_ShouldReturnEmpty [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.DeleteEntry_SoftDelete_ShouldMarkAsDeleted [2 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_Concurrent_ShouldHandleAllRequests [699 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_e4be7f05-044b-4f32-a782-be1454a29ebd.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_e4be7f05-044b-4f32-a782-be1454a29ebd.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_e4be7f05-044b-4f32-a782-be1454a29ebd.json': The process cannot access the file 'C:\Users\jhnhe\AppData\Local\Temp\timetracking_test_e4be7f05-044b-4f32-a782-be1454a29ebd.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.TimeEntry_TotalHours_ShouldCalculateCorrectly [6 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectAggregate_WithDateRange_ShouldFilterByDates [18 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_NullCreator_ShouldThrow [24 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_UnknownType_ShouldThrowArgumentException [11 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.Dispose_PendingSave_ShouldFlushData [31 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntry_ExistingEntry_ShouldReturn [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.AddEntry_ShouldNormalizeWeekEndingToSunday [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetAllEntries_ExcludeDeleted_ShouldNotIncludeDeleted [4 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.CreatePane_AllRegisteredPanes_ShouldReturnNonNullPanes [16 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_UpdateLayout_WithPanes_ShouldNotThrow [76 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_Initialize_ShouldSucceed [76 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_WhileAdding_ShouldNotCrash [7 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_OnFocusChanged_ShouldUpdateVisualState [73 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.UpdateEntry_ExistingEntry_ShouldUpdate [5 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_Initialize_ShouldSucceed [82 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldSaveStateWithoutErrors(paneType: "notes") [79 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetProjectTotalHours_NoEntries_ShouldReturnZero [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetWeekTotalHours_MultipleProjects_ShouldSum [4 ms]
+  Passed SuperTUI.Tests.Services.TimeTrackingServiceTests.GetEntriesForWeek_ShouldReturnOnlyThatWeek [3 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_DeleteTask_ShouldRemove [17 ms]
+[xUnit.net 00:00:03.70]     SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete [FAIL]
+[xUnit.net 00:00:03.70]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.70]       Stack Trace:
+[xUnit.net 00:00:03.70]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.70]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.70]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(287,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete()
+[xUnit.net 00:00:03.70]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.70]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete [11 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_DeleteProject_ShouldDelete() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 287
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_AddEntry_ShouldSucceed [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_GetAllEntries_ShouldReturnList [4 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetTasksForProject_ShouldFilter [7 ms]
+  Passed SuperTUI.Tests.Panes.PaneFactoryTests.RegisterPaneType_CustomPane_ShouldSucceed [57 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskAdded_ShouldNotThrow [64 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithUncPath_PermissiveMode_ShouldReturnTrue [2 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "calendar") [36 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_ToggleCompletion_ShouldWork [5 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_SaveState_ShouldCaptureCurrentPath [38 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_ForwardSlashTraversal_ShouldBlock [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DeviceNameAttack_ShouldBlock [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_GetEntriesForProject_ShouldFilter [6 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading time entries from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NullByteInjection_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_UpdateTask_ShouldModify [17 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_CalledTwice_ShouldThrowException [17 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_GetAllProjects_ShouldReturnList [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MultiplePathTraversalLevels_ShouldReturnFalse [6 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TimeTrackingService_AddAndRetrieve_ShouldPersist [10 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_InitialFocus_ShouldBeFalse [94 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_RemoveChild_ShouldSucceed [106 ms]
+[xUnit.net 00:00:03.76]     SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify [FAIL]
+[xUnit.net 00:00:03.76]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.77]       Stack Trace:
+[xUnit.net 00:00:03.77]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.77]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.77]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.77]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(266,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify()
+[xUnit.net 00:00:03.78]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.78]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.78]     SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork [FAIL]
+[xUnit.net 00:00:03.78]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.78]       Stack Trace:
+[xUnit.net 00:00:03.78]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.78]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.78]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(408,0): at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork()
+[xUnit.net 00:00:03.78]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.78]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading time entries from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json' because it is being used by another process.
+The application will continue running.
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify [6 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_UpdateProject_ShouldModify() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 266
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithDevelopmentMode_ShouldSetModeCorrectly [15 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetAllTasks_ShouldReturnList [3 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork [14 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndTimeTracking_Integration_ShouldWork() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 408
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_CaseSensitivity_ShouldNormalize [18 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DangerousExtensions_ShouldWarn [1 ms]
+[xUnit.net 00:00:03.79]     SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions [FAIL]
+[xUnit.net 00:00:03.79]       Should have write access to test directory
+[xUnit.net 00:00:03.79]       Stack Trace:
+[xUnit.net 00:00:03.79]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(278,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions()
+[xUnit.net 00:00:03.79]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.79]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.80]     SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork [FAIL]
+[xUnit.net 00:00:03.80]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.80]       Stack Trace:
+[xUnit.net 00:00:03.80]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.80]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.80]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.80]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.80]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.80]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(386,0): at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork()
+[xUnit.net 00:00:03.80]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.80]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_AddTask_ShouldSucceed [5 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_AddAndRetrieve_ShouldPersist [3 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions [3 ms]
+  Error Message:
+   Should have write access to test directory
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithWriteCheck_ShouldValidateWritePermissions() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 278
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "notes") [62 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_VeryLongPath_ShouldHandleGracefully [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithStrictMode_ShouldSetModeCorrectly [2 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork [5 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.TaskAndProject_Integration_ShouldWork() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 386
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_FilterModes_ShouldNotThrow [70 ms]
+[xUnit.net 00:00:03.81]     SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed [FAIL]
+[xUnit.net 00:00:03.81]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.81]       Stack Trace:
+[xUnit.net 00:00:03.81]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.81]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(221,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed()
+[xUnit.net 00:00:03.81]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.81]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.81]     SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators [FAIL]
+[xUnit.net 00:00:03.81]       Subdirectory files should be accessible
+[xUnit.net 00:00:03.81]       Stack Trace:
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(430,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators()
+[xUnit.net 00:00:03.81]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.81]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithInvalidCharacters_ShouldReturnFalse [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_UnicodeTraversal_ShouldBlock [2 ms]
+  Passed SuperTUI.Tests.Linux.DomainServicesTests.TaskService_GetTasks_WithPredicate_ShouldFilter [7 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.DevelopmentMode_ShouldAllowAllPaths [3 ms]
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed [2 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddProject_ShouldSucceed() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 221
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators [4 ms]
+  Error Message:
+   Subdirectory files should be accessible
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.AddAllowedDirectory_ShouldNormalizePathsWithSeparators() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 430
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.81]     SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist [FAIL]
+[xUnit.net 00:00:03.81]       System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+[xUnit.net 00:00:03.81]       Stack Trace:
+[xUnit.net 00:00:03.81]            at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+[xUnit.net 00:00:03.81]            at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(834,0): at SuperTUI.Panes.ProjectsPane.RefreshProjectList()
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1175,0): at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs(280,0): at SuperTUI.Core.Services.ProjectService.AddProject(Project project)
+[xUnit.net 00:00:03.81]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs(248,0): at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist()
+[xUnit.net 00:00:03.81]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.81]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+[xUnit.net 00:00:03.82]     SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue [FAIL]
+[xUnit.net 00:00:03.82]       Assert.True() Failure
+[xUnit.net 00:00:03.82]       Expected: True
+[xUnit.net 00:00:03.82]       Actual:   False
+[xUnit.net 00:00:03.82]       Stack Trace:
+[xUnit.net 00:00:03.82]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(127,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue()
+[xUnit.net 00:00:03.82]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.82]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.82]     SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue [FAIL]
+[xUnit.net 00:00:03.82]       Assert.True() Failure
+[xUnit.net 00:00:03.82]       Expected: True
+[xUnit.net 00:00:03.82]       Actual:   False
+[xUnit.net 00:00:03.82]       Stack Trace:
+[xUnit.net 00:00:03.82]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(310,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue()
+[xUnit.net 00:00:03.82]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.82]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Failed SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist [3 ms]
+  Error Message:
+   System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.
+  Stack Trace:
+     at System.Windows.Threading.Dispatcher.<VerifyAccess>g__ThrowVerifyAccess|7_0()
+   at System.Windows.DependencyObject.ClearValue(DependencyPropertyKey key)
+   at SuperTUI.Panes.ProjectsPane.RefreshProjectList() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 834
+   at SuperTUI.Panes.ProjectsPane.OnProjectAdded(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs:line 1175
+   at SuperTUI.Core.Services.ProjectService.AddProject(Project project) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Services\ProjectService.cs:line 280
+   at SuperTUI.Tests.Linux.DomainServicesTests.ProjectService_AddAndRetrieve_ShouldPersist() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Linux\DomainServicesTests.cs:line 248
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsWithinDirectory_SubdirectoryFile_ShouldReturnTrue [3 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue [2 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithAllowedDirectory_ShouldReturnTrue() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 127
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue [2 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithValidPath_ShouldReturnTrue() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 310
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_RestoreState_ShouldRestorePath [106 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NullPath_ShouldReturnFalse [15 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_Focusable_ShouldBeTrue [65 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_RelativeCurrentDirectory_ShouldBlock [3 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading time entries from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading time entries from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_PathTraversalAttempt_ShouldReturnFalse [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsWithinDirectory_OutsideDirectory_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_SymlinkToDisallowedPath_ShouldReturnFalse [6 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_AlternateDataStream_ShouldValidate [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WithDisallowedDirectory_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskDeleted_ShouldNotThrow [48 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_WithInvalidChars_ShouldReplaceWithUnderscore [8 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "projects") [54 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.SecurityMode_Permissive_ShouldAllowMorePaths [11 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_AddRemoveMultiple_ShouldMaintainLayout [106 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MixedSlashTraversal_ShouldBlock [4 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_AbsolutePathEscape_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_SimilarNameAttack_ShouldReturnFalse [4 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ShouldRemoveAllInvalidChars [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_TrailingSpaces_ShouldNormalize [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.PartialRestore_SomePanesFail_ShouldNotBreakOthers [66 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_DefaultMode_ShouldBeStrict [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_EmptyPath_ShouldReturnFalse [1 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_SecurityValidation_ShouldUseSecurityManager [40 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.MultiplePanes_OnlyOneShouldHaveFocus [39 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_DoubleSlashTraversal_ShouldBlock [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_EncodedTraversal_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateScriptExecution_ShouldEnforcePolicy [4 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_Dispose_ShouldUnsubscribeFromTaskService [33 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_WriteToNonExistentDirectory_ShouldReturnFalse [9 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_TrailingDots_ShouldNormalize [3 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_NetworkPath_StrictMode_ShouldBlock [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_IsValidPath_WithUncPath_StrictMode_ShouldReturnFalse [1 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Loading time entries from 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json' because it is being used by another process.
+The application will continue running.
+[xUnit.net 00:00:03.94]     SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify [FAIL]
+[xUnit.net 00:00:03.94]       Assert.NotEqual() Failure: Strings are equal
+[xUnit.net 00:00:03.94]       Expected: Not "CON"
+[xUnit.net 00:00:03.94]       Actual:       "CON"
+[xUnit.net 00:00:03.94]       Stack Trace:
+[xUnit.net 00:00:03.94]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs(822,0): at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify()
+[xUnit.net 00:00:03.94]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:03.94]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving projects to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\projects.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.Initialize_WithPermissiveMode_ShouldSetModeCorrectly [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_8Dot3Name_ShouldValidate [1 ms]
+  Failed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify [11 ms]
+  Error Message:
+   Assert.NotEqual() Failure: Strings are equal
+Expected: Not "CON"
+Actual:       "CON"
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidationHelper_SanitizeFilename_ReservedNames_ShouldModify() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\SecurityManagerTests.cs:line 822
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldInitializeWithoutErrors(paneType: "tasks") [43 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_JunctionPointAttack_ShouldBlock [5 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_ApplyTheme_WhenFocused_ShouldHighlight [38 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_ApplyTheme_ShouldNotThrow [40 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.RestoreState_WithValidState_ShouldSucceed [40 ms]
+  Passed SuperTUI.Tests.Infrastructure.SecurityManagerTests.ValidateFileAccess_MaxFileSize_ShouldRespectLimit [5 ms]
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_SaveState_ShouldCaptureCurrentState [29 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.EmptyWorkspace_SaveRestore_ShouldNotThrow [17 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "tasks") [38 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_SaveState_ShouldCaptureCurrentNote [23 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Panes.TaskListPaneTests.TaskListPane_AfterTaskUpdated_ShouldNotThrow [18 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.ThemeChange_ShouldUpdateAllPanes [34 ms]
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_FullLifecycle_ShouldSucceed [35 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "projects") [50 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusRestore_AfterWorkspaceSwitch_ShouldWork [36 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_RestoreState_ShouldRestoreSelectedNote [46 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.RestoreState_WithNullState_ShouldNotThrow [53 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Panes.FileBrowserPaneTests.FileBrowserPane_Dispose_ShouldCleanup [44 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldRetryOnFailure [3 s]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_Initialize_ShouldSucceed [35 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveRestore_MultiplePanes_ShouldPreserveAllStates [36 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.Pane_ApplyTheme_WhenUnfocused_ShouldNotHighlight [40 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "calendar") [38 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_MultipleConcurrent_ShouldAllComplete [36 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ActionReturnsNull_ShouldReturnNull [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveState_SinglePane_ShouldCaptureState [29 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.AllPanes_ShouldDisposeWithoutErrors(paneType: "notes") [26 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusChange_ShouldTriggerThemeUpdate [29 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_FullLifecycle_ShouldSucceed [35 ms]
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+[Exclamation] Feature Disabled: A feature has been disabled due to an error:
+Saving time entries to 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json': The process cannot access the file 'C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\bin\Debug\net8.0-windows\.data\SuperTUI\timetracking.json.tmp' because it is being used by another process.
+The application will continue running.
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.ProjectContextRestore_ShouldPreserveContext [42 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SaveState_ShouldIncludePaneType [35 ms]
+  Passed SuperTUI.Tests.Infrastructure.FocusManagementTests.FocusHistory_TrackMultiplePanes_ShouldNotThrow [39 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_MemoryLeak_CreateDispose10Times_ShouldNotThrow [63 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Dispose_CalledTwice_ShouldNotThrow [48 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveState_MultiplePanes_ShouldCaptureAllStates [45 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_ProjectContextChange_ShouldNotThrow [17 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.SaveRestore_RoundTrip_ShouldPreserveState [19 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.OnFocusChanged_ShouldNotThrow [18 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_ApplyTheme_ShouldNotThrow [47 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_Dispose_ShouldStopAutoSaveTimer [19 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.WorkspaceSwitch_SaveAndRestore_ShouldMaintainPaneIdentity [49 ms]
+  Passed SuperTUI.Tests.Panes.NotesPaneTests.NotesPane_DoubleDispose_ShouldNotThrow [15 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_ConcurrentWrites_ShouldHandleAllMessages [2 s]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_MemoryLeak_AddRemove100Panes_ShouldNotLeak [750 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_RemoveChild_NotAdded_ShouldNotThrow [12 ms]
+  Passed SuperTUI.Tests.Layout.TilingLayoutEngineTests.TilingLayoutEngine_LayoutMode_Wide_WithTwoPanes_ShouldWork [26 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.MemoryLeak_CreateDispose100Panes_ShouldNotThrow [425 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.IsActive_InitiallyFalse [7 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.RestoreState_WithValidState_ShouldNotThrow [12 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.ApplyTheme_ShouldUpdateVisualState [10 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Initialize_ShouldBuildUIContent [10 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.RestoreState_WithNullState_ShouldNotThrow [11 ms]
+  Passed SuperTUI.Tests.Infrastructure.WorkspaceRestorationTests.MemoryLeak_SaveRestore100Times_ShouldNotLeak [437 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.LifecycleTest_CreateInitializeSaveRestoreDispose_ShouldSucceed [41 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.ApplyTheme_CalledMultipleTimes_ShouldNotThrow [37 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SaveState_ShouldReturnNonNullPaneState [41 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.SizePreference_ShouldHaveDefaultValue [37 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.PaneName_ShouldBeSet [34 ms]
+  Passed SuperTUI.Tests.Panes.PaneBaseTests.Dispose_ShouldUnsubscribeEvents [42 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_NullMessage_ShouldNotThrow [515 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithWarningLevel_ShouldWriteToSink [617 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_ConcurrentFlush_ShouldNotCrash [1 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.GetTotalDroppedLogs_ShouldAggregateAcrossSinks [549 ms]
+[xUnit.net 00:00:08.04]     SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately [FAIL]
+[xUnit.net 00:00:08.04]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:08.04]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:08.04]       Actual:   typeof(System.NullReferenceException)
+[xUnit.net 00:00:08.04]       ---- System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:08.04]       Stack Trace:
+[xUnit.net 00:00:08.04]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(316,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately()
+[xUnit.net 00:00:08.04]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.04]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.04]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:08.04]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs(23,0): at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser)
+[xUnit.net 00:00:08.04]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs(81,0): at SuperTUI.Infrastructure.ErrorHandler.ExecuteWithRetry[T](Func`1 action, Int32 maxRetries, Int32 delayMs, String context)
+[xUnit.net 00:00:08.04]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(317,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<>c__DisplayClass17_0.<ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately>b__1()
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ActionThrowsAggregateException_ShouldThrow [3 s]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_EmptyContext_ShouldNotThrow [4 ms]
+  Failed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately [3 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(System.NullReferenceException)
+---- System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 316
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+   at SuperTUI.Infrastructure.ErrorHandler.ExecuteWithRetry[T](Func`1 action, Int32 maxRetries, Int32 delayMs, String context) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 81
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<>c__DisplayClass17_0.<ExecuteWithRetry_WithZeroRetries_ShouldThrowImmediately>b__1() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 317
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_CancelledException_ShouldThrow [1 s]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithDifferentSeverities_ShouldStoreCorrectSeverity [8 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ShouldRetryOnFailure [51 ms]
+[xUnit.net 00:00:10.27]     SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow [FAIL]
+[xUnit.net 00:00:10.27]       Did not expect any exception, but found System.NullReferenceException: Object reference not set to an instance of an object.
+[xUnit.net 00:00:10.27]          at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+[xUnit.net 00:00:10.27]          at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<HandleError_NullException_ShouldNotThrow>b__24_0() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 499
+[xUnit.net 00:00:10.27]          at FluentAssertions.Specialized.ActionAssertions.InvokeSubject()
+[xUnit.net 00:00:10.27]          at FluentAssertions.Specialized.DelegateAssertions`2.InvokeSubjectWithInterception().
+[xUnit.net 00:00:10.27]       Stack Trace:
+[xUnit.net 00:00:10.27]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Specialized.DelegateAssertionsBase`2.NotThrowInternal(Exception exception, String because, Object[] becauseArgs)
+[xUnit.net 00:00:10.27]            at FluentAssertions.Specialized.DelegateAssertions`2.NotThrow(String because, Object[] becauseArgs)
+[xUnit.net 00:00:10.27]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(500,0): at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow()
+[xUnit.net 00:00:10.27]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:10.27]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ShouldThrowAfterMaxRetries [731 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithCriticalSeverity_ShouldRaiseEvent [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_DifferentExceptionTypes_ShouldRetryAll [82 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_VeryLongDelay_ShouldEventuallyComplete [139 ms]
+  Failed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow [10 ms]
+  Error Message:
+   Did not expect any exception, but found System.NullReferenceException: Object reference not set to an instance of an object.
+   at SuperTUI.Infrastructure.ErrorHandler.HandleError(Exception ex, String context, ErrorSeverity severity, Boolean showToUser) in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Core\Infrastructure\ErrorHandler.cs:line 23
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.<HandleError_NullException_ShouldNotThrow>b__24_0() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 499
+   at FluentAssertions.Specialized.ActionAssertions.InvokeSubject()
+   at FluentAssertions.Specialized.DelegateAssertions`2.InvokeSubjectWithInterception().
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Specialized.DelegateAssertionsBase`2.NotThrowInternal(Exception exception, String because, Object[] becauseArgs)
+   at FluentAssertions.Specialized.DelegateAssertions`2.NotThrow(String because, Object[] becauseArgs)
+   at SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_NullException_ShouldNotThrow() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs:line 500
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldCaptureException [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_MultipleSubscribers_ShouldNotifyAll [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithNestedExceptions_ShouldCaptureOuter [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldReturnResultOnSuccess [13 ms]
+[xUnit.net 00:00:10.67]     SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldRotateWhenMaxSizeExceeded [FAIL]
+[xUnit.net 00:00:10.67]       Expected logFiles.Length to be greater than 1 because 3 messages of 500 KB each (1.5 MB) should exceed 1 MB limit and create 2+ files, but found 1.
+[xUnit.net 00:00:10.67]       Stack Trace:
+[xUnit.net 00:00:10.67]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:10.67]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:10.67]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:10.67]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:10.67]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:10.67]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:10.67]         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs(376,0): at SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldRotateWhenMaxSizeExceeded()
+[xUnit.net 00:00:10.68]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:10.68]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_WithInfoSeverity_ShouldNotShowDialog [1 ms]
+  Failed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldRotateWhenMaxSizeExceeded [3 s]
+  Error Message:
+   Expected logFiles.Length to be greater than 1 because 3 messages of 500 KB each (1.5 MB) should exceed 1 MB limit and create 2+ files, but found 1.
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+   at SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldRotateWhenMaxSizeExceeded() in C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs:line 376
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Flush_WithNoSinks_ShouldNotThrow [516 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldNotBlockUIThread [984 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ExponentialBackoff_ShouldIncreaseDelay [212 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ExponentialBackoff_ShouldIncreaseDelay [170 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldCaptureTimestamp [2 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_ShouldCaptureContext [6 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldCreateLogFile [1 s]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetryAsync_ShouldThrowAfterMaxRetries [715 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.ExecuteWithRetry_ShouldReturnResultOnSuccess [< 1 ms]
+  Passed SuperTUI.Tests.Infrastructure.ErrorHandlerTests.HandleError_Concurrent_ShouldNotifyAllSubscribers [1 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_Clear_ShouldRemoveAllEntries [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithDisabledCategory_ShouldNotWriteToSink [615 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_NullException_ShouldNotThrow [516 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_GetEntriesByLevel_ShouldFilter [616 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_GetQueueDepth_ShouldReturnCurrentDepth [656 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_ShouldRespectMaxEntries [614 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_CriticalLogs_ShouldNeverBeDropped [1 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_BelowMinLevel_ShouldNotWriteToSink [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.FileLogSink_ShouldLimitMaxFiles [9 s]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithTraceLevel_ShouldWriteToSink [615 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithErrorLevel_ShouldWriteToSinkWithException [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithDebugLevel_ShouldWriteToSink [616 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithInfoLevel_ShouldWriteToSink [615 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_DisableCategory_ShouldRemoveFromEnabled [613 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithCriticalLevel_ShouldWriteToSinkWithStackTrace [617 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_AfterDispose_ShouldNotCrash [507 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.MemoryLogSink_ShouldStoreLogs [618 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_EmptyCategory_ShouldNotThrow [504 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithEnabledCategory_ShouldWriteToSink [611 ms]
+[xUnit.net 00:00:35.11]   Finished:    SuperTUI
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.GetDiagnostics_ShouldReturnLoggerState [506 ms]
+  Passed SuperTUI.Tests.Infrastructure.LoggerTests.Log_WithException_ShouldIncludeExceptionDetails [616 ms]
+
+Test Run Failed.
+Total tests: 359
+     Passed: 344
+     Failed: 15
+ Total time: 36.3468 Seconds
+       _VSTestConsole:
+         MSB4181: The "VSTestTask" task returned false but did not log an error.
+     1>Done Building Project "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (VSTest target(s)) -- FAILED.
+
+Build FAILED.
+
+       "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (VSTest target) (1:7) ->
+       "C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj" (default target) (1:8) ->
+       (CoreCompile target) -> 
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\CalendarPane.cs(1043,22): warning CS0108: 'CalendarPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\CommandPalettePane.cs(720,22): warning CS0108: 'CommandPalettePane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ExcelImportPane.cs(714,22): warning CS0108: 'ExcelImportPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\HelpPane.cs(458,22): warning CS0108: 'HelpPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\NotesPane.cs(2126,22): warning CS0108: 'NotesPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\ProjectsPane.cs(1275,22): warning CS0108: 'ProjectsPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\TaskListPane.cs(2159,22): warning CS0108: 'TaskListPane.ApplyTheme()' hides inherited member 'PaneBase.ApplyTheme()'. Use the new keyword if hiding was intended. [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\TestHelpers\MockThemeManager.cs(17,58): warning CS0067: The event 'MockThemeManager.ThemeChanged' is never used [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\TaskListPane.cs(48,25): warning CS0649: Field 'TaskListPane.dateEditBox' is never assigned to, and will always have its default value null [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Panes\NotesPane.cs(55,24): warning CS0649: Field 'NotesPane.commandPaletteBorder' is never assigned to, and will always have its default value null [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TimeTrackingServiceTests.cs(715,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TimeTrackingServiceTests.cs(751,40): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs(301,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\LoggerTests.cs(329,40): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Infrastructure\ErrorHandlerTests.cs(449,18): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(670,41): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+         C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\Tests\Services\TagServiceTests.cs(701,63): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\jhnhe\OneDrive\Documents\GitHub\supertui\WPF\SuperTUI.csproj]
+
+    17 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:41.87

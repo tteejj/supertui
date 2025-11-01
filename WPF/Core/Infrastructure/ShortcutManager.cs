@@ -18,68 +18,78 @@ namespace SuperTUI.Core
             new Lazy<ShortcutManager>(() => new ShortcutManager());
         public static ShortcutManager Instance => instance.Value;
 
+        private readonly object shortcutsLock = new object();
         private List<KeyboardShortcut> globalShortcuts = new List<KeyboardShortcut>();
         private Dictionary<string, List<KeyboardShortcut>> workspaceShortcuts = new Dictionary<string, List<KeyboardShortcut>>();
         private Dictionary<string, List<KeyboardShortcut>> paneShortcuts = new Dictionary<string, List<KeyboardShortcut>>();
 
         public void RegisterGlobal(Key key, ModifierKeys modifiers, Action action, string description = "")
         {
-            // Check for duplicates (conflict detection)
-            if (globalShortcuts.Any(s => s.Key == key && s.Modifiers == modifiers))
+            lock (shortcutsLock)
             {
-                System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered in global shortcuts");
-                return; // Skip duplicate registration
-            }
+                // Check for duplicates (conflict detection)
+                if (globalShortcuts.Any(s => s.Key == key && s.Modifiers == modifiers))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered in global shortcuts");
+                    return; // Skip duplicate registration
+                }
 
-            globalShortcuts.Add(new KeyboardShortcut
-            {
-                Key = key,
-                Modifiers = modifiers,
-                Action = action,
-                Description = description
-            });
+                globalShortcuts.Add(new KeyboardShortcut
+                {
+                    Key = key,
+                    Modifiers = modifiers,
+                    Action = action,
+                    Description = description
+                });
+            }
         }
 
         public void RegisterForWorkspace(string workspaceName, Key key, ModifierKeys modifiers, Action action, string description = "")
         {
-            if (!workspaceShortcuts.ContainsKey(workspaceName))
-                workspaceShortcuts[workspaceName] = new List<KeyboardShortcut>();
-
-            // Check for duplicates (conflict detection)
-            if (workspaceShortcuts[workspaceName].Any(s => s.Key == key && s.Modifiers == modifiers))
+            lock (shortcutsLock)
             {
-                System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered for workspace '{workspaceName}'");
-                return; // Skip duplicate registration
+                if (!workspaceShortcuts.ContainsKey(workspaceName))
+                    workspaceShortcuts[workspaceName] = new List<KeyboardShortcut>();
+
+                // Check for duplicates (conflict detection)
+                if (workspaceShortcuts[workspaceName].Any(s => s.Key == key && s.Modifiers == modifiers))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered for workspace '{workspaceName}'");
+                    return; // Skip duplicate registration
+                }
+
+                workspaceShortcuts[workspaceName].Add(new KeyboardShortcut
+                {
+                    Key = key,
+                    Modifiers = modifiers,
+                    Action = action,
+                    Description = description
+                });
             }
-
-            workspaceShortcuts[workspaceName].Add(new KeyboardShortcut
-            {
-                Key = key,
-                Modifiers = modifiers,
-                Action = action,
-                Description = description
-            });
         }
 
         public void RegisterForPane(string paneName, Key key, ModifierKeys modifiers, Action action, string description = "")
         {
-            if (!paneShortcuts.ContainsKey(paneName))
-                paneShortcuts[paneName] = new List<KeyboardShortcut>();
-
-            // Check for duplicates (conflict detection)
-            if (paneShortcuts[paneName].Any(s => s.Key == key && s.Modifiers == modifiers))
+            lock (shortcutsLock)
             {
-                System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered for pane '{paneName}'");
-                return; // Skip duplicate registration
+                if (!paneShortcuts.ContainsKey(paneName))
+                    paneShortcuts[paneName] = new List<KeyboardShortcut>();
+
+                // Check for duplicates (conflict detection)
+                if (paneShortcuts[paneName].Any(s => s.Key == key && s.Modifiers == modifiers))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Shortcut conflict: {key}+{modifiers} already registered for pane '{paneName}'");
+                    return; // Skip duplicate registration
+                }
+
+                paneShortcuts[paneName].Add(new KeyboardShortcut
+                {
+                    Key = key,
+                    Modifiers = modifiers,
+                    Action = action,
+                    Description = description
+                });
             }
-
-            paneShortcuts[paneName].Add(new KeyboardShortcut
-            {
-                Key = key,
-                Modifiers = modifiers,
-                Action = action,
-                Description = description
-            });
         }
 
         public bool HandleKeyDown(Key key, ModifierKeys modifiers, string currentWorkspace, string focusedPaneName = null)
@@ -182,16 +192,19 @@ namespace SuperTUI.Core
 
         public List<KeyboardShortcut> GetAllShortcuts()
         {
-            var all = new List<KeyboardShortcut>(globalShortcuts);
-            foreach (var kvp in workspaceShortcuts)
+            lock (shortcutsLock)
             {
-                all.AddRange(kvp.Value);
+                var all = new List<KeyboardShortcut>(globalShortcuts);
+                foreach (var kvp in workspaceShortcuts)
+                {
+                    all.AddRange(kvp.Value);
+                }
+                foreach (var kvp in paneShortcuts)
+                {
+                    all.AddRange(kvp.Value);
+                }
+                return all;
             }
-            foreach (var kvp in paneShortcuts)
-            {
-                all.AddRange(kvp.Value);
-            }
-            return all;
         }
 
         public bool HandleKeyDown(Key key, ModifierKeys modifiers)
@@ -207,47 +220,65 @@ namespace SuperTUI.Core
 
         public IReadOnlyList<KeyboardShortcut> GetGlobalShortcuts()
         {
-            return globalShortcuts;
+            lock (shortcutsLock)
+            {
+                return new List<KeyboardShortcut>(globalShortcuts);
+            }
         }
 
         public IReadOnlyList<KeyboardShortcut> GetWorkspaceShortcuts(string workspaceName)
         {
-            if (workspaceShortcuts.TryGetValue(workspaceName, out var shortcuts))
+            lock (shortcutsLock)
             {
-                return shortcuts;
+                if (workspaceShortcuts.TryGetValue(workspaceName, out var shortcuts))
+                {
+                    return new List<KeyboardShortcut>(shortcuts);
+                }
+                return new List<KeyboardShortcut>();
             }
-            return new List<KeyboardShortcut>();
         }
 
         public IReadOnlyList<KeyboardShortcut> GetPaneShortcuts(string paneName)
         {
-            if (paneShortcuts.TryGetValue(paneName, out var shortcuts))
+            lock (shortcutsLock)
             {
-                return shortcuts;
+                if (paneShortcuts.TryGetValue(paneName, out var shortcuts))
+                {
+                    return new List<KeyboardShortcut>(shortcuts);
+                }
+                return new List<KeyboardShortcut>();
             }
-            return new List<KeyboardShortcut>();
         }
 
         public void ClearAll()
         {
-            globalShortcuts.Clear();
-            workspaceShortcuts.Clear();
-            paneShortcuts.Clear();
+            lock (shortcutsLock)
+            {
+                globalShortcuts.Clear();
+                workspaceShortcuts.Clear();
+                paneShortcuts.Clear();
+            }
         }
 
         public void ClearWorkspace(string workspaceName)
         {
-            if (workspaceShortcuts.ContainsKey(workspaceName))
+            lock (shortcutsLock)
             {
-                workspaceShortcuts.Remove(workspaceName);
+                if (workspaceShortcuts.ContainsKey(workspaceName))
+                {
+                    workspaceShortcuts.Remove(workspaceName);
+                }
             }
         }
 
         public void ClearPane(string paneName)
         {
-            if (paneShortcuts.ContainsKey(paneName))
+            lock (shortcutsLock)
             {
-                paneShortcuts.Remove(paneName);
+                if (paneShortcuts.ContainsKey(paneName))
+                {
+                    paneShortcuts.Remove(paneName);
+                }
             }
         }
 

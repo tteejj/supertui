@@ -172,18 +172,23 @@ namespace SuperTUI.Core.Services
         }
 
         /// <summary>
-        /// Get project by ID
+        /// Get project by ID (excludes soft-deleted projects)
         /// </summary>
         public Project GetProject(Guid id)
         {
             lock (lockObject)
             {
-                return projects.ContainsKey(id) ? projects[id] : null;
+                if (projects.ContainsKey(id))
+                {
+                    var project = projects[id];
+                    return project.Deleted ? null : project;
+                }
+                return null;
             }
         }
 
         /// <summary>
-        /// Get project by nickname (case-insensitive)
+        /// Get project by nickname (case-insensitive, excludes soft-deleted projects)
         /// </summary>
         public Project GetProjectByNickname(string nickname)
         {
@@ -195,14 +200,18 @@ namespace SuperTUI.Core.Services
                 if (nicknameIndex.ContainsKey(nickname))
                 {
                     var id = (Guid)nicknameIndex[nickname];
-                    return projects.ContainsKey(id) ? projects[id] : null;
+                    if (projects.ContainsKey(id))
+                    {
+                        var project = projects[id];
+                        return project.Deleted ? null : project;
+                    }
                 }
                 return null;
             }
         }
 
         /// <summary>
-        /// Get project by Id1 (case-insensitive)
+        /// Get project by Id1 (case-insensitive, excludes soft-deleted projects)
         /// </summary>
         public Project GetProjectById1(string id1)
         {
@@ -214,7 +223,11 @@ namespace SuperTUI.Core.Services
                 if (id1Index.ContainsKey(id1))
                 {
                     var id = (Guid)id1Index[id1];
-                    return projects.ContainsKey(id) ? projects[id] : null;
+                    if (projects.ContainsKey(id))
+                    {
+                        var project = projects[id];
+                        return project.Deleted ? null : project;
+                    }
                 }
                 return null;
             }

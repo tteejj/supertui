@@ -101,6 +101,11 @@ namespace SuperTUI
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangedEventArgs e)
         {
+            logger.Log(LogLevel.Info, "MainWindow",
+                $"Switching from workspace {e.OldIndex} to {e.NewIndex}");
+            logger.Log(LogLevel.Debug, "MainWindow",
+                $"Old workspace has {paneManager.OpenPanes.Count} panes");
+
             // Save old workspace state
             SaveCurrentWorkspaceState();
 
@@ -110,7 +115,8 @@ namespace SuperTUI
             // Update status bar workspace indicator
             statusBar?.UpdateWorkspaceIndicator(e.NewIndex);
 
-            logger.Log(LogLevel.Info, "MainWindow", $"Switched from workspace {e.OldIndex} to {e.NewIndex}");
+            logger.Log(LogLevel.Info, "MainWindow",
+                $"Switched to workspace {e.NewIndex} (now has {paneManager.OpenPanes.Count} panes)");
         }
 
         /// <summary>
@@ -327,6 +333,26 @@ namespace SuperTUI
             state.OpenPaneTypes = paneState.OpenPaneTypes;
             state.FocusedPaneIndex = paneState.FocusedPaneIndex;
 
+            // Save individual pane states
+            var paneStates = new List<Core.Components.PaneState>();
+            var openPanes = paneManager.OpenPanes;
+            foreach (var pane in openPanes)
+            {
+                try
+                {
+                    var paneStateData = pane.SaveState();
+                    paneStates.Add(paneStateData);
+                    logger.Log(LogLevel.Debug, "MainWindow",
+                        $"Saved state for pane {pane.PaneName}: {(paneStateData.CustomData != null ? "has custom data" : "no custom data")}");
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LogLevel.Error, "MainWindow",
+                        $"Failed to save state for pane {pane.PaneName}: {ex.Message}");
+                }
+            }
+            state.PaneStates = paneStates;
+
             // CRITICAL: Save focus state for perfect restoration
             state.FocusState = focusHistory.SaveWorkspaceState();
 
@@ -341,7 +367,7 @@ namespace SuperTUI
             }
 
             workspaceManager.UpdateCurrentWorkspace(state);
-            logger.Log(LogLevel.Debug, "MainWindow", $"Saved workspace {state.Index} state ({state.OpenPaneTypes.Count} panes)");
+            logger.Log(LogLevel.Debug, "MainWindow", $"Saved workspace {state.Index} state ({state.OpenPaneTypes.Count} panes, {paneStates.Count} pane states)");
         }
 
         private void RestoreApplicationState()
@@ -427,6 +453,31 @@ namespace SuperTUI
                     FocusedPaneIndex = state.FocusedPaneIndex
                 };
                 paneManager.RestoreState(paneState, panesToRestore);
+
+                // Restore individual pane states
+                if (state.PaneStates != null && state.PaneStates.Count > 0)
+                {
+                    var openPanes = paneManager.OpenPanes;
+                    for (int i = 0; i < openPanes.Count && i < state.PaneStates.Count; i++)
+                    {
+                        try
+                        {
+                            openPanes[i].RestoreState(state.PaneStates[i]);
+                            logger.Log(LogLevel.Debug, "MainWindow",
+                                $"Restored state for pane {openPanes[i].PaneName}: {(state.PaneStates[i].CustomData != null ? "has custom data" : "no custom data")}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Log(LogLevel.Error, "MainWindow",
+                                $"Failed to restore state for pane {openPanes[i].PaneName}: {ex.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    logger.Log(LogLevel.Warning, "MainWindow",
+                        $"No pane states to restore for workspace {state.Index}");
+                }
 
                 // CRITICAL FIX: Restore focus history after panes are loaded
                 // RACE CONDITION FIX: Wait for pane to be fully loaded before restoring focus

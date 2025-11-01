@@ -42,7 +42,6 @@ namespace SuperTUI.Panes
         private TextBox quickAddPriority;
         private TextBlock statusBar;
         private TextBlock filterLabel;
-        private TextBox searchBox;
 
         // Inline editing
         private TextBox inlineEditBox;
@@ -59,7 +58,6 @@ namespace SuperTUI.Panes
         private SortMode currentSort = SortMode.Priority;
         private bool isInternalCommand = false;
         private string commandBuffer = string.Empty;
-        private string searchQuery = string.Empty;
 
         // Theme colors (cached for performance)
         private SolidColorBrush bgBrush;
@@ -195,11 +193,6 @@ namespace SuperTUI.Panes
         {
             var shortcuts = ShortcutManager.Instance;
 
-            // Ctrl+F: Focus search box
-            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control,
-                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
-                "Focus search box");
-
             // Ctrl+: (OemSemicolon) - Enter command mode
             shortcuts.RegisterForPane(PaneName, Key.OemSemicolon, ModifierKeys.Control,
                 () => { isInternalCommand = true; commandBuffer = ":"; UpdateStatusBar(); },
@@ -283,13 +276,6 @@ namespace SuperTUI.Panes
                 inlineEditBox.Focus();
                 System.Windows.Input.Keyboard.Focus(inlineEditBox);
             }
-            else if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
-                     searchBox.Text != "Search tasks... (Press F to focus)")
-            {
-                // If searching, return focus to search box
-                searchBox.Focus();
-                System.Windows.Input.Keyboard.Focus(searchBox);
-            }
             else if (taskListBox != null)
             {
                 // Default: focus the task list
@@ -334,41 +320,11 @@ namespace SuperTUI.Panes
         private Grid BuildTaskListPanel()
         {
             var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search box
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Column headers
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
-
-            // Search box
-            searchBox = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Width = 250,
-                Foreground = fgBrush,
-                Background = surfaceBrush,
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(8, 4, 8, 4),
-                Margin = new Thickness(0, 0, 0, 4),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Text = "Search... (Ctrl+F)"
-            };
-            searchBox.GotFocus += (s, e) =>
-            {
-                if (searchBox.Text == "Search... (Ctrl+F)")
-                    searchBox.Text = "";
-            };
-            searchBox.LostFocus += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(searchBox.Text))
-                    searchBox.Text = "Search... (Ctrl+F)";
-            };
-            searchBox.TextChanged += OnSearchTextChanged;
-            Grid.SetRow(searchBox, 0);
-            grid.Children.Add(searchBox);
 
             // Quick add form (hidden by default)
             quickAddForm = new Grid
@@ -455,7 +411,7 @@ namespace SuperTUI.Panes
             Grid.SetColumn(quickAddPriority, 4);
             quickAddForm.Children.Add(quickAddPriority);
 
-            Grid.SetRow(quickAddForm, 1);
+            Grid.SetRow(quickAddForm, 0);
             grid.Children.Add(quickAddForm);
 
             // Filter bar
@@ -474,7 +430,7 @@ namespace SuperTUI.Panes
             };
             filterBar.Children.Add(filterLabel);
 
-            Grid.SetRow(filterBar, 2);
+            Grid.SetRow(filterBar, 1);
             grid.Children.Add(filterBar);
 
             // Column headers
@@ -552,7 +508,7 @@ namespace SuperTUI.Panes
             Grid.SetColumn(tagsHeader, 6);
             headerGrid.Children.Add(tagsHeader);
 
-            Grid.SetRow(headerGrid, 3);
+            Grid.SetRow(headerGrid, 2);
             grid.Children.Add(headerGrid);
 
             // Task list with virtualization enabled
@@ -582,7 +538,7 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(taskListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(taskListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(taskListBox, 4);
+            Grid.SetRow(taskListBox, 3);
             grid.Children.Add(taskListBox);
 
             // Status bar
@@ -593,23 +549,10 @@ namespace SuperTUI.Panes
                 Foreground = dimBrush,
                 Margin = new Thickness(0, 8, 0, 0)
             };
-            Grid.SetRow(statusBar, 5);
+            Grid.SetRow(statusBar, 4);
             grid.Children.Add(statusBar);
 
             return grid;
-        }
-
-        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
-        {
-            searchQuery = searchBox.Text;
-
-            // Skip placeholder text
-            if (searchQuery == "Search... (Ctrl+F)")
-            {
-                searchQuery = string.Empty;
-            }
-
-            RefreshTaskList();
         }
 
         private void SubscribeToTaskEvents()
@@ -672,7 +615,6 @@ namespace SuperTUI.Panes
 
         private List<TaskItem> ApplyFilter(List<TaskItem> tasks)
         {
-            // Apply filter mode first
             var filtered = currentFilter switch
             {
                 FilterMode.Active => tasks.Where(t => t.Status != TaskStatus.Completed && t.Status != TaskStatus.Cancelled).ToList(),
@@ -682,18 +624,6 @@ namespace SuperTUI.Panes
                 FilterMode.HighPriority => tasks.Where(t => (t.Priority == TaskPriority.High || t.Priority == TaskPriority.Today) && t.Status != TaskStatus.Completed).ToList(),
                 _ => tasks
             };
-
-            // Apply search query if present
-            if (!string.IsNullOrWhiteSpace(searchQuery))
-            {
-                var query = searchQuery.ToLower();
-                filtered = filtered.Where(t =>
-                    t.Title.ToLower().Contains(query) ||
-                    (t.Description != null && t.Description.ToLower().Contains(query)) ||
-                    (t.Tags != null && t.Tags.Any(tag => tag.ToLower().Contains(query))) ||
-                    (t.Notes != null && t.Notes.Any(note => note.Content != null && note.Content.ToLower().Contains(query)))
-                ).ToList();
-            }
 
             return filtered;
         }
@@ -874,24 +804,16 @@ namespace SuperTUI.Panes
             Grid.SetColumn(priorityIcon, 3);
             grid.Children.Add(priorityIcon);
 
-            // Title with search highlighting
+            // Title
             var title = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
                 Foreground = GetTaskForeground(vm.Task),
                 VerticalAlignment = VerticalAlignment.Center,
-                TextTrimming = TextTrimming.CharacterEllipsis
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Text = vm.Task.Title
             };
-
-            if (!string.IsNullOrWhiteSpace(searchQuery))
-            {
-                AddHighlightedText(title, vm.Task.Title, searchQuery);
-            }
-            else
-            {
-                title.Text = vm.Task.Title;
-            }
 
             if (vm.Task.Status == TaskStatus.Completed)
             {
@@ -1926,8 +1848,6 @@ namespace SuperTUI.Panes
 
                 // FOCUS MEMORY - Track exactly what the user was doing
                 ["FocusedControl"] = GetCurrentFocusedControl(),
-                ["SearchText"] = searchBox?.Text,
-                ["IsSearchFocused"] = searchBox?.IsFocused ?? false,
 
                 // INLINE EDIT STATE - Remember if user was editing
                 ["IsInlineEditing"] = inlineEditBox?.Visibility == Visibility.Visible,
@@ -1963,7 +1883,6 @@ namespace SuperTUI.Panes
 
         private string GetCurrentFocusedControl()
         {
-            if (searchBox?.IsFocused == true) return "SearchBox";
             if (inlineEditBox?.IsFocused == true) return "InlineEdit";
             if (quickAddTitle?.IsFocused == true) return "QuickAdd";
             if (dateEditBox?.IsFocused == true) return "DateEdit";
@@ -2013,12 +1932,6 @@ namespace SuperTUI.Panes
                     currentSort = sort;
                     filterLabel.Text = GetFilterText();
                 }
-            }
-
-            // Restore search text BEFORE refreshing
-            if (data.TryGetValue("SearchText", out var searchText))
-            {
-                searchBox.Text = searchText?.ToString() ?? "";
             }
 
             // Refresh with new filter/sort
@@ -2124,10 +2037,6 @@ namespace SuperTUI.Panes
                 {
                     switch (focusedControl?.ToString())
                     {
-                        case "SearchBox":
-                            searchBox?.Focus();
-                            System.Windows.Input.Keyboard.Focus(searchBox);
-                            break;
                         case "InlineEdit":
                             inlineEditBox?.Focus();
                             System.Windows.Input.Keyboard.Focus(inlineEditBox);
@@ -2252,13 +2161,6 @@ namespace SuperTUI.Panes
             CacheThemeColors();
 
             // Update all controls
-            if (searchBox != null)
-            {
-                searchBox.Foreground = fgBrush;
-                searchBox.Background = surfaceBrush;
-                searchBox.BorderBrush = borderBrush;
-            }
-
             if (quickAddForm != null)
             {
                 quickAddForm.Background = surfaceBrush;

@@ -59,6 +59,7 @@ namespace SuperTUI.Infrastructure
 
         private Dictionary<string, ConfigValue> config = new Dictionary<string, ConfigValue>();
         private Dictionary<string, Dictionary<string, ConfigValue>> categories = new Dictionary<string, Dictionary<string, ConfigValue>>();
+        private readonly object configLock = new object();
         private string configFilePath;
         private bool isInitialized = false;
 
@@ -141,80 +142,89 @@ namespace SuperTUI.Infrastructure
         // Interface-compliant non-generic Register method
         public void Register(string key, object defaultValue, string description, string category = "General", Func<object, bool> validator = null)
         {
-            var configValue = new ConfigValue
+            lock (configLock)
             {
-                Key = key,
-                Value = defaultValue,
-                DefaultValue = defaultValue,
-                ValueType = defaultValue?.GetType() ?? typeof(object),
-                Description = description,
-                Category = category,
-                Validator = validator,
-                IsReadOnly = false
-            };
+                var configValue = new ConfigValue
+                {
+                    Key = key,
+                    Value = defaultValue,
+                    DefaultValue = defaultValue,
+                    ValueType = defaultValue?.GetType() ?? typeof(object),
+                    Description = description,
+                    Category = category,
+                    Validator = validator,
+                    IsReadOnly = false
+                };
 
-            config[key] = configValue;
+                config[key] = configValue;
 
-            if (!categories.ContainsKey(category))
-            {
-                categories[category] = new Dictionary<string, ConfigValue>();
+                if (!categories.ContainsKey(category))
+                {
+                    categories[category] = new Dictionary<string, ConfigValue>();
+                }
+                categories[category][key] = configValue;
+
+                Logger.Instance.Debug("Config", $"Registered config key: {key} = {defaultValue}");
             }
-            categories[category][key] = configValue;
-
-            Logger.Instance.Debug("Config", $"Registered config key: {key} = {defaultValue}");
         }
 
         public void Register<T>(string key, T defaultValue, string description = "", string category = "General", Func<object, bool> validator = null)
         {
-            var configValue = new ConfigValue
+            lock (configLock)
             {
-                Key = key,
-                Value = defaultValue,
-                DefaultValue = defaultValue,
-                ValueType = typeof(T),
-                Description = description,
-                Category = category,
-                Validator = validator,
-                IsReadOnly = false
-            };
+                var configValue = new ConfigValue
+                {
+                    Key = key,
+                    Value = defaultValue,
+                    DefaultValue = defaultValue,
+                    ValueType = typeof(T),
+                    Description = description,
+                    Category = category,
+                    Validator = validator,
+                    IsReadOnly = false
+                };
 
-            config[key] = configValue;
+                config[key] = configValue;
 
-            if (!categories.ContainsKey(category))
-            {
-                categories[category] = new Dictionary<string, ConfigValue>();
+                if (!categories.ContainsKey(category))
+                {
+                    categories[category] = new Dictionary<string, ConfigValue>();
+                }
+                categories[category][key] = configValue;
+
+                Logger.Instance.Debug("Config", $"Registered config key: {key} = {defaultValue}");
             }
-            categories[category][key] = configValue;
-
-            Logger.Instance.Debug("Config", $"Registered config key: {key} = {defaultValue}");
         }
 
         public T Get<T>(string key, T defaultValue = default)
         {
-            if (config.TryGetValue(key, out var configValue))
+            lock (configLock)
             {
-                try
+                if (config.TryGetValue(key, out var configValue))
                 {
-                    return GetValueInternal<T>(configValue, key, defaultValue, throwOnError: false);
-                }
-                catch (Exception ex)
-                {
-                    // PHASE 2 FIX: Better error reporting with ErrorPolicy
-                    var targetType = typeof(T);
-                    var sourceType = configValue.Value?.GetType().Name ?? "null";
+                    try
+                    {
+                        return GetValueInternal<T>(configValue, key, defaultValue, throwOnError: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // PHASE 2 FIX: Better error reporting with ErrorPolicy
+                        var targetType = typeof(T);
+                        var sourceType = configValue.Value?.GetType().Name ?? "null";
 
-                    ErrorHandlingPolicy.Handle(
-                        ErrorCategory.Configuration,
-                        ex,
-                        $"Failed to convert config key '{key}' from {sourceType} to {targetType.Name} (value: {configValue.Value})");
+                        ErrorHandlingPolicy.Handle(
+                            ErrorCategory.Configuration,
+                            ex,
+                            $"Failed to convert config key '{key}' from {sourceType} to {targetType.Name} (value: {configValue.Value})");
 
-                    return defaultValue;
+                        return defaultValue;
+                    }
                 }
+
+                // Key not found - log warning
+                Logger.Instance.Debug("Config", $"Configuration key '{key}' not found, using default value: {defaultValue}");
+                return defaultValue;
             }
-
-            // Key not found - log warning
-            Logger.Instance.Debug("Config", $"Configuration key '{key}' not found, using default value: {defaultValue}");
-            return defaultValue;
         }
 
         /// <summary>
@@ -389,46 +399,55 @@ namespace SuperTUI.Infrastructure
 
         public void Set<T>(string key, T value, bool saveImmediately = false)
         {
-            if (!config.TryGetValue(key, out var configValue))
+            lock (configLock)
             {
-                Logger.Instance.Warning("Config", $"Unknown config key: {key}");
-                throw new ArgumentException($"Unknown configuration key: {key}", nameof(key));
-            }
+                if (!config.TryGetValue(key, out var configValue))
+                {
+                    Logger.Instance.Warning("Config", $"Unknown config key: {key}");
+                    throw new ArgumentException($"Unknown configuration key: {key}", nameof(key));
+                }
 
-            if (configValue.IsReadOnly)
-            {
-                Logger.Instance.Warning("Config", $"Cannot modify read-only config key: {key}");
-                throw new InvalidOperationException($"Configuration key '{key}' is read-only and cannot be modified");
-            }
+                if (configValue.IsReadOnly)
+                {
+                    Logger.Instance.Warning("Config", $"Cannot modify read-only config key: {key}");
+                    throw new InvalidOperationException($"Configuration key '{key}' is read-only and cannot be modified");
+                }
 
-            // Validate
-            if (configValue.Validator != null && !configValue.Validator(value))
-            {
-                Logger.Instance.Warning("Config", $"Validation failed for config key {key} with value {value}");
-                throw new ArgumentException($"Validation failed for configuration key '{key}' with value '{value}'", nameof(value));
-            }
+                // Validate
+                if (configValue.Validator != null && !configValue.Validator(value))
+                {
+                    Logger.Instance.Warning("Config", $"Validation failed for config key {key} with value {value}");
+                    throw new ArgumentException($"Validation failed for configuration key '{key}' with value '{value}'", nameof(value));
+                }
 
-            var oldValue = configValue.Value;
-            configValue.Value = value;
+                var oldValue = configValue.Value;
+                configValue.Value = value;
 
-            Logger.Instance.Info("Config", $"Config changed: {key} = {value} (was {oldValue})");
+                Logger.Instance.Info("Config", $"Config changed: {key} = {value} (was {oldValue})");
 
-            ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { Key = key, OldValue = oldValue, NewValue = value });
+                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { Key = key, OldValue = oldValue, NewValue = value });
 
-            if (saveImmediately && !string.IsNullOrEmpty(configFilePath))
-            {
-                SaveToFile(configFilePath);
+                if (saveImmediately && !string.IsNullOrEmpty(configFilePath))
+                {
+                    SaveToFile(configFilePath);
+                }
             }
         }
 
         public Dictionary<string, ConfigValue> GetCategory(string category)
         {
-            return categories.TryGetValue(category, out var cat) ? cat : new Dictionary<string, ConfigValue>();
+            lock (configLock)
+            {
+                return categories.TryGetValue(category, out var cat) ? cat : new Dictionary<string, ConfigValue>();
+            }
         }
 
         public List<string> GetCategories()
         {
-            return categories.Keys.ToList();
+            lock (configLock)
+            {
+                return categories.Keys.ToList();
+            }
         }
 
         // Interface-compliant Save method (uses configured path)
@@ -462,10 +481,15 @@ namespace SuperTUI.Infrastructure
             // Note: This is safe because it doesn't use Dispatcher or WPF threading
             try
             {
-                var configData = config.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Value
-                );
+                Dictionary<string, object> configData;
+
+                lock (configLock)
+                {
+                    configData = config.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Value
+                    );
+                }
 
                 string json = JsonSerializer.Serialize(configData, new JsonSerializerOptions { WriteIndented = true });
 
@@ -490,10 +514,15 @@ namespace SuperTUI.Infrastructure
         {
             try
             {
-                var configData = config.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Value
-                );
+                Dictionary<string, object> configData;
+
+                lock (configLock)
+                {
+                    configData = config.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Value
+                    );
+                }
 
                 string json = JsonSerializer.Serialize(configData, new JsonSerializerOptions { WriteIndented = true });
 
@@ -523,19 +552,22 @@ namespace SuperTUI.Infrastructure
                 string json = File.ReadAllText(path, Encoding.UTF8);
                 var configData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
 
-                foreach (var kvp in configData)
+                lock (configLock)
                 {
-                    if (config.TryGetValue(kvp.Key, out var configValue))
+                    foreach (var kvp in configData)
                     {
-                        ErrorHandlingPolicy.SafeExecute(
-                            ErrorCategory.Configuration,
-                            () =>
-                            {
-                                // Deserialize based on the registered type
-                                object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
-                                configValue.Value = value;
-                            },
-                            context: $"Loading config value {kvp.Key}");
+                        if (config.TryGetValue(kvp.Key, out var configValue))
+                        {
+                            ErrorHandlingPolicy.SafeExecute(
+                                ErrorCategory.Configuration,
+                                () =>
+                                {
+                                    // Deserialize based on the registered type
+                                    object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
+                                    configValue.Value = value;
+                                },
+                                context: $"Loading config value {kvp.Key}");
+                        }
                     }
                 }
 
@@ -557,19 +589,22 @@ namespace SuperTUI.Infrastructure
                 string json = await File.ReadAllTextAsync(path, Encoding.UTF8);
                 var configData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
 
-                foreach (var kvp in configData)
+                lock (configLock)
                 {
-                    if (config.TryGetValue(kvp.Key, out var configValue))
+                    foreach (var kvp in configData)
                     {
-                        ErrorHandlingPolicy.SafeExecute(
-                            ErrorCategory.Configuration,
-                            () =>
-                            {
-                                // Deserialize based on the registered type
-                                object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
-                                configValue.Value = value;
-                            },
-                            context: $"Loading config value {kvp.Key}");
+                        if (config.TryGetValue(kvp.Key, out var configValue))
+                        {
+                            ErrorHandlingPolicy.SafeExecute(
+                                ErrorCategory.Configuration,
+                                () =>
+                                {
+                                    // Deserialize based on the registered type
+                                    object value = JsonSerializer.Deserialize(kvp.Value.GetRawText(), configValue.ValueType);
+                                    configValue.Value = value;
+                                },
+                                context: $"Loading config value {kvp.Key}");
+                        }
                     }
                 }
 
@@ -591,67 +626,70 @@ namespace SuperTUI.Infrastructure
         /// <returns>True if all values are valid, false otherwise</returns>
         public bool Validate()
         {
-            bool allValid = true;
-            int validatedCount = 0;
-            int invalidCount = 0;
-
-            foreach (var kvp in config)
+            lock (configLock)
             {
-                validatedCount++;
-                var configValue = kvp.Value;
+                bool allValid = true;
+                int validatedCount = 0;
+                int invalidCount = 0;
 
-                // Check for null when not expected
-                if (configValue.Value == null && configValue.DefaultValue != null)
+                foreach (var kvp in config)
                 {
-                    Logger.Instance.Warning("Config",
-                        $"Configuration key '{kvp.Key}' has null value but expects type {configValue.ValueType.Name}. " +
-                        $"Using default: {configValue.DefaultValue}");
-                    configValue.Value = configValue.DefaultValue;
-                    allValid = false;
-                    invalidCount++;
-                    continue;
-                }
+                    validatedCount++;
+                    var configValue = kvp.Value;
 
-                // Run validator if configured
-                if (configValue.Validator != null && configValue.Value != null)
-                {
-                    try
+                    // Check for null when not expected
+                    if (configValue.Value == null && configValue.DefaultValue != null)
                     {
-                        if (!configValue.Validator(configValue.Value))
+                        Logger.Instance.Warning("Config",
+                            $"Configuration key '{kvp.Key}' has null value but expects type {configValue.ValueType.Name}. " +
+                            $"Using default: {configValue.DefaultValue}");
+                        configValue.Value = configValue.DefaultValue;
+                        allValid = false;
+                        invalidCount++;
+                        continue;
+                    }
+
+                    // Run validator if configured
+                    if (configValue.Validator != null && configValue.Value != null)
+                    {
+                        try
                         {
-                            Logger.Instance.Warning("Config",
-                                $"Configuration key '{kvp.Key}' failed validation. " +
-                                $"Value: {configValue.Value}, Default: {configValue.DefaultValue}. " +
-                                $"Resetting to default.");
+                            if (!configValue.Validator(configValue.Value))
+                            {
+                                Logger.Instance.Warning("Config",
+                                    $"Configuration key '{kvp.Key}' failed validation. " +
+                                    $"Value: {configValue.Value}, Default: {configValue.DefaultValue}. " +
+                                    $"Resetting to default.");
+                                configValue.Value = configValue.DefaultValue;
+                                allValid = false;
+                                invalidCount++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Error("Config",
+                                $"Validator for '{kvp.Key}' threw exception: {ex.Message}. " +
+                                $"Resetting to default.", ex);
                             configValue.Value = configValue.DefaultValue;
                             allValid = false;
                             invalidCount++;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.Instance.Error("Config",
-                            $"Validator for '{kvp.Key}' threw exception: {ex.Message}. " +
-                            $"Resetting to default.", ex);
-                        configValue.Value = configValue.DefaultValue;
-                        allValid = false;
-                        invalidCount++;
-                    }
                 }
-            }
 
-            if (allValid)
-            {
-                Logger.Instance.Info("Config", $"Configuration validation passed. {validatedCount} values checked.");
-            }
-            else
-            {
-                Logger.Instance.Warning("Config",
-                    $"Configuration validation found {invalidCount} invalid values out of {validatedCount} total. " +
-                    $"Invalid values reset to defaults.");
-            }
+                if (allValid)
+                {
+                    Logger.Instance.Info("Config", $"Configuration validation passed. {validatedCount} values checked.");
+                }
+                else
+                {
+                    Logger.Instance.Warning("Config",
+                        $"Configuration validation found {invalidCount} invalid values out of {validatedCount} total. " +
+                        $"Invalid values reset to defaults.");
+                }
 
-            return allValid;
+                return allValid;
+            }
         }
 
         /// <summary>
@@ -666,67 +704,73 @@ namespace SuperTUI.Infrastructure
         /// <exception cref="InvalidCastException">If type conversion fails</exception>
         public T GetStrict<T>(string key)
         {
-            if (!config.ContainsKey(key))
+            lock (configLock)
             {
-                throw new KeyNotFoundException(
-                    $"Required configuration key '{key}' not found. " +
-                    $"Available keys: {string.Join(", ", config.Keys.Take(10))}...");
-            }
-
-            var configValue = config[key];
-
-            if (configValue.Value == null)
-            {
-                if (typeof(T).IsValueType && Nullable.GetUnderlyingType(typeof(T)) == null)
+                if (!config.ContainsKey(key))
                 {
-                    throw new InvalidOperationException(
-                        $"Configuration key '{key}' has null value but type {typeof(T).Name} is not nullable.");
+                    throw new KeyNotFoundException(
+                        $"Required configuration key '{key}' not found. " +
+                        $"Available keys: {string.Join(", ", config.Keys.Take(10))}...");
                 }
-                return default(T);
-            }
 
-            try
-            {
-                // Use internal method with throwOnError=true for strict enforcement
-                T value = GetValueInternal<T>(configValue, key, default(T), throwOnError: true);
+                var configValue = config[key];
 
-                // Verify we got a valid value (for reference types)
-                if (value == null && configValue.Value != null)
+                if (configValue.Value == null)
+                {
+                    if (typeof(T).IsValueType && Nullable.GetUnderlyingType(typeof(T)) == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Configuration key '{key}' has null value but type {typeof(T).Name} is not nullable.");
+                    }
+                    return default(T);
+                }
+
+                try
+                {
+                    // Use internal method with throwOnError=true for strict enforcement
+                    T value = GetValueInternal<T>(configValue, key, default(T), throwOnError: true);
+
+                    // Verify we got a valid value (for reference types)
+                    if (value == null && configValue.Value != null)
+                    {
+                        throw new InvalidCastException(
+                            $"Failed to convert configuration key '{key}' " +
+                            $"from {configValue.Value.GetType().Name} to {typeof(T).Name}");
+                    }
+
+                    return value;
+                }
+                catch (KeyNotFoundException)
+                {
+                    // Re-throw key not found exceptions
+                    throw;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Re-throw invalid operation exceptions
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     throw new InvalidCastException(
-                        $"Failed to convert configuration key '{key}' " +
-                        $"from {configValue.Value.GetType().Name} to {typeof(T).Name}");
+                        $"Failed to get configuration key '{key}' as type {typeof(T).Name}. " +
+                        $"Current value type: {configValue.Value?.GetType().Name ?? "null"}. " +
+                        $"Error: {ex.Message}", ex);
                 }
-
-                return value;
-            }
-            catch (KeyNotFoundException)
-            {
-                // Re-throw key not found exceptions
-                throw;
-            }
-            catch (InvalidOperationException)
-            {
-                // Re-throw invalid operation exceptions
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidCastException(
-                    $"Failed to get configuration key '{key}' as type {typeof(T).Name}. " +
-                    $"Current value type: {configValue.Value?.GetType().Name ?? "null"}. " +
-                    $"Error: {ex.Message}", ex);
             }
         }
 
         public void ResetToDefaults()
         {
-            foreach (var kvp in config)
+            lock (configLock)
             {
-                kvp.Value.Value = kvp.Value.DefaultValue;
-            }
+                foreach (var kvp in config)
+                {
+                    kvp.Value.Value = kvp.Value.DefaultValue;
+                }
 
-            Logger.Instance.Info("Config", "Configuration reset to defaults");
+                Logger.Instance.Info("Config", "Configuration reset to defaults");
+            }
         }
 
         /// <summary>
@@ -736,11 +780,14 @@ namespace SuperTUI.Infrastructure
         public void ResetForTesting()
         {
             #if DEBUG
-            isInitialized = false;
-            config = new Dictionary<string, ConfigValue>();
-            categories = new Dictionary<string, Dictionary<string, ConfigValue>>();
-            configFilePath = null;
-            Logger.Instance.Warning("Config", "ConfigurationManager reset for testing - NOT for production use");
+            lock (configLock)
+            {
+                isInitialized = false;
+                config = new Dictionary<string, ConfigValue>();
+                categories = new Dictionary<string, Dictionary<string, ConfigValue>>();
+                configFilePath = null;
+                Logger.Instance.Warning("Config", "ConfigurationManager reset for testing - NOT for production use");
+            }
             #else
             throw new InvalidOperationException(
                 "ResetForTesting() is only available in DEBUG builds and should NEVER be called in production.");

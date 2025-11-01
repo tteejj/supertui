@@ -11,6 +11,10 @@
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
     <!-- Enable Windows targeting on Linux for syntax/type checking -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- Disable test SDK auto-generation since this is a WPF app -->
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +30,12 @@
 
     <!-- Test dependencies (excluded from build) -->
     <PackageReference Include="xunit" Version="2.6.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Xunit.StaFact" Version="1.1.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,11 +43,21 @@
     <Compile Remove="compile_error.cs" />
     <Compile Remove="**/*.ps1" />
 
-    <!-- Exclude test files (require Xunit/Moq dependencies) -->
-    <Compile Remove="Tests/**/*.cs" />
-
     <!-- Exclude example/documentation files -->
     <Compile Remove="Core/StateMigrationExamples.cs" />
+
+    <!-- Exclude tests with missing dependencies or obsolete types -->
+    <Compile Remove="Tests/Components/WorkspaceTests.cs" />
+    <Compile Remove="Tests/Layout/GridLayoutEngineTests.cs" />
+    <Compile Remove="Tests/Infrastructure/StateMigrationTests.cs" />
+    <Compile Remove="Tests/Infrastructure/ThemeManagerTests.cs" />
+    <Compile Remove="Tests/Linux/WidgetFactoryTests.cs" />
+    <Compile Remove="Tests/Widgets/**/*.cs" />
+    <Compile Remove="Tests/Integration/**/*.cs" />
+    <Compile Remove="Tests/Windows/**/*.cs" />
+
+    <!-- Exclude auto-generated assembly attributes that conflict with test SDK -->
+    <Compile Remove="obj/**/*.cs" />
 
     <!-- SECURITY POLICY: Exclude widgets requiring external code execution packages -->
     <!-- TerminalWidget requires System.Management.Automation (PowerShell) - arbitrary code execution risk -->

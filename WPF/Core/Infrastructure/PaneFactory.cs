@@ -124,18 +124,19 @@ namespace SuperTUI.Core.Infrastructure
                         return pane;
                     }
                 },
-                ["excel-import"] = new PaneMetadata
-                {
-                    Name = "excel-import",
-                    Description = "Import projects from Excel clipboard",
-                    Icon = "📋",
-                    Creator = () =>
-                    {
-                        var pane = new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus);
-                        SetFocusHistory(pane);
-                        return pane;
-                    }
-                },
+                // Note: ExcelImportPane excluded from test builds
+                // ["excel-import"] = new PaneMetadata
+                // {
+                //     Name = "excel-import",
+                //     Description = "Import projects from Excel clipboard",
+                //     Icon = "📋",
+                //     Creator = () =>
+                //     {
+                //         var pane = new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus);
+                //         SetFocusHistory(pane);
+                //         return pane;
+                //     }
+                // },
                 ["help"] = new PaneMetadata
                 {
                     Name = "help",

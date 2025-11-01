@@ -20,6 +20,7 @@ namespace SuperTUI.Core.Infrastructure
         public Guid? CurrentProjectId { get; set; }
         public DateTime LastModified { get; set; }
         public Dictionary<string, object> FocusState { get; set; } = new Dictionary<string, object>();
+        public List<Components.PaneState> PaneStates { get; set; } = new List<Components.PaneState>();
 
         public PaneWorkspaceState()
         {

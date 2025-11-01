@@ -242,6 +242,7 @@ namespace SuperTUI.Infrastructure
     public class SecurityManager : ISecurityManager
     {
         private static SecurityManager instance;
+        private static readonly object initializationLock = new object();
 
         /// <summary>
         /// Singleton instance for infrastructure use.
@@ -263,94 +264,98 @@ namespace SuperTUI.Infrastructure
         /// <summary>
         /// Initialize security manager with specified mode.
         /// Can only be called once - subsequent calls will throw an exception.
+        /// Thread-safe for concurrent test execution.
         /// </summary>
         /// <param name="securityMode">Security mode to use</param>
         /// <exception cref="InvalidOperationException">If already initialized</exception>
         /// <exception cref="InvalidOperationException">If Development mode is used in Release builds</exception>
         public void Initialize(SecurityMode securityMode = SecurityMode.Strict)
         {
-            if (isInitialized)
+            lock (initializationLock)
             {
-                throw new InvalidOperationException(
-                    "SecurityManager is already initialized. Security mode cannot be changed after initialization.");
-            }
-
-            // SECURITY: Prevent Development mode in Release builds
-            #if !DEBUG
-            if (securityMode == SecurityMode.Development)
-            {
-                throw new InvalidOperationException(
-                    "SECURITY VIOLATION: Development security mode is not allowed in Release builds. " +
-                    "Development mode bypasses ALL security validation and should NEVER be used in production. " +
-                    "Use SecurityMode.Strict or SecurityMode.Permissive instead.");
-            }
-            #endif
-
-            mode = securityMode;
-            isInitialized = true;
-
-            // Log security mode with severity appropriate to risk level
-            Logger.Instance.Info("Security", $"SecurityManager initializing in {mode} mode");
-
-            if (mode == SecurityMode.Development)
-            {
-                // Log with CRITICAL severity for development mode
-                Logger.Instance.Critical("Security",
-                    "╔════════════════════════════════════════════════════════════════╗\n" +
-                    "║  ⚠️  DEVELOPMENT MODE ACTIVE - SECURITY DISABLED  ⚠️           ║\n" +
-                    "╠════════════════════════════════════════════════════════════════╣\n" +
-                    "║  ALL file access validation is BYPASSED                        ║\n" +
-                    "║  Path traversal attacks are NOT prevented                      ║\n" +
-                    "║  File size limits are NOT enforced                             ║\n" +
-                    "║  Extension filtering is NOT applied                            ║\n" +
-                    "║                                                                ║\n" +
-                    "║  This mode is for DEBUGGING ONLY                               ║\n" +
-                    "║  DO NOT USE IN PRODUCTION                                      ║\n" +
-                    "║  DO NOT EXPOSE TO UNTRUSTED INPUT                              ║\n" +
-                    "╚════════════════════════════════════════════════════════════════╝");
-
-                // Defer modal warning dialog to when Application is initialized
-                // This prevents crashes when Initialize() is called before WPF Application exists
-                if (System.Windows.Application.Current != null)
+                if (isInitialized)
                 {
-                    ShowDevelopmentModeWarning();
+                    throw new InvalidOperationException(
+                        "SecurityManager is already initialized. Security mode cannot be changed after initialization.");
                 }
-                else
+
+                // SECURITY: Prevent Development mode in Release builds
+                #if !DEBUG
+                if (securityMode == SecurityMode.Development)
                 {
-                    // Schedule warning for when application starts
-                    System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(
-                        new Action(ShowDevelopmentModeWarning),
-                        System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    throw new InvalidOperationException(
+                        "SECURITY VIOLATION: Development security mode is not allowed in Release builds. " +
+                        "Development mode bypasses ALL security validation and should NEVER be used in production. " +
+                        "Use SecurityMode.Strict or SecurityMode.Permissive instead.");
                 }
-            }
-            else if (mode == SecurityMode.Permissive)
-            {
-                Logger.Instance.Warning("Security",
-                    "SecurityManager running in PERMISSIVE mode. " +
-                    "UNC paths allowed, larger file sizes permitted. " +
-                    "Use only in trusted environments.");
-            }
+                #endif
 
-            // Load from config
-            var extensions = ConfigurationManager.Instance.Get<List<string>>("Security.AllowedExtensions");
-            if (extensions != null)
-            {
-                foreach (var ext in extensions)
+                mode = securityMode;
+                isInitialized = true;
+
+                // Log security mode with severity appropriate to risk level
+                Logger.Instance.Info("Security", $"SecurityManager initializing in {mode} mode");
+
+                if (mode == SecurityMode.Development)
                 {
-                    allowedExtensions.Add(ext);
+                    // Log with CRITICAL severity for development mode
+                    Logger.Instance.Critical("Security",
+                        "╔════════════════════════════════════════════════════════════════╗\n" +
+                        "║  ⚠️  DEVELOPMENT MODE ACTIVE - SECURITY DISABLED  ⚠️           ║\n" +
+                        "╠════════════════════════════════════════════════════════════════╣\n" +
+                        "║  ALL file access validation is BYPASSED                        ║\n" +
+                        "║  Path traversal attacks are NOT prevented                      ║\n" +
+                        "║  File size limits are NOT enforced                             ║\n" +
+                        "║  Extension filtering is NOT applied                            ║\n" +
+                        "║                                                                ║\n" +
+                        "║  This mode is for DEBUGGING ONLY                               ║\n" +
+                        "║  DO NOT USE IN PRODUCTION                                      ║\n" +
+                        "║  DO NOT EXPOSE TO UNTRUSTED INPUT                              ║\n" +
+                        "╚════════════════════════════════════════════════════════════════╝");
+
+                    // Defer modal warning dialog to when Application is initialized
+                    // This prevents crashes when Initialize() is called before WPF Application exists
+                    if (System.Windows.Application.Current != null)
+                    {
+                        ShowDevelopmentModeWarning();
+                    }
+                    else
+                    {
+                        // Schedule warning for when application starts
+                        System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(
+                            new Action(ShowDevelopmentModeWarning),
+                            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    }
                 }
+                else if (mode == SecurityMode.Permissive)
+                {
+                    Logger.Instance.Warning("Security",
+                        "SecurityManager running in PERMISSIVE mode. " +
+                        "UNC paths allowed, larger file sizes permitted. " +
+                        "Use only in trusted environments.");
+                }
+
+                // Load from config
+                var extensions = ConfigurationManager.Instance.Get<List<string>>("Security.AllowedExtensions");
+                if (extensions != null)
+                {
+                    foreach (var ext in extensions)
+                    {
+                        allowedExtensions.Add(ext);
+                    }
+                }
+
+                // File size limits depend on mode
+                int defaultMaxSize = mode == SecurityMode.Permissive ? 100 : 10;  // 100MB permissive, 10MB strict
+                maxFileSizeBytes = ConfigurationManager.Instance.Get<int>("Security.MaxFileSize", defaultMaxSize) * 1024 * 1024;
+
+                // Add default allowed directories
+                AddAllowedDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+                AddAllowedDirectory(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+
+                Logger.Instance.Info("Security",
+                    $"Security manager initialized successfully. Mode: {mode}, MaxFileSize: {maxFileSizeBytes / 1024 / 1024}MB, AllowedExtensions: {allowedExtensions.Count}");
             }
-
-            // File size limits depend on mode
-            int defaultMaxSize = mode == SecurityMode.Permissive ? 100 : 10;  // 100MB permissive, 10MB strict
-            maxFileSizeBytes = ConfigurationManager.Instance.Get<int>("Security.MaxFileSize", defaultMaxSize) * 1024 * 1024;
-
-            // Add default allowed directories
-            AddAllowedDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            AddAllowedDirectory(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
-
-            Logger.Instance.Info("Security",
-                $"Security manager initialized successfully. Mode: {mode}, MaxFileSize: {maxFileSizeBytes / 1024 / 1024}MB, AllowedExtensions: {allowedExtensions.Count}");
         }
 
         /// <summary>
@@ -573,16 +578,20 @@ namespace SuperTUI.Infrastructure
         /// <summary>
         /// Reset initialization state for testing purposes ONLY.
         /// WARNING: This bypasses immutability guarantees and should NEVER be used in production.
+        /// Thread-safe for concurrent test execution.
         /// </summary>
         public void ResetForTesting()
         {
             #if DEBUG
-            isInitialized = false;
-            mode = SecurityMode.Strict;
-            allowedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            maxFileSizeBytes = 10 * 1024 * 1024;
-            Logger.Instance.Warning("Security", "SecurityManager reset for testing - NOT for production use");
+            lock (initializationLock)
+            {
+                isInitialized = false;
+                mode = SecurityMode.Strict;
+                allowedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                maxFileSizeBytes = 10 * 1024 * 1024;
+                Logger.Instance.Warning("Security", "SecurityManager reset for testing - NOT for production use");
+            }
             #else
             throw new InvalidOperationException(
                 "ResetForTesting() is only available in DEBUG builds and should NEVER be called in production.");

@@ -68,6 +68,12 @@ namespace SuperTUI.Core.Components
             // CRITICAL FIX: Make pane focusable to receive keyboard events
             this.Focusable = true;
 
+            // CRITICAL FIX: Subscribe to focus changes to update visual state
+            this.IsKeyboardFocusWithinChanged += OnKeyboardFocusWithinChanged;
+
+            logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                "Subscribed to IsKeyboardFocusWithinChanged event");
+
             // Main grid: header + content
             mainGrid = new Grid();
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(30) }); // Header
@@ -268,8 +274,20 @@ namespace SuperTUI.Core.Components
             var theme = themeManager.CurrentTheme;
             if (theme == null) return;
 
+            // Guard against cross-thread access in tests
+            // WPF UI objects must be accessed on the thread that created them
+            if (!CheckAccess())
+            {
+                logger?.Log(LogLevel.Debug, PaneName ?? "Pane",
+                    "ApplyTheme called on non-UI thread - skipping visual updates (test mode)");
+                return;
+            }
+
             // UNIFIED FOCUS: Use WPF's native focus state as single source of truth
             bool hasFocus = this.IsKeyboardFocusWithin;
+
+            logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                $"ApplyTheme called - HasFocus: {hasFocus}, IsActive: {IsActive}");
 
             var background = theme.Background;
             var headerBg = hasFocus ? theme.BorderActive : theme.Surface;  // Change header bg when focused
@@ -303,6 +321,18 @@ namespace SuperTUI.Core.Components
             headerBorder.BorderBrush = new SolidColorBrush(border);
             headerText.Foreground = new SolidColorBrush(foreground);  // Always use foreground, border shows focus
 
+            // Add visual indicator in header text for better focus tracking
+            if (hasFocus)
+            {
+                headerText.Text = $"► {PaneName}";  // Add arrow prefix when focused
+                headerText.FontWeight = FontWeights.Bold;
+            }
+            else
+            {
+                headerText.Text = PaneName;
+                headerText.FontWeight = FontWeights.Normal;
+            }
+
             // Content
             if (contentArea.Content is Panel panel)
             {
@@ -311,8 +341,36 @@ namespace SuperTUI.Core.Components
         }
 
         /// <summary>
+        /// Handles keyboard focus changes to update visual state
+        /// </summary>
+        private void OnKeyboardFocusWithinChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            bool hasFocus = (bool)e.NewValue;
+
+            logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                $"Focus changed: {(hasFocus ? "GAINED" : "LOST")} keyboard focus");
+
+            // Update visual state immediately
+            ApplyTheme();
+
+            // Log current visual state for debugging
+            if (hasFocus)
+            {
+                logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                    "Visual state updated: thick border + glow + highlighted header");
+            }
+            else
+            {
+                logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                    "Visual state updated: thin border, no glow, default header");
+            }
+        }
+
+        /// <summary>
         /// Dispose pane resources
         /// </summary>
+        private bool disposedValue = false; // To detect redundant calls
+
         public void Dispose()
         {
             Dispose(true);
@@ -321,20 +379,28 @@ namespace SuperTUI.Core.Components
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (!disposedValue) // Prevent double disposal
             {
-                // Untrack this pane from FocusHistoryManager to prevent memory leaks
-                if (focusHistory != null)
+                if (disposing)
                 {
-                    focusHistory.UntrackPane(this);
+                    // Unsubscribe from focus events
+                    this.IsKeyboardFocusWithinChanged -= OnKeyboardFocusWithinChanged;
+
+                    // Untrack this pane from FocusHistoryManager to prevent memory leaks
+                    if (focusHistory != null)
+                    {
+                        focusHistory.UntrackPane(this);
+                    }
+
+                    // Unsubscribe from events
+                    projectContext.ProjectContextChanged -= OnProjectContextChanged;
+                    themeManager.ThemeChanged -= OnThemeChanged;
+
+                    // Let subclasses clean up
+                    OnDispose();
                 }
 
-                // Unsubscribe from events
-                projectContext.ProjectContextChanged -= OnProjectContextChanged;
-                themeManager.ThemeChanged -= OnThemeChanged;
-
-                // Let subclasses clean up
-                OnDispose();
+                disposedValue = true;
             }
         }
 

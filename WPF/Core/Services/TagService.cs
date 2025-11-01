@@ -44,6 +44,19 @@ namespace SuperTUI.Core.Services
             RebuildTagIndex();
         }
 
+        /// <summary>
+        /// Clear all tag state (for testing - ensures clean slate between tests)
+        /// </summary>
+        public void Clear()
+        {
+            lock (tagLock)
+            {
+                tagIndex.Clear();
+                allTags.Clear();
+                logger.Debug("TagService", "Cleared all tag state");
+            }
+        }
+
         #region Tag CRUD
 
         /// <summary>

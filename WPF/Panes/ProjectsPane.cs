@@ -1172,11 +1172,27 @@ namespace SuperTUI.Panes
 
         private void OnProjectAdded(Project project)
         {
+            // Guard against cross-thread access in tests
+            if (!CheckAccess())
+            {
+                logger?.Log(LogLevel.Debug, PaneName ?? "ProjectsPane",
+                    "OnProjectAdded called on non-UI thread - skipping UI updates (test mode)");
+                return;
+            }
+
             RefreshProjectList();
         }
 
         private void OnProjectUpdated(Project project)
         {
+            // Guard against cross-thread access in tests
+            if (!CheckAccess())
+            {
+                logger?.Log(LogLevel.Debug, PaneName ?? "ProjectsPane",
+                    "OnProjectUpdated called on non-UI thread - skipping UI updates (test mode)");
+                return;
+            }
+
             RefreshProjectList();
             if (selectedProject?.Id == project.Id)
             {
@@ -1187,6 +1203,14 @@ namespace SuperTUI.Panes
 
         private void OnProjectDeleted(Guid projectId)
         {
+            // Guard against cross-thread access in tests
+            if (!CheckAccess())
+            {
+                logger?.Log(LogLevel.Debug, PaneName ?? "ProjectsPane",
+                    "OnProjectDeleted called on non-UI thread - skipping UI updates (test mode)");
+                return;
+            }
+
             if (selectedProject?.Id == projectId)
             {
                 selectedProject = null;
@@ -1197,6 +1221,14 @@ namespace SuperTUI.Panes
 
         private void OnProjectContextChanged(object sender, EventArgs e)
         {
+            // Guard against cross-thread access in tests
+            if (!CheckAccess())
+            {
+                logger?.Log(LogLevel.Debug, PaneName ?? "ProjectsPane",
+                    "OnProjectContextChanged called on non-UI thread - skipping UI updates (test mode)");
+                return;
+            }
+
             UpdateStatusBar();
         }
 

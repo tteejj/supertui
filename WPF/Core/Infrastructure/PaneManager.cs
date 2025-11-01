@@ -153,24 +153,53 @@ namespace SuperTUI.Core.Infrastructure
             focusedPane.SetActive(true);
             focusedPane.OnFocusChanged();
 
-            // Use FocusHistoryManager's fallback chain to ensure focus is never lost
-            // This replaces manual focus attempts with a robust 4-level fallback:
-            // 1. Try the pane itself
-            // 2. Try first focusable child
-            // 3. Try pane again
-            // 4. Try main window as last resort
+            // Use FocusHistoryManager's fallback chain with load checking
             pane.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (!pane.IsKeyboardFocusWithin)
+                // Check if pane is loaded before applying focus
+                if (!pane.IsLoaded)
                 {
-                    bool focusApplied = focusHistory.ApplyFocusToPane(pane);
-                    if (!focusApplied)
+                    logger.Log(LogLevel.Debug, "PaneManager",
+                        $"Pane {pane.PaneName} not loaded yet, waiting for Loaded event");
+
+                    RoutedEventHandler loadedHandler = null;
+                    loadedHandler = (s, e) =>
                     {
-                        logger.Log(LogLevel.Warning, "PaneManager", 
-                            $"Failed to apply focus to pane {pane.PaneName} even with fallback chain");
-                    }
+                        pane.Loaded -= loadedHandler;
+
+                        logger.Log(LogLevel.Debug, "PaneManager",
+                            $"Pane {pane.PaneName} loaded, applying focus now");
+
+                        // Now safe to apply focus
+                        bool focusApplied = focusHistory.ApplyFocusToPane(pane);
+
+                        logger.Log(focusApplied ? LogLevel.Debug : LogLevel.Warning,
+                            "PaneManager",
+                            focusApplied
+                                ? $"Successfully applied focus to pane {pane.PaneName}"
+                                : $"Failed to apply focus to pane {pane.PaneName} even after loading");
+                    };
+                    pane.Loaded += loadedHandler;
                 }
-            }), System.Windows.Threading.DispatcherPriority.Input);
+                else if (!pane.IsKeyboardFocusWithin)
+                {
+                    logger.Log(LogLevel.Debug, "PaneManager",
+                        $"Pane {pane.PaneName} already loaded, applying focus immediately");
+
+                    bool focusApplied = focusHistory.ApplyFocusToPane(pane);
+
+                    logger.Log(focusApplied ? LogLevel.Debug : LogLevel.Warning,
+                        "PaneManager",
+                        focusApplied
+                            ? $"Successfully applied focus to pane {pane.PaneName}"
+                            : $"Failed to apply focus to pane {pane.PaneName}");
+                }
+                else
+                {
+                    logger.Log(LogLevel.Debug, "PaneManager",
+                        $"Pane {pane.PaneName} already has focus");
+                }
+            }), System.Windows.Threading.DispatcherPriority.Loaded); // Changed from Input to Loaded
 
             PaneFocusChanged?.Invoke(this, new PaneEventArgs(pane));
         }
