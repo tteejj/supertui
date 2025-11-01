@@ -22,7 +22,15 @@
       "Bash(cat:*)",
       "Bash(Select-String -Pattern \"(Starting test execution|Test Run|Passed!|Failed!|Error Message|Stack Trace)\" -Context 0,2)",
       "Bash(test_results.txt)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(test_output.txt)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 2)",
+      "Bash(Select-String -Pattern \"warning|error|Build\")",
+      "Bash(Select-Object -First 30)",
+      "Bash(Select-String -Pattern \"Build|error CS|warning CS\")",
+      "Bash(Select-Object -Last 20)",
+      "Bash(Select-String -Pattern \"Build|error|warning\")"
     ],
     "deny": [],
     "ask": []

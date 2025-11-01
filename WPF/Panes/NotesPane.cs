@@ -1139,10 +1139,14 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // Check if we're typing in a TextBox (single-key shortcuts shouldn't fire during editing)
-            if (System.Windows.Input.Keyboard.FocusedElement is TextBox && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            // Check if we're typing in THE EDITOR TextBox specifically (not the list box)
+            // Only block shortcuts when actively editing a note, not when browsing the list
+            if (noteEditor != null &&
+                noteEditor.IsFocused &&
+                noteEditor.Visibility == Visibility.Visible &&
+                e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                return; // Let the TextBox handle the key
+                return; // Let the editor handle the key
             }
 
             // Try to handle via ShortcutManager (all registered pane shortcuts)
@@ -1672,12 +1676,22 @@ namespace SuperTUI.Panes
 
             // E (no modifiers): Edit note
             shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
-                () => { if (notesListBox.SelectedItem is NoteMetadata note) _ = LoadNoteAsync(note); else if (currentNote != null) noteEditor?.Focus(); },
+                () => {
+                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
+                        _ = LoadNoteAsync(note);
+                    else if (currentNote != null)
+                        noteEditor?.Focus();
+                },
                 "Edit note");
 
             // Enter (no modifiers): Edit note
             shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
-                () => { if (notesListBox.SelectedItem is NoteMetadata note) _ = LoadNoteAsync(note); else if (currentNote != null) noteEditor?.Focus(); },
+                () => {
+                    if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
+                        _ = LoadNoteAsync(note);
+                    else if (currentNote != null)
+                        noteEditor?.Focus();
+                },
                 "Edit note");
         }
 

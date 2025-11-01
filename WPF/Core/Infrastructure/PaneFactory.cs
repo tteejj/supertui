@@ -43,6 +43,7 @@ namespace SuperTUI.Core.Infrastructure
         private readonly FocusHistoryManager focusHistory;
 
         private readonly Dictionary<string, PaneMetadata> paneRegistry;
+        private readonly Dictionary<string, string> typeNameToFactoryName;
 
         public PaneFactory(
             ILogger logger,
@@ -162,6 +163,18 @@ namespace SuperTUI.Core.Infrastructure
                     }
                 }
             };
+
+            // Build reverse lookup: .NET type name -> factory name
+            // This fixes workspace restoration where PaneType is saved as "TaskListPane" but factory expects "tasks"
+            typeNameToFactoryName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["TaskListPane"] = "tasks",
+                ["NotesPane"] = "notes",
+                ["FileBrowserPane"] = "files",
+                ["ProjectsPane"] = "projects",
+                ["HelpPane"] = "help",
+                ["CalendarPane"] = "calendar"
+            };
         }
 
         /// <summary>
@@ -178,14 +191,24 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
-        /// Create a pane by name
+        /// Create a pane by name (supports both factory names like "tasks" and .NET type names like "TaskListPane")
         /// </summary>
         public PaneBase CreatePane(string paneName)
         {
             if (string.IsNullOrWhiteSpace(paneName))
                 throw new ArgumentException("Pane name cannot be empty", nameof(paneName));
 
-            paneName = paneName.Trim().ToLowerInvariant();
+            paneName = paneName.Trim();
+
+            // Try to map .NET type name to factory name (for workspace restoration)
+            // This handles cases where SaveState() stored "TaskListPane" but we need "tasks"
+            if (typeNameToFactoryName.TryGetValue(paneName, out var factoryName))
+            {
+                paneName = factoryName;
+                logger.Log(LogLevel.Debug, "PaneFactory", $"Mapped type name to factory name: {paneName}");
+            }
+
+            paneName = paneName.ToLowerInvariant();
 
             if (paneRegistry.TryGetValue(paneName, out var metadata))
             {
