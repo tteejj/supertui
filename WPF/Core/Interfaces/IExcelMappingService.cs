@@ -35,7 +35,10 @@ namespace SuperTUI.Infrastructure
 
         // Import operations
         Project ImportProjectFromClipboard(string clipboardData, string startCell = "W3");
+        Project ImportProjectFromCellData(Dictionary<string, string> cellData);
         List<Project> ImportMultipleProjectsFromClipboard(string clipboardData, string startCell = "W3");
+        (Project project, string errorMessage) ImportProjectFromExcelCOM(string startCell = "W3");
+        (Project project, string errorMessage) ImportProjectFromExcelFile(string filePath, string startCell = "W3", int rowCount = 128);
 
         // Export operations
         void ExportToClipboard(List<Project> projects, string format);

@@ -28,6 +28,7 @@ namespace SuperTUI
         private readonly IStatePersistenceManager statePersistence;
         private readonly CommandHistory commandHistory;
         private readonly FocusHistoryManager focusHistory;
+        private readonly INotificationManager notificationManager;
 
         private PaneManager paneManager;
         private PaneFactory paneFactory;
@@ -35,6 +36,7 @@ namespace SuperTUI
         private PaneWorkspaceManager workspaceManager;
         private Panes.CommandPalettePane commandPalette;
         private Core.Components.DebugOverlay debugOverlay;
+        private Core.Components.NotificationPanel notificationPanel;
         private bool isDebugMode = false;
 
         public MainWindow(DI.ServiceContainer container)
@@ -48,6 +50,7 @@ namespace SuperTUI
             statePersistence = serviceContainer.GetRequiredService<IStatePersistenceManager>();
             commandHistory = serviceContainer.GetRequiredService<CommandHistory>();
             focusHistory = serviceContainer.GetRequiredService<FocusHistoryManager>();
+            notificationManager = serviceContainer.GetRequiredService<INotificationManager>();
 
             InitializeComponent();
 
@@ -66,6 +69,7 @@ namespace SuperTUI
             InitializeWorkspaceManager();
             InitializePaneSystem();
             InitializeStatusBar();
+            InitializeNotificationPanel();
 
             // Restore full application state from disk (with checksum validation)
             RestoreApplicationState();
@@ -247,6 +251,7 @@ namespace SuperTUI
             if (!commandHistory.CanUndo)
             {
                 logger.Log(LogLevel.Debug, "MainWindow", "Nothing to undo");
+                notificationManager.ShowInfo("Nothing to undo", "Undo");
                 return;
             }
 
@@ -255,11 +260,12 @@ namespace SuperTUI
                 var description = commandHistory.GetUndoDescription();
                 commandHistory.Undo();
                 logger.Log(LogLevel.Info, "MainWindow", $"Undone: {description}");
+                notificationManager.ShowSuccess($"Undone: {description}", "Undo");
             }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Error, "MainWindow", $"Failed to undo: {ex.Message}", ex);
-                MessageBox.Show($"Failed to undo: {ex.Message}", "Undo Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                notificationManager.ShowError($"Failed to undo: {ex.Message}", "Undo Error");
             }
         }
 
@@ -271,6 +277,7 @@ namespace SuperTUI
             if (!commandHistory.CanRedo)
             {
                 logger.Log(LogLevel.Debug, "MainWindow", "Nothing to redo");
+                notificationManager.ShowInfo("Nothing to redo", "Redo");
                 return;
             }
 
@@ -279,11 +286,12 @@ namespace SuperTUI
                 var description = commandHistory.GetRedoDescription();
                 commandHistory.Redo();
                 logger.Log(LogLevel.Info, "MainWindow", $"Redone: {description}");
+                notificationManager.ShowSuccess($"Redone: {description}", "Redo");
             }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Error, "MainWindow", $"Failed to redo: {ex.Message}", ex);
-                MessageBox.Show($"Failed to redo: {ex.Message}", "Redo Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                notificationManager.ShowError($"Failed to redo: {ex.Message}", "Redo Error");
             }
         }
 
@@ -387,6 +395,7 @@ namespace SuperTUI
 
             // Restore panes
             var panesToRestore = new List<Core.Components.PaneBase>();
+            var failedPanes = new List<string>();
             foreach (var paneTypeName in state.OpenPaneTypes)
             {
                 try
@@ -397,7 +406,17 @@ namespace SuperTUI
                 catch (Exception ex)
                 {
                     logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore pane '{paneTypeName}': {ex.Message}");
+                    failedPanes.Add(paneTypeName);
                 }
+            }
+
+            // Show notification if any panes failed to restore
+            if (failedPanes.Count > 0)
+            {
+                var paneList = string.Join(", ", failedPanes);
+                notificationManager.ShowWarning(
+                    $"Could not restore {failedPanes.Count} pane(s): {paneList}",
+                    "Workspace Restoration Warning");
             }
 
             if (panesToRestore.Count > 0)
@@ -533,6 +552,23 @@ namespace SuperTUI
             {
                 StatusBarContainer.Child = statusBar;
             }
+        }
+
+        private void InitializeNotificationPanel()
+        {
+            notificationPanel = new Core.Components.NotificationPanel(
+                logger,
+                themeManager,
+                notificationManager
+            );
+
+            // Add to notification overlay
+            if (!NotificationOverlay.Children.Contains(notificationPanel))
+            {
+                NotificationOverlay.Children.Add(notificationPanel);
+            }
+
+            logger.Log(LogLevel.Info, "MainWindow", "Notification panel initialized");
         }
 
         private void OnPaneFocusChanged(object sender, PaneEventArgs e)
@@ -1010,11 +1046,19 @@ namespace SuperTUI
                 debugOverlay?.Stop();
                 debugOverlay = null;
 
+                // Dispose notification panel
+                notificationPanel?.Dispose();
+
                 logger.Log(LogLevel.Info, "MainWindow", "Shutdown complete");
             }
             catch (Exception ex)
             {
                 logger.Log(LogLevel.Error, "MainWindow", $"Error during shutdown: {ex.Message}");
+
+                // Show error notification (user may see it briefly before window closes)
+                notificationManager?.ShowError(
+                    $"Failed to save application state: {ex.Message}",
+                    "Shutdown Error");
             }
         }
     }

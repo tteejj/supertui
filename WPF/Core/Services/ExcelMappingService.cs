@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using SuperTUI.Core.Models;
+using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Core.Services
@@ -21,6 +22,7 @@ namespace SuperTUI.Core.Services
         private readonly ILogger logger;
         private readonly IConfigurationManager config;
         private readonly IProjectService projectService;
+        private readonly ExcelComReader excelComReader;
 
         private List<ExcelMappingProfile> profiles;
         private ExcelMappingProfile activeProfile;
@@ -37,6 +39,7 @@ namespace SuperTUI.Core.Services
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.config = config ?? throw new ArgumentNullException(nameof(config));
             this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+            this.excelComReader = new ExcelComReader(this.logger);
 
             profiles = new List<ExcelMappingProfile>();
         }
@@ -79,6 +82,23 @@ namespace SuperTUI.Core.Services
                 {
                     SetActiveProfile(profiles[0].Id);
                 }
+
+                // Validate all profile mappings reference valid properties
+                foreach (var profile in profiles)
+                {
+                    foreach (var mapping in profile.Mappings)
+                    {
+                        var prop = typeof(Project).GetProperty(mapping.ProjectPropertyName);
+                        if (prop == null)
+                        {
+                            logger.Error("ExcelMapping", $"Profile '{profile.Name}' has invalid property '{mapping.ProjectPropertyName}'");
+                            throw new InvalidOperationException(
+                                $"Excel mapping profile '{profile.Name}' references non-existent property '{mapping.ProjectPropertyName}'. " +
+                                $"Please fix the profile or update the Project model.");
+                        }
+                    }
+                }
+                logger.Info("ExcelMapping", $"All profile mappings validated successfully");
 
                 logger.Info("ExcelMapping", $"Initialized with {profiles.Count} profiles");
             }
@@ -337,26 +357,14 @@ namespace SuperTUI.Core.Services
             try
             {
                 var cellData = ClipboardDataParser.ParseTSV(clipboardData, startCell);
-                var project = new Project();
+                var project = MapCellDataToProject(cellData);
 
-                foreach (var mapping in activeProfile.Mappings)
-                {
-                    var cellValue = ClipboardDataParser.GetCellValue(cellData, mapping.ExcelCellRef);
-
-                    if (string.IsNullOrEmpty(cellValue) && !string.IsNullOrEmpty(mapping.DefaultValue))
-                    {
-                        cellValue = mapping.DefaultValue;
-                    }
-
-                    ExcelExportFormatter.SetProjectValue(project, mapping.ProjectPropertyName, cellValue);
-                }
-
-                logger.Info("ExcelMapping", $"Imported project: {project.Name}");
+                logger.Info("ExcelMapping", $"Imported project from clipboard: {project.Name}");
                 return project;
             }
             catch (Exception ex)
             {
-                logger.Error("ExcelMapping", $"Import failed: {ex.Message}", ex);
+                logger.Error("ExcelMapping", $"Clipboard import failed: {ex.Message}", ex);
                 throw;
             }
         }
@@ -376,6 +384,118 @@ namespace SuperTUI.Core.Services
                 logger.Error("ExcelMapping", $"Multiple import failed: {ex.Message}", ex);
             }
             return projects;
+        }
+
+        /// <summary>
+        /// Import project from running Excel instance via COM
+        /// </summary>
+        public (Project project, string errorMessage) ImportProjectFromExcelCOM(string startCell = "W3")
+        {
+            if (activeProfile == null)
+            {
+                return (null, "No active profile selected");
+            }
+
+            try
+            {
+                var (success, cellData, error) = excelComReader.TryReadFromRunningExcel(startCell);
+
+                if (!success)
+                {
+                    return (null, error);
+                }
+
+                // Use existing mapping logic (same as clipboard import)
+                var project = MapCellDataToProject(cellData);
+
+                logger.Info("ExcelMapping", $"Imported project from Excel COM: {project.Name}");
+                return (project, null);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("ExcelMapping", $"COM import failed: {ex.Message}", ex);
+                return (null, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Import project from Excel file via COM
+        /// </summary>
+        public (Project project, string errorMessage) ImportProjectFromExcelFile(string filePath, string startCell = "W3", int rowCount = 128)
+        {
+            if (activeProfile == null)
+            {
+                return (null, "No active profile selected");
+            }
+
+            try
+            {
+                var (success, cellData, error) = excelComReader.ReadFromFile(filePath, startCell, rowCount);
+
+                if (!success)
+                {
+                    return (null, error);
+                }
+
+                var project = MapCellDataToProject(cellData);
+
+                logger.Info("ExcelMapping", $"Imported project from file: {project.Name}");
+                return (project, null);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("ExcelMapping", $"File import failed: {ex.Message}", ex);
+                return (null, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Import project directly from cellData dictionary (useful when data already read via COM)
+        /// </summary>
+        public Project ImportProjectFromCellData(Dictionary<string, string> cellData)
+        {
+            if (activeProfile == null)
+                throw new InvalidOperationException("No active profile");
+
+            if (cellData == null || cellData.Count == 0)
+                throw new ArgumentException("Cell data is empty", nameof(cellData));
+
+            try
+            {
+                var project = MapCellDataToProject(cellData);
+                logger.Info("ExcelMapping", $"Imported project from cell data: {project.Name}");
+                return project;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("ExcelMapping", $"Cell data import failed: {ex.Message}", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Shared mapping logic: Dictionary<cellRef, value> -> Project
+        /// Refactored from ImportProjectFromClipboard
+        /// </summary>
+        private Project MapCellDataToProject(Dictionary<string, string> cellData)
+        {
+            var project = new Project();
+
+            foreach (var mapping in activeProfile.Mappings)
+            {
+                var cellValue = cellData.ContainsKey(mapping.ExcelCellRef)
+                    ? cellData[mapping.ExcelCellRef]
+                    : "";
+
+                if (string.IsNullOrEmpty(cellValue) && !string.IsNullOrEmpty(mapping.DefaultValue))
+                {
+                    cellValue = mapping.DefaultValue;
+                }
+
+                ExcelExportFormatter.SetProjectValue(project, mapping.ProjectPropertyName, cellValue);
+            }
+
+            return project;
         }
 
         // Export operations
@@ -445,28 +565,36 @@ namespace SuperTUI.Core.Services
                 Description = "Government audit request form mapping (W3:W130, 48 fields)"
             };
 
-            // Sample mappings (you mentioned 48 fields from W3:W130)
-            // I'll create a representative subset - expand as needed
+            // Mappings using ACTUAL Project model property names
+            // Based on ProjectModels.cs lines 133-220
             var mappings = new List<(string display, string cell, string prop, string category, bool export)>
             {
-                ("TP Name", "W3", "TPName", "Case Info", true),
-                ("TP Address 1", "W4", "TPAddress1", "Case Info", false),
-                ("TP Address 2", "W5", "TPAddress2", "Case Info", false),
-                ("TP City", "W6", "TPCity", "Case Info", false),
-                ("TP State", "W7", "TPState", "Case Info", true),
-                ("TP ZIP", "W8", "TPZIP", "Case Info", false),
-                ("CAS Case", "W17", "CASCase", "Case Info", true),
-                ("Original Project", "W23", "OriginalProject", "Project Info", true),
-                ("Actual Project", "W24", "ActualProject", "Project Info", true),
-                ("Project Status", "W30", "ProjectStatus", "Status", true),
-                ("Date Received", "W40", "DateReceived", "Dates", true),
-                ("Due Date", "W41", "DueDate", "Dates", true),
-                ("Extension Date", "W42", "ExtensionDate", "Dates", false),
-                ("Analyst Name", "W50", "AnalystName", "Assignment", true),
-                ("Hours Estimated", "W60", "HoursEstimated", "Time", false),
-                ("Hours Actual", "W61", "HoursActual", "Time", true),
-                ("Issues Found", "W70", "IssuesFound", "Results", true),
-                ("Recommendation", "W80", "Recommendation", "Results", true),
+                ("TP Name", "W3", "FullProjectName", "Case Info", true),
+                ("TP Address", "W4", "Address", "Case Info", false),
+                ("TP City", "W6", "City", "Case Info", false),
+                ("TP Province/State", "W7", "Province", "Case Info", true),
+                ("TP Postal Code", "W8", "PostalCode", "Case Info", false),
+                ("Country", "W9", "Country", "Case Info", false),
+                ("CAS Case Number", "W17", "ID2", "Case Info", true),
+                ("Client ID", "W18", "ClientID", "Case Info", true),
+                ("Tax ID", "W19", "TaxID", "Project Info", false),
+                ("Audit Type", "W23", "AuditType", "Project Info", true),
+                ("Audit Program", "W24", "AuditProgram", "Project Info", true),
+                ("Date Received", "W40", "RequestDate", "Dates", true),
+                ("Date Assigned", "W41", "DateAssigned", "Dates", true),
+                ("Audit Period From", "W42", "AuditPeriodFrom", "Dates", false),
+                ("Audit Period To", "W43", "AuditPeriodTo", "Dates", false),
+                ("Auditor Name", "W50", "AuditorName", "Assignment", true),
+                ("Contact 1 Name", "W60", "Contact1Name", "Contacts", false),
+                ("Contact 1 Phone", "W61", "Contact1Phone", "Contacts", false),
+                ("Contact 1 Title", "W62", "Contact1Title", "Contacts", false),
+                ("Contact 2 Name", "W70", "Contact2Name", "Contacts", false),
+                ("Contact 2 Phone", "W71", "Contact2Phone", "Contacts", false),
+                ("Accounting Software 1", "W80", "AccountingSoftware1", "Systems", false),
+                ("Accounting Software 2", "W81", "AccountingSoftware2", "Systems", false),
+                ("TP Email", "W90", "TPEmailAddress", "Contacts", false),
+                ("TP Phone", "W91", "TPPhoneNumber", "Contacts", false),
+                ("Comments", "W100", "Comments", "Notes", false),
             };
 
             int sortOrder = 0;

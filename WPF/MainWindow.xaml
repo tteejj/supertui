@@ -21,5 +21,8 @@
 
         <!-- Modal overlay container (spans all rows, appears on top) -->
         <Grid x:Name="ModalOverlay" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="1000"/>
+
+        <!-- Notification overlay container (top-right, appears above modal) -->
+        <Grid x:Name="NotificationOverlay" Grid.RowSpan="2" Panel.ZIndex="2000" IsHitTestVisible="False"/>
     </Grid>
 </Window>

@@ -18,6 +18,12 @@
     <!-- System.Management.Automation REMOVED: Security policy - no external code execution packages (2025-10-25) -->
     <!-- <PackageReference Include="System.Management.Automation" Version="7.4.0" /> -->
 
+    <!-- Excel Interop for COM automation (NuGet package instead of COMReference for cross-platform builds) -->
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+
+    <!-- System.Runtime.InteropServices.RuntimeInformation for GetActiveObject support on .NET -->
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+
     <!-- Test dependencies (excluded from build) -->
     <PackageReference Include="xunit" Version="2.6.2" />
     <PackageReference Include="Moq" Version="4.20.70" />

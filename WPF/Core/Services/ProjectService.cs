@@ -27,6 +27,7 @@ namespace SuperTUI.Core.Services
         private Dictionary<Guid, Project> projects;
         private Hashtable nicknameIndex; // Nickname -> Guid (case-insensitive)
         private Hashtable id1Index;      // Id1 -> Guid (case-insensitive)
+        private Hashtable id2Index;      // ID2 (CAS Case) -> Guid (case-insensitive)
         private string dataFilePath;
         private readonly object lockObject = new object();
 
@@ -46,6 +47,7 @@ namespace SuperTUI.Core.Services
             projects = new Dictionary<Guid, Project>();
             nicknameIndex = new Hashtable(StringComparer.OrdinalIgnoreCase);
             id1Index = new Hashtable(StringComparer.OrdinalIgnoreCase);
+            id2Index = new Hashtable(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -239,6 +241,13 @@ namespace SuperTUI.Core.Services
                     throw new InvalidOperationException($"Project with Id1 '{project.Id1}' already exists");
                 }
 
+                // Validate ID2 (CAS Case) uniqueness
+                if (!string.IsNullOrWhiteSpace(project.ID2) && id2Index.ContainsKey(project.ID2))
+                {
+                    Logger.Instance?.Warning("ProjectService", $"Cannot add project: ID2 (CAS Case Number) '{project.ID2}' already exists");
+                    throw new InvalidOperationException($"Project with ID2 (CAS Case Number) '{project.ID2}' already exists");
+                }
+
                 project.Id = Guid.NewGuid();
                 project.CreatedAt = DateTime.Now;
                 project.UpdatedAt = DateTime.Now;
@@ -251,6 +260,8 @@ namespace SuperTUI.Core.Services
                     nicknameIndex[project.Nickname] = project.Id;
                 if (!string.IsNullOrWhiteSpace(project.Id1))
                     id1Index[project.Id1] = project.Id;
+                if (!string.IsNullOrWhiteSpace(project.ID2))
+                    id2Index[project.ID2] = project.Id;
 
                 ScheduleSave();
                 ProjectAdded?.Invoke(project);
@@ -319,6 +330,28 @@ namespace SuperTUI.Core.Services
                         id1Index[project.Id1] = project.Id;
                 }
 
+                // Check if ID2 changed and validate uniqueness
+                if (oldProject.ID2 != project.ID2)
+                {
+                    if (!string.IsNullOrWhiteSpace(project.ID2) && id2Index.ContainsKey(project.ID2))
+                    {
+                        var existingId = (Guid)id2Index[project.ID2];
+                        if (existingId != project.Id)
+                        {
+                            Logger.Instance?.Warning("ProjectService", $"Cannot update project: ID2 '{project.ID2}' already exists");
+                            throw new InvalidOperationException($"Project with ID2 '{project.ID2}' already exists");
+                        }
+                    }
+
+                    // Remove old ID2 from index
+                    if (!string.IsNullOrWhiteSpace(oldProject.ID2))
+                        id2Index.Remove(oldProject.ID2);
+
+                    // Add new ID2 to index
+                    if (!string.IsNullOrWhiteSpace(project.ID2))
+                        id2Index[project.ID2] = project.Id;
+                }
+
                 project.UpdatedAt = DateTime.Now;
                 projects[project.Id] = project;
 
@@ -352,6 +385,8 @@ namespace SuperTUI.Core.Services
                         nicknameIndex.Remove(project.Nickname);
                     if (!string.IsNullOrWhiteSpace(project.Id1))
                         id1Index.Remove(project.Id1);
+                    if (!string.IsNullOrWhiteSpace(project.ID2))
+                        id2Index.Remove(project.ID2);
 
                     projects.Remove(id);
                 }
@@ -773,6 +808,7 @@ namespace SuperTUI.Core.Services
                     projects.Clear();
                     nicknameIndex.Clear();
                     id1Index.Clear();
+                    id2Index.Clear();
 
                     foreach (var project in loadedProjects)
                     {
@@ -783,6 +819,8 @@ namespace SuperTUI.Core.Services
                             nicknameIndex[project.Nickname] = project.Id;
                         if (!string.IsNullOrWhiteSpace(project.Id1))
                             id1Index[project.Id1] = project.Id;
+                        if (!string.IsNullOrWhiteSpace(project.ID2))
+                            id2Index[project.ID2] = project.Id;
                     }
                 }
 
@@ -817,6 +855,7 @@ namespace SuperTUI.Core.Services
                 projects.Clear();
                 nicknameIndex.Clear();
                 id1Index.Clear();
+                id2Index.Clear();
                 ScheduleSave();
                 ProjectsReloaded?.Invoke();
                 Logger.Instance?.Info("ProjectService", "Cleared all projects");

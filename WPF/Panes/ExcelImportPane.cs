@@ -15,8 +15,8 @@ using SuperTUI.Infrastructure;
 namespace SuperTUI.Panes
 {
     /// <summary>
-    /// Excel import pane for clipboard-based project import
-    /// User copies cells from Excel (W3:W130), pastes here, clicks Import
+    /// Excel import pane for COM-based and clipboard-based project import
+    /// User can read directly from Excel via COM or paste clipboard data
     /// Uses ExcelMappingService with SVI-CAS profile
     /// </summary>
     public class ExcelImportPane : PaneBase
@@ -25,6 +25,7 @@ namespace SuperTUI.Panes
         private readonly IProjectService projectService;
         private readonly IExcelMappingService excelMappingService;
         private readonly IEventBus eventBus;
+        private ExcelComReader excelComReader;
 
         // UI Components
         private Grid mainLayout;
@@ -34,6 +35,8 @@ namespace SuperTUI.Panes
         private TextBlock statusLabel;
         private TextBlock helpText;
         private TextBlock previewText;
+        private Button readExcelButton;
+        private Button selectFileButton;
 
         // State
         private List<ExcelMappingProfile> availableProfiles;
@@ -61,6 +64,7 @@ namespace SuperTUI.Panes
             this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             this.excelMappingService = excelMappingService ?? throw new ArgumentNullException(nameof(excelMappingService));
             this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            this.excelComReader = new ExcelComReader(logger);
             PaneName = "Excel Import";
         }
 
@@ -87,8 +91,9 @@ namespace SuperTUI.Panes
         private void RegisterPaneShortcuts()
         {
             var shortcuts = ShortcutManager.Instance;
-            shortcuts.RegisterForPane(PaneName, Key.I, ModifierKeys.None, () => ImportFromClipboard(), "Import from clipboard");
+            shortcuts.RegisterForPane(PaneName, Key.I, ModifierKeys.None, () => ImportFromClipboard(), "Import from clipboard or Excel");
             shortcuts.RegisterForPane(PaneName, Key.P, ModifierKeys.None, () => CycleProfile(), "Cycle mapping profile");
+            shortcuts.RegisterForPane(PaneName, Key.R, ModifierKeys.Control, () => ReadFromRunningExcel(), "Read from running Excel");
         }
 
         protected override UIElement BuildContent()
@@ -99,6 +104,8 @@ namespace SuperTUI.Panes
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Instructions
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Controls
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Button row (COM reading)
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Fallback label
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Clipboard input
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Preview
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status
@@ -128,11 +135,11 @@ namespace SuperTUI.Panes
                 Padding = new Thickness(16, 0, 16, 12),
                 TextWrapping = TextWrapping.Wrap,
                 Text = "1. Open Excel audit request form (SVI-CAS)\n" +
-                       "2. Select cells W3:W130 (48 fields)\n" +
-                       "3. Copy to clipboard (Ctrl+C)\n" +
-                       "4. Paste into textbox below (focus textbox, system paste)\n" +
-                       "5. Press P to cycle profile (if needed)\n" +
-                       "6. Press I to import"
+                       "2. Click 'Read from Running Excel' (Ctrl+R) to read selected cells\n" +
+                       "   OR click 'Open Excel File' to select .xlsx file\n" +
+                       "   OR manually copy cells W3:W130 and paste into textbox below\n" +
+                       "3. Press P to cycle profile (if needed)\n" +
+                       "4. Press I to import"
             };
             Grid.SetRow(helpText, 1);
             mainLayout.Children.Add(helpText);
@@ -141,6 +148,60 @@ namespace SuperTUI.Panes
             var controlsPanel = BuildControlsPanel();
             Grid.SetRow(controlsPanel, 2);
             mainLayout.Children.Add(controlsPanel);
+
+            // Button row for COM reading
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(16, 0, 16, 12),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+
+            readExcelButton = new Button
+            {
+                Content = "Read from Running Excel (Ctrl+R)",
+                Padding = new Thickness(12, 8, 12, 8),
+                Margin = new Thickness(0, 0, 10, 0),
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                Background = surfaceBrush,
+                Foreground = accentBrush,
+                BorderBrush = accentBrush,
+                BorderThickness = new Thickness(2),
+                Cursor = Cursors.Hand
+            };
+            readExcelButton.Click += ReadExcelButton_Click;
+
+            selectFileButton = new Button
+            {
+                Content = "Open Excel File...",
+                Padding = new Thickness(12, 8, 12, 8),
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                Background = surfaceBrush,
+                Foreground = fgBrush,
+                BorderBrush = borderBrush,
+                BorderThickness = new Thickness(2),
+                Cursor = Cursors.Hand
+            };
+            selectFileButton.Click += SelectFileButton_Click;
+
+            buttonPanel.Children.Add(readExcelButton);
+            buttonPanel.Children.Add(selectFileButton);
+            Grid.SetRow(buttonPanel, 3);
+            mainLayout.Children.Add(buttonPanel);
+
+            // Fallback label
+            var fallbackLabel = new TextBlock
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 14,
+                Foreground = dimBrush,
+                Padding = new Thickness(16, 0, 16, 8),
+                Text = "OR paste clipboard data below:"
+            };
+            Grid.SetRow(fallbackLabel, 4);
+            mainLayout.Children.Add(fallbackLabel);
 
             // Clipboard input box
             clipboardTextBox = new TextBox
@@ -159,7 +220,7 @@ namespace SuperTUI.Panes
                 TextWrapping = TextWrapping.NoWrap
             };
             clipboardTextBox.TextChanged += ClipboardTextBox_TextChanged;
-            Grid.SetRow(clipboardTextBox, 3);
+            Grid.SetRow(clipboardTextBox, 5);
             mainLayout.Children.Add(clipboardTextBox);
 
             // Preview
@@ -174,7 +235,7 @@ namespace SuperTUI.Panes
                 TextWrapping = TextWrapping.Wrap,
                 Text = "Preview: (paste data to see preview)"
             };
-            Grid.SetRow(previewText, 4);
+            Grid.SetRow(previewText, 6);
             mainLayout.Children.Add(previewText);
 
             // Status bar
@@ -185,9 +246,9 @@ namespace SuperTUI.Panes
                 Foreground = fgBrush,
                 Background = surfaceBrush,
                 Padding = new Thickness(16, 8, 16, 8),
-                Text = "Ready to import | Paste data into textbox | P:CycleProfile I:Import"
+                Text = "Ready to import | Ctrl+R:Read from Excel | P:CycleProfile I:Import"
             };
-            Grid.SetRow(statusLabel, 5);
+            Grid.SetRow(statusLabel, 7);
             mainLayout.Children.Add(statusLabel);
 
             return mainLayout;
@@ -339,8 +400,102 @@ namespace SuperTUI.Panes
             }
         }
 
+        private void ReadExcelButton_Click(object sender, RoutedEventArgs e)
+        {
+            ReadFromRunningExcel();
+        }
+
+        private void SelectFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files|*.xlsx;*.xls",
+                Title = "Select Excel Audit Request Form"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                ReadFromExcelFile(dialog.FileName);
+            }
+        }
+
+        private void ReadFromRunningExcel()
+        {
+            UpdateStatus("Reading from Excel...", accentBrush);
+
+            var startCell = startCellBox.Text.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(startCell))
+                startCell = "W3";
+
+            var (success, cellData, errorMessage) = excelComReader.TryReadFromRunningExcel(startCell);
+
+            if (success)
+            {
+                // Convert cellData to preview format
+                var previewLines = cellData.Take(5).Select(kvp => $"{kvp.Key}: {kvp.Value}");
+                var previewText = $"Read {cellData.Count} cells from Excel\n\n{string.Join("\n", previewLines)}\n...";
+
+                // Store cellData in Tag for import
+                clipboardTextBox.Tag = cellData;
+                clipboardTextBox.Text = previewText;
+
+                UpdatePreview(previewText);
+                UpdateStatus($"✓ Read {cellData.Count} cells from Excel", successBrush);
+            }
+            else
+            {
+                UpdateStatus($"ERROR: {errorMessage}", errorBrush);
+                MessageBox.Show(
+                    $"Could not read from Excel:\n\n{errorMessage}\n\n" +
+                    $"Please ensure Excel is running with cells selected, or use 'Open Excel File' button.",
+                    "Excel Read Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        private void ReadFromExcelFile(string filePath)
+        {
+            UpdateStatus("Reading Excel file...", accentBrush);
+
+            var startCell = startCellBox.Text.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(startCell))
+                startCell = "W3";
+
+            // Default SVI-CAS: 128 rows (W3:W130)
+            int rowCount = 128;
+
+            var (success, cellData, errorMessage) = excelComReader.ReadFromFile(filePath, startCell, rowCount);
+
+            if (success)
+            {
+                var previewLines = cellData.Take(5).Select(kvp => $"{kvp.Key}: {kvp.Value}");
+                var previewText = $"Read {cellData.Count} cells from {System.IO.Path.GetFileName(filePath)}\n\n{string.Join("\n", previewLines)}\n...";
+
+                clipboardTextBox.Tag = cellData;
+                clipboardTextBox.Text = previewText;
+
+                UpdatePreview(previewText);
+                UpdateStatus($"✓ Read {cellData.Count} cells from file", successBrush);
+            }
+            else
+            {
+                UpdateStatus($"ERROR: {errorMessage}", errorBrush);
+                MessageBox.Show(
+                    $"Could not read Excel file:\n\n{errorMessage}",
+                    "Excel Read Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
         private void ClipboardTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // If Tag contains COM data, don't update preview on text change
+            if (clipboardTextBox.Tag is Dictionary<string, string>)
+            {
+                return; // Preview already set by COM reader
+            }
             UpdatePreview();
         }
 
@@ -379,21 +534,49 @@ namespace SuperTUI.Panes
             }
         }
 
+        private void UpdatePreview(string previewData)
+        {
+            if (string.IsNullOrWhiteSpace(previewData))
+            {
+                previewText.Text = "Preview: (no data)";
+                previewText.Foreground = dimBrush;
+                return;
+            }
+
+            previewText.Text = previewData;
+            previewText.Foreground = fgBrush;
+        }
+
         private void ImportFromClipboard()
         {
             try
             {
-                string clipboardData = clipboardTextBox.Text;
-                if (string.IsNullOrWhiteSpace(clipboardData))
-                {
-                    UpdateStatus("ERROR: No data to import", errorBrush);
-                    return;
-                }
+                Dictionary<string, string> cellData;
 
-                string startCell = startCellBox.Text.Trim().ToUpperInvariant();
-                if (string.IsNullOrEmpty(startCell))
+                // Check if we have COM-read data
+                if (clipboardTextBox.Tag is Dictionary<string, string> comData)
                 {
-                    startCell = "W3";
+                    cellData = comData;
+                    logger.Log(LogLevel.Info, "ExcelImport", "Using COM-read Excel data");
+                }
+                else
+                {
+                    // Fallback: parse clipboard text
+                    string clipboardText = clipboardTextBox.Text;
+                    if (string.IsNullOrWhiteSpace(clipboardText))
+                    {
+                        UpdateStatus("ERROR: No data to import", errorBrush);
+                        return;
+                    }
+
+                    string startCell = startCellBox.Text.Trim().ToUpperInvariant();
+                    if (string.IsNullOrEmpty(startCell))
+                    {
+                        startCell = "W3";
+                    }
+
+                    cellData = ClipboardDataParser.ParseTSV(clipboardText, startCell);
+                    logger.Log(LogLevel.Info, "ExcelImport", "Using clipboard TSV data");
                 }
 
                 // Set active profile from current selection
@@ -405,8 +588,8 @@ namespace SuperTUI.Panes
 
                 UpdateStatus("Importing...", accentBrush);
 
-                // Import project
-                var project = excelMappingService.ImportProjectFromClipboard(clipboardData, startCell);
+                // Import project using the cellData dictionary (works for both COM and clipboard data)
+                Project project = excelMappingService.ImportProjectFromCellData(cellData);
 
                 // Add to project service
                 projectService.AddProject(project);
@@ -423,8 +606,9 @@ namespace SuperTUI.Panes
                 // Success!
                 UpdateStatus($"✓ Imported: {project.Name} (ID2: {project.ID2})", successBrush);
 
-                // Clear clipboard box
+                // Clear clipboard box and Tag
                 clipboardTextBox.Text = "";
+                clipboardTextBox.Tag = null;
 
                 // Show success message
                 MessageBox.Show(
@@ -556,7 +740,49 @@ namespace SuperTUI.Panes
 
         protected override void OnDispose()
         {
+            // Clear pane-specific shortcuts
+            try
+            {
+                var shortcuts = ShortcutManager.Instance;
+                shortcuts.ClearPane(PaneName);
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Warning, "ExcelImport", $"Failed to clear pane shortcuts: {ex.Message}");
+            }
+
+            // Unsubscribe from text changed event
+            if (clipboardTextBox != null)
+            {
+                clipboardTextBox.TextChanged -= ClipboardTextBox_TextChanged;
+            }
+
+            // Unsubscribe from button clicks (if they exist)
+            if (readExcelButton != null)
+            {
+                readExcelButton.Click -= ReadExcelButton_Click;
+            }
+            if (selectFileButton != null)
+            {
+                selectFileButton.Click -= SelectFileButton_Click;
+            }
+
+            // Unsubscribe from main layout keyboard events
+            if (mainLayout != null)
+            {
+                mainLayout.PreviewKeyDown -= MainLayout_PreviewKeyDown;
+            }
+
+            // Unsubscribe from theme changes
             themeManager.ThemeChanged -= OnThemeChanged;
+
+            // Dispose COM reader
+            if (excelComReader != null)
+            {
+                excelComReader.Dispose();
+                excelComReader = null;
+            }
+
             base.OnDispose();
         }
     }

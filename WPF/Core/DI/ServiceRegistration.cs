@@ -49,6 +49,7 @@ namespace SuperTUI.DI
             container.RegisterSingleton<IEventBus, EventBus>(EventBus.Instance);
             container.RegisterSingleton<IShortcutManager, ShortcutManager>(ShortcutManager.Instance);
             container.RegisterSingleton<IProjectContextManager, ProjectContextManager>(ProjectContextManager.Instance);
+            container.RegisterSingleton<INotificationManager, NotificationManager>(NotificationManager.Instance);
             // HotReloadManager not yet implemented - skip for now
 
             // Register CommandHistory for undo/redo operations
@@ -57,7 +58,7 @@ namespace SuperTUI.DI
             // CRITICAL: Register FocusHistoryManager for perfect focus tracking
             container.RegisterSingleton<FocusHistoryManager>(sp => new FocusHistoryManager(Logger.Instance));
 
-            Logger.Instance.Info("DI", $"✅ Registered {13} infrastructure services");
+            Logger.Instance.Info("DI", $"✅ Registered {14} infrastructure services");
 
             // Register domain services with their interfaces
             container.RegisterSingleton<ITaskService, Core.Services.TaskService>(Core.Services.TaskService.Instance);
