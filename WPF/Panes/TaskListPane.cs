@@ -141,7 +141,8 @@ namespace SuperTUI.Panes
         {
             if (evt?.Project == null) return;
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 // Update project context (inherited from PaneBase)
                 // This will trigger OnProjectContextChanged which calls RefreshTaskList()
@@ -163,7 +164,8 @@ namespace SuperTUI.Panes
         {
             if (evt == null) return;
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 // Check if command is related to task creation
                 var commandLower = evt.CommandName?.ToLower() ?? "";
@@ -564,17 +566,20 @@ namespace SuperTUI.Panes
 
         private void OnTaskChanged(TaskItem task)
         {
-            Application.Current?.Dispatcher.Invoke(() => RefreshTaskList());
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() => RefreshTaskList());
         }
 
         private void OnTaskDeleted(Guid taskId)
         {
-            Application.Current?.Dispatcher.Invoke(() => RefreshTaskList());
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() => RefreshTaskList());
         }
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() => RefreshTaskList());
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() => RefreshTaskList());
         }
 
         private void RefreshTaskList()
@@ -2178,7 +2183,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });
@@ -2271,7 +2277,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 RefreshTaskList();
                 Log("TaskListPane refreshed (RefreshRequestedEvent)");

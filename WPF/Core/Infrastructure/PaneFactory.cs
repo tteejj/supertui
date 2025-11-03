@@ -125,19 +125,18 @@ namespace SuperTUI.Core.Infrastructure
                         return pane;
                     }
                 },
-                // Note: ExcelImportPane excluded from test builds
-                // ["excel-import"] = new PaneMetadata
-                // {
-                //     Name = "excel-import",
-                //     Description = "Import projects from Excel clipboard",
-                //     Icon = "📋",
-                //     Creator = () =>
-                //     {
-                //         var pane = new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus);
-                //         SetFocusHistory(pane);
-                //         return pane;
-                //     }
-                // },
+                ["excel-import"] = new PaneMetadata
+                {
+                    Name = "excel-import",
+                    Description = "Import projects from Excel clipboard",
+                    Icon = "📋",
+                    Creator = () =>
+                    {
+                        var pane = new ExcelImportPane(logger, themeManager, projectContext, projectService, ExcelMappingService.Instance, eventBus);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
+                },
                 ["help"] = new PaneMetadata
                 {
                     Name = "help",
@@ -161,6 +160,18 @@ namespace SuperTUI.Core.Infrastructure
                         SetFocusHistory(pane);
                         return pane;
                     }
+                },
+                ["commands"] = new PaneMetadata
+                {
+                    Name = "commands",
+                    Description = "Command library - searchable snippet manager",
+                    Icon = "💾",
+                    Creator = () =>
+                    {
+                        var pane = new CommandLibraryPane(logger, themeManager, projectContext, configManager);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 }
             };
 
@@ -173,8 +184,10 @@ namespace SuperTUI.Core.Infrastructure
                 ["FileBrowserPane"] = "files",
                 ["SimpleFileBrowserPane"] = "files",
                 ["ProjectsPane"] = "projects",
+                ["ExcelImportPane"] = "excel-import",
                 ["HelpPane"] = "help",
-                ["CalendarPane"] = "calendar"
+                ["CalendarPane"] = "calendar",
+                ["CommandLibraryPane"] = "commands"
             };
         }
 

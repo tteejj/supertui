@@ -699,7 +699,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void ShowStatus(string message)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 statusText.Text = message;
             });
@@ -707,7 +708,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });
@@ -764,7 +766,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 RefreshCommands();
                 Log("CommandPalettePane refreshed (RefreshRequestedEvent)");
@@ -811,7 +814,8 @@ namespace SuperTUI.Panes
         /// </summary>
         public void FocusSearchBox()
         {
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 if (searchBox != null && searchBox.IsLoaded)
                 {

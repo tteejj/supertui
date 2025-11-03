@@ -167,7 +167,8 @@ namespace SuperTUI.Panes
                     fileList.UpdateLayout();
 
                     // Set focus after items are loaded and selected
-                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.InvokeAsync(() =>
                     {
                         Keyboard.Focus(fileList);
                         fileList.Focus();

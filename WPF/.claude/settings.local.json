@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED\")",
       "Bash(git checkout:*)",
-      "Bash(Select-String -Pattern \"(error|warning|Build)\")"
+      "Bash(Select-String -Pattern \"(error|warning|Build)\")",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

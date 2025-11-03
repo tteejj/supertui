@@ -118,7 +118,8 @@ namespace SuperTUI.Panes
         private void RegisterPaneShortcuts()
         {
             var shortcuts = ShortcutManager.Instance;
-            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control, () => { if (searchBox != null) System.Windows.Input.Keyboard.Focus(searchBox); searchBox?.SelectAll(); }, "Focus search box");
+            // Ctrl+F shortcut removed (search box removed per user request)
+            // shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control, () => { if (searchBox != null) System.Windows.Input.Keyboard.Focus(searchBox); searchBox?.SelectAll(); }, "Focus search box");
             shortcuts.RegisterForPane(PaneName, Key.A, ModifierKeys.None, () => ShowQuickAdd(), "Show quick add");
             shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None, () => { if (selectedProject != null) DeleteCurrentProject(); }, "Delete selected project");
             shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.None, () => CycleFilter(), "Cycle filter mode");
@@ -190,13 +191,15 @@ namespace SuperTUI.Panes
         private Grid BuildProjectListPanel()
         {
             var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search box
+            // Search box removed per user request
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Project list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
 
-            // Search box
+            // Search box commented out (removed per user request)
+            // This allows 'A' key to work without search box stealing focus
+            /*
             searchBox = new TextBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
@@ -222,6 +225,7 @@ namespace SuperTUI.Panes
             searchBox.TextChanged += OnSearchTextChanged;
             Grid.SetRow(searchBox, 0);
             grid.Children.Add(searchBox);
+            */
 
             // Quick add box (Name, DateAssigned, ID2)
             quickAddBox = new TextBox
@@ -237,7 +241,7 @@ namespace SuperTUI.Panes
                 Visibility = Visibility.Collapsed
             };
             quickAddBox.KeyDown += QuickAddBox_KeyDown;
-            Grid.SetRow(quickAddBox, 1);
+            Grid.SetRow(quickAddBox, 0); // Changed from 1 to 0 (search box removed)
             grid.Children.Add(quickAddBox);
 
             // Filter label
@@ -250,7 +254,7 @@ namespace SuperTUI.Panes
                 Background = surfaceBrush,
                 Text = $"Filter: {currentFilter}"
             };
-            Grid.SetRow(filterLabel, 2);
+            Grid.SetRow(filterLabel, 1); // Changed from 2 to 1 (search box removed)
             grid.Children.Add(filterLabel);
 
             // Project list
@@ -272,7 +276,7 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(projectListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(projectListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(projectListBox, 3);
+            Grid.SetRow(projectListBox, 2); // Changed from 3 to 2 (search box removed)
             grid.Children.Add(projectListBox);
 
             // Status bar
@@ -285,7 +289,7 @@ namespace SuperTUI.Panes
                 Padding = new Thickness(8, 4, 8, 4),
                 Text = GetStatusBarText()
             };
-            Grid.SetRow(statusBar, 4);
+            Grid.SetRow(statusBar, 3); // Changed from 4 to 3 (search box removed)
             grid.Children.Add(statusBar);
 
             return grid;
@@ -1239,7 +1243,8 @@ namespace SuperTUI.Panes
         {
             if (evt?.Task == null) return;
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 // Find the parent project of the selected task
                 if (evt.ProjectId.HasValue)
@@ -1298,7 +1303,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });
@@ -1386,7 +1392,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 RefreshProjectList();
                 Log("ProjectsPane refreshed (RefreshRequestedEvent)");

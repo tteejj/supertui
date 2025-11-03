@@ -245,6 +245,7 @@ namespace SuperTUI.Panes
                 FontSize = 18,
                 Foreground = fgBrush,
                 Background = transparentBrush,
+                CaretBrush = fgBrush, // Explicit cursor color for visibility
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(24),
                 TextWrapping = TextWrapping.Wrap,
@@ -452,7 +453,8 @@ namespace SuperTUI.Panes
 
         private void UpdateNotesList()
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 var selectedNote = currentNote;
                 notesListBox.Items.Clear();
@@ -1481,7 +1483,8 @@ namespace SuperTUI.Panes
         private void OnFileSystemChanged(object sender, FileSystemEventArgs e)
         {
             // Debounce file system events
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 if (e.Name.EndsWith(".tmp") || e.Name.EndsWith(BACKUP_EXTENSION))
                     return;
@@ -1537,7 +1540,8 @@ namespace SuperTUI.Panes
 
         private void ShowStatus(string message, bool isError = false)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 var theme = themeManager.CurrentTheme;
                 statusBar.Text = message;
@@ -1685,7 +1689,8 @@ namespace SuperTUI.Panes
             eventBus.Subscribe(refreshRequestedHandler);
 
             // Set initial focus to notes list for keyboard-first navigation
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 if (notesListBox != null) System.Windows.Input.Keyboard.Focus(notesListBox);
             }, System.Windows.Threading.DispatcherPriority.Loaded);
@@ -1790,7 +1795,8 @@ namespace SuperTUI.Panes
         /// </summary>
         protected override void OnPaneGainedFocus()
         {
-            Application.Current?.Dispatcher.InvokeAsync(() => {
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() => {
                 lock (stateLock)
                 {
                     // Determine which control should have focus based on current state
@@ -1813,7 +1819,8 @@ namespace SuperTUI.Panes
         private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
         {
             // Task selected - could filter notes in the future
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 if (evt.Task != null)
                 {
@@ -1830,7 +1837,8 @@ namespace SuperTUI.Panes
         {
             if (evt?.Project == null) return;
 
-            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(async () =>
             {
                 logger.Log(LogLevel.Info, "NotesPane",
                     $"Project selected from {evt.SourceWidget}: {evt.Project.Name}");
@@ -1858,7 +1866,8 @@ namespace SuperTUI.Panes
         {
             if (evt == null) return;
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 // Check if command is related to note creation
                 var commandLower = evt.CommandName?.ToLower() ?? "";
@@ -2063,7 +2072,8 @@ namespace SuperTUI.Panes
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
         {
-            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(async () =>
             {
                 if (hasUnsavedChanges && currentNote != null)
                 {
@@ -2235,7 +2245,8 @@ namespace SuperTUI.Panes
             // Use dispatcher to ensure UI is ready
             // CRITICAL: Use Render priority to ensure restoration completes BEFORE focus operations
             // Focus operations run at Input priority (5), so Render (7) ensures state is restored first
-            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
@@ -2343,7 +2354,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private Task RestoreEditorStateAsync(Dictionary<string, object> data, CancellationToken token)
         {
-            return Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            return this.Dispatcher.InvokeAsync(() =>
             {
                 lock (stateLock)
                 {
@@ -2376,7 +2388,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private Task RestoreCommandPaletteStateAsync(Dictionary<string, object> data, CancellationToken token)
         {
-            return Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            return this.Dispatcher.InvokeAsync(() =>
             {
                 lock (stateLock)
                 {
@@ -2398,7 +2411,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private Task RestoreScrollPositionsAsync(Dictionary<string, object> data, CancellationToken token)
         {
-            return Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            return this.Dispatcher.InvokeAsync(() =>
             {
                 lock (stateLock)
                 {
@@ -2427,7 +2441,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private Task RestoreFocusToControlAsync(Dictionary<string, object> data, CancellationToken token)
         {
-            return Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            return this.Dispatcher.InvokeAsync(() =>
             {
                 lock (stateLock)
                 {
@@ -2492,7 +2507,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });
@@ -2611,7 +2627,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 LoadAllNotes();
                 Log("NotesPane refreshed (RefreshRequestedEvent)");

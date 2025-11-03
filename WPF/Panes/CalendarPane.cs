@@ -457,7 +457,8 @@ namespace SuperTUI.Panes
 
         private void OnTaskChanged(TaskItem task)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 LoadTasks();
                 RenderCalendar();
@@ -466,7 +467,8 @@ namespace SuperTUI.Panes
 
         private void OnTaskDeleted(Guid taskId)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 LoadTasks();
                 RenderCalendar();
@@ -475,7 +477,8 @@ namespace SuperTUI.Panes
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 LoadTasks();
                 RenderCalendar();
@@ -966,7 +969,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnProjectSelected(Core.Events.ProjectSelectedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 if (evt.Project != null)
                 {
@@ -983,7 +987,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 if (evt.Task != null && evt.Task.DueDate.HasValue)
                 {
@@ -1004,7 +1009,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnTaskCreated(Core.Events.TaskCreatedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 Log($"Task created via EventBus: {evt.Title}");
                 LoadTasks();
@@ -1017,7 +1023,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnTaskUpdatedEvent(Core.Events.TaskUpdatedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 if (evt.Task != null)
                 {
@@ -1034,7 +1041,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });
@@ -1108,7 +1116,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 LoadTasks();
                 RenderCalendar();

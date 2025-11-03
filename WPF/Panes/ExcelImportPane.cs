@@ -682,7 +682,8 @@ namespace SuperTUI.Panes
                 var startCellText = startCell.ToString();
                 if (!string.IsNullOrEmpty(startCellText) && startCellBox != null)
                 {
-                    Application.Current?.Dispatcher.Invoke(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.Invoke(() =>
                     {
                         startCellBox.Text = startCellText;
                     });
@@ -695,7 +696,8 @@ namespace SuperTUI.Panes
                 var contentText = clipboardContent.ToString();
                 if (!string.IsNullOrEmpty(contentText) && clipboardTextBox != null)
                 {
-                    Application.Current?.Dispatcher.Invoke(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.Invoke(() =>
                     {
                         clipboardTextBox.Text = contentText;
                     });
@@ -705,7 +707,8 @@ namespace SuperTUI.Panes
 
         private void OnThemeChanged(object sender, EventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.Invoke(() =>
             {
                 ApplyTheme();
             });

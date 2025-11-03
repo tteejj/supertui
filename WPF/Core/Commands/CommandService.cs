@@ -42,7 +42,7 @@ namespace SuperTUI.Core.Commands
             }
             catch (Exception ex)
             {
-                _logger?.Error($"Failed to create data directory: {ex.Message}");
+                _logger?.Log(LogLevel.Error, "CommandService", $"Failed to create data directory: {ex.Message}");
                 // Last resort fallback - should rarely happen with DirectoryHelper
                 var currentDir = Directory.GetCurrentDirectory();
                 _dataPath = Path.Combine(currentDir, ".supertui", "commands.json");
@@ -74,7 +74,7 @@ namespace SuperTUI.Core.Commands
             {
                 if (!File.Exists(_dataPath))
                 {
-                    _logger?.Info($"No existing commands file found at {_dataPath}, starting with empty library");
+                    _logger?.Log(LogLevel.Info, "CommandService", $"No existing commands file found at {_dataPath}, starting with empty library");
                     return;
                 }
 
@@ -87,11 +87,11 @@ namespace SuperTUI.Core.Commands
                     _commands.AddRange(commands);
                 }
 
-                _logger?.Info($"Loaded {_commands.Count} commands from {_dataPath}");
+                _logger?.Log(LogLevel.Info, "CommandService", $"Loaded {_commands.Count} commands from {_dataPath}");
             }
             catch (Exception ex)
             {
-                _logger?.Error($"Failed to load commands: {ex.Message}");
+                _logger?.Log(LogLevel.Error, "CommandService", $"Failed to load commands: {ex.Message}");
             }
         }
 
@@ -110,11 +110,11 @@ namespace SuperTUI.Core.Commands
                 var json = JsonSerializer.Serialize(_commands, options);
                 File.WriteAllText(_dataPath, json);
 
-                _logger?.Debug($"Saved {_commands.Count} commands to {_dataPath}");
+                _logger?.Log(LogLevel.Debug, "CommandService", $"Saved {_commands.Count} commands to {_dataPath}");
             }
             catch (Exception ex)
             {
-                _logger?.Error($"Failed to save commands: {ex.Message}");
+                _logger?.Log(LogLevel.Error, "CommandService", $"Failed to save commands: {ex.Message}");
             }
         }
 
@@ -132,7 +132,7 @@ namespace SuperTUI.Core.Commands
             _commands.Add(command);
             SaveCommands();
 
-            _logger?.Info($"Added command: {command.Title}");
+            _logger?.Log(LogLevel.Info, "CommandService", $"Added command: {command.Title}");
 
             return command;
         }
@@ -151,14 +151,14 @@ namespace SuperTUI.Core.Commands
             var index = _commands.FindIndex(c => c.Id == command.Id);
             if (index < 0)
             {
-                _logger?.Warning($"Command not found for update: {command.Id}");
+                _logger?.Log(LogLevel.Warning, "CommandService", $"Command not found for update: {command.Id}");
                 return false;
             }
 
             _commands[index] = command;
             SaveCommands();
 
-            _logger?.Info($"Updated command: {command.Title}");
+            _logger?.Log(LogLevel.Info, "CommandService", $"Updated command: {command.Title}");
 
             return true;
         }
@@ -171,14 +171,14 @@ namespace SuperTUI.Core.Commands
             var command = _commands.FirstOrDefault(c => c.Id == id);
             if (command == null)
             {
-                _logger?.Warning($"Command not found for deletion: {id}");
+                _logger?.Log(LogLevel.Warning, "CommandService", $"Command not found for deletion: {id}");
                 return false;
             }
 
             _commands.Remove(command);
             SaveCommands();
 
-            _logger?.Info($"Deleted command: {command.Title}");
+            _logger?.Log(LogLevel.Info, "CommandService", $"Deleted command: {command.Title}");
 
             return true;
         }
@@ -191,7 +191,7 @@ namespace SuperTUI.Core.Commands
             var command = GetCommand(id);
             if (command == null)
             {
-                _logger?.Warning($"Command not found: {id}");
+                _logger?.Log(LogLevel.Warning, "CommandService", $"Command not found: {id}");
                 return;
             }
 
@@ -201,11 +201,11 @@ namespace SuperTUI.Core.Commands
                 command.RecordUsage();
                 SaveCommands();
 
-                _logger?.Debug($"Copied command to clipboard: {command.Title}");
+                _logger?.Log(LogLevel.Debug, "CommandService", $"Copied command to clipboard: {command.Title}");
             }
             catch (Exception ex)
             {
-                _logger?.Error($"Failed to copy to clipboard: {ex.Message}");
+                _logger?.Log(LogLevel.Error, "CommandService", $"Failed to copy to clipboard: {ex.Message}");
                 throw;
             }
         }

@@ -151,7 +151,8 @@ namespace SuperTUI.Panes
 
             // Post navigation to dispatcher queue AFTER UI is fully loaded
             // This ensures the file list UI is attached to the visual tree before populating it
-            Application.Current?.Dispatcher.BeginInvoke(
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.BeginInvoke(
                 DispatcherPriority.Loaded,
                 new Action(() =>
                 {
@@ -312,7 +313,8 @@ namespace SuperTUI.Panes
                 // Update path header
                 if (pathHeader != null)
                 {
-                    Application.Current?.Dispatcher.Invoke(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.Invoke(() =>
                     {
                         pathHeader.Text = currentPath;
                     });
@@ -414,9 +416,10 @@ namespace SuperTUI.Panes
                 // Update UI on main thread with DataBind priority
                 // DataBind priority ensures UI updates complete before any focus operations
                 // This prevents race conditions where focus tries to target not-yet-rendered items
+                // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
                 try
                 {
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    await this.Dispatcher.InvokeAsync(() =>
                     {
                         try
                         {
@@ -455,7 +458,8 @@ namespace SuperTUI.Panes
                 if (!token.IsCancellationRequested)
                 {
                     logger.Log(LogLevel.Error, PaneName, $"Error loading files: {ex.Message}");
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    await this.Dispatcher.InvokeAsync(() =>
                     {
                         ErrorHandlingPolicy.Handle(
                             ErrorCategory.IO,
@@ -583,7 +587,8 @@ namespace SuperTUI.Panes
         {
             if (evt?.Project == null) return;
 
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 // Try to get working directory from CustomFields
                 string projectPath = null;
@@ -606,7 +611,8 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnRefreshRequested(Core.Events.RefreshRequestedEvent evt)
         {
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 RefreshCurrentDirectory();
                 Log("FileBrowserPane refreshed (RefreshRequestedEvent)");
@@ -661,7 +667,8 @@ namespace SuperTUI.Panes
                 // This ensures file browser remains navigable after file selection
                 if (hadFocus)
                 {
-                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.InvokeAsync(() =>
                     {
                         if (fileListBox != null && fileListBox.Items.Count > 0)
                         {
@@ -842,7 +849,8 @@ namespace SuperTUI.Panes
         {
             // Use async dispatch to avoid race conditions with focus system
             // and provide proper fallback when list is empty
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+            this.Dispatcher.InvokeAsync(() =>
             {
                 if (fileListBox != null && fileListBox.Items.Count > 0)
                 {
@@ -886,7 +894,8 @@ namespace SuperTUI.Panes
                     NavigateToDirectory(pathStr);
 
                     // Restore selection and scroll position after navigation
-                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
+                    this.Dispatcher.InvokeAsync(() =>
                     {
                         if (fileListBox == null || fileListBox.Items.Count == 0) return;
 

@@ -73,9 +73,6 @@
     <!-- Exclude old DI implementation (requires Microsoft.Extensions.DependencyInjection) -->
     <!-- We're building our own zero-dependency DI container for security -->
     <Compile Remove="Core/DependencyInjection/**/*.cs" />
-
-    <!-- Exclude incomplete CommandService (needs migration to DI pattern) -->
-    <Compile Remove="Core/Commands/CommandService.cs" />
   </ItemGroup>
 
 </Project>
