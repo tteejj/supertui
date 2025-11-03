@@ -417,5 +417,11 @@ namespace SuperTUI.Core.Events
         public SuperTUI.Infrastructure.TaskFilterType Filter { get; set; }
         public string SourceWidget { get; set; }
     }
+
+    public class CloseFileBrowserEvent
+    {
+        public string Reason { get; set; }
+        public string RequestingPane { get; set; }
+    }
 }
 

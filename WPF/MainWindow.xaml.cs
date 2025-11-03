@@ -80,6 +80,7 @@ namespace SuperTUI
             InitializePaneSystem();
             InitializeStatusBar();
             InitializeNotificationPanel();
+            SubscribeToEvents();
 
             // Restore full application state from disk (with checksum validation)
             RestoreApplicationState();
@@ -667,6 +668,28 @@ namespace SuperTUI
             }
 
             logger.Log(LogLevel.Info, "MainWindow", "Notification panel initialized");
+        }
+
+        private void SubscribeToEvents()
+        {
+            var eventBus = serviceContainer.GetRequiredService<IEventBus>();
+
+            // Subscribe to CloseFileBrowserEvent
+            eventBus.Subscribe<Core.Events.CloseFileBrowserEvent>(evt =>
+            {
+                // Close FileBrowser pane when NotesPane opens a file
+                var fileBrowserPane = paneManager.OpenPanes.OfType<Panes.SimpleFileBrowserPane>().FirstOrDefault();
+                if (fileBrowserPane != null)
+                {
+                    logger.Log(LogLevel.Info, "MainWindow", $"Closing FileBrowser pane (reason: {evt.Reason})");
+                    paneManager.ClosePane(fileBrowserPane);
+
+                    // DON'T call FocusPane here - the requesting pane (NotesPane) already handled its own focus
+                    // Calling FocusPane causes a race condition where FocusManager finds the ListBox instead of editor
+                }
+            });
+
+            logger.Log(LogLevel.Info, "MainWindow", "Subscribed to EventBus events");
         }
 
         private void OnPaneFocusChanged(object sender, PaneEventArgs e)

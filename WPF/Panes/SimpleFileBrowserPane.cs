@@ -50,15 +50,8 @@ namespace SuperTUI.Panes
             base.Initialize();
             LoadDirectory(currentPath);
 
-            // CRITICAL: Ensure focus goes to file list, not ContentControl wrapper
-            // Schedule focus after pane is fully loaded
-            Application.Current?.Dispatcher.InvokeAsync(() =>
-            {
-                if (fileList != null)
-                {
-                    Keyboard.Focus(fileList);
-                }
-            }, System.Windows.Threading.DispatcherPriority.Loaded);
+            // CRITICAL: Don't set focus here - let LoadDirectory handle it after items are loaded
+            // Focus is now set in LoadDirectory after items are populated
         }
 
         /// <summary>
@@ -70,15 +63,7 @@ namespace SuperTUI.Panes
             {
                 logger?.Log(LogLevel.Debug, "FileBrowser", $"SetInitialPath called: {path}");
                 LoadDirectory(path);
-
-                // Focus the file list after path change
-                Application.Current?.Dispatcher.InvokeAsync(() =>
-                {
-                    if (fileList != null)
-                    {
-                        Keyboard.Focus(fileList);
-                    }
-                }, System.Windows.Threading.DispatcherPriority.Loaded);
+                // Focus is set by LoadDirectory after items are loaded
             }
         }
 
@@ -114,20 +99,6 @@ namespace SuperTUI.Panes
             };
             fileList.PreviewKeyDown += OnKeyDown;
             fileList.MouseDoubleClick += OnDoubleClick;
-
-            // CRITICAL: Set focus when ListBox is loaded and ready
-            fileList.Loaded += (s, e) =>
-            {
-                logger?.Log(LogLevel.Debug, "FileBrowser", "ListBox Loaded event - setting keyboard focus");
-                // Must set SelectedIndex BEFORE setting focus for proper keyboard navigation
-                if (fileList.Items.Count > 0 && fileList.SelectedIndex < 0)
-                {
-                    fileList.SelectedIndex = 0;
-                }
-                Keyboard.Focus(fileList);
-                fileList.Focus(); // Also call WPF Focus() for good measure
-                logger?.Log(LogLevel.Debug, "FileBrowser", $"Focus set. IsKeyboardFocused: {fileList.IsKeyboardFocused}, SelectedIndex: {fileList.SelectedIndex}");
-            };
 
             Grid.SetRow(fileList, 1);
             grid.Children.Add(fileList);
@@ -190,6 +161,18 @@ namespace SuperTUI.Panes
                 if (fileList.Items.Count > 0)
                 {
                     fileList.SelectedIndex = 0;
+                    fileList.ScrollIntoView(fileList.Items[0]);
+
+                    // CRITICAL: Force ListBox to update its visual state before focusing
+                    fileList.UpdateLayout();
+
+                    // Set focus after items are loaded and selected
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        Keyboard.Focus(fileList);
+                        fileList.Focus();
+                        logger?.Log(LogLevel.Debug, PaneName, $"Focus set after LoadDirectory. IsKeyboardFocused: {fileList.IsKeyboardFocused}, SelectedIndex: {fileList.SelectedIndex}");
+                    }, System.Windows.Threading.DispatcherPriority.Input);
                 }
 
                 logger?.Log(LogLevel.Info, PaneName, $"Loaded {fileList.Items.Count} items from {path}");

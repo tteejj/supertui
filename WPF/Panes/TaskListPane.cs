@@ -733,6 +733,49 @@ namespace SuperTUI.Panes
                 var item = CreateTaskListItem(vm);
                 taskListBox.Items.Add(item);
             }
+
+            // Set selection and focus for keyboard navigation
+            if (taskListBox.Items.Count > 0)
+            {
+                // Preserve selection if possible, otherwise select first item
+                if (selectedTask != null)
+                {
+                    var index = taskViewModels.IndexOf(selectedTask);
+                    if (index >= 0)
+                    {
+                        taskListBox.SelectedIndex = index;
+                    }
+                    else
+                    {
+                        taskListBox.SelectedIndex = 0;
+                        selectedTask = taskViewModels[0];
+                    }
+                }
+                else
+                {
+                    taskListBox.SelectedIndex = 0;
+                    if (taskViewModels.Count > 0)
+                    {
+                        selectedTask = taskViewModels[0];
+                    }
+                }
+
+                // Scroll to selected item
+                if (taskListBox.SelectedIndex >= 0 && taskListBox.SelectedIndex < taskListBox.Items.Count)
+                {
+                    taskListBox.ScrollIntoView(taskListBox.Items[taskListBox.SelectedIndex]);
+                }
+
+                // Force layout update
+                taskListBox.UpdateLayout();
+
+                // Set focus after items are loaded
+                Dispatcher.InvokeAsync(() =>
+                {
+                    Keyboard.Focus(taskListBox);
+                    taskListBox.Focus();
+                }, System.Windows.Threading.DispatcherPriority.Input);
+            }
         }
 
         private Grid CreateTaskListItem(TaskItemViewModel vm)

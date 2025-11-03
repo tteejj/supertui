@@ -17,6 +17,16 @@ using SuperTUI.Infrastructure;
 namespace SuperTUI.Panes
 {
     /// <summary>
+    /// Enum to track what action should be performed when a file is selected from FileBrowser
+    /// </summary>
+    public enum FileAction
+    {
+        Open,   // O: Open file in editor
+        Delete, // D: Delete the selected file
+        Edit    // E: Open file in editor (same as Open)
+    }
+
+    /// <summary>
     /// PRODUCTION-QUALITY NOTES PANE
     /// Full CRUD: Create, Read, Update, Delete
     /// Features: Auto-save, fuzzy search, rename, file watcher, command palette
@@ -49,6 +59,7 @@ namespace SuperTUI.Panes
         private FileSystemWatcher fileWatcher;
         private bool hasUnsavedChanges;
         private bool isLoadingNote;
+        private FileAction pendingFileAction = FileAction.Open; // Track intent when opening FileBrowser
 
         // Simple notepad-style editor - no modal editing
 
@@ -545,7 +556,9 @@ namespace SuperTUI.Panes
                 if (disposalCancellation.IsCancellationRequested)
                     return;
 
-                Application.Current?.Dispatcher.Invoke(() =>
+                // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher
+                // EventBus may call LoadNoteAsync from a background thread where Application.Current is null
+                this.Dispatcher.Invoke(() =>
                 {
                     if (!disposalCancellation.IsCancellationRequested)
                     {
@@ -849,12 +862,23 @@ namespace SuperTUI.Panes
             }
         }
 
-        private void OpenExternalNote()
+        private void OpenExternalNote(FileAction action = FileAction.Open)
         {
+            // Store the intended action for when the file is selected
+            pendingFileAction = action;
+
             // Request FileBrowser from parent
             FileBrowserRequested?.Invoke(this, currentNotesFolder);
-            ShowStatus("Select a .txt file to open...");
-            Log("OpenExternalNote: Requested FileBrowser");
+
+            // Show appropriate status message based on action
+            string statusMessage = action switch
+            {
+                FileAction.Delete => "Select a .txt file to delete...",
+                FileAction.Edit => "Select a .txt file to edit...",
+                _ => "Select a .txt file to open..."
+            };
+            ShowStatus(statusMessage);
+            Log($"OpenExternalNote: Requested FileBrowser for action: {action}");
         }
 
         public void OnFileBrowserFileSelected(string filePath)
@@ -1155,8 +1179,19 @@ namespace SuperTUI.Panes
                                    noteEditor.Visibility == Visibility.Visible;
 
             // Handle critical editor shortcuts that work even while typing
-            // IMPORTANT: Check EXACT modifiers to avoid blocking Ctrl+Shift+S
-            if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
+            // IMPORTANT: Handle Ctrl+Shift+S BEFORE Ctrl+S to avoid blocking rename
+            if (e.Key == Key.S && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+            {
+                // Ctrl+Shift+S: Rename/Save As (works while typing)
+                logger?.Log(LogLevel.Debug, "NotesPane", "Ctrl+Shift+S pressed - calling RenameCurrentNote");
+                if (currentNote != null)
+                {
+                    RenameCurrentNote();
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 // Ctrl+S (WITHOUT Shift): Save current note (works while typing)
                 if (currentNote != null && hasUnsavedChanges)
@@ -1178,26 +1213,16 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // If user is typing in editor, DON'T process MOST pane shortcuts
-            // But allow meta-commands (D, O, W) that close/save/manage notes
+            // If user is typing in editor, DON'T process pane shortcuts at all
+            // Let them type normally without shortcuts interfering
             if (isTypingInEditor)
             {
-                // Allow specific meta-commands even while editor is focused
-                // These are commands that CLOSE the editor or manage notes, not text input
-                bool isMetaCommand = e.KeyboardDevice.Modifiers == ModifierKeys.None &&
-                                   (e.Key == Key.D ||  // Delete note
-                                    e.Key == Key.O ||  // Open external note
-                                    e.Key == Key.W);   // Save note
-
-                if (!isMetaCommand)
-                {
-                    // User is typing - don't mark as handled, let editor receive the key
-                    return;
-                }
-                // Fall through to ShortcutManager for meta-commands
+                // User is typing - don't mark as handled, let editor receive the key
+                return;
             }
 
             // Check ShortcutManager for pane shortcuts (A, E, D, O, W, Enter, etc.)
+            // Only when NOT typing in editor
             var shortcuts = ShortcutManager.Instance;
             if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
@@ -1708,12 +1733,12 @@ namespace SuperTUI.Panes
 
             // O (no modifiers): Open external note
             shortcuts.RegisterForPane(PaneName, Key.O, ModifierKeys.None,
-                () => OpenExternalNote(),
+                () => OpenExternalNote(FileAction.Open),
                 "Open external note");
 
             // D (no modifiers): Open FileBrowser to select and delete a note
             shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None,
-                () => OpenExternalNote(),
+                () => OpenExternalNote(FileAction.Delete),
                 "Open file browser to delete note");
 
             // W (no modifiers): Save note
@@ -1723,7 +1748,7 @@ namespace SuperTUI.Panes
 
             // E (no modifiers): Open FileBrowser to select and edit a note
             shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
-                () => OpenExternalNote(),
+                () => OpenExternalNote(FileAction.Edit),
                 "Open file browser to edit note");
 
             // Ctrl+Shift+S: Save As (rename current note)
@@ -1862,10 +1887,12 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            logger?.Log(LogLevel.Debug, "NotesPane", $"Application.Current is null: {Application.Current == null}");
+            logger?.Log(LogLevel.Debug, "NotesPane", $"this.Dispatcher is null: {this.Dispatcher == null}");
 
             // Queue async file operations on UI thread
-            var task = Application.Current?.Dispatcher.InvokeAsync(async () =>
+            // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher
+            // EventBus may call this from a background thread where Application.Current is null
+            var task = this.Dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
@@ -1875,60 +1902,126 @@ namespace SuperTUI.Panes
                 // Get file extension
                 var extension = Path.GetExtension(evt.FilePath)?.ToLowerInvariant();
 
-                // Check if it's a text file we can open
+                // Check if it's a text file we can operate on
                 if (extension == ".md" || extension == ".txt")
                 {
                     try
                     {
-                        // Save current note if needed before switching
-                        if (hasUnsavedChanges && currentNote != null)
+                        // Handle the action based on what the user requested (O/D/E)
+                        if (pendingFileAction == FileAction.Delete)
                         {
-                            // Save and restore focus around MessageBox
-                            var previousFocus = Keyboard.FocusedElement;
-
+                            // DELETE ACTION: Confirm and delete the selected file
+                            var fileName = Path.GetFileName(evt.FilePath);
                             var result = MessageBox.Show(
-                                $"Save changes to '{currentNote.Name}'?",
-                                "Unsaved Changes",
-                                MessageBoxButton.YesNoCancel,
-                                MessageBoxImage.Question);
+                                $"Are you sure you want to delete '{fileName}'?",
+                                "Confirm Delete",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Warning);
 
-                            if (previousFocus is UIElement element)
+                            if (result == MessageBoxResult.Yes)
                             {
-                                System.Windows.Input.Keyboard.Focus(element);
+                                try
+                                {
+                                    File.Delete(evt.FilePath);
+
+                                    // Also delete backup if it exists
+                                    var backupPath = evt.FilePath + BACKUP_EXTENSION;
+                                    if (File.Exists(backupPath))
+                                    {
+                                        File.Delete(backupPath);
+                                    }
+
+                                    Log($"Deleted file from FileBrowser: {evt.FilePath}");
+                                    ShowStatus($"Deleted: {fileName}");
+
+                                    // Remove from notes list if it's in there
+                                    var noteToRemove = allNotes.FirstOrDefault(n => n.FullPath == evt.FilePath);
+                                    if (noteToRemove != null)
+                                    {
+                                        allNotes.Remove(noteToRemove);
+                                        FilterNotes();
+                                    }
+                                }
+                                catch (Exception deleteEx)
+                                {
+                                    ErrorHandlingPolicy.Handle(
+                                        ErrorCategory.IO,
+                                        deleteEx,
+                                        $"Deleting file from FileBrowser: '{evt.FilePath}'",
+                                        logger);
+
+                                    ShowStatus($"ERROR: Failed to delete file", isError: true);
+                                }
                             }
 
-                            if (result == MessageBoxResult.Cancel)
+                            // Close FileBrowser after delete operation (whether confirmed or cancelled)
+                            eventBus?.Publish(new Core.Events.CloseFileBrowserEvent
                             {
-                                return; // Don't open new file
-                            }
-                            else if (result == MessageBoxResult.Yes)
-                            {
-                                await SaveCurrentNoteAsync();
-                            }
+                                Reason = "Delete operation completed",
+                                RequestingPane = PaneName
+                            });
                         }
-
-                        // Load the selected file
-                        var note = new NoteMetadata
+                        else
                         {
-                            Name = Path.GetFileNameWithoutExtension(evt.FilePath),
-                            FullPath = evt.FilePath,
-                            LastModified = File.GetLastWriteTime(evt.FilePath),
-                            Extension = extension
-                        };
+                            // OPEN/EDIT ACTION: Load the file into the editor
+                            // Save current note if needed before switching
+                            if (hasUnsavedChanges && currentNote != null)
+                            {
+                                // Save and restore focus around MessageBox
+                                var previousFocus = Keyboard.FocusedElement;
 
-                        await LoadNoteAsync(note);
-                        ShowStatus($"Opened: {evt.FileName}");
-                        Log($"Loaded file from FileBrowser: {evt.FilePath}");
+                                var result = MessageBox.Show(
+                                    $"Save changes to '{currentNote.Name}'?",
+                                    "Unsaved Changes",
+                                    MessageBoxButton.YesNoCancel,
+                                    MessageBoxImage.Question);
+
+                                if (previousFocus is UIElement element)
+                                {
+                                    System.Windows.Input.Keyboard.Focus(element);
+                                }
+
+                                if (result == MessageBoxResult.Cancel)
+                                {
+                                    return; // Don't open new file
+                                }
+                                else if (result == MessageBoxResult.Yes)
+                                {
+                                    await SaveCurrentNoteAsync();
+                                }
+                            }
+
+                            // Load the selected file
+                            var note = new NoteMetadata
+                            {
+                                Name = Path.GetFileNameWithoutExtension(evt.FilePath),
+                                FullPath = evt.FilePath,
+                                LastModified = File.GetLastWriteTime(evt.FilePath),
+                                Extension = extension
+                            };
+
+                            await LoadNoteAsync(note);
+                            ShowStatus($"Opened: {evt.FileName}");
+                            Log($"Loaded file from FileBrowser: {evt.FilePath}");
+
+                            // CRITICAL: Publish event to request FileBrowser closure and focus this pane
+                            // This ensures the user can see the note they just opened
+                            eventBus?.Publish(new Core.Events.CloseFileBrowserEvent
+                            {
+                                Reason = "File opened in NotesPane",
+                                RequestingPane = PaneName
+                            });
+                        }
                     }
                     catch (Exception ex)
                     {
                         ErrorHandlingPolicy.Handle(
                             ErrorCategory.IO,
                             ex,
-                            $"Loading file from FileBrowser: '{evt.FilePath}'",
+                            $"Handling file from FileBrowser: '{evt.FilePath}'",
                             logger);
 
-                        ShowStatus($"ERROR: Failed to open file", isError: true);
+                        ShowStatus($"ERROR: Failed to process file", isError: true);
                     }
                 }
                 else
