@@ -135,71 +135,54 @@ namespace SuperTUI.Core.Infrastructure
 
         /// <summary>
         /// Sets focus to a specific pane
+        /// CRITICAL FIX: Coordinates SetActive() and focus transfer in single async operation to prevent race conditions
+        /// Previously: SetActive() called synchronously, then focus scheduled asynchronously
+        /// This caused visual updates before focus transfer, creating timing issues
         /// </summary>
         public void FocusPane(PaneBase pane)
         {
             if (pane == null || !openPanes.Contains(pane))
                 return;
 
-            // Unfocus previous
-            if (focusedPane != null && focusedPane != pane)
+            var previousPane = focusedPane;
+
+            // CRITICAL FIX: Deactivate previous pane immediately (synchronous)
+            // This ensures visual state changes happen before we start the async focus operation
+            if (previousPane != null && previousPane != pane)
             {
-                focusedPane.SetActive(false);
-                focusedPane.OnFocusChanged();
+                previousPane.SetActive(false);
+                // Removed redundant OnFocusChanged() call
+                // SetActive already calls ApplyTheme internally
+
+                logger.Log(LogLevel.Debug, "PaneManager",
+                    $"Deactivated previous pane: {previousPane.PaneName}");
             }
 
-            // Focus new
+            // Update tracking immediately (synchronous)
             focusedPane = pane;
-            focusedPane.SetActive(true);
-            focusedPane.OnFocusChanged();
 
-            // Use FocusHistoryManager's fallback chain with load checking
-            pane.Dispatcher.BeginInvoke(new Action(() =>
+            // CRITICAL FIX: Activate and apply focus in single async operation to prevent race
+            // SetActive(true) and actual focus transfer happen together at DispatcherPriority.Render
+            // This ensures visual state and keyboard focus are coordinated
+            Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                // Check if pane is loaded before applying focus
-                if (!pane.IsLoaded)
-                {
-                    logger.Log(LogLevel.Debug, "PaneManager",
-                        $"Pane {pane.PaneName} not loaded yet, waiting for Loaded event");
+                // Log state before activation
+                logger.Log(LogLevel.Debug, "PaneManager",
+                    $"Starting focus operation for {pane.PaneName}, IsLoaded={pane.IsLoaded}, IsKeyboardFocusWithin={pane.IsKeyboardFocusWithin}");
 
-                    RoutedEventHandler loadedHandler = null;
-                    loadedHandler = (s, e) =>
-                    {
-                        pane.Loaded -= loadedHandler;
+                // Activate pane (applies visual state)
+                pane.SetActive(true);
+                // Removed redundant OnFocusChanged() call
+                // SetActive already calls ApplyTheme internally, no need to call it again
 
-                        logger.Log(LogLevel.Debug, "PaneManager",
-                            $"Pane {pane.PaneName} loaded, applying focus now");
+                logger.Log(LogLevel.Debug, "PaneManager",
+                    $"Activated pane: {pane.PaneName}");
 
-                        // Now safe to apply focus
-                        bool focusApplied = focusHistory.ApplyFocusToPane(pane);
-
-                        logger.Log(focusApplied ? LogLevel.Debug : LogLevel.Warning,
-                            "PaneManager",
-                            focusApplied
-                                ? $"Successfully applied focus to pane {pane.PaneName}"
-                                : $"Failed to apply focus to pane {pane.PaneName} even after loading");
-                    };
-                    pane.Loaded += loadedHandler;
-                }
-                else if (!pane.IsKeyboardFocusWithin)
-                {
-                    logger.Log(LogLevel.Debug, "PaneManager",
-                        $"Pane {pane.PaneName} already loaded, applying focus immediately");
-
-                    bool focusApplied = focusHistory.ApplyFocusToPane(pane);
-
-                    logger.Log(focusApplied ? LogLevel.Debug : LogLevel.Warning,
-                        "PaneManager",
-                        focusApplied
-                            ? $"Successfully applied focus to pane {pane.PaneName}"
-                            : $"Failed to apply focus to pane {pane.PaneName}");
-                }
-                else
-                {
-                    logger.Log(LogLevel.Debug, "PaneManager",
-                        $"Pane {pane.PaneName} already has focus");
-                }
-            }), System.Windows.Threading.DispatcherPriority.Loaded); // Changed from Input to Loaded
+                // OnPaneGainedFocus (called by SetActive above) handles focusing the correct child control
+                // The pane knows which control should have focus (editor, list, etc.)
+                logger.Log(LogLevel.Debug, "PaneManager",
+                    $"Pane {pane.PaneName} activated, OnPaneGainedFocus will set focus to correct control");
+            }, System.Windows.Threading.DispatcherPriority.Render);
 
             PaneFocusChanged?.Invoke(this, new PaneEventArgs(pane));
         }
@@ -249,7 +232,7 @@ namespace SuperTUI.Core.Infrastructure
         {
             return new PaneManagerState
             {
-                OpenPaneTypes = openPanes.Select(p => p.GetType().FullName).ToList(),
+                OpenPaneTypes = openPanes.Select(p => p.GetType().Name).ToList(),  // Use Name not FullName for factory mapping
                 FocusedPaneIndex = focusedPane != null ? openPanes.IndexOf(focusedPane) : -1
             };
         }

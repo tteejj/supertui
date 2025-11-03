@@ -21,22 +21,22 @@ namespace SuperTUI.Tests.Infrastructure
             var pane = PaneFactory.CreatePane("tasks");
             pane.Initialize();
 
-            // Assert
-            pane.IsActive.Should().BeFalse("New pane should not be active initially");
+            // Assert - Use IsKeyboardFocusWithin (single source of truth for focus state)
+            pane.IsKeyboardFocusWithin.Should().BeFalse("New pane should not have keyboard focus initially");
         }
 
         [WpfFact]
-        public void Pane_OnFocusChanged_ShouldUpdateVisualState()
+        public void Pane_ApplyTheme_ShouldUpdateVisualState()
         {
             // Arrange
             var pane = PaneFactory.CreatePane("tasks");
             pane.Initialize();
 
-            // Act
-            Action act = () => pane.OnFocusChanged();
+            // Act - Visual state updates are now automatic via IsKeyboardFocusWithinChanged
+            Action act = () => pane.ApplyTheme();
 
             // Assert
-            act.Should().NotThrow("OnFocusChanged should update visual state");
+            act.Should().NotThrow("ApplyTheme should update visual state");
         }
 
         [WpfFact]
@@ -76,9 +76,9 @@ namespace SuperTUI.Tests.Infrastructure
             pane1.Initialize();
             pane2.Initialize();
 
-            // Assert - Initially both should be inactive
-            pane1.IsActive.Should().BeFalse();
-            pane2.IsActive.Should().BeFalse();
+            // Assert - Use IsKeyboardFocusWithin (single source of truth for focus state)
+            pane1.IsKeyboardFocusWithin.Should().BeFalse("Pane1 should not have keyboard focus initially");
+            pane2.IsKeyboardFocusWithin.Should().BeFalse("Pane2 should not have keyboard focus initially");
         }
 
         [WpfFact]
@@ -88,15 +88,14 @@ namespace SuperTUI.Tests.Infrastructure
             var pane = PaneFactory.CreatePane("tasks");
             pane.Initialize();
 
-            // Act - Simulate focus change
+            // Act - Theme updates now happen automatically via IsKeyboardFocusWithinChanged event
             Action act = () =>
             {
-                pane.OnFocusChanged();
                 pane.ApplyTheme();
             };
 
             // Assert
-            act.Should().NotThrow("Focus change should trigger theme update");
+            act.Should().NotThrow("Theme update should work without errors");
         }
 
         [WpfFact]
@@ -109,10 +108,10 @@ namespace SuperTUI.Tests.Infrastructure
 
             // Act - Simulate workspace switch and restore
             pane.RestoreState(state);
-            Action act = () => pane.OnFocusChanged();
+            Action act = () => pane.ApplyTheme();
 
             // Assert
-            act.Should().NotThrow("Focus should be restorable after workspace switch");
+            act.Should().NotThrow("State should be restorable after workspace switch");
         }
 
         [WpfFact]

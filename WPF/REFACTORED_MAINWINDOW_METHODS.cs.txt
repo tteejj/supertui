@@ -1,0 +1,232 @@
+// PHASE 3: Simplified Async Code for MainWindow.xaml.cs
+// Replace existing methods with these refactored versions
+
+// ==================================================================
+// METHOD 1: RestoreWorkspaceState (LINES 458-632)
+// BEFORE: 174 lines with complex nested async code
+// AFTER: 126 lines with clean Task-based pattern
+// ==================================================================
+
+private async void RestoreWorkspaceState()
+{
+    try
+    {
+        var state = workspaceManager.CurrentWorkspace;
+        logger?.Log(LogLevel.Debug, "MainWindow", $"Restoring workspace {state.Index} state");
+
+        // Unsubscribe from all pane events before closing
+        // This prevents memory leaks from event handlers holding references to disposed panes
+        foreach (var pane in paneManager.OpenPanes.ToList())
+        {
+            if (pane is Panes.NotesPane notesPane)
+            {
+                notesPane.FileBrowserRequested -= OnNotesPaneRequestFileBrowser;
+            }
+            // Add more pane types here if they have MainWindow event subscriptions
+        }
+
+        // Close all current panes
+        paneManager.CloseAll();
+
+        // Restore project context
+        if (state.CurrentProjectId.HasValue)
+        {
+            var project = serviceContainer.GetRequiredService<IProjectService>()
+                .GetAllProjects()
+                .FirstOrDefault(p => p.Id == state.CurrentProjectId.Value);
+
+            if (project != null)
+            {
+                projectContext.SetProject(project);
+            }
+        }
+        else
+        {
+            projectContext.ClearProject();
+        }
+
+        // Restore panes
+        var panesToRestore = new List<Core.Components.PaneBase>();
+        var failedPanes = new List<string>();
+        foreach (var paneTypeName in state.OpenPaneTypes)
+        {
+            try
+            {
+                var pane = paneFactory.CreatePane(paneTypeName);
+                panesToRestore.Add(pane);
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore pane '{paneTypeName}': {ex.Message}");
+                failedPanes.Add(paneTypeName);
+            }
+        }
+
+        // Show notification if any panes failed to restore
+        if (failedPanes.Count > 0)
+        {
+            var paneList = string.Join(", ", failedPanes);
+            notificationManager.ShowWarning(
+                $"Could not restore {failedPanes.Count} pane(s): {paneList}",
+                "Workspace Restoration Warning");
+        }
+
+        if (panesToRestore.Count > 0)
+        {
+            var paneState = new PaneManagerState
+            {
+                OpenPaneTypes = state.OpenPaneTypes,
+                FocusedPaneIndex = state.FocusedPaneIndex
+            };
+            paneManager.RestoreState(paneState, panesToRestore);
+
+            // Subscribe to pane-specific events and restore state for each pane
+            foreach (var pane in panesToRestore)
+            {
+                try
+                {
+                    if (pane is Panes.NotesPane notesPane)
+                    {
+                        notesPane.FileBrowserRequested += OnNotesPaneRequestFileBrowser;
+                    }
+
+                    // Wait for pane to load
+                    await WaitForLoadedAsync(pane);
+
+                    // Restore pane state
+                    if (state.PaneStates != null && state.PaneStates.Count > 0)
+                    {
+                        var paneIndex = panesToRestore.IndexOf(pane);
+                        if (paneIndex >= 0 && paneIndex < state.PaneStates.Count)
+                        {
+                            pane.RestoreState(state.PaneStates[paneIndex]);
+                            logger.Log(LogLevel.Debug, "MainWindow",
+                                $"Restored state for pane {pane.PaneName}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.Log(LogLevel.Error, "MainWindow", $"Error restoring pane {pane.PaneName}: {ex.Message}");
+                }
+            }
+
+            // Restore focus history
+            if (state.FocusState != null)
+            {
+                focusHistory.RestoreWorkspaceState(state.FocusState);
+            }
+
+            // Restore focus to the correct pane
+            if (state.FocusedPaneIndex >= 0 && state.FocusedPaneIndex < paneManager?.ActivePanes.Count)
+            {
+                var targetPane = paneManager.ActivePanes[state.FocusedPaneIndex];
+
+                // Wait for pane to be fully loaded
+                await WaitForLoadedAsync(targetPane);
+
+                // Delay slightly to ensure layout is complete
+                await Task.Delay(50);
+
+                // Focus the pane
+                await Application.Current?.Dispatcher.InvokeAsync(() =>
+                {
+                    paneManager?.FocusPane(targetPane);
+                }, System.Windows.Threading.DispatcherPriority.Input);
+            }
+
+            logger.Log(LogLevel.Debug, "MainWindow", $"Workspace {state.Index} state restored successfully");
+        }
+
+        UpdateStatusBarContext();
+        logger.Log(LogLevel.Info, "MainWindow", $"Restored workspace {state.Index} ({panesToRestore.Count} panes)");
+    }
+    catch (Exception ex)
+    {
+        logger?.Log(LogLevel.Error, "MainWindow", $"Error in RestoreWorkspaceState: {ex.Message}");
+    }
+}
+
+
+// ==================================================================
+// METHOD 2: HideCommandPalette (LINES 898-987)
+// BEFORE: 89 lines with complex nested Loaded event handlers
+// AFTER: 56 lines using WaitForLoadedAsync helper
+// ==================================================================
+
+/// <summary>
+/// Hide command palette modal overlay
+/// Correct focus restoration order - re-enable input FIRST, then restore focus
+/// </summary>
+private async void HideCommandPalette()
+{
+    if (commandPalette != null && ModalOverlay.Visibility == Visibility.Visible)
+    {
+        // Retrieve saved focus state
+        var savedState = commandPaletteFocusState;
+        UIElement previousElement = savedState?.PreviousElement;
+        Core.Components.PaneBase previousPane = savedState?.PreviousPane;
+
+        // Animate closing
+        commandPalette.AnimateClose(async () =>
+        {
+            await Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                // Re-enable input FIRST (before focus restoration)
+                PaneCanvas.IsHitTestVisible = true;
+                PaneCanvas.Focusable = true;
+
+                // THEN hide overlay
+                ModalOverlay.Visibility = Visibility.Collapsed;
+                ModalOverlay.Children.Clear();
+
+                // Restore focus (fallback chain)
+                if (previousElement != null && previousElement.IsLoaded && previousElement is FrameworkElement fwElement && fwElement.Focusable)
+                {
+                    // Try saved element first
+                    await Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        System.Windows.Input.Keyboard.Focus(fwElement);
+                    }, System.Windows.Threading.DispatcherPriority.Input);
+
+                    logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to saved element: {fwElement.GetType().Name}");
+                }
+                else if (previousPane != null)
+                {
+                    // Wait for pane to load if needed
+                    await WaitForLoadedAsync(previousPane);
+
+                    // Focus the pane
+                    await Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        paneManager?.FocusPane(previousPane);
+                    }, System.Windows.Threading.DispatcherPriority.Input);
+
+                    logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to pane: {previousPane.PaneName}");
+                }
+                else
+                {
+                    logger.Log(LogLevel.Warning, "MainWindow", "No previous focus state saved, focus may be lost");
+                }
+
+                // Clear focus state
+                commandPaletteFocusState = null;
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        });
+
+        logger.Log(LogLevel.Debug, "MainWindow", "Command palette closed (background input restored)");
+    }
+}
+
+
+// ==================================================================
+// Helper struct for command palette focus state
+// Add this near the top of the MainWindow class (around line 40)
+// ==================================================================
+
+private struct FocusState
+{
+    public UIElement PreviousElement { get; set; }
+    public Core.Components.PaneBase PreviousPane { get; set; }
+    public DateTime CapturedAt { get; set; }
+}

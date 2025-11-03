@@ -128,7 +128,7 @@ namespace SuperTUI.Panes
             // Set initial focus to task list
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                taskListBox?.Focus();
+                if (taskListBox != null) System.Windows.Input.Keyboard.Focus(taskListBox);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
@@ -179,7 +179,7 @@ namespace SuperTUI.Panes
                     {
                         taskListBox.SelectedIndex = 0;
                         taskListBox.ScrollIntoView(taskListBox.Items[0]);
-                        taskListBox.Focus();
+                        System.Windows.Input.Keyboard.Focus(taskListBox);
                     }
                 }
             });
@@ -273,13 +273,11 @@ namespace SuperTUI.Panes
             if (inlineEditBox != null && inlineEditBox.Visibility == Visibility.Visible)
             {
                 // If editing, return focus to edit box
-                inlineEditBox.Focus();
                 System.Windows.Input.Keyboard.Focus(inlineEditBox);
             }
             else if (taskListBox != null)
             {
                 // Default: focus the task list
-                taskListBox.Focus();
                 System.Windows.Input.Keyboard.Focus(taskListBox);
             }
         }
@@ -1150,17 +1148,17 @@ namespace SuperTUI.Panes
                 // Tab navigation between fields
                 if (sender == quickAddTitle)
                 {
-                    quickAddDueDate.Focus();
+                    System.Windows.Input.Keyboard.Focus(quickAddDueDate);
                     e.Handled = true;
                 }
                 else if (sender == quickAddDueDate)
                 {
-                    quickAddPriority.Focus();
+                    System.Windows.Input.Keyboard.Focus(quickAddPriority);
                     e.Handled = true;
                 }
                 else if (sender == quickAddPriority)
                 {
-                    quickAddTitle.Focus();
+                    System.Windows.Input.Keyboard.Focus(quickAddTitle);
                     e.Handled = true;
                 }
             }
@@ -1174,13 +1172,13 @@ namespace SuperTUI.Panes
             quickAddTitle.Text = string.Empty;
             quickAddDueDate.Text = string.Empty;
             quickAddPriority.Text = "2"; // Default to Medium
-            quickAddTitle.Focus();
+            System.Windows.Input.Keyboard.Focus(quickAddTitle);
         }
 
         private void HideQuickAdd()
         {
             quickAddForm.Visibility = Visibility.Collapsed;
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private void CreateTaskFromQuickAdd()
@@ -1265,7 +1263,7 @@ namespace SuperTUI.Panes
             taskListBox.Items.Insert(selectedIndex, inlineEditBox);
             taskListBox.SelectedIndex = selectedIndex;
 
-            inlineEditBox.Focus();
+            System.Windows.Input.Keyboard.Focus(inlineEditBox);
             inlineEditBox.SelectAll();
         }
 
@@ -1307,14 +1305,14 @@ namespace SuperTUI.Panes
 
             editingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private void CancelInlineEdit()
         {
             editingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         // Date editing methods
@@ -1335,7 +1333,7 @@ namespace SuperTUI.Panes
                     RefreshTaskList();
                 }
             }
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private DateTime? ShowDatePicker(DateTime? currentDate)
@@ -1466,7 +1464,7 @@ namespace SuperTUI.Panes
 
             dateEditingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
             UpdateStatusBar();
         }
 
@@ -1474,7 +1472,7 @@ namespace SuperTUI.Panes
         {
             dateEditingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
             UpdateStatusBar();
         }
 
@@ -1655,7 +1653,7 @@ namespace SuperTUI.Panes
             taskListBox.Items.Insert(selectedIndex, tagEditBox);
             taskListBox.SelectedIndex = selectedIndex;
 
-            tagEditBox.Focus();
+            System.Windows.Input.Keyboard.Focus(tagEditBox);
             tagEditBox.SelectAll();
 
             // Update status bar with hints
@@ -1699,7 +1697,7 @@ namespace SuperTUI.Panes
 
             tagEditingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
             UpdateStatusBar();
         }
 
@@ -1707,7 +1705,7 @@ namespace SuperTUI.Panes
         {
             tagEditingTask = null;
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
             UpdateStatusBar();
         }
 
@@ -1729,7 +1727,7 @@ namespace SuperTUI.Panes
         {
             taskService.ToggleTaskCompletion(taskId);
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private void SetSelectedTaskPriority(TaskPriority priority)
@@ -1744,7 +1742,7 @@ namespace SuperTUI.Panes
                 task.UpdatedAt = DateTime.Now;
                 taskService.UpdateTask(task);
                 RefreshTaskList();
-                taskListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(taskListBox);
             }
         }
 
@@ -1801,7 +1799,7 @@ namespace SuperTUI.Panes
 
             taskService.MoveTaskUp(selectedTask.Task.Id);
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private void MoveSelectedTaskDown()
@@ -1811,7 +1809,7 @@ namespace SuperTUI.Panes
 
             taskService.MoveTaskDown(selectedTask.Task.Id);
             RefreshTaskList();
-            taskListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
         private void DeleteSelectedTask()
@@ -1832,7 +1830,7 @@ namespace SuperTUI.Panes
                 commandHistory.Execute(deleteCommand);
 
                 RefreshTaskList();
-                taskListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(taskListBox);
             }
         }
 
@@ -2038,24 +2036,24 @@ namespace SuperTUI.Panes
                     switch (focusedControl?.ToString())
                     {
                         case "InlineEdit":
-                            inlineEditBox?.Focus();
+                            if (inlineEditBox != null) System.Windows.Input.Keyboard.Focus(inlineEditBox);
                             System.Windows.Input.Keyboard.Focus(inlineEditBox);
                             break;
                         case "QuickAdd":
-                            quickAddTitle?.Focus();
+                            if (quickAddTitle != null) System.Windows.Input.Keyboard.Focus(quickAddTitle);
                             System.Windows.Input.Keyboard.Focus(quickAddTitle);
                             break;
                         case "DateEdit":
-                            dateEditBox?.Focus();
+                            if (dateEditBox != null) System.Windows.Input.Keyboard.Focus(dateEditBox);
                             System.Windows.Input.Keyboard.Focus(dateEditBox);
                             break;
                         case "TagEdit":
-                            tagEditBox?.Focus();
+                            if (tagEditBox != null) System.Windows.Input.Keyboard.Focus(tagEditBox);
                             System.Windows.Input.Keyboard.Focus(tagEditBox);
                             break;
                         case "TaskList":
                         default:
-                            taskListBox?.Focus();
+                            if (taskListBox != null) System.Windows.Input.Keyboard.Focus(taskListBox);
                             System.Windows.Input.Keyboard.Focus(taskListBox);
                             break;
                     }

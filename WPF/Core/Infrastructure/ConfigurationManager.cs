@@ -31,7 +31,7 @@ namespace SuperTUI.Infrastructure
     /// <summary>
     /// Hierarchical configuration system with validation and persistence
     ///
-    /// PHASE 2 FIX: Improved type conversion with better error handling
+    /// Improved type conversion with better error handling
     ///
     /// SUPPORTED TYPES:
     /// - Primitives: int, long, bool, double, decimal, float, byte, etc.
@@ -208,7 +208,7 @@ namespace SuperTUI.Infrastructure
                     }
                     catch (Exception ex)
                     {
-                        // PHASE 2 FIX: Better error reporting with ErrorPolicy
+                        // Better error reporting with ErrorPolicy
                         var targetType = typeof(T);
                         var sourceType = configValue.Value?.GetType().Name ?? "null";
 
@@ -311,7 +311,7 @@ namespace SuperTUI.Infrastructure
                 return (T)Convert.ChangeType(configValue.Value, typeof(T));
             }
 
-            // PHASE 2 FIX: Fail fast on truly unsupported types
+            // Fail fast on truly unsupported types
             if (targetType.IsInterface || targetType.IsAbstract)
             {
                 throw new NotSupportedException(

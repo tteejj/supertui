@@ -367,6 +367,14 @@ namespace SuperTUI.Extensions
 
         public async Task SaveStateAsync(StateSnapshot snapshot = null, bool createBackup = false)
         {
+            // Check if initialized
+            if (string.IsNullOrEmpty(currentStateFile))
+            {
+                Logger.Instance.Warning("StatePersistence",
+                    "StatePersistenceManager not initialized. Call Initialize() before saving. Skipping save.");
+                return;
+            }
+
             snapshot = snapshot ?? currentState;
             if (snapshot == null)
             {
@@ -382,7 +390,7 @@ namespace SuperTUI.Extensions
                     await CreateBackupAsync();
                 }
 
-                // PHASE 2 FIX: Calculate checksum before saving
+                // Calculate checksum before saving
                 snapshot.Timestamp = DateTime.Now;
                 snapshot.CalculateChecksum();
 
@@ -433,7 +441,7 @@ namespace SuperTUI.Extensions
                 string json = await File.ReadAllTextAsync(currentStateFile, Encoding.UTF8);
                 var snapshot = JsonSerializer.Deserialize<StateSnapshot>(json);
 
-                // PHASE 2 FIX: Verify checksum
+                // Verify checksum
                 if (!snapshot.VerifyChecksum())
                 {
                     Logger.Instance.Error("StatePersistence",

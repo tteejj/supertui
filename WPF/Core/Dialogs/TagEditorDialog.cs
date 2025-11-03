@@ -410,7 +410,7 @@ namespace SuperTUI.Core.Dialogs
             // Add tag
             currentTags.Add(trimmedTag);
             newTagTextBox.Clear();
-            newTagTextBox.Focus();
+            System.Windows.Input.Keyboard.Focus(newTagTextBox);
 
             logger?.Debug("TagEditorDialog", $"Added tag: {trimmedTag}");
         }

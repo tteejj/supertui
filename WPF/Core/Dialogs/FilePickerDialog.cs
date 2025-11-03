@@ -230,7 +230,7 @@ namespace SuperTUI.Core.Dialogs
             Content = mainGrid;
 
             // Focus the list on load
-            Loaded += (s, e) => itemsListBox.Focus();
+            Loaded += (s, e) => System.Windows.Input.Keyboard.Focus(itemsListBox);
         }
 
         private void LoadDirectory(string path)
@@ -597,7 +597,7 @@ namespace SuperTUI.Core.Dialogs
 
             Loaded += (s, e) =>
             {
-                inputBox.Focus();
+                System.Windows.Input.Keyboard.Focus(inputBox);
                 inputBox.SelectAll();
             };
         }

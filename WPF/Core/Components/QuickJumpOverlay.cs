@@ -151,8 +151,8 @@ namespace SuperTUI.Core.Components
         {
             if (this.Visibility == Visibility.Visible)
             {
-                this.Focus();
-                Keyboard.Focus(this);
+                System.Windows.Input.Keyboard.Focus(this);
+                System.Windows.Input.Keyboard.Focus(this);
             }
         }
 

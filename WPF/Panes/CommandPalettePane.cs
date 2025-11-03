@@ -225,12 +225,8 @@ namespace SuperTUI.Panes
             refreshRequestedHandler = OnRefreshRequested;
             eventBus.Subscribe(refreshRequestedHandler);
 
-            // Auto-focus search box when palette opens
-            Loaded += (s, e) =>
-            {
-                searchBox.Focus();
-                Keyboard.Focus(searchBox);
-            };
+            // Removed Loaded event - only fires once, doesn't work for subsequent opens
+            // Focus is now set explicitly via FocusSearchBox() method called by MainWindow
         }
 
         /// <summary>
@@ -510,7 +506,7 @@ namespace SuperTUI.Panes
                     // Move to results list
                     if (resultsListBox.Items.Count > 0)
                     {
-                        resultsListBox.Focus();
+                        System.Windows.Input.Keyboard.Focus(resultsListBox);
                         resultsListBox.SelectedIndex = 0;
                     }
                     e.Handled = true;
@@ -560,7 +556,7 @@ namespace SuperTUI.Panes
                     if (resultsListBox.SelectedIndex == 0)
                     {
                         // Return to search box
-                        searchBox.Focus();
+                        System.Windows.Input.Keyboard.Focus(searchBox);
                         searchBox.CaretIndex = searchBox.Text.Length;
                         e.Handled = true;
                     }
@@ -788,7 +784,7 @@ namespace SuperTUI.Panes
         public void Show()
         {
             AnimateOpen();
-            searchBox?.Focus();
+            if (searchBox != null) System.Windows.Input.Keyboard.Focus(searchBox);
         }
 
         public void Hide()
@@ -810,10 +806,47 @@ namespace SuperTUI.Panes
         }
 
         /// <summary>
+        /// Focus search box explicitly
+        /// Called by MainWindow every time palette opens (not just first time)
+        /// </summary>
+        public void FocusSearchBox()
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                if (searchBox != null && searchBox.IsLoaded)
+                {
+                    System.Windows.Input.Keyboard.Focus(searchBox);
+                    searchBox.SelectAll(); // Select any previous search text for easy replacement
+                    logger.Log(LogLevel.Debug, PaneName, "Search box focused and text selected");
+                }
+                else if (searchBox != null)
+                {
+                    // Not loaded yet, wait for it
+                    logger.Log(LogLevel.Debug, PaneName, "Search box not loaded, waiting for Loaded event");
+                    RoutedEventHandler handler = null;
+                    handler = (s, e) =>
+                    {
+                        searchBox.Loaded -= handler;
+                        System.Windows.Input.Keyboard.Focus(searchBox);
+                        searchBox.SelectAll();
+                        logger.Log(LogLevel.Debug, PaneName, "Search box focused after load");
+                    };
+                    searchBox.Loaded += handler;
+                }
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        /// <summary>
         /// Animate palette opening
         /// </summary>
         public void AnimateOpen()
         {
+            if (overlayBorder == null || paletteBox == null)
+            {
+                logger.Log(LogLevel.Warning, PaneName, "Cannot animate - UI not built yet");
+                return;
+            }
+
             var fadeIn = new DoubleAnimation
             {
                 From = 0,
@@ -842,6 +875,13 @@ namespace SuperTUI.Panes
         /// </summary>
         public void AnimateClose(Action onComplete)
         {
+            if (overlayBorder == null)
+            {
+                logger.Log(LogLevel.Warning, PaneName, "Cannot animate close - UI not built yet");
+                onComplete?.Invoke();
+                return;
+            }
+
             var fadeOut = new DoubleAnimation
             {
                 From = 1,

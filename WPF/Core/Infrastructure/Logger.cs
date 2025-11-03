@@ -88,7 +88,7 @@ namespace SuperTUI.Infrastructure
         private readonly long maxFileSizeBytes;
         private readonly int maxFiles;
 
-        // PHASE 2 FIX: Separate queues by priority
+        // Separate queues by priority
         private readonly System.Collections.Concurrent.BlockingCollection<string> criticalQueue;  // Error, Critical
         private readonly System.Collections.Concurrent.BlockingCollection<string> normalQueue;    // Trace, Debug, Info, Warning
 
@@ -112,7 +112,7 @@ namespace SuperTUI.Infrastructure
             this.maxFiles = maxFiles;
             this.dropPolicy = dropPolicy;
 
-            // PHASE 2 FIX: Separate queues by priority
+            // Separate queues by priority
             // Critical queue: smaller but NEVER drops logs (blocking if necessary)
             this.criticalQueue = new System.Collections.Concurrent.BlockingCollection<string>(boundedCapacity: 1000);
 
@@ -178,7 +178,7 @@ namespace SuperTUI.Infrastructure
         /// Background thread that writes log entries to disk
         /// This prevents blocking the UI thread during log writes
         ///
-        /// PHASE 2 FIX: Processes critical queue with priority
+        /// Processes critical queue with priority
         /// </summary>
         private void WriterThreadProc()
         {
@@ -192,7 +192,7 @@ namespace SuperTUI.Infrastructure
                     string line = null;
                     bool gotLine = false;
 
-                    // PHASE 2 FIX: Always prioritize critical queue
+                    // Always prioritize critical queue
                     // Check critical queue first (blocks for up to 10ms)
                     if (criticalQueue.TryTake(out line, millisecondsTimeout: 10))
                     {
@@ -310,7 +310,7 @@ namespace SuperTUI.Infrastructure
 
             line += "\n";
 
-            // PHASE 2 FIX: Route to appropriate queue based on severity
+            // Route to appropriate queue based on severity
             bool isCritical = entry.Level >= LogLevel.Error;
 
             if (isCritical)

@@ -11,7 +11,7 @@ namespace SuperTUI.Infrastructure
     /// Captures the complete application state at a point in time,
     /// including workspace configurations and widget states.
     ///
-    /// PHASE 2 FIX: Added integrity verification with checksums
+    /// Added integrity verification with checksums
     /// </summary>
     public class StateSnapshot
     {
@@ -28,7 +28,7 @@ namespace SuperTUI.Infrastructure
 
         /// <summary>
         /// SHA256 checksum of the state data for integrity verification
-        /// PHASE 2 FIX: Detect corrupted state files
+        /// Detect corrupted state files
         /// </summary>
         public string Checksum { get; set; }
 
@@ -49,7 +49,7 @@ namespace SuperTUI.Infrastructure
 
         /// <summary>
         /// Calculate SHA256 checksum for integrity verification
-        /// PHASE 2 FIX: Verify state file hasn't been corrupted
+        /// Verify state file hasn't been corrupted
         /// </summary>
         public void CalculateChecksum()
         {
@@ -71,7 +71,7 @@ namespace SuperTUI.Infrastructure
 
         /// <summary>
         /// Verify that checksum matches current data
-        /// PHASE 2 FIX: Detect corrupted or tampered state files
+        /// Detect corrupted or tampered state files
         /// </summary>
         public bool VerifyChecksum()
         {

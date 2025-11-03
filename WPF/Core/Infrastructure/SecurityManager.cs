@@ -48,7 +48,6 @@ namespace SuperTUI.Infrastructure
         // for simple patterns due to JIT overhead. For high-performance needs, use source generators.
         private static readonly Regex EmailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         private static readonly Regex AlphanumericRegex = new Regex(@"^[a-zA-Z0-9]+$");
-        private static readonly Regex PathSeparatorRegex = new Regex(@"[<>:|?*]");
 
         public static bool IsValidEmail(string email)
         {
@@ -73,8 +72,10 @@ namespace SuperTUI.Infrastructure
 
             try
             {
-                // Check for invalid characters (Windows path-specific: <>:|?*)
-                if (PathSeparatorRegex.IsMatch(path))
+                // Check for invalid path characters using .NET's built-in validation
+                // This correctly handles platform-specific rules (e.g., C:\ on Windows)
+                char[] invalidChars = Path.GetInvalidPathChars();
+                if (path.IndexOfAny(invalidChars) >= 0)
                     return false;
 
                 // Check for null bytes (path traversal technique)

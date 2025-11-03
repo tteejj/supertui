@@ -301,7 +301,7 @@ namespace SuperTUI.Core.Components
             isEditMode = true;
             inputBox.Text = DisplayFormatter(selectedItem);
             inputBox.SelectAll();
-            inputBox.Focus();
+            System.Windows.Input.Keyboard.Focus(inputBox);
             UpdateStatus("Editing... (Enter to save, Esc to cancel)", theme.Info);
         }
 

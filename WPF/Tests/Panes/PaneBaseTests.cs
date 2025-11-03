@@ -159,27 +159,27 @@ namespace SuperTUI.Tests.Panes
         }
 
         [WpfFact]
-        public void IsActive_InitiallyFalse()
+        public void IsKeyboardFocusWithin_InitiallyFalse()
         {
             // Arrange & Act
             var pane = PaneFactory.CreatePane("tasks");
 
-            // Assert
-            pane.IsActive.Should().BeFalse("Pane should not be active initially");
+            // Assert - Use IsKeyboardFocusWithin (single source of truth for focus state)
+            pane.IsKeyboardFocusWithin.Should().BeFalse("Pane should not have keyboard focus initially");
         }
 
         [WpfFact]
-        public void OnFocusChanged_ShouldNotThrow()
+        public void ApplyTheme_MultipleCalls_ShouldNotThrow()
         {
             // Arrange
             var pane = PaneFactory.CreatePane("tasks");
             pane.Initialize();
 
-            // Act
-            Action act = () => pane.OnFocusChanged();
+            // Act - Visual updates happen via IsKeyboardFocusWithinChanged event
+            Action act = () => pane.ApplyTheme();
 
             // Assert
-            act.Should().NotThrow();
+            act.Should().NotThrow("ApplyTheme should handle multiple calls safely");
         }
 
         [WpfFact]

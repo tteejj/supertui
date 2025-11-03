@@ -111,14 +111,14 @@ namespace SuperTUI.Panes
             // Set initial focus to project list
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                projectListBox?.Focus();
+                if (projectListBox != null) System.Windows.Input.Keyboard.Focus(projectListBox);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         private void RegisterPaneShortcuts()
         {
             var shortcuts = ShortcutManager.Instance;
-            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control, () => { searchBox?.Focus(); searchBox?.SelectAll(); }, "Focus search box");
+            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control, () => { if (searchBox != null) System.Windows.Input.Keyboard.Focus(searchBox); searchBox?.SelectAll(); }, "Focus search box");
             shortcuts.RegisterForPane(PaneName, Key.A, ModifierKeys.None, () => ShowQuickAdd(), "Show quick add");
             shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None, () => { if (selectedProject != null) DeleteCurrentProject(); }, "Delete selected project");
             shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.None, () => CycleFilter(), "Cycle filter mode");
@@ -593,7 +593,7 @@ namespace SuperTUI.Panes
             parent.Children.Add(editBox);
             fieldEditors[fieldName] = editBox;
 
-            editBox.Focus();
+            System.Windows.Input.Keyboard.Focus(editBox);
             editBox.SelectAll();
         }
 
@@ -1010,7 +1010,7 @@ namespace SuperTUI.Panes
         {
             quickAddBox.Text = "";
             quickAddBox.Visibility = Visibility.Visible;
-            quickAddBox.Focus();
+            System.Windows.Input.Keyboard.Focus(quickAddBox);
             UpdateStatusBar("Quick Add: Name | DateAssigned (optional) | ID2 (optional)");
         }
 
@@ -1018,7 +1018,7 @@ namespace SuperTUI.Panes
         {
             quickAddBox.Visibility = Visibility.Collapsed;
             quickAddBox.Text = "";
-            projectListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(projectListBox);
             UpdateStatusBar();
         }
 

@@ -31,15 +31,10 @@ namespace SuperTUI.Core.Infrastructure
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // UNIFIED FOCUS: Hook into WPF's native global focus events (single source of truth)
-            // This ensures we observe actual keyboard focus changes, not custom tracking
-            EventManager.RegisterClassHandler(typeof(UIElement),
-                UIElement.GotFocusEvent,
-                new RoutedEventHandler(OnElementGotFocus));
-
-            EventManager.RegisterClassHandler(typeof(UIElement),
-                UIElement.LostFocusEvent,
-                new RoutedEventHandler(OnElementLostFocus));
+            // PHASE 2C: Removed global event handlers - replaced with pane-level tracking
+            // Previously: EventManager.RegisterClassHandler tracked ALL focus events (performance overhead)
+            // Now: Panes explicitly call RecordFocus when they gain focus (efficient, targeted)
+            // The OnElementGotFocus/OnElementLostFocus methods are kept and called by panes directly
         }
 
         /// <summary>
@@ -82,6 +77,18 @@ namespace SuperTUI.Core.Infrastructure
                 $"Focus recorded: {record.ElementType} in {record.PaneId}");
 
             FocusChanged?.Invoke(this, new FocusChangedEventArgs(record.ElementType, record.PaneId, record.Timestamp));
+        }
+
+        /// <summary>
+        /// Record focus from a specific pane. Called by panes when they gain focus.
+        /// Replaces the previous global event handler pattern.
+        /// PHASE 2C: Pane-level tracking instead of global event handler
+        /// </summary>
+        public void RecordFocusFromPane(UIElement element, string paneId)
+        {
+            if (!isTrackingEnabled) return;
+
+            RecordFocus(element, paneId);
         }
 
         /// <summary>
@@ -157,6 +164,19 @@ namespace SuperTUI.Core.Infrastructure
                 }
             }
 
+            // Always clear paneFocusMap if weak reference is dead
+            // Check if the stored focus record is still valid
+            if (paneFocusMap.TryGetValue(paneId, out var focusRecord))
+            {
+                if (focusRecord.Element == null || !focusRecord.Element.IsAlive)
+                {
+                    // Weak reference is dead, clear it immediately
+                    paneFocusMap.Remove(paneId);
+                    logger.Log(LogLevel.Debug, "FocusHistory",
+                        $"Cleared dead focus record for {paneId}");
+                }
+            }
+
             // Check if any other instances of this pane ID are still alive
             bool hasLiveInstances = false;
             if (trackedPanes.TryGetValue(paneId, out var instances))
@@ -164,17 +184,17 @@ namespace SuperTUI.Core.Infrastructure
                 hasLiveInstances = instances.Any(wr => wr.IsAlive);
             }
 
-            // Only clear history if no live instances remain
+            // Clear history if no live instances remain
             if (!hasLiveInstances)
             {
                 ClearPaneHistory(paneId);
                 logger.Log(LogLevel.Debug, "FocusHistory",
-                    $"Untracked and cleared history for pane: {paneId}");
+                    $"Untracked and cleared history for pane: {paneId} (no live instances)");
             }
             else
             {
                 logger.Log(LogLevel.Debug, "FocusHistory",
-                    $"Untracked pane instance: {paneId} (other instances still alive)");
+                    $"Untracked pane instance: {paneId} ({instances.Count(wr => wr.IsAlive)} instances still alive)");
             }
         }
 
@@ -207,7 +227,12 @@ namespace SuperTUI.Core.Infrastructure
         public bool ApplyFocusToPane(Components.PaneBase pane)
         {
             if (pane == null) return false;
-            return ApplyFocusWithFallback(pane, pane.PaneName, "ApplyFocusToPane");
+
+            // Don't use fallback - let pane handle its own focus logic
+            // Each pane knows which control should receive focus
+            pane.Focus();
+
+            return true;
         }
 
         /// <summary>
@@ -255,14 +280,9 @@ namespace SuperTUI.Core.Infrastructure
                 }
             }
 
-            // Attempt 4: Try the main window as last resort
-            var mainWindow = Application.Current?.MainWindow;
-            if (mainWindow != null && TryFocusElement(mainWindow))
-            {
-                logger.Log(LogLevel.Warning, "FocusHistory",
-                    $"[{source}] Focus fallback #3: Focused MainWindow (all other attempts failed)");
-                return true;
-            }
+            // Removed MainWindow fallback that masked failures
+            // Previously: Focused MainWindow and returned true (hiding the real failure)
+            // Now: Return false to signal failure, let caller handle it properly
 
             logger.Log(LogLevel.Warning, "FocusHistory",
                 $"[{source}] Focus fallback exhausted: Could not focus any element for {paneId}");
@@ -285,8 +305,8 @@ namespace SuperTUI.Core.Infrastructure
                     return false;
                 }
 
-                // Attempt to focus
-                element.Focus();
+                // Use only Keyboard.Focus (removed element.Focus())
+                // Double-focusing triggers WPF events twice and pollutes focus history
                 Keyboard.Focus(element);
                 return true;
             }
@@ -507,7 +527,7 @@ namespace SuperTUI.Core.Infrastructure
                         loadedHandler = (s, e) =>
                         {
                             frameworkElement.Loaded -= loadedHandler;
-                            element.Focus();
+                            // Use only Keyboard.Focus
                             Keyboard.Focus(element);
                             logger.Log(LogLevel.Debug, "FocusHistory", "Previous element now loaded, focus restored");
                         };
@@ -517,7 +537,7 @@ namespace SuperTUI.Core.Infrastructure
 
                     try
                     {
-                        element.Focus();
+                        // Use only Keyboard.Focus
                         Keyboard.Focus(element);
                         return true;
                     }
@@ -586,14 +606,25 @@ namespace SuperTUI.Core.Infrastructure
 
         /// <summary>
         /// Restore focus state after workspace switch
+        /// CRITICAL FIX: DO NOT clear paneFocusMap to preserve focus history across workspace switches
+        /// Previously: Cleared focus history before restoration, causing focus loss
+        /// Now: Only clears general history stack, preserves per-pane focus map
         /// </summary>
         public void RestoreWorkspaceState(Dictionary<string, object> state)
         {
             if (state == null) return;
 
-            // Clear current state
+            // CRITICAL FIX: Clear only the general history stack, NOT the pane focus map
+            // The pane focus map must be preserved to maintain focus state for each pane
+            // Clearing it causes focus loss during workspace switches
             focusHistory.Clear();
-            paneFocusMap.Clear();
+
+            // DO NOT clear paneFocusMap - this is the fix for workspace restoration focus loss
+            // Each pane's last focused element must be preserved across workspace switches
+            // paneFocusMap.Clear(); // REMOVED - this was causing focus loss
+
+            logger.Log(LogLevel.Debug, "FocusHistory",
+                $"Restored workspace state, preserved {paneFocusMap.Count} pane focus records");
 
             // Restore current focus pane
             if (state.TryGetValue("CurrentFocus", out var currentPaneId))

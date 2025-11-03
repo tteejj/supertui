@@ -84,7 +84,7 @@ namespace SuperTUI.Panes
             // Set initial focus
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                clipboardTextBox?.Focus();
+                if (clipboardTextBox != null) System.Windows.Input.Keyboard.Focus(clipboardTextBox);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 

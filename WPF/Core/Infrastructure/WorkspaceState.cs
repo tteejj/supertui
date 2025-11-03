@@ -113,6 +113,23 @@ namespace SuperTUI.Core.Infrastructure
         }
 
         /// <summary>
+        /// Update a specific workspace state by index
+        /// CRITICAL FIX: Needed for workspace switching bug - allows saving to specific workspace
+        /// </summary>
+        public void UpdateWorkspace(int index, PaneWorkspaceState state)
+        {
+            if (index < 0 || index >= workspaceStates.Count)
+            {
+                logger.Log(LogLevel.Warning, "WorkspaceStateManager", $"Cannot update workspace {index}: out of range");
+                return;
+            }
+
+            workspaceStates[index] = state;
+            state.LastModified = DateTime.Now;
+            logger.Log(LogLevel.Debug, "WorkspaceStateManager", $"Updated workspace {index} state");
+        }
+
+        /// <summary>
         /// Save all workspaces to disk
         /// </summary>
         public void SaveWorkspaces()

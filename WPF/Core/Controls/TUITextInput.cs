@@ -168,7 +168,7 @@ namespace SuperTUI.Core.Controls
         protected override void OnGotFocus(RoutedEventArgs e)
         {
             base.OnGotFocus(e);
-            textBox.Focus();
+            System.Windows.Input.Keyboard.Focus(textBox);
         }
     }
 }

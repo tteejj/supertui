@@ -1,0 +1,213 @@
+// PHASE 3: Simplified Async Code for NotesPane.cs
+// Replace existing RestoreDetailedStateAsync method with these refactored versions
+
+// ==================================================================
+// METHOD: RestoreDetailedStateAsync (LINES 2126-2246)
+// BEFORE: 120 lines monolithic method
+// AFTER: 30 lines main method + 4 focused helper methods (total ~90 lines)
+// ==================================================================
+
+/// <summary>
+/// Restore detailed pane state with focus memory
+/// Broken into smaller focused methods for clarity
+/// </summary>
+private async Task RestoreDetailedStateAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    try
+    {
+        // Restore note selection
+        await RestoreNoteSelectionAsync(data, token);
+
+        // Restore editor state
+        await RestoreEditorStateAsync(data, token);
+
+        // Restore command palette state
+        await RestoreCommandPaletteStateAsync(data, token);
+
+        // Restore scroll positions
+        await RestoreScrollPositionsAsync(data, token);
+
+        // Small delay to ensure layout complete
+        await Task.Delay(50, token);
+
+        // Restore focus
+        await RestoreFocusToControlAsync(data, token);
+    }
+    catch (OperationCanceledException)
+    {
+        logger?.Log(LogLevel.Debug, "NotesPane", "State restoration cancelled");
+    }
+    catch (Exception ex)
+    {
+        logger?.Log(LogLevel.Error, "NotesPane", $"Error in RestoreDetailedStateAsync: {ex.Message}");
+    }
+}
+
+/// <summary>
+/// Restore note selection by index or path
+/// </summary>
+private async Task RestoreNoteSelectionAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    // Restore note selection by index first (more reliable)
+    var index = GetValueOrDefault(data, "SelectedNoteIndex", -1);
+    if (index >= 0 && index < notesListBox.Items.Count)
+    {
+        token.ThrowIfCancellationRequested();
+        notesListBox.SelectedIndex = index;
+
+        // Load the selected note
+        if (notesListBox.SelectedItem is ListBoxItem item && item.Tag is NoteMetadata note)
+        {
+            await LoadNoteAsync(note);
+        }
+    }
+    // Fallback to path-based selection
+    else
+    {
+        var notePathStr = GetValueOrDefault<string>(data, "SelectedNotePath", null);
+        if (!string.IsNullOrEmpty(notePathStr))
+        {
+            token.ThrowIfCancellationRequested();
+            // Check if it's an unsaved note
+            var noteName = GetValueOrDefault<string>(data, "SelectedNoteName", null);
+            if (noteName != null && notePathStr == null)
+            {
+                // Create unsaved note placeholder
+                lock (stateLock)
+                {
+                    currentNote = new NoteMetadata
+                    {
+                        Name = noteName,
+                        FullPath = null
+                    };
+                }
+                noteEditor.IsEnabled = true;
+            }
+            else if (File.Exists(notePathStr))
+            {
+                var note = allNotes.FirstOrDefault(n => n.FullPath == notePathStr);
+                if (note != null)
+                {
+                    await LoadNoteAsync(note);
+                }
+            }
+        }
+    }
+}
+
+/// <summary>
+/// Restore editor text, cursor position, and selection
+/// </summary>
+private Task RestoreEditorStateAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    return Application.Current?.Dispatcher.InvokeAsync(() =>
+    {
+        lock (stateLock)
+        {
+            if (token.IsCancellationRequested) return;
+
+            var editorText = GetValueOrDefault<string>(data, "EditorText", null);
+            if (editorText != null)
+            {
+                noteEditor.Text = editorText;
+
+                // Restore cursor and selection
+                noteEditor.CaretIndex = GetValueOrDefault(data, "EditorCursorPos", 0);
+                noteEditor.SelectionStart = GetValueOrDefault(data, "EditorSelectionStart", 0);
+                noteEditor.SelectionLength = GetValueOrDefault(data, "EditorSelectionLength", 0);
+
+                // Restore scroll position
+                var lineIndex = GetValueOrDefault(data, "EditorScrollPosition", 0);
+                if (lineIndex > 0)
+                {
+                    var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
+                    noteEditor.ScrollToLine(lineIndex);
+                }
+            }
+        }
+    }, System.Windows.Threading.DispatcherPriority.Render).Task;
+}
+
+/// <summary>
+/// Restore command palette state if it was visible
+/// </summary>
+private Task RestoreCommandPaletteStateAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    return Application.Current?.Dispatcher.InvokeAsync(() =>
+    {
+        lock (stateLock)
+        {
+            if (token.IsCancellationRequested) return;
+
+            if (GetValueOrDefault(data, "IsCommandPaletteVisible", false))
+            {
+                ShowCommandPalette();
+
+                commandInput.Text = GetValueOrDefault<string>(data, "CommandText", "");
+                commandInput.CaretIndex = GetValueOrDefault(data, "CommandCursorPos", 0);
+            }
+        }
+    }, System.Windows.Threading.DispatcherPriority.Render).Task;
+}
+
+/// <summary>
+/// Restore scroll positions for list and main view
+/// </summary>
+private Task RestoreScrollPositionsAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    return Application.Current?.Dispatcher.InvokeAsync(() =>
+    {
+        lock (stateLock)
+        {
+            if (token.IsCancellationRequested) return;
+
+            // Restore list scroll position
+            var listScroll = GetValueOrDefault(data, "NotesListScrollPosition", 0.0);
+            if (listScroll > 0)
+            {
+                var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
+                scrollViewer?.ScrollToVerticalOffset(listScroll);
+            }
+
+            // Restore main scroll position
+            var scrollPos = GetValueOrDefault(data, "ScrollPosition", 0.0);
+            if (scrollPos > 0)
+            {
+                SetScrollPosition(scrollPos);
+            }
+        }
+    }, System.Windows.Threading.DispatcherPriority.Render).Task;
+}
+
+/// <summary>
+/// Restore focus to the control that was focused before
+/// </summary>
+private Task RestoreFocusToControlAsync(Dictionary<string, object> data, CancellationToken token)
+{
+    return Application.Current?.Dispatcher.InvokeAsync(() =>
+    {
+        lock (stateLock)
+        {
+            if (token.IsCancellationRequested) return;
+
+            var focusedControl = GetValueOrDefault<string>(data, "FocusedControl", "NotesList");
+
+            switch (focusedControl)
+            {
+                case "Editor":
+                    if (noteEditor != null && noteEditor.Visibility == Visibility.Visible)
+                    {
+                        System.Windows.Input.Keyboard.Focus(noteEditor);
+                    }
+                    break;
+                case "NotesList":
+                default:
+                    if (notesListBox != null)
+                    {
+                        System.Windows.Input.Keyboard.Focus(notesListBox);
+                    }
+                    break;
+            }
+        }
+    }, System.Windows.Threading.DispatcherPriority.Render).Task;
+}

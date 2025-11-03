@@ -17,30 +17,20 @@ using SuperTUI.Infrastructure;
 namespace SuperTUI.Panes
 {
     /// <summary>
-    /// PRODUCTION-QUALITY FILE BROWSER PANE
+    /// SIMPLIFIED FILE BROWSER PANE
     ///
-    /// PURPOSE: File/directory selection ONLY - NO file operations (copy/move/delete)
+    /// PURPOSE: Simple directory browsing like 'ls'
     ///
     /// FEATURES:
-    /// - Three-panel layout: Directory tree | File list | Info panel
-    /// - Breadcrumb navigation with clickable segments
-    /// - Quick access bookmarks (Home, Documents, Desktop, Recent)
-    /// - Hidden files toggle, file type filtering
-    /// - Search/filter current directory
-    /// - Keyboard-first navigation
+    /// - Single list showing directory contents
+    /// - "[...]" item at top to go up one level
+    /// - Enter to navigate into directories or select files
+    /// - Keyboard-focused, no search or other distractions
     /// - Security: Path validation via ISecurityManager
-    ///
-    /// SECURITY:
-    /// - All paths validated via ISecurityManager
-    /// - Path traversal prevention (../../)
-    /// - Symlink detection and warnings
-    /// - Permission checking (read access verification)
-    /// - Visual warnings for dangerous/restricted paths
     ///
     /// INTEGRATION:
     /// - FileSelected(string path) - fired when user selects file
     /// - DirectorySelected(string path) - fired when user selects directory
-    /// - SelectionCancelled - fired on Escape
     /// </summary>
     public class FileBrowserPane : PaneBase
     {
@@ -52,58 +42,20 @@ namespace SuperTUI.Panes
 
         // Event handlers (store references for proper unsubscription)
         private Action<Core.Events.ProjectSelectedEvent> projectSelectedHandler;
-        private Action<Core.Events.TaskSelectedEvent> taskSelectedHandler;
         private Action<Core.Events.RefreshRequestedEvent> refreshRequestedHandler;
 
-        // UI Components - Three-panel layout
-        private Grid mainLayout;
-        private Border breadcrumbBorder;
-        private StackPanel breadcrumbPanel;
-        private Grid bookmarksPanel;
-        private TreeView directoryTree;
+        // UI Components - Simple single list
         private ListBox fileListBox;
-        private Grid infoPanel;
-        private TextBox searchBox;
-        private TextBlock statusBar;
-
-        // Info panel components
-        private TextBlock infoPathText;
-        private TextBlock infoSizeText;
-        private TextBlock infoModifiedText;
-        private TextBlock infoTypeText;
-        private TextBlock infoPermissionsText;
-        private TextBlock infoWarningText;
-        private Border previewBorder;
-        private TextBox previewTextBox;
-
-        // Theme-aware UI elements (need to track for ApplyTheme)
-        private List<Button> bookmarkButtons = new List<Button>();
-        private List<Button> breadcrumbButtons = new List<Button>();
+        private TextBlock pathHeader;
         private Style listBoxItemStyle;
 
         // State
         private string currentPath;
         private List<FileSystemItem> currentFiles = new List<FileSystemItem>();
-        private List<FileSystemItem> filteredFiles = new List<FileSystemItem>();
         private FileSystemItem selectedItem;
         private bool showHiddenFiles = false;
-        private FileSelectionMode selectionMode = FileSelectionMode.Both;
-        private HashSet<string> fileTypeFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private List<string> recentLocations = new List<string>();
         private CancellationTokenSource loadCancellation;
         private CancellationTokenSource disposalCancellation;
-
-        // Bookmarks
-        private List<Bookmark> bookmarks = new List<Bookmark>();
-        private bool showBookmarks = true;
-
-        // Debouncing
-        private DispatcherTimer searchDebounceTimer;
-        private const int SEARCH_DEBOUNCE_MS = 150;
-
-        // Constants
-        private const int MAX_RECENT_LOCATIONS = 10;
-        private const string SEARCH_PLACEHOLDER = "Filter files... (Ctrl+F)";
 
         #endregion
 
@@ -118,11 +70,6 @@ namespace SuperTUI.Panes
         /// Fired when user selects a directory (Enter on directory)
         /// </summary>
         public event EventHandler<DirectorySelectedEventArgs> DirectorySelected;
-
-        /// <summary>
-        /// Fired when user cancels selection (Escape)
-        /// </summary>
-        public event EventHandler SelectionCancelled;
 
         #endregion
 
@@ -147,22 +94,8 @@ namespace SuperTUI.Panes
             // Initialize cancellation token
             disposalCancellation = new CancellationTokenSource();
 
-            // Initialize debounce timer
-            searchDebounceTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(SEARCH_DEBOUNCE_MS)
-            };
-            searchDebounceTimer.Tick += (s, e) =>
-            {
-                searchDebounceTimer.Stop();
-                FilterFiles();
-            };
-
-            // Initialize bookmarks
-            InitializeBookmarks();
-
-            // Set initial path to user's home directory
-            currentPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            // Default to current directory, will be overridden by SetInitialPath or config
+            currentPath = Directory.GetCurrentDirectory();
         }
 
         #endregion
@@ -173,79 +106,64 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
 
-            // Register pane-specific shortcuts with ShortcutManager (migrated from hardcoded handlers)
-            RegisterPaneShortcuts();
+            logger.Log(LogLevel.Info, PaneName, "=== FileBrowser Initialize() START ===");
+
+            // Try to get initial path from config
+            try
+            {
+                var configPath = config.Get<string>("FileBrowser.InitialPath", null);
+                if (!string.IsNullOrEmpty(configPath) && Directory.Exists(configPath))
+                {
+                    currentPath = configPath;
+                    logger.Log(LogLevel.Info, PaneName, $"Using configured initial path: {currentPath}");
+                }
+                else
+                {
+                    // Fall back to Documents folder
+                    var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    if (Directory.Exists(documents))
+                    {
+                        currentPath = documents;
+                        logger.Log(LogLevel.Info, PaneName, $"Using Documents folder: {currentPath}");
+                    }
+                    else
+                    {
+                        logger.Log(LogLevel.Info, PaneName, $"Using working directory: {currentPath}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Warning, PaneName, $"Error reading config, using default path: {ex.Message}");
+            }
+
+            logger.Log(LogLevel.Info, PaneName, $"Final path before navigation: {currentPath}");
+            logger.Log(LogLevel.Info, PaneName, $"fileListBox null? {fileListBox == null}");
 
             // Subscribe to EventBus for cross-pane communication
             projectSelectedHandler = OnProjectSelected;
             eventBus.Subscribe(projectSelectedHandler);
 
-            taskSelectedHandler = OnTaskSelected;
-            eventBus.Subscribe(taskSelectedHandler);
-
             refreshRequestedHandler = OnRefreshRequested;
             eventBus.Subscribe(refreshRequestedHandler);
-        }
 
-        /// <summary>
-        /// Register all FileBrowserPane shortcuts with ShortcutManager
-        /// These shortcuts only execute when this pane is focused
-        /// </summary>
-        private void RegisterPaneShortcuts()
-        {
-            var shortcuts = ShortcutManager.Instance;
+            logger.Log(LogLevel.Info, PaneName, "About to schedule NavigateToDirectory");
 
-            // Enter: Select item or navigate
-            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
-                () => { if (selectedItem != null) HandleSelection(); },
-                "Select or navigate");
-
-            // Escape: Cancel selection
-            shortcuts.RegisterForPane(PaneName, Key.Escape, ModifierKeys.None,
-                () => SelectionCancelled?.Invoke(this, EventArgs.Empty),
-                "Cancel selection");
-
-            // Backspace: Go up one directory
-            shortcuts.RegisterForPane(PaneName, Key.Back, ModifierKeys.None,
-                () => { if (!searchBox.IsFocused) NavigateUp(); },
-                "Go up one directory");
-
-            // ~ (OemTilde): Jump to home directory
-            shortcuts.RegisterForPane(PaneName, Key.OemTilde, ModifierKeys.None,
-                () =>
+            // Post navigation to dispatcher queue AFTER UI is fully loaded
+            // This ensures the file list UI is attached to the visual tree before populating it
+            Application.Current?.Dispatcher.BeginInvoke(
+                DispatcherPriority.Loaded,
+                new Action(() =>
                 {
-                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    NavigateToDirectory(home);
-                },
-                "Go to home directory");
+                    logger.Log(LogLevel.Info, PaneName, $"=== NavigateToDirectory DISPATCHER CALLBACK START ===");
+                    logger.Log(LogLevel.Info, PaneName, $"Navigating to initial path: {currentPath}");
+                    logger.Log(LogLevel.Info, PaneName, $"fileListBox null in callback? {fileListBox == null}");
+                    NavigateToDirectory(currentPath);
+                    logger.Log(LogLevel.Info, PaneName, $"=== NavigateToDirectory DISPATCHER CALLBACK END ===");
+                })
+            );
 
-            // / (Oem2): Jump to path
-            shortcuts.RegisterForPane(PaneName, Key.Oem2, ModifierKeys.None,
-                () => { if (!searchBox.IsFocused) PromptForPath(); },
-                "Jump to path");
-
-            // Ctrl+B: Toggle bookmarks
-            shortcuts.RegisterForPane(PaneName, Key.B, ModifierKeys.Control,
-                () => ToggleBookmarks(),
-                "Toggle bookmarks panel");
-
-            // Ctrl+F: Focus search box
-            shortcuts.RegisterForPane(PaneName, Key.F, ModifierKeys.Control,
-                () => { searchBox?.Focus(); searchBox?.SelectAll(); },
-                "Focus search box");
-
-            // Ctrl+1, Ctrl+2, Ctrl+3: Jump to bookmarks
-            shortcuts.RegisterForPane(PaneName, Key.D1, ModifierKeys.Control,
-                () => JumpToBookmark(0),
-                "Jump to bookmark 1");
-
-            shortcuts.RegisterForPane(PaneName, Key.D2, ModifierKeys.Control,
-                () => JumpToBookmark(1),
-                "Jump to bookmark 2");
-
-            shortcuts.RegisterForPane(PaneName, Key.D3, ModifierKeys.Control,
-                () => JumpToBookmark(2),
-                "Jump to bookmark 3");
+            logger.Log(LogLevel.Info, PaneName, "=== FileBrowser Initialize() END ===");
         }
 
         #endregion
@@ -254,246 +172,31 @@ namespace SuperTUI.Panes
 
         protected override UIElement BuildContent()
         {
-            mainLayout = new Grid();
+            var mainLayout = new Grid();
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Path header
+            mainLayout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // File list
 
-            // Define layout structure
-            if (showBookmarks)
-            {
-                // With bookmarks: Breadcrumb | Bookmarks + Tree | Files | Info
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) }); // Bookmarks + Tree
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Files
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) }); // Info
-            }
-            else
-            {
-                // Without bookmarks: Breadcrumb | Tree | Files | Info
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(250) }); // Tree
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Files
-                mainLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) }); // Info
-            }
-
-            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Breadcrumb
-            mainLayout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Main content
-            mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
-
-            // Build components
-            breadcrumbBorder = BuildBreadcrumb();
-            Grid.SetRow(breadcrumbBorder, 0);
-            Grid.SetColumnSpan(breadcrumbBorder, 3);
-            mainLayout.Children.Add(breadcrumbBorder);
-
-            var leftPanel = BuildLeftPanel();
-            Grid.SetRow(leftPanel, 1);
-            Grid.SetColumn(leftPanel, 0);
-            mainLayout.Children.Add(leftPanel);
-
-            var filePanel = BuildFilePanel();
-            Grid.SetRow(filePanel, 1);
-            Grid.SetColumn(filePanel, 1);
-            mainLayout.Children.Add(filePanel);
-
-            infoPanel = BuildInfoPanel();
-            Grid.SetRow(infoPanel, 1);
-            Grid.SetColumn(infoPanel, 2);
-            mainLayout.Children.Add(infoPanel);
-
-            var statusBorder = BuildStatusBar();
-            Grid.SetRow(statusBorder, 2);
-            Grid.SetColumnSpan(statusBorder, 3);
-            mainLayout.Children.Add(statusBorder);
-
-            // Set up keyboard shortcuts
-            this.PreviewKeyDown += OnPreviewKeyDown;
-
-            // Subscribe to theme changes
-            themeManager.ThemeChanged += OnThemeChanged;
-
-            // Apply initial theme
-            ApplyFileBrowserTheme();
-
-            // Load initial directory
-            NavigateToDirectory(currentPath);
-
-            return mainLayout;
-        }
-
-        private void OnThemeChanged(object sender, EventArgs e)
-        {
-            ApplyFileBrowserTheme();
-        }
-
-        private Border BuildBreadcrumb()
-        {
-            var border = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 0, 1),
-                Height = 36,
-                Padding = new Thickness(12, 0, 12, 0)
-            };
-
-            breadcrumbPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            border.Child = breadcrumbPanel;
-            return border;
-        }
-
-        private Grid BuildLeftPanel()
-        {
-            var panel = new Grid();
-
-            if (showBookmarks)
-            {
-                panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Bookmarks
-                panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Tree
-
-                bookmarksPanel = BuildBookmarksPanel();
-                Grid.SetRow(bookmarksPanel, 0);
-                panel.Children.Add(bookmarksPanel);
-
-                var treeBorder = BuildDirectoryTree();
-                Grid.SetRow(treeBorder, 1);
-                panel.Children.Add(treeBorder);
-            }
-            else
-            {
-                panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-                var treeBorder = BuildDirectoryTree();
-                Grid.SetRow(treeBorder, 0);
-                panel.Children.Add(treeBorder);
-            }
-
-            return panel;
-        }
-
-        private Grid BuildBookmarksPanel()
-        {
-            var panel = new Grid();
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Bookmarks
-
-            // Header
+            // Path header
             var headerBorder = new Border
             {
-                BorderThickness = new Thickness(0, 0, 1, 1),
-                Padding = new Thickness(8, 4, 8, 4),
-                Height = 24
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Height = 32,
+                Padding = new Thickness(12, 6, 12, 6)
             };
 
-            var headerText = new TextBlock
+            pathHeader = new TextBlock
             {
-                Text = "Quick Access",
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Text = currentPath
             };
 
-            headerBorder.Child = headerText;
+            headerBorder.Child = pathHeader;
             Grid.SetRow(headerBorder, 0);
-            panel.Children.Add(headerBorder);
-
-            // Bookmarks list
-            var bookmarksBorder = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 1, 1),
-                Padding = new Thickness(4)
-            };
-
-            var bookmarksStack = new StackPanel();
-
-            bookmarkButtons.Clear();
-            foreach (var bookmark in bookmarks)
-            {
-                var btn = new Button
-                {
-                    Content = $"{bookmark.Icon} {bookmark.Name}",
-                    FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                    FontSize = 18,
-                    Padding = new Thickness(8, 4, 8, 4),
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    HorizontalContentAlignment = HorizontalAlignment.Left,
-                    Margin = new Thickness(0, 0, 0, 2),
-                    BorderThickness = new Thickness(0),
-                    Tag = bookmark
-                };
-                btn.Click += OnBookmarkClick;
-                bookmarkButtons.Add(btn);
-                bookmarksStack.Children.Add(btn);
-            }
-
-            bookmarksBorder.Child = bookmarksStack;
-            Grid.SetRow(bookmarksBorder, 1);
-            panel.Children.Add(bookmarksBorder);
-
-            return panel;
-        }
-
-        private Border BuildDirectoryTree()
-        {
-            var border = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                Padding = new Thickness(0)
-            };
-
-            directoryTree = new TreeView
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(4)
-            };
-
-            directoryTree.SelectedItemChanged += OnDirectoryTreeSelectionChanged;
-
-            // Load root directories
-            LoadDirectoryTree();
-
-            border.Child = directoryTree;
-            return border;
-        }
-
-        private Grid BuildFilePanel()
-        {
-            var panel = new Grid();
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search
-            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // File list
-
-            // Search box
-            var searchBorder = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 1, 1),
-                Padding = new Thickness(8),
-                Height = 36
-            };
-
-            searchBox = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                BorderThickness = new Thickness(0),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            searchBox.TextChanged += OnSearchTextChanged;
-            searchBox.GotFocus += (s, e) => searchBox.Text = searchBox.Text == SEARCH_PLACEHOLDER ? "" : searchBox.Text;
-            searchBox.LostFocus += (s, e) => searchBox.Text = string.IsNullOrEmpty(searchBox.Text) ? SEARCH_PLACEHOLDER : searchBox.Text;
-            searchBox.Text = SEARCH_PLACEHOLDER;
-
-            searchBorder.Child = searchBox;
-            Grid.SetRow(searchBorder, 0);
-            panel.Children.Add(searchBorder);
+            mainLayout.Children.Add(headerBorder);
 
             // File list
-            var listBorder = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                Padding = new Thickness(0)
-            };
-
             fileListBox = new ListBox
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
@@ -509,179 +212,22 @@ namespace SuperTUI.Panes
             listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
             fileListBox.ItemContainerStyle = listBoxItemStyle;
 
-            listBorder.Child = fileListBox;
-            Grid.SetRow(listBorder, 1);
-            panel.Children.Add(listBorder);
+            Grid.SetRow(fileListBox, 1);
+            mainLayout.Children.Add(fileListBox);
 
-            return panel;
+            // Subscribe to theme changes
+            themeManager.ThemeChanged += OnThemeChanged;
+
+            // Apply initial theme
+            ApplyFileBrowserTheme();
+
+            // Don't load directory here - wait for Initialize() to set correct path
+            return mainLayout;
         }
 
-        private Grid BuildInfoPanel()
+        private void OnThemeChanged(object sender, EventArgs e)
         {
-            var panel = new Grid();
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Info
-
-            // Header
-            var headerBorder = new Border
-            {
-                BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(12, 8, 12, 8),
-                Height = 36
-            };
-
-            var headerText = new TextBlock
-            {
-                Text = "Details",
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                FontWeight = FontWeights.Bold
-            };
-
-            headerBorder.Child = headerText;
-            Grid.SetRow(headerBorder, 0);
-            panel.Children.Add(headerBorder);
-
-            // Info content
-            var infoBorder = new Border
-            {
-                Padding = new Thickness(12)
-            };
-
-            var infoStack = new StackPanel();
-
-            // Warning text (for dangerous paths)
-            infoWarningText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 0, 0, 12),
-                Visibility = Visibility.Collapsed
-            };
-            infoStack.Children.Add(infoWarningText);
-
-            // Path
-            AddInfoLabel(infoStack, "Path:");
-            infoPathText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 4, 0, 12),
-                Text = "No selection"
-            };
-            infoStack.Children.Add(infoPathText);
-
-            // Type
-            AddInfoLabel(infoStack, "Type:");
-            infoTypeText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Margin = new Thickness(0, 4, 0, 12),
-                Text = "-"
-            };
-            infoStack.Children.Add(infoTypeText);
-
-            // Size
-            AddInfoLabel(infoStack, "Size:");
-            infoSizeText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Margin = new Thickness(0, 4, 0, 12),
-                Text = "-"
-            };
-            infoStack.Children.Add(infoSizeText);
-
-            // Modified
-            AddInfoLabel(infoStack, "Modified:");
-            infoModifiedText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Margin = new Thickness(0, 4, 0, 12),
-                Text = "-"
-            };
-            infoStack.Children.Add(infoModifiedText);
-
-            // Permissions
-            AddInfoLabel(infoStack, "Access:");
-            infoPermissionsText = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Margin = new Thickness(0, 4, 0, 12),
-                Text = "-"
-            };
-            infoStack.Children.Add(infoPermissionsText);
-
-            // Preview section
-            AddInfoLabel(infoStack, "Preview:");
-            previewBorder = new Border
-            {
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Margin = new Thickness(0, 4, 0, 0),
-                MaxHeight = 300,
-                Visibility = Visibility.Collapsed
-            };
-
-            previewTextBox = new TextBox
-            {
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 12,
-                IsReadOnly = true,
-                TextWrapping = TextWrapping.Wrap,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                BorderThickness = new Thickness(0)
-            };
-
-            previewBorder.Child = previewTextBox;
-            infoStack.Children.Add(previewBorder);
-
-            infoBorder.Child = infoStack;
-            Grid.SetRow(infoBorder, 1);
-            panel.Children.Add(infoBorder);
-
-            return panel;
-        }
-
-        private void AddInfoLabel(StackPanel parent, string text)
-        {
-            var label = new TextBlock
-            {
-                Text = text,
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                Opacity = 0.7
-            };
-            parent.Children.Add(label);
-        }
-
-        private Border BuildStatusBar()
-        {
-            var border = new Border
-            {
-                BorderThickness = new Thickness(0, 1, 0, 0),
-                Height = 24,
-                Padding = new Thickness(12, 0, 12, 0)
-            };
-
-            statusBar = new TextBlock
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                VerticalAlignment = VerticalAlignment.Center,
-                Text = "Enter: Select | Backspace: Up | Ctrl+H: Hidden | Esc: Cancel | /: Jump to path | ~: Home"
-            };
-
-            border.Child = statusBar;
-            return border;
+            ApplyFileBrowserTheme();
         }
 
         #endregion
@@ -689,7 +235,7 @@ namespace SuperTUI.Panes
         #region Theme Application
 
         /// <summary>
-        /// Apply theme to all FileBrowser UI elements
+        /// Apply theme to FileBrowser UI elements
         /// </summary>
         private void ApplyFileBrowserTheme()
         {
@@ -697,64 +243,19 @@ namespace SuperTUI.Panes
             if (theme == null) return;
 
             var background = theme.Background;
-            var surface = theme.Surface;
             var foreground = theme.Foreground;
             var border = theme.Border;
-            var accent = theme.Primary;
+            var surface = theme.Surface;
 
-            // Apply to breadcrumb border
-            if (breadcrumbBorder != null)
+            // Apply to path header
+            if (pathHeader != null)
             {
-                breadcrumbBorder.Background = new SolidColorBrush(surface);
-                breadcrumbBorder.BorderBrush = new SolidColorBrush(border);
-            }
-
-            // Apply to breadcrumb buttons
-            foreach (var btn in breadcrumbButtons)
-            {
-                btn.Background = new SolidColorBrush(Colors.Transparent);
-                btn.Foreground = new SolidColorBrush(foreground);
-            }
-
-            // Apply to bookmarks panel
-            if (bookmarksPanel != null)
-            {
-                // Find header border and content border in bookmarksPanel
-                foreach (UIElement child in bookmarksPanel.Children)
+                pathHeader.Foreground = new SolidColorBrush(foreground);
+                if (pathHeader.Parent is Border headerBorder)
                 {
-                    if (child is Border border_elem)
-                    {
-                        border_elem.Background = new SolidColorBrush(surface);
-                        border_elem.BorderBrush = new SolidColorBrush(border);
-
-                        if (border_elem.Child is TextBlock header)
-                        {
-                            header.Foreground = new SolidColorBrush(foreground);
-                        }
-                    }
+                    headerBorder.Background = new SolidColorBrush(surface);
+                    headerBorder.BorderBrush = new SolidColorBrush(border);
                 }
-            }
-
-            // Apply to bookmark buttons
-            foreach (var btn in bookmarkButtons)
-            {
-                btn.Background = new SolidColorBrush(Colors.Transparent);
-                btn.Foreground = new SolidColorBrush(foreground);
-            }
-
-            // Apply to directory tree
-            if (directoryTree != null)
-            {
-                directoryTree.Background = new SolidColorBrush(background);
-                directoryTree.Foreground = new SolidColorBrush(foreground);
-            }
-
-            // Apply to search box
-            if (searchBox != null)
-            {
-                searchBox.Background = new SolidColorBrush(Colors.Transparent);
-                searchBox.Foreground = new SolidColorBrush(foreground);
-                searchBox.CaretBrush = new SolidColorBrush(accent);
             }
 
             // Apply to file list box
@@ -773,49 +274,6 @@ namespace SuperTUI.Panes
                 listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
                 listBoxItemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(foreground)));
             }
-
-            // Apply to info panel
-            if (infoPanel != null)
-            {
-                // Find header and content borders
-                foreach (UIElement child in infoPanel.Children)
-                {
-                    if (child is Border border_elem)
-                    {
-                        border_elem.Background = new SolidColorBrush(surface);
-                        border_elem.BorderBrush = new SolidColorBrush(border);
-
-                        // Apply to child elements
-                        if (border_elem.Child is TextBlock text)
-                        {
-                            text.Foreground = new SolidColorBrush(foreground);
-                        }
-                        else if (border_elem.Child is StackPanel stack)
-                        {
-                            foreach (var item in stack.Children)
-                            {
-                                if (item is TextBlock tb)
-                                {
-                                    tb.Foreground = new SolidColorBrush(foreground);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Apply to info panel text blocks
-            if (infoPathText != null) infoPathText.Foreground = new SolidColorBrush(foreground);
-            if (infoTypeText != null) infoTypeText.Foreground = new SolidColorBrush(foreground);
-            if (infoSizeText != null) infoSizeText.Foreground = new SolidColorBrush(foreground);
-            if (infoModifiedText != null) infoModifiedText.Foreground = new SolidColorBrush(foreground);
-            if (infoPermissionsText != null) infoPermissionsText.Foreground = new SolidColorBrush(foreground);
-
-            // Apply to status bar
-            if (statusBar != null)
-            {
-                statusBar.Foreground = new SolidColorBrush(foreground);
-            }
         }
 
         #endregion
@@ -824,6 +282,8 @@ namespace SuperTUI.Panes
 
         private void NavigateToDirectory(string path)
         {
+            logger.Log(LogLevel.Debug, PaneName, $"NavigateToDirectory called with path: {path}");
+
             // Cancel any ongoing load
             loadCancellation?.Cancel();
             loadCancellation = new CancellationTokenSource();
@@ -837,7 +297,7 @@ namespace SuperTUI.Panes
             // Validate path
             if (!ValidatePath(path, out string errorMessage))
             {
-                ShowStatus($"Access denied: {errorMessage}", isError: true);
+                logger.Log(LogLevel.Warning, PaneName, $"Path validation failed: {errorMessage}");
                 return;
             }
 
@@ -847,16 +307,22 @@ namespace SuperTUI.Panes
                 var resolvedPath = Path.GetFullPath(path);
                 currentPath = resolvedPath;
 
-                // Update breadcrumb
-                UpdateBreadcrumb();
+                logger.Log(LogLevel.Debug, PaneName, $"Resolved path to: {resolvedPath}");
 
-                // Load files asynchronously
-                Task.Run(() => LoadFilesAsync(token), token);
+                // Update path header
+                if (pathHeader != null)
+                {
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        pathHeader.Text = currentPath;
+                    });
+                }
 
-                // Add to recent locations
-                AddRecentLocation(resolvedPath);
+                // Load files asynchronously on background thread
+                // Use async lambda to properly await the async method
+                _ = Task.Run(async () => await LoadFilesAsync(token), token);
 
-                Log($"Navigated to: {resolvedPath}");
+                logger.Log(LogLevel.Info, PaneName, $"Started loading files from: {resolvedPath}");
             }
             catch (Exception ex)
             {
@@ -865,15 +331,12 @@ namespace SuperTUI.Panes
                     ex,
                     $"Navigating to directory '{path}'",
                     logger);
-
-                ShowStatus($"Error: {ex.Message}", isError: true);
             }
         }
 
         private async Task LoadFilesAsync(CancellationToken token)
         {
-            // Show loading indicator
-            ShowStatus("Loading files...");
+            logger.Log(LogLevel.Debug, PaneName, $"LoadFilesAsync started for: {currentPath}");
 
             try
             {
@@ -882,6 +345,8 @@ namespace SuperTUI.Panes
                 // Get directories
                 if (Directory.Exists(currentPath))
                 {
+                    logger.Log(LogLevel.Debug, PaneName, $"Directory exists, loading contents...");
+
                     var dirs = Directory.GetDirectories(currentPath)
                         .Where(d => showHiddenFiles || !IsHidden(d))
                         .OrderBy(d => Path.GetFileName(d));
@@ -914,7 +379,6 @@ namespace SuperTUI.Panes
                     // Get files
                     var filesPaths = Directory.GetFiles(currentPath)
                         .Where(f => showHiddenFiles || !IsHidden(f))
-                        .Where(f => fileTypeFilters.Count == 0 || fileTypeFilters.Contains(Path.GetExtension(f)))
                         .OrderBy(f => Path.GetFileName(f));
 
                     foreach (var file in filesPaths)
@@ -945,26 +409,52 @@ namespace SuperTUI.Panes
 
                 if (token.IsCancellationRequested) return;
 
-                // Update UI on main thread - check cancellation before UI update
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                logger.Log(LogLevel.Debug, PaneName, $"Found {files.Count} items (dirs + files)");
+
+                // Update UI on main thread with DataBind priority
+                // DataBind priority ensures UI updates complete before any focus operations
+                // This prevents race conditions where focus tries to target not-yet-rendered items
+                try
                 {
-                    if (!token.IsCancellationRequested)
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        currentFiles = files;
-                        FilterFiles();
-                        ShowStatus($"Loaded {files.Count} items");
-                        UpdateStatus();
-                    }
-                });
+                        try
+                        {
+                            if (token.IsCancellationRequested)
+                            {
+                                logger.Log(LogLevel.Debug, PaneName, "Token cancelled before UI update");
+                                return;
+                            }
+
+                            logger.Log(LogLevel.Debug, PaneName, $"About to set currentFiles to {files.Count} items");
+                            currentFiles = files;
+                            logger.Log(LogLevel.Debug, PaneName, $"Set currentFiles, now calling UpdateFileList");
+                            UpdateFileList();
+                            logger.Log(LogLevel.Debug, PaneName, "UpdateFileList completed successfully");
+                        }
+                        catch (Exception innerEx)
+                        {
+                            logger.Log(LogLevel.Error, PaneName, $"Exception in UI update: {innerEx.GetType().Name}: {innerEx.Message}\n{innerEx.StackTrace}");
+                            throw;
+                        }
+                    }, DispatcherPriority.DataBind);  // Changed from default (Normal) to DataBind
+                }
+                catch (Exception dispatcherEx)
+                {
+                    logger.Log(LogLevel.Error, PaneName, $"Dispatcher.InvokeAsync failed: {dispatcherEx.GetType().Name}: {dispatcherEx.Message}\n{dispatcherEx.StackTrace}");
+                    throw;
+                }
             }
             catch (OperationCanceledException)
             {
                 // Expected during cancellation, ignore
+                logger.Log(LogLevel.Debug, PaneName, "LoadFilesAsync cancelled");
             }
             catch (Exception ex)
             {
                 if (!token.IsCancellationRequested)
                 {
+                    logger.Log(LogLevel.Error, PaneName, $"Error loading files: {ex.Message}");
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         ErrorHandlingPolicy.Handle(
@@ -972,266 +462,85 @@ namespace SuperTUI.Panes
                             ex,
                             $"Loading files from directory '{currentPath}'",
                             logger);
-
-                        ShowStatus($"Error: {ex.Message}", isError: true);
                     });
                 }
             }
         }
 
-        private void FilterFiles()
-        {
-            var query = searchBox.Text;
-
-            if (string.IsNullOrEmpty(query) || query == SEARCH_PLACEHOLDER)
-            {
-                filteredFiles = currentFiles.ToList();
-            }
-            else
-            {
-                // Fuzzy search
-                filteredFiles = currentFiles
-                    .Select(file => new { File = file, Score = CalculateFuzzyScore(query.ToLower(), file.Name.ToLower()) })
-                    .Where(x => x.Score > 0)
-                    .OrderByDescending(x => x.Score)
-                    .ThenBy(x => x.File.Name)
-                    .Select(x => x.File)
-                    .ToList();
-            }
-
-            UpdateFileList();
-        }
-
         private void UpdateFileList()
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            // NOTE: This is called from LoadFilesAsync which already uses Dispatcher.InvokeAsync,
+            // so we're already on the UI thread. No need for another dispatcher wrapper.
+            logger.Log(LogLevel.Debug, PaneName, $"UpdateFileList called with {currentFiles.Count} items");
+
+            if (fileListBox == null)
             {
-                fileListBox.Items.Clear();
-
-                if (!filteredFiles.Any())
-                {
-                    var placeholder = new TextBlock
-                    {
-                        Text = currentFiles.Any() ? "No matching files" : "Empty directory",
-                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 18,
-                        FontStyle = FontStyles.Italic,
-                        Opacity = 0.5,
-                        TextAlignment = TextAlignment.Center,
-                        Padding = new Thickness(12)
-                    };
-                    fileListBox.Items.Add(placeholder);
-                    return;
-                }
-
-                foreach (var item in filteredFiles)
-                {
-                    var stackPanel = new StackPanel { Orientation = Orientation.Horizontal };
-
-                    // Icon
-                    var icon = new TextBlock
-                    {
-                        Text = GetFileIcon(item) + " ",
-                        FontFamily = new FontFamily("Segoe UI Emoji, JetBrains Mono, Consolas"),
-                        FontSize = 18,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    stackPanel.Children.Add(icon);
-
-                    // Name with search highlighting
-                    var nameBlock = new TextBlock
-                    {
-                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 18,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-
-                    var query = searchBox.Text;
-                    if (!string.IsNullOrWhiteSpace(query) && query != SEARCH_PLACEHOLDER)
-                    {
-                        AddHighlightedText(nameBlock, item.Name, query);
-                    }
-                    else
-                    {
-                        nameBlock.Text = item.Name;
-                    }
-
-                    if (item.IsSymlink)
-                    {
-                        nameBlock.Inlines.Add(new System.Windows.Documents.Run(" →"));
-                        nameBlock.FontStyle = FontStyles.Italic;
-                    }
-
-                    stackPanel.Children.Add(nameBlock);
-
-                    var listItem = new ListBoxItem
-                    {
-                        Content = stackPanel,
-                        Tag = item
-                    };
-
-                    fileListBox.Items.Add(listItem);
-                }
-            });
-        }
-
-        private void UpdateBreadcrumb()
-        {
-            Application.Current?.Dispatcher.Invoke(() =>
-            {
-                breadcrumbPanel.Children.Clear();
-                breadcrumbButtons.Clear();
-
-                if (string.IsNullOrEmpty(currentPath))
-                    return;
-
-                var parts = currentPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                string buildPath = "";
-
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    var part = parts[i];
-                    if (string.IsNullOrEmpty(part) && i > 0) continue;
-
-                    // Build cumulative path
-                    if (i == 0 && string.IsNullOrEmpty(part))
-                    {
-                        buildPath = Path.DirectorySeparatorChar.ToString();
-                        part = Path.DirectorySeparatorChar.ToString();
-                    }
-                    else
-                    {
-                        buildPath = i == 0 ? part : Path.Combine(buildPath, part);
-                    }
-
-                    // Create clickable segment
-                    var btn = new Button
-                    {
-                        Content = i == 0 && part.Length <= 3 ? part : (part.Length > 20 ? part.Substring(0, 17) + "..." : part),
-                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                        FontSize = 18,
-                        Padding = new Thickness(6, 2, 6, 2),
-                        Margin = new Thickness(0, 0, 4, 0),
-                        BorderThickness = new Thickness(0),
-                        Tag = buildPath
-                    };
-                    btn.Click += OnBreadcrumbClick;
-                    breadcrumbButtons.Add(btn);
-
-                    breadcrumbPanel.Children.Add(btn);
-
-                    // Add separator (except for last item)
-                    if (i < parts.Length - 1)
-                    {
-                        var separator = new TextBlock
-                        {
-                            Text = "›",
-                            FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                            FontSize = 18,
-                            Opacity = 0.5,
-                            VerticalAlignment = VerticalAlignment.Center,
-                            Margin = new Thickness(0, 0, 4, 0)
-                        };
-                        breadcrumbPanel.Children.Add(separator);
-                    }
-                }
-            });
-        }
-
-        private void LoadDirectoryTree()
-        {
-            directoryTree.Items.Clear();
-
-            // Add drives/root
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                // Windows: Show drives
-                foreach (var drive in DriveInfo.GetDrives())
-                {
-                    try
-                    {
-                        if (drive.IsReady)
-                        {
-                            var item = CreateTreeItem(drive.RootDirectory.FullName, drive.Name);
-                            directoryTree.Items.Add(item);
-                        }
-                    }
-                    catch
-                    {
-                        // Skip drives we can't access
-                    }
-                }
-            }
-            else
-            {
-                // Unix: Start from root
-                var item = CreateTreeItem("/", "/");
-                directoryTree.Items.Add(item);
-            }
-        }
-
-        private TreeViewItem CreateTreeItem(string path, string displayName)
-        {
-            var item = new TreeViewItem
-            {
-                Header = displayName,
-                Tag = path,
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18
-            };
-
-            // Add dummy child to show expand arrow
-            if (HasSubdirectories(path))
-            {
-                item.Items.Add(new TreeViewItem { Header = "Loading..." });
+                logger.Log(LogLevel.Error, PaneName, "fileListBox is null!");
+                return;
             }
 
-            item.Expanded += OnTreeItemExpanded;
+            fileListBox.Items.Clear();
+            logger.Log(LogLevel.Debug, PaneName, "Cleared fileListBox");
 
-            return item;
-        }
-
-        private void OnTreeItemExpanded(object sender, RoutedEventArgs e)
-        {
-            var item = sender as TreeViewItem;
-            if (item == null) return;
-
-            // Check if already loaded
-            if (item.Items.Count == 1 && item.Items[0] is TreeViewItem dummy && dummy.Header.ToString() == "Loading...")
+            // Add parent directory "[...]" item at the top (except for root)
+            var parent = Directory.GetParent(currentPath);
+            if (parent != null)
             {
-                item.Items.Clear();
-
-                var path = item.Tag as string;
-                if (string.IsNullOrEmpty(path)) return;
-
-                try
+                var parentItem = new ListBoxItem
                 {
-                    var subdirs = Directory.GetDirectories(path)
-                        .Where(d => showHiddenFiles || !IsHidden(d))
-                        .OrderBy(d => Path.GetFileName(d));
-
-                    foreach (var subdir in subdirs)
+                    Content = new TextBlock
                     {
-                        try
-                        {
-                            var dirName = Path.GetFileName(subdir);
-                            var subItem = CreateTreeItem(subdir, dirName);
-                            item.Items.Add(subItem);
-                        }
-                        catch
-                        {
-                            // Skip directories we can't access
-                        }
+                        Text = "[...]",
+                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                        FontSize = 18,
+                        Foreground = fileListBox.Foreground
+                    },
+                    Tag = new FileSystemItem
+                    {
+                        Name = "[...]",
+                        FullPath = parent.FullName,
+                        IsDirectory = true,
+                        Modified = DateTime.Now,
+                        Size = 0,
+                        Extension = "",
+                        IsHidden = false,
+                        IsSymlink = false
                     }
-                }
-                catch (Exception ex)
+                };
+                fileListBox.Items.Add(parentItem);
+                logger.Log(LogLevel.Debug, PaneName, "Added [...] parent item");
+            }
+
+            // Add current directory contents
+            int addedCount = 0;
+            foreach (var item in currentFiles)
+            {
+                var icon = GetFileIcon(item);
+                var text = $"{icon} {item.Name}";
+
+                var listItem = new ListBoxItem
                 {
-                    ErrorHandlingPolicy.Handle(
-                        ErrorCategory.IO,
-                        ex,
-                        $"Expanding directory tree for '{path}'",
-                        logger);
-                }
+                    Content = new TextBlock
+                    {
+                        Text = text,
+                        FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                        FontSize = 18,
+                        Foreground = fileListBox.Foreground
+                    },
+                    Tag = item
+                };
+
+                fileListBox.Items.Add(listItem);
+                addedCount++;
+            }
+
+            logger.Log(LogLevel.Info, PaneName, $"Added {addedCount} items to fileListBox, total count: {fileListBox.Items.Count}");
+
+            // Auto-select first item if list is not empty
+            if (fileListBox.Items.Count > 0)
+            {
+                fileListBox.SelectedIndex = 0;
+                logger.Log(LogLevel.Debug, PaneName, "Selected first item");
             }
         }
 
@@ -1239,77 +548,28 @@ namespace SuperTUI.Panes
 
         #region Event Handlers
 
-        private void OnDirectoryTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (directoryTree.SelectedItem is TreeViewItem item && item.Tag is string path)
-            {
-                NavigateToDirectory(path);
-            }
-        }
-
         private void OnFileSelected(object sender, SelectionChangedEventArgs e)
         {
             if (fileListBox.SelectedItem is ListBoxItem item && item.Tag is FileSystemItem fsItem)
             {
                 selectedItem = fsItem;
-                UpdateInfoPanel(fsItem);
             }
             else
             {
                 selectedItem = null;
-                ClearInfoPanel();
             }
         }
 
         private void OnFileListKeyDown(object sender, KeyEventArgs e)
         {
+            // Guard against processing input when we don't have focus
+            if (!this.IsKeyboardFocusWithin) return;
+
             if (e.Key == Key.Enter && selectedItem != null)
             {
                 HandleSelection();
                 e.Handled = true;
             }
-        }
-
-        private void OnBreadcrumbClick(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is string path)
-            {
-                NavigateToDirectory(path);
-            }
-        }
-
-        private void OnBookmarkClick(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is Bookmark bookmark)
-            {
-                if (Directory.Exists(bookmark.Path))
-                {
-                    NavigateToDirectory(bookmark.Path);
-                }
-                else
-                {
-                    ShowStatus($"Bookmark path not found: {bookmark.Path}", isError: true);
-                }
-            }
-        }
-
-        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
-        {
-            searchDebounceTimer.Stop();
-            searchDebounceTimer.Start();
-        }
-
-        private void OnPreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            // Try to handle via ShortcutManager (all registered pane shortcuts)
-            var shortcuts = ShortcutManager.Instance;
-            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
-            {
-                e.Handled = true;
-                return;
-            }
-
-            // If not handled by ShortcutManager, leave for default handling
         }
 
         #endregion
@@ -1333,55 +593,11 @@ namespace SuperTUI.Panes
                     {
                         NavigateToDirectory(projectPath);
                         Log($"Navigated to project directory: {projectPath}");
-                        ShowStatus($"Project: {evt.Project.Name}");
                         return;
                     }
                 }
 
                 Log($"Project {evt.Project.Name} has no valid working directory in CustomFields", LogLevel.Info);
-            });
-        }
-
-        /// <summary>
-        /// Handle TaskSelectedEvent - navigate to task files if task has file metadata
-        /// </summary>
-        private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
-        {
-            if (evt?.Task == null) return;
-
-            Application.Current?.Dispatcher.InvokeAsync(() =>
-            {
-                // Check if task description contains a file path (simple heuristic)
-                // This is a simple implementation - can be enhanced based on actual task metadata structure
-                var description = evt.Task.Description;
-                if (!string.IsNullOrEmpty(description))
-                {
-                    // Try to extract file paths from description using simple pattern matching
-                    // Look for absolute paths (starting with / or drive letter)
-                    var lines = description.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var line in lines)
-                    {
-                        var trimmed = line.Trim();
-                        // Check if line looks like a file path
-                        if ((trimmed.StartsWith("/") || (trimmed.Length > 3 && trimmed[1] == ':')) && File.Exists(trimmed))
-                        {
-                            var directoryPath = Path.GetDirectoryName(trimmed);
-                            if (!string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
-                            {
-                                NavigateToDirectory(directoryPath);
-
-                                // Try to select the file
-                                SelectFileByPath(trimmed);
-
-                                Log($"Navigated to task file directory: {directoryPath}");
-                                ShowStatus($"Task: {evt.Task.Title}");
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                Log($"Task {evt.Task.Title} has no associated file path in description", LogLevel.Info);
             });
         }
 
@@ -1405,7 +621,6 @@ namespace SuperTUI.Panes
             if (!string.IsNullOrEmpty(currentPath) && Directory.Exists(currentPath))
             {
                 NavigateToDirectory(currentPath);
-                ShowStatus("Directory refreshed");
             }
         }
 
@@ -1419,284 +634,48 @@ namespace SuperTUI.Panes
 
             if (selectedItem.IsDirectory)
             {
-                if (selectionMode == FileSelectionMode.File)
-                {
-                    // Navigate into directory
-                    NavigateToDirectory(selectedItem.FullPath);
-                }
-                else
-                {
-                    // Select directory
-                    DirectorySelected?.Invoke(this, new DirectorySelectedEventArgs { Path = selectedItem.FullPath });
-                }
+                // Navigate into directory (or up if it's the [...] item)
+                NavigateToDirectory(selectedItem.FullPath);
             }
             else
             {
-                if (selectionMode == FileSelectionMode.Directory)
-                {
-                    ShowStatus("Please select a directory", isError: true);
-                }
-                else
-                {
-                    // Select file
-                    FileSelected?.Invoke(this, new FileSelectedEventArgs { Path = selectedItem.FullPath });
+                // Preserve focus state before event publishing
+                // Event handlers in other panes might try to steal focus
+                var hadFocus = this.IsKeyboardFocusWithin;
 
-                    // Publish FileSelectedEvent to EventBus for cross-pane communication
-                    eventBus.Publish(new Core.Events.FileSelectedEvent
+                // Select file
+                FileSelected?.Invoke(this, new FileSelectedEventArgs { Path = selectedItem.FullPath });
+
+                // Publish FileSelectedEvent to EventBus for cross-pane communication
+                eventBus.Publish(new Core.Events.FileSelectedEvent
+                {
+                    FilePath = selectedItem.FullPath,
+                    FileName = selectedItem.Name,
+                    FileSize = selectedItem.Size,
+                    SelectedAt = DateTime.Now
+                });
+
+                Log($"Published FileSelectedEvent: {selectedItem.FullPath}");
+
+                // Restore focus after event handlers complete
+                // This ensures file browser remains navigable after file selection
+                if (hadFocus)
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() =>
                     {
-                        FilePath = selectedItem.FullPath,
-                        FileName = selectedItem.Name,
-                        FileSize = selectedItem.Size,
-                        SelectedAt = DateTime.Now
-                    });
-
-                    Log($"Published FileSelectedEvent: {selectedItem.FullPath}");
+                        if (fileListBox != null && fileListBox.Items.Count > 0)
+                        {
+                            Keyboard.Focus(fileListBox);
+                        }
+                    }, DispatcherPriority.Render);
                 }
             }
-        }
-
-        private void NavigateUp()
-        {
-            if (string.IsNullOrEmpty(currentPath)) return;
-
-            try
-            {
-                var parent = Directory.GetParent(currentPath);
-                if (parent != null)
-                {
-                    NavigateToDirectory(parent.FullName);
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorHandlingPolicy.Handle(
-                    ErrorCategory.IO,
-                    ex,
-                    $"Navigating up from directory '{currentPath}'",
-                    logger);
-
-                ShowStatus("Cannot navigate up", isError: true);
-            }
-        }
-
-        private void ToggleHiddenFiles()
-        {
-            showHiddenFiles = !showHiddenFiles;
-            NavigateToDirectory(currentPath); // Reload
-            ShowStatus($"Hidden files: {(showHiddenFiles ? "Shown" : "Hidden")}");
-        }
-
-        private void ToggleBookmarks()
-        {
-            showBookmarks = !showBookmarks;
-            // BUG FIX: contentArea is undefined - rebuild requires pane reconstruction
-            // TODO: Implement proper layout toggle without full rebuild
-            logger.Log(LogLevel.Warning, "FileBrowserPane",
-                "ToggleBookmarks not yet implemented - requires pane reconstruction");
-            ShowStatus("Bookmark toggle not yet implemented", isError: true);
-        }
-
-        private void JumpToBookmark(int index)
-        {
-            if (index < bookmarks.Count)
-            {
-                var bookmark = bookmarks[index];
-                if (Directory.Exists(bookmark.Path))
-                {
-                    NavigateToDirectory(bookmark.Path);
-                }
-            }
-        }
-
-        private void PromptForPath()
-        {
-            var dialog = new Window
-            {
-                Title = "Jump to Path",
-                Width = 500,
-                Height = 100,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = Window.GetWindow(this),
-                ResizeMode = ResizeMode.NoResize
-            };
-
-            var grid = new Grid();
-            grid.Margin = new Thickness(16);
-
-            var input = new TextBox
-            {
-                Text = currentPath,
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Padding = new Thickness(8)
-            };
-
-            input.KeyDown += (s, e) =>
-            {
-                if (e.Key == Key.Enter)
-                {
-                    var path = input.Text.Trim();
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        NavigateToDirectory(path);
-                    }
-                    dialog.Close();
-                }
-                else if (e.Key == Key.Escape)
-                {
-                    dialog.Close();
-                }
-            };
-
-            grid.Children.Add(input);
-            dialog.Content = grid;
-
-            input.SelectAll();
-            input.Focus();
-            dialog.ShowDialog();
         }
 
         #endregion
 
-        #region Info Panel
-
-        private void UpdateInfoPanel(FileSystemItem item)
-        {
-            infoPathText.Text = item.FullPath;
-            infoTypeText.Text = item.IsDirectory ? "Directory" : (item.Extension.Length > 0 ? $"{item.Extension} File" : "File");
-            infoSizeText.Text = item.IsDirectory ? "-" : FormatFileSize(item.Size);
-            infoModifiedText.Text = item.Modified.ToString("yyyy-MM-dd HH:mm:ss");
-
-            // Check permissions
-            var canRead = CanReadPath(item.FullPath);
-            infoPermissionsText.Text = canRead ? "Read ✓" : "Read ✗";
-
-            // Security warnings
-            var theme = themeManager.CurrentTheme;
-            if (IsDangerousPath(item.FullPath))
-            {
-                infoWarningText.Text = "⚠ WARNING: System path\nModifications could damage your system";
-                infoWarningText.Foreground = new SolidColorBrush(theme.Error);
-                infoWarningText.Visibility = Visibility.Visible;
-            }
-            else if (item.IsSymlink)
-            {
-                infoWarningText.Text = "ℹ Symbolic link\nPoints to another location";
-                infoWarningText.Foreground = new SolidColorBrush(theme.Warning);
-                infoWarningText.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                infoWarningText.Visibility = Visibility.Collapsed;
-            }
-
-            // Show file preview
-            ShowFilePreview(item);
-        }
-
-        private void ClearInfoPanel()
-        {
-            infoPathText.Text = "No selection";
-            infoTypeText.Text = "-";
-            infoSizeText.Text = "-";
-            infoModifiedText.Text = "-";
-            infoPermissionsText.Text = "-";
-            infoWarningText.Visibility = Visibility.Collapsed;
-            previewBorder.Visibility = Visibility.Collapsed;
-            previewTextBox.Text = string.Empty;
-        }
-
-        private void ShowFilePreview(FileSystemItem item)
-        {
-            if (item == null || item.IsDirectory)
-            {
-                previewBorder.Visibility = Visibility.Collapsed;
-                previewTextBox.Text = string.Empty;
-                return;
-            }
-
-            var theme = themeManager.CurrentTheme;
-
-            // Check if file is text-based and not too large
-            if (!IsTextFile(item.FullPath))
-            {
-                previewBorder.Visibility = Visibility.Collapsed;
-                previewTextBox.Text = string.Empty;
-                return;
-            }
-
-            if (item.Size > 100 * 1024) // > 100KB
-            {
-                previewBorder.Visibility = Visibility.Visible;
-                previewBorder.Background = new SolidColorBrush(theme.Surface);
-                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
-                previewTextBox.Foreground = new SolidColorBrush(theme.ForegroundSecondary);
-                previewTextBox.Background = new SolidColorBrush(theme.Surface);
-                previewTextBox.Text = $"File too large for preview ({FormatFileSize(item.Size)})";
-                return;
-            }
-
-            try
-            {
-                var content = File.ReadAllText(item.FullPath);
-                var preview = content.Length > 1000
-                    ? content.Substring(0, 1000) + "\n\n... (truncated)"
-                    : content;
-
-                previewBorder.Visibility = Visibility.Visible;
-                previewBorder.Background = new SolidColorBrush(theme.Surface);
-                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
-                previewTextBox.Foreground = new SolidColorBrush(theme.Foreground);
-                previewTextBox.Background = new SolidColorBrush(theme.Surface);
-                previewTextBox.Text = preview;
-            }
-            catch (Exception ex)
-            {
-                previewBorder.Visibility = Visibility.Visible;
-                previewBorder.Background = new SolidColorBrush(theme.Surface);
-                previewBorder.BorderBrush = new SolidColorBrush(theme.Border);
-                previewTextBox.Foreground = new SolidColorBrush(theme.Error);
-                previewTextBox.Background = new SolidColorBrush(theme.Surface);
-                previewTextBox.Text = $"Cannot preview file: {ex.Message}";
-            }
-        }
-
-        private bool IsTextFile(string path)
-        {
-            var ext = Path.GetExtension(path).ToLower();
-            var textExtensions = new[]
-            {
-                ".txt", ".md", ".cs", ".json", ".xml", ".xaml", ".config",
-                ".log", ".ini", ".yaml", ".yml", ".toml", ".csv",
-                ".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".cpp", ".c", ".h",
-                ".css", ".scss", ".less", ".html", ".htm", ".svg",
-                ".sh", ".bash", ".ps1", ".bat", ".cmd"
-            };
-            return textExtensions.Contains(ext);
-        }
-
-        #endregion
 
         #region Helpers
-
-        private void InitializeBookmarks()
-        {
-            bookmarks.Clear();
-            bookmarks.Add(new Bookmark("🏠", "Home", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
-            bookmarks.Add(new Bookmark("📄", "Documents", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)));
-            bookmarks.Add(new Bookmark("🖥", "Desktop", Environment.GetFolderPath(Environment.SpecialFolder.Desktop)));
-        }
-
-        private void AddRecentLocation(string path)
-        {
-            recentLocations.Remove(path); // Remove if exists
-            recentLocations.Insert(0, path);
-
-            if (recentLocations.Count > MAX_RECENT_LOCATIONS)
-            {
-                recentLocations.RemoveAt(recentLocations.Count - 1);
-            }
-        }
 
         private bool ValidatePath(string path, out string errorMessage)
         {
@@ -1723,51 +702,6 @@ namespace SuperTUI.Panes
             return true;
         }
 
-        private bool CanReadPath(string path)
-        {
-            try
-            {
-                if (Directory.Exists(path))
-                {
-                    Directory.GetFiles(path);
-                    return true;
-                }
-                else if (File.Exists(path))
-                {
-                    File.OpenRead(path).Close();
-                    return true;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-
-            return false;
-        }
-
-        private bool IsDangerousPath(string path)
-        {
-            var dangerous = new[]
-            {
-                "/etc", "/sys", "/proc", "/dev", "/boot",
-                "C:\\Windows", "C:\\Program Files", "C:\\Program Files (x86)",
-                Environment.GetFolderPath(Environment.SpecialFolder.System),
-                Environment.GetFolderPath(Environment.SpecialFolder.Windows)
-            };
-
-            foreach (var dangerousPath in dangerous)
-            {
-                if (!string.IsNullOrEmpty(dangerousPath) &&
-                    path.StartsWith(dangerousPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private bool IsHidden(string path)
         {
             try
@@ -1778,18 +712,6 @@ namespace SuperTUI.Panes
 
                 var attr = File.GetAttributes(path);
                 return (attr & FileAttributes.Hidden) == FileAttributes.Hidden;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool HasSubdirectories(string path)
-        {
-            try
-            {
-                return Directory.GetDirectories(path).Any();
             }
             catch
             {
@@ -1841,122 +763,6 @@ namespace SuperTUI.Panes
             }
         }
 
-        private string FormatFileSize(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-
-            return $"{len:0.##} {sizes[order]}";
-        }
-
-        private int CalculateFuzzyScore(string query, string target)
-        {
-            if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(target))
-                return 0;
-
-            int score = 0;
-            int queryIndex = 0;
-            int consecutiveMatches = 0;
-            bool previousWasMatch = false;
-
-            for (int targetIndex = 0; targetIndex < target.Length && queryIndex < query.Length; targetIndex++)
-            {
-                if (query[queryIndex] == target[targetIndex])
-                {
-                    score += 10;
-
-                    if (previousWasMatch)
-                    {
-                        consecutiveMatches++;
-                        score += consecutiveMatches * 5;
-                    }
-                    else
-                    {
-                        consecutiveMatches = 1;
-                    }
-
-                    if (targetIndex == 0 || target[targetIndex - 1] == ' ' || target[targetIndex - 1] == '.')
-                    {
-                        score += 20;
-                    }
-
-                    previousWasMatch = true;
-                    queryIndex++;
-                }
-                else
-                {
-                    previousWasMatch = false;
-                    consecutiveMatches = 0;
-                }
-            }
-
-            if (queryIndex != query.Length)
-                return 0;
-
-            score -= (target.Length - query.Length) * 2;
-            return Math.Max(0, score);
-        }
-
-        private void UpdateStatus()
-        {
-            var fileCount = filteredFiles.Count(f => !f.IsDirectory);
-            var dirCount = filteredFiles.Count(f => f.IsDirectory);
-            var totalCount = filteredFiles.Count;
-
-            statusBar.Text = $"{totalCount} items ({dirCount} folders, {fileCount} files) | " +
-                           "Enter: Select | Backspace: Up | Ctrl+H: Hidden | Esc: Cancel | /: Jump | ~: Home";
-        }
-
-        private void ShowStatus(string message, bool isError = false)
-        {
-            Application.Current?.Dispatcher.Invoke(() =>
-            {
-                statusBar.Text = message;
-
-                var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
-                timer.Tick += (s, e) =>
-                {
-                    timer.Stop();
-                    UpdateStatus();
-                };
-                timer.Start();
-            });
-        }
-
-        private void AddHighlightedText(TextBlock textBlock, string text, string searchQuery)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return;
-            }
-
-            var theme = themeManager.CurrentTheme;
-            var highlightBrush = new SolidColorBrush(theme.Success);
-            var normalBrush = new SolidColorBrush(theme.Foreground);
-
-            int queryIndex = 0;
-            for (int i = 0; i < text.Length && queryIndex < searchQuery.Length; i++)
-            {
-                bool isMatch = char.ToLower(text[i]) == char.ToLower(searchQuery[queryIndex]);
-
-                var run = new System.Windows.Documents.Run(text[i].ToString())
-                {
-                    Foreground = isMatch ? highlightBrush : normalBrush,
-                    FontWeight = isMatch ? FontWeights.Bold : FontWeights.Normal
-                };
-
-                if (isMatch) queryIndex++;
-                textBlock.Inlines.Add(run);
-            }
-        }
-
         #endregion
 
         #region Public API
@@ -1972,74 +778,90 @@ namespace SuperTUI.Panes
             }
         }
 
-        /// <summary>
-        /// Set file type filters (e.g., ".md", ".txt")
-        /// Empty list = show all files
-        /// </summary>
-        public void SetFileTypes(params string[] extensions)
-        {
-            fileTypeFilters.Clear();
-            foreach (var ext in extensions)
-            {
-                fileTypeFilters.Add(ext.StartsWith(".") ? ext : "." + ext);
-            }
-
-            // Reload current directory
-            NavigateToDirectory(currentPath);
-        }
-
-        /// <summary>
-        /// Set selection mode (File, Directory, or Both)
-        /// </summary>
-        public void SetSelectionMode(FileSelectionMode mode)
-        {
-            selectionMode = mode;
-        }
-
         #endregion
 
         #region State Persistence
 
         public override PaneState SaveState()
         {
+            var data = new Dictionary<string, object>
+            {
+                ["CurrentPath"] = currentPath,
+                ["ShowHiddenFiles"] = showHiddenFiles
+            };
+
+            // Save selection state for restoration
+            if (fileListBox != null)
+            {
+                data["SelectedIndex"] = fileListBox.SelectedIndex;
+
+                // Save selected item path for reliable restoration across refreshes
+                if (selectedItem != null)
+                {
+                    data["SelectedItemPath"] = selectedItem.FullPath;
+                    data["SelectedItemName"] = selectedItem.Name;
+                }
+
+                // Save scroll position (requires finding ScrollViewer)
+                var scrollViewer = FindVisualChild<ScrollViewer>(fileListBox);
+                if (scrollViewer != null)
+                {
+                    data["ScrollOffset"] = scrollViewer.VerticalOffset;
+                }
+            }
+
             return new PaneState
             {
                 PaneType = "FileBrowserPane",
-                CustomData = new Dictionary<string, object>
-                {
-                    ["CurrentPath"] = currentPath,
-                    ["SelectedFilePath"] = selectedItem?.FullPath,
-                    ["ShowHiddenFiles"] = showHiddenFiles,
-                    ["SearchFilter"] = (searchBox?.Text != SEARCH_PLACEHOLDER) ? searchBox?.Text : null
-                }
+                CustomData = data
             };
         }
 
+        // Helper method to find ScrollViewer in visual tree
+        private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null) return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T typedChild)
+                    return typedChild;
+
+                var result = FindVisualChild<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
         /// <summary>
-        /// Override to handle when pane gains focus - focus appropriate control
+        /// Override to handle when pane gains focus - focus file list
         /// </summary>
         protected override void OnPaneGainedFocus()
         {
-            // Determine which control should have focus based on current state
-            if (searchBox != null && !string.IsNullOrEmpty(searchBox.Text) &&
-                searchBox.Text != "Search files...")
+            // Use async dispatch to avoid race conditions with focus system
+            // and provide proper fallback when list is empty
+            Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                // If searching, return focus to search box
-                searchBox.Focus();
-                System.Windows.Input.Keyboard.Focus(searchBox);
-            }
-            else if (fileListBox != null && fileListBox.Items.Count > 0)
-            {
-                // If files are shown, focus the file list
-                fileListBox.Focus();
-                System.Windows.Input.Keyboard.Focus(fileListBox);
-            }
-            else if (directoryTree != null)
-            {
-                // Otherwise focus the directory tree
-                directoryTree.Focus();
-                System.Windows.Input.Keyboard.Focus(directoryTree);
-            }
+                if (fileListBox != null && fileListBox.Items.Count > 0)
+                {
+                    // List has items - focus it for keyboard navigation
+                    Keyboard.Focus(fileListBox);
+                }
+                else if (fileListBox != null)
+                {
+                    // List is empty but exists - focus it anyway for keyboard navigation
+                    // This ensures keyboard input works even when directory is empty
+                    Keyboard.Focus(fileListBox);
+                }
+                else
+                {
+                    // Fallback - focus the pane itself if list hasn't been created yet
+                    // This handles race conditions during initialization
+                    Keyboard.Focus(this);
+                }
+            }, DispatcherPriority.Render);
         }
 
         public override void RestoreState(PaneState state)
@@ -2062,51 +884,52 @@ namespace SuperTUI.Panes
                 if (!string.IsNullOrEmpty(pathStr) && Directory.Exists(pathStr))
                 {
                     NavigateToDirectory(pathStr);
-                }
-            }
 
-            // Restore search filter
-            if (data.TryGetValue("SearchFilter", out var searchFilter) && searchFilter != null)
-            {
-                var filterText = searchFilter.ToString();
-                if (!string.IsNullOrEmpty(filterText))
-                {
+                    // Restore selection and scroll position after navigation
                     Application.Current?.Dispatcher.InvokeAsync(() =>
                     {
-                        searchBox.Text = filterText;
-                        FilterFiles();
-                    });
-                }
-            }
+                        if (fileListBox == null || fileListBox.Items.Count == 0) return;
 
-            // Restore selected file after directory loads
-            if (data.TryGetValue("SelectedFilePath", out var selectedPath) && selectedPath != null)
-            {
-                var selectedPathStr = selectedPath.ToString();
-                if (!string.IsNullOrEmpty(selectedPathStr))
-                {
-                    Application.Current?.Dispatcher.InvokeAsync(() =>
-                    {
-                        SelectFileByPath(selectedPathStr);
-                    }, System.Windows.Threading.DispatcherPriority.Background);
-                }
-            }
-        }
+                        // Try to restore by SelectedItemPath first (most reliable)
+                        if (data.TryGetValue("SelectedItemPath", out var selectedPath) && selectedPath != null)
+                        {
+                            var pathToFind = selectedPath.ToString();
+                            for (int i = 0; i < fileListBox.Items.Count; i++)
+                            {
+                                if (fileListBox.Items[i] is ListBoxItem item &&
+                                    item.Tag is FileSystemItem fsItem &&
+                                    fsItem.FullPath == pathToFind)
+                                {
+                                    fileListBox.SelectedIndex = i;
+                                    fileListBox.ScrollIntoView(item);
+                                    logger.Log(LogLevel.Debug, PaneName,
+                                        $"Restored selection to: {fsItem.Name}");
+                                    break;
+                                }
+                            }
+                        }
+                        // Fallback to SelectedIndex if path not found
+                        else if (data.TryGetValue("SelectedIndex", out var selectedIdx))
+                        {
+                            int index = Convert.ToInt32(selectedIdx);
+                            if (index >= 0 && index < fileListBox.Items.Count)
+                            {
+                                fileListBox.SelectedIndex = index;
+                                fileListBox.ScrollIntoView(fileListBox.Items[index]);
+                            }
+                        }
 
-        private void SelectFileByPath(string filePath)
-        {
-            if (fileListBox == null || string.IsNullOrEmpty(filePath)) return;
-
-            foreach (var item in fileListBox.Items)
-            {
-                if (item is ListBoxItem listItem && listItem.Tag is FileSystemItem fsItem)
-                {
-                    if (fsItem.FullPath == filePath)
-                    {
-                        fileListBox.SelectedItem = listItem;
-                        fileListBox.ScrollIntoView(listItem);
-                        break;
-                    }
+                        // Restore scroll position
+                        if (data.TryGetValue("ScrollOffset", out var scrollOffset))
+                        {
+                            var scrollViewer = FindVisualChild<ScrollViewer>(fileListBox);
+                            if (scrollViewer != null)
+                            {
+                                double offset = Convert.ToDouble(scrollOffset);
+                                scrollViewer.ScrollToVerticalOffset(offset);
+                            }
+                        }
+                    }, DispatcherPriority.Loaded); // Use Loaded to ensure list is populated
                 }
             }
         }
@@ -2127,12 +950,6 @@ namespace SuperTUI.Panes
                 projectSelectedHandler = null;
             }
 
-            if (taskSelectedHandler != null)
-            {
-                eventBus.Unsubscribe(taskSelectedHandler);
-                taskSelectedHandler = null;
-            }
-
             if (refreshRequestedHandler != null)
             {
                 eventBus.Unsubscribe(refreshRequestedHandler);
@@ -2145,9 +962,6 @@ namespace SuperTUI.Panes
             // Cancel any ongoing operations
             loadCancellation?.Cancel();
             loadCancellation?.Dispose();
-
-            // Stop timers
-            searchDebounceTimer?.Stop();
 
             // Dispose cancellation token source
             disposalCancellation?.Dispose();
@@ -2175,32 +989,6 @@ namespace SuperTUI.Panes
         public bool IsSymlink { get; set; }
     }
 
-    /// <summary>
-    /// Bookmark for quick access
-    /// </summary>
-    internal class Bookmark
-    {
-        public string Icon { get; set; }
-        public string Name { get; set; }
-        public string Path { get; set; }
-
-        public Bookmark(string icon, string name, string path)
-        {
-            Icon = icon;
-            Name = name;
-            Path = path;
-        }
-    }
-
-    /// <summary>
-    /// Selection mode for file browser
-    /// </summary>
-    public enum FileSelectionMode
-    {
-        File,       // Only files can be selected
-        Directory,  // Only directories can be selected
-        Both        // Both files and directories can be selected
-    }
 
     /// <summary>
     /// Event args for file selection

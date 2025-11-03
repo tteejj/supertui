@@ -646,7 +646,7 @@ namespace SuperTUI.Core.Components
                 // Focus title box
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    editTitleBox?.Focus();
+                    if (editTitleBox != null) System.Windows.Input.Keyboard.Focus(editTitleBox);
                     editTitleBox?.SelectAll();
                 }), System.Windows.Threading.DispatcherPriority.Input);
             }
@@ -714,7 +714,7 @@ namespace SuperTUI.Core.Components
             editDueDatePicker = null;
 
             // Return focus to listbox
-            listBox?.Focus();
+            if (listBox != null) System.Windows.Input.Keyboard.Focus(listBox);
         }
 
         #endregion

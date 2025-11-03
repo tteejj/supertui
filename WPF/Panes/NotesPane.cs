@@ -19,8 +19,9 @@ namespace SuperTUI.Panes
     /// <summary>
     /// PRODUCTION-QUALITY NOTES PANE
     /// Full CRUD: Create, Read, Update, Delete
-    /// Features: Auto-save, fuzzy search, rename, markdown support, file watcher, command palette
+    /// Features: Auto-save, fuzzy search, rename, file watcher, command palette
     /// Keyboard-first navigation with terminal aesthetic
+    /// Note: Markdown rendering not yet implemented (plain text editor only)
     /// </summary>
     public class NotesPane : PaneBase
     {
@@ -63,6 +64,10 @@ namespace SuperTUI.Panes
 
         // Cancellation for async operations
         private CancellationTokenSource disposalCancellation;
+        private CancellationTokenSource stateRestoreCancellation;
+
+        // State synchronization lock to prevent race conditions
+        private readonly object stateLock = new object();
 
         // Constants
         private const int SEARCH_DEBOUNCE_MS = 150;
@@ -544,16 +549,35 @@ namespace SuperTUI.Panes
                 {
                     if (!disposalCancellation.IsCancellationRequested)
                     {
-                        currentNote = note;
-                        noteEditor.Text = content;
-                        hasUnsavedChanges = false;
+                        // Unsubscribe from TextChanged to prevent race condition
+                        // Setting noteEditor.Text triggers TextChanged, which would set hasUnsavedChanges = true
+                        // We unsubscribe, set the text, then resubscribe to avoid this
+                        noteEditor.TextChanged -= OnEditorTextChanged;
 
-                        // Switch to editor mode
-                        notesListBox.Visibility = Visibility.Collapsed;
-                        noteEditor.Visibility = Visibility.Visible;
-                        noteEditor.Focus();
+                        try
+                        {
+                            // Lock currentNote assignment to prevent race conditions
+                            lock (stateLock)
+                            {
+                                currentNote = note;
+                            }
+                            noteEditor.Text = content;
+                            hasUnsavedChanges = false;
 
-                        UpdateStatusBar();
+                            // Switch to editor mode
+                            notesListBox.Visibility = Visibility.Collapsed;
+                            noteEditor.Visibility = Visibility.Visible;
+
+                            UpdateStatusBar();
+                        }
+                        finally
+                        {
+                            // Resubscribe to TextChanged
+                            noteEditor.TextChanged += OnEditorTextChanged;
+                        }
+
+                        // Focus AFTER resubscribing to avoid focus events during setup
+                        System.Windows.Input.Keyboard.Focus(noteEditor);
                     }
                 });
 
@@ -615,7 +639,7 @@ namespace SuperTUI.Panes
                 hasUnsavedChanges = false;
                 notesListBox.Visibility = Visibility.Collapsed;
                 noteEditor.Visibility = Visibility.Visible;
-                noteEditor.Focus();
+                System.Windows.Input.Keyboard.Focus(noteEditor);
 
                 // Add to notes list
                 allNotes.Insert(0, currentNote);
@@ -795,13 +819,17 @@ namespace SuperTUI.Panes
                 ShowStatus($"Deleted: {noteName}");
 
                 allNotes.Remove(currentNote);
-                currentNote = null;
+                // Lock currentNote assignment to prevent race conditions
+                lock (stateLock)
+                {
+                    currentNote = null;
+                }
                 hasUnsavedChanges = false;
 
                 // Return to notes list
                 noteEditor.Visibility = Visibility.Collapsed;
                 notesListBox.Visibility = Visibility.Visible;
-                notesListBox.Focus();
+                System.Windows.Input.Keyboard.Focus(notesListBox);
 
                 FilterNotes();
             }
@@ -879,11 +907,15 @@ namespace SuperTUI.Panes
             }
 
             // Switch back to notes list mode
-            currentNote = null;
+            // Lock currentNote assignment to prevent race conditions
+            lock (stateLock)
+            {
+                currentNote = null;
+            }
             hasUnsavedChanges = false;
             noteEditor.Visibility = Visibility.Collapsed;
             notesListBox.Visibility = Visibility.Visible;
-            notesListBox.Focus();
+            System.Windows.Input.Keyboard.Focus(notesListBox);
 
             UpdateStatusBar();
         }
@@ -1016,7 +1048,7 @@ namespace SuperTUI.Panes
             };
 
             nameInput.SelectAll();
-            nameInput.Focus();
+            System.Windows.Input.Keyboard.Focus(nameInput);
             dialog.ShowDialog();
         }
 
@@ -1116,10 +1148,16 @@ namespace SuperTUI.Panes
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Handle critical editor shortcuts FIRST (always work, regardless of focus)
+            // Check if user is typing in editor FIRST (before any shortcut processing)
+            // This prevents shortcuts from blocking text input
+            bool isTypingInEditor = noteEditor != null &&
+                                   noteEditor.IsFocused &&
+                                   noteEditor.Visibility == Visibility.Visible;
+
+            // Handle critical editor shortcuts that work even while typing
             if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                // Ctrl+S: Save current note
+                // Ctrl+S: Save current note (works while typing)
                 if (currentNote != null && hasUnsavedChanges)
                 {
                     _ = SaveCurrentNoteAsync();
@@ -1130,7 +1168,7 @@ namespace SuperTUI.Panes
 
             if (e.Key == Key.Escape && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                // Esc: Close editor
+                // Esc: Close editor (works while typing)
                 if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
                 {
                     CloseNoteEditor();
@@ -1139,22 +1177,20 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // Try to handle via ShortcutManager FIRST (pane shortcuts like A, E, D, W, Enter, etc.)
+            // If user is typing in editor, DON'T process pane shortcuts
+            // Let the text input reach the editor instead
+            if (isTypingInEditor)
+            {
+                // User is typing - don't mark as handled, let editor receive the key
+                return;
+            }
+
+            // Only check ShortcutManager if NOT typing in editor
+            // Try to handle via ShortcutManager (pane shortcuts like A, E, D, W, Enter, etc.)
             var shortcuts = ShortcutManager.Instance;
             if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
                 e.Handled = true;
-                return;
-            }
-
-            // If we're actively typing in the editor (editor focused and visible),
-            // let remaining keys go to the editor for text input
-            // This only blocks keys that weren't handled by shortcuts above
-            if (noteEditor != null &&
-                noteEditor.IsFocused &&
-                noteEditor.Visibility == Visibility.Visible)
-            {
-                // Don't mark as handled - let the editor handle text input
                 return;
             }
         }
@@ -1204,7 +1240,7 @@ namespace SuperTUI.Panes
                         }
                         else if (currentNote != null)
                         {
-                            noteEditor.Focus();
+                            System.Windows.Input.Keyboard.Focus(noteEditor);
                             e.Handled = true;
                         }
                         break;
@@ -1221,7 +1257,7 @@ namespace SuperTUI.Panes
             isCommandPaletteVisible = true;
             commandPaletteBorder.Visibility = Visibility.Visible;
             commandInput.Text = "";
-            commandInput.Focus();
+            System.Windows.Input.Keyboard.Focus(commandInput);
             PopulateCommands("");
         }
 
@@ -1229,7 +1265,7 @@ namespace SuperTUI.Panes
         {
             isCommandPaletteVisible = false;
             commandPaletteBorder.Visibility = Visibility.Collapsed;
-            noteEditor.Focus();
+            System.Windows.Input.Keyboard.Focus(noteEditor);
         }
 
         private void PopulateCommands(string query)
@@ -1301,7 +1337,7 @@ namespace SuperTUI.Panes
         {
             if (e.Key == Key.Down)
             {
-                commandList.Focus();
+                System.Windows.Input.Keyboard.Focus(commandList);
                 e.Handled = true;
             }
             else if (e.Key == Key.Enter)
@@ -1337,7 +1373,7 @@ namespace SuperTUI.Panes
             else if (e.Key == Key.Up && commandList.SelectedIndex == 0)
             {
                 // Return focus to input when at top of list
-                commandInput.Focus();
+                System.Windows.Input.Keyboard.Focus(commandInput);
                 e.Handled = true;
             }
         }
@@ -1614,7 +1650,7 @@ namespace SuperTUI.Panes
             // Set initial focus to notes list for keyboard-first navigation
             Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                notesListBox?.Focus();
+                if (notesListBox != null) System.Windows.Input.Keyboard.Focus(notesListBox);
             }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
@@ -1679,7 +1715,7 @@ namespace SuperTUI.Panes
                     // If editor is visible, just focus it
                     if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
                     {
-                        noteEditor?.Focus();
+                        if (noteEditor != null) System.Windows.Input.Keyboard.Focus(noteEditor);
                         return;
                     }
 
@@ -1701,7 +1737,7 @@ namespace SuperTUI.Panes
                     // If editor is visible, just focus it
                     if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
                     {
-                        noteEditor?.Focus();
+                        if (noteEditor != null) System.Windows.Input.Keyboard.Focus(noteEditor);
                         return;
                     }
 
@@ -1720,22 +1756,28 @@ namespace SuperTUI.Panes
 
         /// <summary>
         /// Override to handle when pane gains focus - focus appropriate control
+        /// Added state locking to prevent race conditions during focus restoration
         /// </summary>
         protected override void OnPaneGainedFocus()
         {
-            // Determine which control should have focus based on current state
-            if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
-            {
-                // If editing a note, return focus to editor
-                noteEditor.Focus();
-                System.Windows.Input.Keyboard.Focus(noteEditor);
-            }
-            else if (notesListBox != null)
-            {
-                // Default: focus the notes list
-                notesListBox.Focus();
-                System.Windows.Input.Keyboard.Focus(notesListBox);
-            }
+            Application.Current?.Dispatcher.InvokeAsync(() => {
+                lock (stateLock)
+                {
+                    // Determine which control should have focus based on current state
+                    if (noteEditor != null &&
+                        noteEditor.Visibility == Visibility.Visible &&
+                        currentNote != null)
+                    {
+                        // If editing a note, return focus to editor
+                        System.Windows.Input.Keyboard.Focus(noteEditor);
+                    }
+                    else if (notesListBox != null)
+                    {
+                        // Default: focus the notes list
+                        System.Windows.Input.Keyboard.Focus(notesListBox);
+                    }
+                }
+            }, DispatcherPriority.Render);
         }
 
         private void OnTaskSelected(Core.Events.TaskSelectedEvent evt)
@@ -1804,11 +1846,20 @@ namespace SuperTUI.Panes
         /// <summary>
         /// Handle FileSelectedEvent from FileBrowserPane
         /// Opens text files (.md, .txt) in the editor, shows message for other types
+        /// Transfer focus SYNCHRONOUSLY before async operations to prevent race condition
         /// </summary>
         private void OnFileSelected(Core.Events.FileSelectedEvent evt)
         {
             if (evt == null || string.IsNullOrEmpty(evt.FilePath)) return;
 
+            // CRITICAL - Transfer focus IMMEDIATELY before async operations
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                System.Windows.Input.Keyboard.Focus(this);
+                System.Windows.Input.Keyboard.Focus(this);
+            }, DispatcherPriority.Send);  // Highest priority
+
+            // NOW queue async file operations
             Application.Current?.Dispatcher.InvokeAsync(async () =>
             {
                 logger.Log(LogLevel.Info, "NotesPane",
@@ -1825,11 +1876,19 @@ namespace SuperTUI.Panes
                         // Save current note if needed before switching
                         if (hasUnsavedChanges && currentNote != null)
                         {
+                            // Save and restore focus around MessageBox
+                            var previousFocus = Keyboard.FocusedElement;
+
                             var result = MessageBox.Show(
                                 $"Save changes to '{currentNote.Name}'?",
                                 "Unsaved Changes",
                                 MessageBoxButton.YesNoCancel,
                                 MessageBoxImage.Question);
+
+                            if (previousFocus is UIElement element)
+                            {
+                                System.Windows.Input.Keyboard.Focus(element);
+                            }
 
                             if (result == MessageBoxResult.Cancel)
                             {
@@ -1887,7 +1946,11 @@ namespace SuperTUI.Panes
                 LoadAllNotes();
                 SetupFileWatcher();
 
-                currentNote = null;
+                // Lock currentNote assignment to prevent race conditions
+                lock (stateLock)
+                {
+                    currentNote = null;
+                }
                 hasUnsavedChanges = false;
                 noteEditor.Text = "Project context changed\n\nSelect a note or create a new one";
                 noteEditor.IsEnabled = false;
@@ -2031,6 +2094,10 @@ namespace SuperTUI.Panes
             var data = state.CustomData;
             if (data == null) return;
 
+            // Cancel any in-flight restoration
+            stateRestoreCancellation?.Cancel();
+            stateRestoreCancellation = new CancellationTokenSource();
+
             // Store for deferred restoration
             pendingRestoreData = data;
 
@@ -2038,20 +2105,69 @@ namespace SuperTUI.Panes
             hasUnsavedChanges = GetValueOrDefault(data, "HasUnsavedChanges", false);
 
             // Use dispatcher to ensure UI is ready
+            // CRITICAL: Use Render priority to ensure restoration completes BEFORE focus operations
+            // Focus operations run at Input priority (5), so Render (7) ensures state is restored first
             Application.Current?.Dispatcher.InvokeAsync(async () =>
             {
-                await RestoreDetailedStateAsync(data);
-            }, System.Windows.Threading.DispatcherPriority.Loaded);
+                try
+                {
+                    await RestoreDetailedStateAsync(data, stateRestoreCancellation.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected during workspace switch
+                }
+            }, System.Windows.Threading.DispatcherPriority.Render);
         }
 
         private Dictionary<string, object> pendingRestoreData;
 
-        private async Task RestoreDetailedStateAsync(Dictionary<string, object> data)
+        /// <summary>
+        /// Restore detailed pane state with focus memory
+        /// Broken into smaller focused methods for clarity
+        /// </summary>
+        private async Task RestoreDetailedStateAsync(Dictionary<string, object> data, CancellationToken token)
+        {
+            try
+            {
+                // Restore note selection
+                await RestoreNoteSelectionAsync(data, token);
+
+                // Restore editor state
+                await RestoreEditorStateAsync(data, token);
+
+                // Restore command palette state
+                await RestoreCommandPaletteStateAsync(data, token);
+
+                // Restore scroll positions
+                await RestoreScrollPositionsAsync(data, token);
+
+                // Small delay to ensure layout complete
+                await Task.Delay(50, token);
+
+                // Restore focus
+                await RestoreFocusToControlAsync(data, token);
+            }
+            catch (OperationCanceledException)
+            {
+                logger?.Log(LogLevel.Debug, "NotesPane", "State restoration cancelled");
+            }
+            catch (Exception ex)
+            {
+                logger?.Log(LogLevel.Error, "NotesPane", $"Error in RestoreDetailedStateAsync: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Restore note selection by index or path
+        /// </summary>
+        private async Task RestoreNoteSelectionAsync(Dictionary<string, object> data, CancellationToken token)
         {
             // Restore note selection by index first (more reliable)
             var index = GetValueOrDefault(data, "SelectedNoteIndex", -1);
             if (index >= 0 && index < notesListBox.Items.Count)
             {
+                token.ThrowIfCancellationRequested();
                 notesListBox.SelectedIndex = index;
 
                 // Load the selected note
@@ -2066,16 +2182,20 @@ namespace SuperTUI.Panes
                 var notePathStr = GetValueOrDefault<string>(data, "SelectedNotePath", null);
                 if (!string.IsNullOrEmpty(notePathStr))
                 {
+                    token.ThrowIfCancellationRequested();
                     // Check if it's an unsaved note
                     var noteName = GetValueOrDefault<string>(data, "SelectedNoteName", null);
                     if (noteName != null && notePathStr == null)
                     {
                         // Create unsaved note placeholder
-                        currentNote = new NoteMetadata
+                        lock (stateLock)
                         {
-                            Name = noteName,
-                            FullPath = null
-                        };
+                            currentNote = new NoteMetadata
+                            {
+                                Name = noteName,
+                                FullPath = null
+                            };
+                        }
                         noteEditor.IsEnabled = true;
                     }
                     else if (File.Exists(notePathStr))
@@ -2088,67 +2208,123 @@ namespace SuperTUI.Panes
                     }
                 }
             }
+        }
 
-            // Restore editor state
-            var editorText = GetValueOrDefault<string>(data, "EditorText", null);
-            if (editorText != null)
+        /// <summary>
+        /// Restore editor text, cursor position, and selection
+        /// </summary>
+        private Task RestoreEditorStateAsync(Dictionary<string, object> data, CancellationToken token)
+        {
+            return Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                noteEditor.Text = editorText;
-
-                // Restore cursor and selection
-                noteEditor.CaretIndex = GetValueOrDefault(data, "EditorCursorPos", 0);
-                noteEditor.SelectionStart = GetValueOrDefault(data, "EditorSelectionStart", 0);
-                noteEditor.SelectionLength = GetValueOrDefault(data, "EditorSelectionLength", 0);
-
-                // Restore scroll position
-                var lineIndex = GetValueOrDefault(data, "EditorScrollPosition", 0);
-                if (lineIndex > 0)
+                lock (stateLock)
                 {
-                    var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
-                    noteEditor.ScrollToLine(lineIndex);
+                    if (token.IsCancellationRequested) return;
+
+                    var editorText = GetValueOrDefault<string>(data, "EditorText", null);
+                    if (editorText != null)
+                    {
+                        noteEditor.Text = editorText;
+
+                        // Restore cursor and selection
+                        noteEditor.CaretIndex = GetValueOrDefault(data, "EditorCursorPos", 0);
+                        noteEditor.SelectionStart = GetValueOrDefault(data, "EditorSelectionStart", 0);
+                        noteEditor.SelectionLength = GetValueOrDefault(data, "EditorSelectionLength", 0);
+
+                        // Restore scroll position
+                        var lineIndex = GetValueOrDefault(data, "EditorScrollPosition", 0);
+                        if (lineIndex > 0)
+                        {
+                            var charIndex = noteEditor.GetCharacterIndexFromLineIndex(lineIndex);
+                            noteEditor.ScrollToLine(lineIndex);
+                        }
+                    }
                 }
-            }
+            }, System.Windows.Threading.DispatcherPriority.Render).Task;
+        }
 
-            // Restore command palette state
-            if (GetValueOrDefault(data, "IsCommandPaletteVisible", false))
+        /// <summary>
+        /// Restore command palette state if it was visible
+        /// </summary>
+        private Task RestoreCommandPaletteStateAsync(Dictionary<string, object> data, CancellationToken token)
+        {
+            return Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                ShowCommandPalette();
+                lock (stateLock)
+                {
+                    if (token.IsCancellationRequested) return;
 
-                commandInput.Text = GetValueOrDefault<string>(data, "CommandText", "");
-                commandInput.CaretIndex = GetValueOrDefault(data, "CommandCursorPos", 0);
-            }
+                    if (GetValueOrDefault(data, "IsCommandPaletteVisible", false))
+                    {
+                        ShowCommandPalette();
 
-            // Restore list scroll position
-            var listScroll = GetValueOrDefault(data, "NotesListScrollPosition", 0.0);
-            if (listScroll > 0)
+                        commandInput.Text = GetValueOrDefault<string>(data, "CommandText", "");
+                        commandInput.CaretIndex = GetValueOrDefault(data, "CommandCursorPos", 0);
+                    }
+                }
+            }, System.Windows.Threading.DispatcherPriority.Render).Task;
+        }
+
+        /// <summary>
+        /// Restore scroll positions for list and main view
+        /// </summary>
+        private Task RestoreScrollPositionsAsync(Dictionary<string, object> data, CancellationToken token)
+        {
+            return Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
-                scrollViewer?.ScrollToVerticalOffset(listScroll);
-            }
+                lock (stateLock)
+                {
+                    if (token.IsCancellationRequested) return;
 
-            // Restore main scroll position
-            var scrollPos = GetValueOrDefault(data, "ScrollPosition", 0.0);
-            if (scrollPos > 0)
+                    // Restore list scroll position
+                    var listScroll = GetValueOrDefault(data, "NotesListScrollPosition", 0.0);
+                    if (listScroll > 0)
+                    {
+                        var scrollViewer = FindVisualChild<ScrollViewer>(notesListBox);
+                        scrollViewer?.ScrollToVerticalOffset(listScroll);
+                    }
+
+                    // Restore main scroll position
+                    var scrollPos = GetValueOrDefault(data, "ScrollPosition", 0.0);
+                    if (scrollPos > 0)
+                    {
+                        SetScrollPosition(scrollPos);
+                    }
+                }
+            }, System.Windows.Threading.DispatcherPriority.Render).Task;
+        }
+
+        /// <summary>
+        /// Restore focus to the control that was focused before
+        /// </summary>
+        private Task RestoreFocusToControlAsync(Dictionary<string, object> data, CancellationToken token)
+        {
+            return Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                SetScrollPosition(scrollPos);
-            }
+                lock (stateLock)
+                {
+                    if (token.IsCancellationRequested) return;
 
-            // Finally, restore focus to the correct control
-            var focusedControl = GetValueOrDefault<string>(data, "FocusedControl", "NotesList");
-            await Task.Delay(100); // Small delay to ensure UI is ready
+                    var focusedControl = GetValueOrDefault<string>(data, "FocusedControl", "NotesList");
 
-            switch (focusedControl)
-            {
-                case "Editor":
-                    noteEditor?.Focus();
-                    System.Windows.Input.Keyboard.Focus(noteEditor);
-                    break;
-                case "NotesList":
-                default:
-                    notesListBox?.Focus();
-                    System.Windows.Input.Keyboard.Focus(notesListBox);
-                    break;
-            }
+                    switch (focusedControl)
+                    {
+                        case "Editor":
+                            if (noteEditor != null && noteEditor.Visibility == Visibility.Visible)
+                            {
+                                System.Windows.Input.Keyboard.Focus(noteEditor);
+                            }
+                            break;
+                        case "NotesList":
+                        default:
+                            if (notesListBox != null)
+                            {
+                                System.Windows.Input.Keyboard.Focus(notesListBox);
+                            }
+                            break;
+                    }
+                }
+            }, System.Windows.Threading.DispatcherPriority.Render).Task;
         }
 
         private double GetScrollPosition()
@@ -2229,6 +2405,7 @@ namespace SuperTUI.Panes
         {
             // Cancel all async operations FIRST
             disposalCancellation?.Cancel();
+            stateRestoreCancellation?.Cancel();
 
             // Unsubscribe from event bus to prevent memory leaks
             if (taskSelectedHandler != null)
@@ -2259,6 +2436,12 @@ namespace SuperTUI.Panes
             // Unsubscribe from theme changes
             themeManager.ThemeChanged -= OnThemeChanged;
 
+            // Unsubscribe from editor events to prevent memory leak
+            if (noteEditor != null)
+            {
+                noteEditor.TextChanged -= OnEditorTextChanged;
+            }
+
             // Save on close if needed (synchronous to ensure it completes)
             if (hasUnsavedChanges && currentNote != null && !disposalCancellation.IsCancellationRequested)
             {
@@ -2288,8 +2471,9 @@ namespace SuperTUI.Panes
                 fileWatcher.Dispose();
             }
 
-            // Dispose cancellation token source
+            // Dispose cancellation token sources
             disposalCancellation?.Dispose();
+            stateRestoreCancellation?.Dispose();
 
             base.OnDispose();
         }

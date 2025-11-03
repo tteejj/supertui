@@ -103,15 +103,15 @@ namespace SuperTUI.Core.Infrastructure
                 ["files"] = new PaneMetadata
                 {
                     Name = "files",
-                    Description = "Browse and select files/directories (internal use only)",
+                    Description = "Browse and select files and directories",
                     Icon = "📁",
                     Creator = () =>
                     {
-                        var pane = new FileBrowserPane(logger, themeManager, projectContext, configManager, securityManager, eventBus);
+                        var pane = new SimpleFileBrowserPane(logger, themeManager, projectContext, configManager);
                         SetFocusHistory(pane);
                         return pane;
                     },
-                    HiddenFromPalette = true
+                    HiddenFromPalette = false
                 },
                 ["projects"] = new PaneMetadata
                 {
@@ -171,6 +171,7 @@ namespace SuperTUI.Core.Infrastructure
                 ["TaskListPane"] = "tasks",
                 ["NotesPane"] = "notes",
                 ["FileBrowserPane"] = "files",
+                ["SimpleFileBrowserPane"] = "files",
                 ["ProjectsPane"] = "projects",
                 ["HelpPane"] = "help",
                 ["CalendarPane"] = "calendar"
@@ -195,10 +196,13 @@ namespace SuperTUI.Core.Infrastructure
         /// </summary>
         public PaneBase CreatePane(string paneName)
         {
+            logger.Log(LogLevel.Info, "PaneFactory", $"=== CreatePane called with: '{paneName}' ===");
+
             if (string.IsNullOrWhiteSpace(paneName))
                 throw new ArgumentException("Pane name cannot be empty", nameof(paneName));
 
             paneName = paneName.Trim();
+            logger.Log(LogLevel.Debug, "PaneFactory", $"After trim: '{paneName}'");
 
             // Try to map .NET type name to factory name (for workspace restoration)
             // This handles cases where SaveState() stored "TaskListPane" but we need "tasks"
@@ -209,15 +213,28 @@ namespace SuperTUI.Core.Infrastructure
             }
 
             paneName = paneName.ToLowerInvariant();
+            logger.Log(LogLevel.Debug, "PaneFactory", $"After ToLowerInvariant: '{paneName}'");
+            logger.Log(LogLevel.Debug, "PaneFactory", $"Registry contains key? {paneRegistry.ContainsKey(paneName)}");
 
             if (paneRegistry.TryGetValue(paneName, out var metadata))
             {
-                var pane = metadata.Creator();
-                logger.Log(LogLevel.Info, "PaneFactory", $"Created pane: {paneName}");
-                return pane;
+                logger.Log(LogLevel.Info, "PaneFactory", $"Found metadata, calling Creator() for: {paneName}");
+                try
+                {
+                    var pane = metadata.Creator();
+                    logger.Log(LogLevel.Info, "PaneFactory", $"✓ Successfully created pane: {paneName}");
+                    return pane;
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LogLevel.Error, "PaneFactory", $"✗ EXCEPTION creating pane '{paneName}': {ex.Message}");
+                    logger.Log(LogLevel.Error, "PaneFactory", $"Stack trace: {ex.StackTrace}");
+                    throw;
+                }
             }
 
             logger.Log(LogLevel.Warning, "PaneFactory", $"Unknown pane type: {paneName}");
+            logger.Log(LogLevel.Warning, "PaneFactory", $"Available panes: {string.Join(", ", paneRegistry.Keys)}");
             throw new ArgumentException($"Unknown pane type: {paneName}");
         }
 

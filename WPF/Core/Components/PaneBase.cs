@@ -43,7 +43,8 @@ namespace SuperTUI.Core.Components
         // Properties
         public string PaneName { get; protected set; }
         public string PaneIcon { get; protected set; }  // Optional emoji/icon
-        public bool IsActive { get; private set; }
+        // Removed IsActive property - use IsKeyboardFocusWithin instead (WPF native)
+        // [Obsolete] public bool IsActive { get; private set; }
         public virtual PaneSizePreference SizePreference => PaneSizePreference.Flex;
 
         // Constructor
@@ -213,15 +214,17 @@ namespace SuperTUI.Core.Components
 
         /// <summary>
         /// Set pane active state (called by PaneManager on focus change)
+        /// Simplified - no longer tracks IsActive property
+        /// Visual state updated automatically via IsKeyboardFocusWithinChanged
         /// </summary>
         internal void SetActive(bool active)
         {
-            if (IsActive != active)
-            {
-                IsActive = active;
-                ApplyTheme();
-                OnActiveChanged(active);
-            }
+            // Removed IsActive property tracking
+            // ApplyTheme() is now called automatically by IsKeyboardFocusWithinChanged
+            // We only need to call the lifecycle methods
+
+            // Call lifecycle methods for subclass overrides
+            OnActiveChanged(active);
         }
 
         /// <summary>
@@ -242,12 +245,17 @@ namespace SuperTUI.Core.Components
 
         /// <summary>
         /// Called when pane gains focus - override to focus specific child control
+        /// Applies focus asynchronously to avoid race conditions
         /// </summary>
         protected virtual void OnPaneGainedFocus()
         {
-            // Default: Let WPF find first focusable child
-            this.MoveFocus(new System.Windows.Input.TraversalRequest(
-                System.Windows.Input.FocusNavigationDirection.First));
+            // Schedule focus application asynchronously
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                // Default: Let WPF find first focusable child
+                this.MoveFocus(new System.Windows.Input.TraversalRequest(
+                    System.Windows.Input.FocusNavigationDirection.First));
+            }, System.Windows.Threading.DispatcherPriority.Render);
         }
 
         /// <summary>
@@ -258,17 +266,10 @@ namespace SuperTUI.Core.Components
             // Default: do nothing, let subclasses handle
         }
 
-        /// <summary>
-        /// Called when focus state changes (for visual feedback)
-        /// </summary>
-        public virtual void OnFocusChanged()
-        {
-            ApplyTheme();
-        }
 
         /// <summary>
         /// Apply terminal theme to pane
-        /// Uses WPF's native focus state (IsKeyboardFocusWithin) as single source of truth
+        /// Uses both IsActive (from PaneManager) and IsKeyboardFocusWithin (from WPF) to determine focus state
         /// </summary>
         public void ApplyTheme()
         {
@@ -284,11 +285,12 @@ namespace SuperTUI.Core.Components
                 return;
             }
 
-            // UNIFIED FOCUS: Use WPF's native focus state as single source of truth
+            // Single source of truth - use only WPF's IsKeyboardFocusWithin
+            // Removed IsActive property (was redundant tracking)
             bool hasFocus = this.IsKeyboardFocusWithin;
 
             logger.Log(LogLevel.Debug, PaneName ?? "Pane",
-                $"ApplyTheme called - HasFocus: {hasFocus}, IsActive: {IsActive}");
+                $"ApplyTheme called - HasFocus: {hasFocus}, IsKeyboardFocusWithin: {IsKeyboardFocusWithin}");
 
             var background = theme.Background;
             var headerBg = hasFocus ? theme.BorderActive : theme.Surface;  // Change header bg when focused
@@ -343,6 +345,9 @@ namespace SuperTUI.Core.Components
 
         /// <summary>
         /// Handles keyboard focus changes to update visual state
+        /// Single automatic theme application when focus changes
+        /// No state tracking needed - WPF's IsKeyboardFocusWithin is the source of truth
+        /// PHASE 2C: Explicit focus recording replaces global event handler
         /// </summary>
         private void OnKeyboardFocusWithinChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -351,8 +356,22 @@ namespace SuperTUI.Core.Components
             logger.Log(LogLevel.Debug, PaneName ?? "Pane",
                 $"Focus changed: {(hasFocus ? "GAINED" : "LOST")} keyboard focus");
 
-            // Update visual state immediately
+            // Single call to ApplyTheme when focus changes
+            // This is now the ONLY place ApplyTheme is called automatically
             ApplyTheme();
+
+            // PHASE 2C: Record focus change in history (replaces global event handler)
+            // Only record when gaining focus - more efficient than tracking ALL focus events
+            if (hasFocus && focusHistory != null)
+            {
+                var focusedElement = System.Windows.Input.Keyboard.FocusedElement as UIElement;
+                if (focusedElement != null)
+                {
+                    focusHistory.RecordFocusFromPane(focusedElement, this.PaneName);
+                    logger.Log(LogLevel.Debug, PaneName ?? "Pane",
+                        $"Recorded focus on {focusedElement.GetType().Name}");
+                }
+            }
 
             // Log current visual state for debugging
             if (hasFocus)

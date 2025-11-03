@@ -120,7 +120,7 @@ namespace SuperTUI.Panes
             // Set initial focus
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                this.Focus();
+                System.Windows.Input.Keyboard.Focus(this);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
@@ -879,7 +879,7 @@ namespace SuperTUI.Panes
                 }
             };
 
-            titleInput.Focus();
+            System.Windows.Input.Keyboard.Focus(titleInput);
             dialog.ShowDialog();
         }
 

@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -38,6 +39,7 @@ namespace SuperTUI
         private Core.Components.DebugOverlay debugOverlay;
         private Core.Components.NotificationPanel notificationPanel;
         private bool isDebugMode = false;
+        private FocusState? commandPaletteFocusState = null;
 
         public MainWindow(DI.ServiceContainer container)
         {
@@ -51,6 +53,10 @@ namespace SuperTUI
             commandHistory = serviceContainer.GetRequiredService<CommandHistory>();
             focusHistory = serviceContainer.GetRequiredService<FocusHistoryManager>();
             notificationManager = serviceContainer.GetRequiredService<INotificationManager>();
+
+            // Initialize StatePersistenceManager so it can actually save state!
+            statePersistence.Initialize();
+            logger.Log(LogLevel.Info, "MainWindow", "StatePersistenceManager initialized");
 
             InitializeComponent();
 
@@ -103,11 +109,50 @@ namespace SuperTUI
         {
             logger.Log(LogLevel.Info, "MainWindow",
                 $"Switching from workspace {e.OldIndex} to {e.NewIndex}");
-            logger.Log(LogLevel.Debug, "MainWindow",
-                $"Old workspace has {paneManager.OpenPanes.Count} panes");
 
-            // Save old workspace state
-            SaveCurrentWorkspaceState();
+            // Capture current keyboard focus IMMEDIATELY (synchronously)
+            // This prevents race conditions where async focus operations corrupt saved state
+            var currentFocusedElement = System.Windows.Input.Keyboard.FocusedElement as UIElement;
+            var currentFocusedPane = paneManager?.FocusedPane;
+
+            logger.Log(LogLevel.Debug, "MainWindow",
+                $"Captured focus state: Element={currentFocusedElement?.GetType().Name}, Pane={currentFocusedPane?.PaneName}");
+
+            // CRITICAL: Get the old workspace state BEFORE the index changes
+            var oldWorkspace = workspaceManager.GetWorkspace(e.OldIndex);
+
+            logger.Log(LogLevel.Debug, "MainWindow",
+                $"Old workspace {e.OldIndex} has {paneManager.OpenPanes.Count} panes");
+
+            // Save current panes to the OLD workspace
+            var paneState = paneManager.GetState();
+            oldWorkspace.OpenPaneTypes = paneState.OpenPaneTypes;
+            oldWorkspace.FocusedPaneIndex = paneState.FocusedPaneIndex;
+
+            // Save individual pane states (synchronously, before async operations start)
+            var paneStates = new List<Core.Components.PaneState>();
+            foreach (var pane in paneManager.OpenPanes)
+            {
+                try
+                {
+                    paneStates.Add(pane.SaveState());
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LogLevel.Error, "MainWindow", $"Failed to save state for pane: {ex.Message}");
+                }
+            }
+            oldWorkspace.PaneStates = paneStates;
+
+            // Save focus state synchronously using captured values
+            oldWorkspace.FocusState = focusHistory.SaveWorkspaceState();
+            if (projectContext.CurrentProject != null)
+            {
+                oldWorkspace.CurrentProjectId = projectContext.CurrentProject.Id;
+            }
+
+            // Update the old workspace
+            workspaceManager.UpdateWorkspace(e.OldIndex, oldWorkspace);
 
             // Restore new workspace state
             RestoreWorkspaceState();
@@ -324,9 +369,12 @@ namespace SuperTUI
             }
         }
 
-        private void SaveCurrentWorkspaceState()
+        private void SaveCurrentWorkspaceState(int? workspaceIndex = null)
         {
-            var state = workspaceManager.CurrentWorkspace;
+            // CRITICAL FIX: Use provided workspace index if specified, otherwise use current
+            // This fixes the workspace switching bug where panes appear to "move" between workspaces
+            var targetIndex = workspaceIndex ?? workspaceManager.CurrentWorkspaceIndex;
+            var state = workspaceManager.GetWorkspace(targetIndex);
 
             // Save pane state
             var paneState = paneManager.GetState();
@@ -366,7 +414,8 @@ namespace SuperTUI
                 state.CurrentProjectId = null;
             }
 
-            workspaceManager.UpdateCurrentWorkspace(state);
+            // CRITICAL FIX: Update the specific workspace, not just the current one
+            workspaceManager.UpdateWorkspace(targetIndex, state);
             logger.Log(LogLevel.Debug, "MainWindow", $"Saved workspace {state.Index} state ({state.OpenPaneTypes.Count} panes, {paneStates.Count} pane states)");
         }
 
@@ -374,7 +423,19 @@ namespace SuperTUI
         {
             try
             {
-                var snapshot = statePersistence.LoadStateAsync().Result;
+                // FIX: Use synchronous file I/O during initialization to avoid deadlock
+                // (blocking .Result on UI thread with async I/O causes classic async deadlock)
+                var stateFile = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SuperTUI", "State", "state.json");
+
+                StateSnapshot snapshot = null;
+                if (System.IO.File.Exists(stateFile))
+                {
+                    string json = System.IO.File.ReadAllText(stateFile, System.Text.Encoding.UTF8);
+                    snapshot = System.Text.Json.JsonSerializer.Deserialize<StateSnapshot>(json);
+                }
+
                 if (snapshot != null)
                 {
                     // Validate checksum
@@ -395,168 +456,141 @@ namespace SuperTUI
             }
         }
 
-        private void RestoreWorkspaceState()
+        private async void RestoreWorkspaceState()
         {
-            var state = workspaceManager.CurrentWorkspace;
-
-            // Close all current panes
-            paneManager.CloseAll();
-
-            // Restore project context
-            if (state.CurrentProjectId.HasValue)
+            try
             {
-                var project = serviceContainer.GetRequiredService<IProjectService>()
-                    .GetAllProjects()
-                    .FirstOrDefault(p => p.Id == state.CurrentProjectId.Value);
+                var state = workspaceManager.CurrentWorkspace;
+                logger?.Log(LogLevel.Debug, "MainWindow", $"Restoring workspace {state.Index} state");
 
-                if (project != null)
-                {
-                    projectContext.SetProject(project);
-                }
-            }
-            else
-            {
-                projectContext.ClearProject();
-            }
-
-            // Restore panes
-            var panesToRestore = new List<Core.Components.PaneBase>();
-            var failedPanes = new List<string>();
-            foreach (var paneTypeName in state.OpenPaneTypes)
-            {
-                try
-                {
-                    var pane = paneFactory.CreatePane(paneTypeName);
-                    panesToRestore.Add(pane);
-                }
-                catch (Exception ex)
-                {
-                    logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore pane '{paneTypeName}': {ex.Message}");
-                    failedPanes.Add(paneTypeName);
-                }
-            }
-
-            // Show notification if any panes failed to restore
-            if (failedPanes.Count > 0)
-            {
-                var paneList = string.Join(", ", failedPanes);
-                notificationManager.ShowWarning(
-                    $"Could not restore {failedPanes.Count} pane(s): {paneList}",
-                    "Workspace Restoration Warning");
-            }
-
-            if (panesToRestore.Count > 0)
-            {
-                var paneState = new PaneManagerState
-                {
-                    OpenPaneTypes = state.OpenPaneTypes,
-                    FocusedPaneIndex = state.FocusedPaneIndex
-                };
-                paneManager.RestoreState(paneState, panesToRestore);
-
-                // Subscribe to pane-specific events after restoration
-                foreach (var pane in panesToRestore)
+                // Unsubscribe from all pane events before closing
+                // This prevents memory leaks from event handlers holding references to disposed panes
+                foreach (var pane in paneManager.OpenPanes.ToList())
                 {
                     if (pane is Panes.NotesPane notesPane)
                     {
-                        notesPane.FileBrowserRequested += OnNotesPaneRequestFileBrowser;
+                        notesPane.FileBrowserRequested -= OnNotesPaneRequestFileBrowser;
                     }
+                    // Add more pane types here if they have MainWindow event subscriptions
                 }
 
-                // Restore individual pane states
-                if (state.PaneStates != null && state.PaneStates.Count > 0)
+                // Close all current panes
+                paneManager.CloseAll();
+
+                // Restore project context
+                if (state.CurrentProjectId.HasValue)
                 {
-                    var openPanes = paneManager.OpenPanes;
-                    for (int i = 0; i < openPanes.Count && i < state.PaneStates.Count; i++)
+                    var project = serviceContainer.GetRequiredService<IProjectService>()
+                        .GetAllProjects()
+                        .FirstOrDefault(p => p.Id == state.CurrentProjectId.Value);
+
+                    if (project != null)
                     {
-                        try
-                        {
-                            openPanes[i].RestoreState(state.PaneStates[i]);
-                            logger.Log(LogLevel.Debug, "MainWindow",
-                                $"Restored state for pane {openPanes[i].PaneName}: {(state.PaneStates[i].CustomData != null ? "has custom data" : "no custom data")}");
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Log(LogLevel.Error, "MainWindow",
-                                $"Failed to restore state for pane {openPanes[i].PaneName}: {ex.Message}");
-                        }
+                        projectContext.SetProject(project);
                     }
                 }
                 else
                 {
-                    logger.Log(LogLevel.Warning, "MainWindow",
-                        $"No pane states to restore for workspace {state.Index}");
+                    projectContext.ClearProject();
                 }
 
-                // CRITICAL FIX: Restore focus history after panes are loaded
-                // RACE CONDITION FIX: Wait for pane to be fully loaded before restoring focus
-                // Without this, focus restoration can trigger NullReferenceException because
-                // pane controls may not be initialized yet during workspace switch
-                if (state.FocusState != null)
+                // Restore panes
+                var panesToRestore = new List<Core.Components.PaneBase>();
+                var failedPanes = new List<string>();
+                foreach (var paneTypeName in state.OpenPaneTypes)
                 {
-                    focusHistory.RestoreWorkspaceState(state.FocusState);
-
-                    // Restore focus to the previously focused pane
-                    // Use DispatcherPriority.Loaded to ensure pane is fully initialized
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    try
                     {
-                        try
-                        {
-                            var focusedPane = paneManager.FocusedPane;
-
-                            // CRITICAL: Check if pane exists and is loaded
-                            if (focusedPane == null)
-                            {
-                                logger.Log(LogLevel.Debug, "MainWindow", "No focused pane to restore focus to after workspace switch");
-                                return;
-                            }
-
-                            // RACE CONDITION FIX: Check if pane is fully loaded before restoring focus
-                            if (!focusedPane.IsLoaded)
-                            {
-                                logger.Log(LogLevel.Debug, "MainWindow", $"Pane {focusedPane.PaneName} not loaded yet, waiting for Loaded event");
-
-                                // Wait for pane to be fully loaded before restoring focus
-                                RoutedEventHandler loadedHandler = null;
-                                loadedHandler = (s, e) =>
-                                {
-                                    focusedPane.Loaded -= loadedHandler;
-
-                                    // Now pane is fully loaded, safe to restore focus
-                                    Dispatcher.BeginInvoke(new Action(() =>
-                                    {
-                                        try
-                                        {
-                                            focusHistory.RestorePaneFocus(focusedPane.PaneName);
-                                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {focusedPane.PaneName} after pane loaded");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after pane loaded: {ex.Message}");
-                                        }
-                                    }), System.Windows.Threading.DispatcherPriority.Input);
-                                };
-
-                                focusedPane.Loaded += loadedHandler;
-                            }
-                            else
-                            {
-                                // Pane already loaded, safe to restore focus immediately
-                                var paneName = focusedPane.PaneName;
-                                focusHistory.RestorePaneFocus(paneName);
-                                logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to {paneName} after workspace switch");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after workspace switch: {ex.Message}");
-                        }
-                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                        var pane = paneFactory.CreatePane(paneTypeName);
+                        panesToRestore.Add(pane);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore pane '{paneTypeName}': {ex.Message}");
+                        failedPanes.Add(paneTypeName);
+                    }
                 }
-            }
 
-            UpdateStatusBarContext();
-            logger.Log(LogLevel.Info, "MainWindow", $"Restored workspace {state.Index} ({panesToRestore.Count} panes)");
+                // Show notification if any panes failed to restore
+                if (failedPanes.Count > 0)
+                {
+                    var paneList = string.Join(", ", failedPanes);
+                    notificationManager.ShowWarning(
+                        $"Could not restore {failedPanes.Count} pane(s): {paneList}",
+                        "Workspace Restoration Warning");
+                }
+
+                if (panesToRestore.Count > 0)
+                {
+                    var paneState = new PaneManagerState
+                    {
+                        OpenPaneTypes = state.OpenPaneTypes,
+                        FocusedPaneIndex = state.FocusedPaneIndex
+                    };
+                    paneManager.RestoreState(paneState, panesToRestore);
+
+                    // Subscribe to pane-specific events after restoration
+                    foreach (var pane in panesToRestore)
+                    {
+                        if (pane is Panes.NotesPane notesPane)
+                        {
+                            notesPane.FileBrowserRequested += OnNotesPaneRequestFileBrowser;
+                        }
+                    }
+
+                    // Restore individual pane states on UI thread
+                    if (state.PaneStates != null && state.PaneStates.Count > 0)
+                    {
+                        for (int i = 0; i < panesToRestore.Count && i < state.PaneStates.Count; i++)
+                        {
+                            try
+                            {
+                                panesToRestore[i].RestoreState(state.PaneStates[i]);
+                                logger.Log(LogLevel.Debug, "MainWindow",
+                                    $"Restored state for pane {panesToRestore[i].PaneName}");
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.Log(LogLevel.Error, "MainWindow",
+                                    $"Failed to restore state for pane {panesToRestore[i].PaneName}: {ex.Message}");
+                            }
+                        }
+                    }
+
+                    // Restore focus history
+                    if (state.FocusState != null)
+                    {
+                        focusHistory.RestoreWorkspaceState(state.FocusState);
+                    }
+
+                    // Restore focus to the correct pane
+                    if (state.FocusedPaneIndex >= 0 && state.FocusedPaneIndex < paneManager?.OpenPanes.Count)
+                    {
+                        var targetPane = paneManager.OpenPanes[state.FocusedPaneIndex];
+
+                        // Wait for pane to be fully loaded
+                        await WaitForLoadedAsync(targetPane);
+
+                        // Delay slightly to ensure layout is complete
+                        await Task.Delay(50);
+
+                        // Focus the pane
+                        await Application.Current?.Dispatcher.InvokeAsync(() =>
+                        {
+                            paneManager?.FocusPane(targetPane);
+                        }, System.Windows.Threading.DispatcherPriority.Input);
+                    }
+
+                    logger.Log(LogLevel.Debug, "MainWindow", $"Workspace {state.Index} state restored successfully");
+                }
+
+                UpdateStatusBarContext();
+                logger.Log(LogLevel.Info, "MainWindow", $"Restored workspace {state.Index} ({panesToRestore.Count} panes)");
+            }
+            catch (Exception ex)
+            {
+                logger?.Log(LogLevel.Error, "MainWindow", $"Error in RestoreWorkspaceState: {ex.Message}");
+            }
         }
 
 
@@ -765,9 +799,21 @@ namespace SuperTUI
         /// <summary>
         /// Show command palette as modal overlay
         /// CRITICAL FIX: Block input to background panes to prevent accidental actions
+        /// Save previous focus state for restoration
         /// </summary>
         private void ShowCommandPalette()
         {
+            // Save focus state before opening modal
+            commandPaletteFocusState = new FocusState
+            {
+                PreviousElement = Keyboard.FocusedElement as UIElement,
+                PreviousPane = paneManager?.FocusedPane,
+                CapturedAt = DateTime.Now
+            };
+
+            logger.Log(LogLevel.Debug, "MainWindow",
+                $"Opening command palette, saving focus state: Pane={commandPaletteFocusState.PreviousPane?.PaneName}, Element={commandPaletteFocusState.PreviousElement?.GetType().Name}");
+
             if (commandPalette == null)
             {
                 // Create command palette
@@ -804,64 +850,70 @@ namespace SuperTUI
             // Animate opening
             commandPalette.AnimateOpen();
 
+            // Focus search box EVERY time palette opens (not just first time)
+            commandPalette.FocusSearchBox();
+
             logger.Log(LogLevel.Debug, "MainWindow", "Command palette opened (background input blocked)");
         }
 
         /// <summary>
         /// Hide command palette modal overlay
-        /// CRITICAL FIX: Re-enable input to background panes when modal closes
-        /// RACE CONDITION FIX: Wait for pane to be loaded before restoring focus
+        /// Correct focus restoration order - re-enable input FIRST, then restore focus
         /// </summary>
-        private void HideCommandPalette()
+        private async void HideCommandPalette()
         {
             if (commandPalette != null && ModalOverlay.Visibility == Visibility.Visible)
             {
-                // Animate closing
-                commandPalette.AnimateClose(() =>
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        ModalOverlay.Visibility = Visibility.Collapsed;
-                        ModalOverlay.Children.Clear();
+                // Retrieve saved focus state
+                var savedState = commandPaletteFocusState;
+                UIElement previousElement = savedState?.PreviousElement;
+                Core.Components.PaneBase previousPane = savedState?.PreviousPane;
 
-                        // CRITICAL FIX: Re-enable input to background panes when modal closes
+                // Animate closing
+                commandPalette.AnimateClose(async () =>
+                {
+                    await Application.Current?.Dispatcher.InvokeAsync(async () =>
+                    {
+                        // Re-enable input FIRST (before focus restoration)
                         PaneCanvas.IsHitTestVisible = true;
                         PaneCanvas.Focusable = true;
 
-                        // CRITICAL FIX: Return focus to the previously focused pane
-                        // RACE CONDITION FIX: Check pane is loaded before focusing
-                        var focusedPane = paneManager?.FocusedPane;
-                        if (focusedPane != null)
-                        {
-                            try
-                            {
-                                // Check pane is loaded before attempting to focus
-                                if (!focusedPane.IsLoaded)
-                                {
-                                    logger.Log(LogLevel.Debug, "MainWindow", $"Pane {focusedPane.PaneName} not loaded yet, deferring focus restoration");
+                        // THEN hide overlay
+                        ModalOverlay.Visibility = Visibility.Collapsed;
+                        ModalOverlay.Children.Clear();
 
-                                    // Wait for pane to load
-                                    RoutedEventHandler loadedHandler = null;
-                                    loadedHandler = (s, e) =>
-                                    {
-                                        focusedPane.Loaded -= loadedHandler;
-                                        paneManager.FocusPane(focusedPane);
-                                        logger.Log(LogLevel.Debug, "MainWindow", $"Returned focus to {focusedPane.PaneName} after pane loaded");
-                                    };
-                                    focusedPane.Loaded += loadedHandler;
-                                }
-                                else
-                                {
-                                    logger.Log(LogLevel.Debug, "MainWindow", $"Returning focus to {focusedPane.PaneName} after closing command palette");
-                                    paneManager.FocusPane(focusedPane);
-                                }
-                            }
-                            catch (Exception ex)
+                        // Restore focus (fallback chain)
+                        if (previousElement is FrameworkElement fwElement && fwElement.IsLoaded && fwElement.Focusable)
+                        {
+                            // Try saved element first
+                            await Application.Current?.Dispatcher.InvokeAsync(() =>
                             {
-                                logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore focus after closing command palette: {ex.Message}");
-                            }
+                                System.Windows.Input.Keyboard.Focus(fwElement);
+                            }, System.Windows.Threading.DispatcherPriority.Input);
+
+                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to saved element: {fwElement.GetType().Name}");
                         }
-                    });
+                        else if (previousPane != null)
+                        {
+                            // Wait for pane to load if needed
+                            await WaitForLoadedAsync(previousPane);
+
+                            // Focus the pane
+                            await Application.Current?.Dispatcher.InvokeAsync(() =>
+                            {
+                                paneManager?.FocusPane(previousPane);
+                            }, System.Windows.Threading.DispatcherPriority.Input);
+
+                            logger.Log(LogLevel.Debug, "MainWindow", $"Restored focus to pane: {previousPane.PaneName}");
+                        }
+                        else
+                        {
+                            logger.Log(LogLevel.Warning, "MainWindow", "No previous focus state saved, focus may be lost");
+                        }
+
+                        // Clear focus state
+                        commandPaletteFocusState = null;
+                    }, System.Windows.Threading.DispatcherPriority.Input);
                 });
 
                 logger.Log(LogLevel.Debug, "MainWindow", "Command palette closed (background input restored)");
@@ -950,6 +1002,26 @@ namespace SuperTUI
                     }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
             }
+        }
+
+        /// <summary>
+        /// Wait for a FrameworkElement to finish loading.
+        /// Returns immediately if already loaded.
+        /// </summary>
+        private Task WaitForLoadedAsync(FrameworkElement element)
+        {
+            if (element.IsLoaded)
+                return Task.CompletedTask;
+
+            var tcs = new TaskCompletionSource<bool>();
+            RoutedEventHandler handler = null;
+            handler = (s, e) =>
+            {
+                element.Loaded -= handler;
+                tcs.TrySetResult(true);
+            };
+            element.Loaded += handler;
+            return tcs.Task;
         }
 
         /// <summary>
@@ -1131,6 +1203,20 @@ namespace SuperTUI
             {
                 logger.Log(LogLevel.Info, "MainWindow", "Window closing, saving state...");
 
+                // Unsubscribe event handlers to prevent memory leaks
+                if (workspaceManager != null)
+                {
+                    workspaceManager.WorkspaceChanged -= OnWorkspaceChanged;
+                }
+
+                if (paneManager != null)
+                {
+                    paneManager.PaneFocusChanged -= OnPaneFocusChanged;
+                }
+
+                // Note: MainWindow lifetime events (KeyDown, Activated, etc.) are automatically
+                // cleaned up when window closes, but we unsubscribe from long-lived services
+
                 // Save current workspace state
                 SaveCurrentWorkspaceState();
 
@@ -1139,7 +1225,32 @@ namespace SuperTUI
 
                 // Capture and save full application state with checksums
                 var snapshot = statePersistence.CaptureState(workspaceManager);
-                statePersistence.SaveStateAsync(snapshot, createBackup: true).Wait();
+
+                // FIX: Use synchronous file I/O during shutdown to avoid deadlock
+                // (blocking .Wait() on UI thread with async I/O causes classic async deadlock)
+                if (snapshot != null)
+                {
+                    snapshot.Timestamp = DateTime.Now;
+                    snapshot.CalculateChecksum();
+
+                    var stateFile = System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "SuperTUI", "State", "state.json");
+
+                    // Ensure directory exists
+                    var stateDir = System.IO.Path.GetDirectoryName(stateFile);
+                    if (!System.IO.Directory.Exists(stateDir))
+                    {
+                        System.IO.Directory.CreateDirectory(stateDir);
+                    }
+
+                    string json = System.Text.Json.JsonSerializer.Serialize(snapshot,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+
+                    System.IO.File.WriteAllText(stateFile, json, System.Text.Encoding.UTF8);
+
+                    logger.Log(LogLevel.Info, "MainWindow", $"State saved to {stateFile}");
+                }
 
                 // Close all panes
                 paneManager?.CloseAll();
