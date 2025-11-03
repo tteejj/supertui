@@ -94,15 +94,9 @@ namespace SuperTUI.Core
 
         public bool HandleKeyDown(Key key, ModifierKeys modifiers, string currentWorkspace, string focusedPaneName = null)
         {
-            // CRITICAL FIX: Check if user is typing in a text input control
-            // This prevents shortcuts from firing when the user is typing
-            if (IsTypingInTextInput() && !IsAllowedWhileTyping(key, modifiers))
-            {
-                // User is typing, don't process most shortcuts
-                return false;
-            }
-
-            // Try pane-specific shortcuts first (highest priority)
+            // CRITICAL: Try pane-specific shortcuts FIRST (highest priority)
+            // This allows each pane to decide what shortcuts work while typing in that pane
+            // (e.g., NotesPane allows D, O, W to close/save while editor is focused)
             if (!string.IsNullOrEmpty(focusedPaneName) && paneShortcuts.ContainsKey(focusedPaneName))
             {
                 foreach (var shortcut in paneShortcuts[focusedPaneName])
@@ -113,6 +107,15 @@ namespace SuperTUI.Core
                         return true;
                     }
                 }
+            }
+
+            // Check if user is typing in a text input control
+            // This prevents workspace/global shortcuts from firing when the user is typing
+            // (but pane shortcuts were already checked above, giving panes control)
+            if (IsTypingInTextInput() && !IsAllowedWhileTyping(key, modifiers))
+            {
+                // User is typing, don't process workspace/global shortcuts
+                return false;
             }
 
             // Try workspace-specific shortcuts second

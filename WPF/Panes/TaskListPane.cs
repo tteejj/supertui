@@ -58,6 +58,7 @@ namespace SuperTUI.Panes
         private SortMode currentSort = SortMode.Priority;
         private bool isInternalCommand = false;
         private string commandBuffer = string.Empty;
+        private Guid? pendingSubtaskParentId = null; // Parent ID for subtask being created via quick add
 
         // Theme colors (cached for performance)
         private SolidColorBrush bgBrush;
@@ -1178,6 +1179,7 @@ namespace SuperTUI.Panes
         private void HideQuickAdd()
         {
             quickAddForm.Visibility = Visibility.Collapsed;
+            pendingSubtaskParentId = null; // Clear if cancelled
             System.Windows.Input.Keyboard.Focus(taskListBox);
         }
 
@@ -1195,7 +1197,8 @@ namespace SuperTUI.Panes
                 Title = title,
                 ProjectId = projectContext.CurrentProject?.Id,
                 Status = TaskStatus.Pending,
-                Priority = TaskPriority.Medium
+                Priority = TaskPriority.Medium,
+                ParentTaskId = pendingSubtaskParentId // Will be null for regular tasks, set for subtasks
             };
 
             // Parse due date
@@ -1223,6 +1226,7 @@ namespace SuperTUI.Panes
             }
 
             taskService.AddTask(task);
+            pendingSubtaskParentId = null; // Clear after creating task
             HideQuickAdd();
             RefreshTaskList();
         }
@@ -1769,27 +1773,10 @@ namespace SuperTUI.Panes
                 logger.Log(LogLevel.Debug, "TaskListPane", $"Creating subtask under parent '{selectedTask.Task.Title}'");
             }
 
-            // Create the new subtask
-            var subtask = new TaskItem
-            {
-                Title = "New Subtask",
-                ProjectId = projectContext.CurrentProject?.Id,
-                Status = TaskStatus.Pending,
-                Priority = TaskPriority.Medium,
-                ParentTaskId = parentId
-            };
-
-            taskService.AddTask(subtask);
-            RefreshTaskList();
-
-            // Select the new subtask and start editing it
-            var newTaskVm = taskViewModels.FirstOrDefault(vm => vm.Task.Id == subtask.Id);
-            if (newTaskVm != null)
-            {
-                taskListBox.SelectedItem = newTaskVm;
-                selectedTask = newTaskVm;
-                StartInlineEdit();
-            }
+            // Set pending parent ID and show quick add form (just like adding regular tasks)
+            // This allows user to enter title, due date, and priority inline
+            pendingSubtaskParentId = parentId;
+            ShowQuickAdd();
         }
 
         private void MoveSelectedTaskUp()

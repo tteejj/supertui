@@ -1,6 +1,6 @@
 ﻿{
   "App.Title": "SuperTUI",
-  "App.LogLevel": 2,
+  "App.LogLevel": 6,
   "App.LogDirectory": "C:\\Users\\jhnhe\\OneDrive\\Documents\\GitHub\\supertui\\WPF\\.data\\SuperTUI\\Logs",
   "App.AutoSave": true,
   "App.AutoSaveInterval": 300,

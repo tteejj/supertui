@@ -1155,9 +1155,10 @@ namespace SuperTUI.Panes
                                    noteEditor.Visibility == Visibility.Visible;
 
             // Handle critical editor shortcuts that work even while typing
-            if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            // IMPORTANT: Check EXACT modifiers to avoid blocking Ctrl+Shift+S
+            if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
             {
-                // Ctrl+S: Save current note (works while typing)
+                // Ctrl+S (WITHOUT Shift): Save current note (works while typing)
                 if (currentNote != null && hasUnsavedChanges)
                 {
                     _ = SaveCurrentNoteAsync();
@@ -1177,16 +1178,26 @@ namespace SuperTUI.Panes
                 }
             }
 
-            // If user is typing in editor, DON'T process pane shortcuts
-            // Let the text input reach the editor instead
+            // If user is typing in editor, DON'T process MOST pane shortcuts
+            // But allow meta-commands (D, O, W) that close/save/manage notes
             if (isTypingInEditor)
             {
-                // User is typing - don't mark as handled, let editor receive the key
-                return;
+                // Allow specific meta-commands even while editor is focused
+                // These are commands that CLOSE the editor or manage notes, not text input
+                bool isMetaCommand = e.KeyboardDevice.Modifiers == ModifierKeys.None &&
+                                   (e.Key == Key.D ||  // Delete note
+                                    e.Key == Key.O ||  // Open external note
+                                    e.Key == Key.W);   // Save note
+
+                if (!isMetaCommand)
+                {
+                    // User is typing - don't mark as handled, let editor receive the key
+                    return;
+                }
+                // Fall through to ShortcutManager for meta-commands
             }
 
-            // Only check ShortcutManager if NOT typing in editor
-            // Try to handle via ShortcutManager (pane shortcuts like A, E, D, W, Enter, etc.)
+            // Check ShortcutManager for pane shortcuts (A, E, D, O, W, Enter, etc.)
             var shortcuts = ShortcutManager.Instance;
             if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
             {
@@ -1638,6 +1649,7 @@ namespace SuperTUI.Panes
             // Subscribe to FileSelectedEvent for seamless file browsing → note editing workflow
             fileSelectedHandler = OnFileSelected;
             eventBus.Subscribe(fileSelectedHandler);
+            logger.Log(LogLevel.Debug, "NotesPane", "Subscribed to FileSelectedEvent via EventBus");
 
             // Subscribe to CommandExecutedFromPaletteEvent for command palette coordination
             commandExecutedHandler = OnCommandExecutedFromPalette;
@@ -1699,37 +1711,30 @@ namespace SuperTUI.Panes
                 () => OpenExternalNote(),
                 "Open external note");
 
-            // D (no modifiers): Delete current note
+            // D (no modifiers): Open FileBrowser to select and delete a note
             shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None,
-                () => { if (currentNote != null) DeleteCurrentNote(); },
-                "Delete current note");
+                () => OpenExternalNote(),
+                "Open file browser to delete note");
 
             // W (no modifiers): Save note
             shortcuts.RegisterForPane(PaneName, Key.W, ModifierKeys.None,
                 () => { if (currentNote != null && hasUnsavedChanges) _ = SaveCurrentNoteAsync(); },
                 "Save current note");
 
-            // E (no modifiers): Edit note
+            // E (no modifiers): Open FileBrowser to select and edit a note
             shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
-                () => {
-                    // If editor is visible, just focus it
-                    if (noteEditor != null && noteEditor.Visibility == Visibility.Visible && currentNote != null)
-                    {
-                        if (noteEditor != null) System.Windows.Input.Keyboard.Focus(noteEditor);
-                        return;
-                    }
+                () => OpenExternalNote(),
+                "Open file browser to edit note");
 
-                    // Otherwise, try to load selected note from list
-                    if (notesListBox != null && notesListBox.SelectedIndex >= 0 && notesListBox.SelectedIndex < notesListBox.Items.Count)
+            // Ctrl+Shift+S: Save As (rename current note)
+            shortcuts.RegisterForPane(PaneName, Key.S, ModifierKeys.Control | ModifierKeys.Shift,
+                () => {
+                    if (currentNote != null)
                     {
-                        var item = notesListBox.Items[notesListBox.SelectedIndex];
-                        if (item is ListBoxItem listBoxItem && listBoxItem.Tag is NoteMetadata note)
-                        {
-                            _ = LoadNoteAsync(note);
-                        }
+                        RenameCurrentNote();
                     }
                 },
-                "Edit note");
+                "Save As (rename note)");
 
             // Enter (no modifiers): Edit note
             shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
@@ -1850,20 +1855,22 @@ namespace SuperTUI.Panes
         /// </summary>
         private void OnFileSelected(Core.Events.FileSelectedEvent evt)
         {
-            if (evt == null || string.IsNullOrEmpty(evt.FilePath)) return;
-
-            // CRITICAL - Transfer focus IMMEDIATELY before async operations
-            Application.Current?.Dispatcher.Invoke(() =>
+            logger?.Log(LogLevel.Debug, "NotesPane", $"OnFileSelected called with FilePath: {evt?.FilePath}");
+            if (evt == null || string.IsNullOrEmpty(evt.FilePath))
             {
-                System.Windows.Input.Keyboard.Focus(this);
-                System.Windows.Input.Keyboard.Focus(this);
-            }, DispatcherPriority.Send);  // Highest priority
+                logger?.Log(LogLevel.Warning, "NotesPane", "OnFileSelected: event or FilePath is null/empty");
+                return;
+            }
 
-            // NOW queue async file operations
-            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            logger?.Log(LogLevel.Debug, "NotesPane", $"Application.Current is null: {Application.Current == null}");
+
+            // Queue async file operations on UI thread
+            var task = Application.Current?.Dispatcher.InvokeAsync(async () =>
             {
-                logger.Log(LogLevel.Info, "NotesPane",
-                    $"File selected from FileBrowser: {evt.FileName}");
+                try
+                {
+                    logger.Log(LogLevel.Info, "NotesPane",
+                        $"File selected from FileBrowser: {evt.FileName}");
 
                 // Get file extension
                 var extension = Path.GetExtension(evt.FilePath)?.ToLowerInvariant();
@@ -1930,7 +1937,35 @@ namespace SuperTUI.Panes
                     ShowStatus($"Cannot open {extension} files in notes editor", isError: false);
                     Log($"File type {extension} not supported in NotesPane");
                 }
+                }
+                catch (Exception ex)
+                {
+                    logger?.Log(LogLevel.Error, "NotesPane", $"OnFileSelected: Unhandled exception in async handler: {ex.Message}");
+                    logger?.Log(LogLevel.Error, "NotesPane", $"Stack trace: {ex.StackTrace}");
+                    ShowStatus($"ERROR: Failed to process file selection", isError: true);
+                }
             });
+
+            if (task != null)
+            {
+                logger?.Log(LogLevel.Debug, "NotesPane", $"InvokeAsync task created, Status: {task.Status}");
+                task.Task.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        logger?.Log(LogLevel.Error, "NotesPane", $"InvokeAsync task faulted: {t.Exception?.Message}");
+                        logger?.Log(LogLevel.Error, "NotesPane", $"Stack trace: {t.Exception?.StackTrace}");
+                    }
+                    else
+                    {
+                        logger?.Log(LogLevel.Debug, "NotesPane", $"InvokeAsync task completed successfully");
+                    }
+                }, System.Threading.Tasks.TaskScheduler.Default);
+            }
+            else
+            {
+                logger?.Log(LogLevel.Error, "NotesPane", "InvokeAsync returned null - Application.Current or Dispatcher is null");
+            }
         }
 
         protected override void OnProjectContextChanged(object sender, ProjectContextChangedEventArgs e)
@@ -2091,7 +2126,7 @@ namespace SuperTUI.Panes
         {
             if (state?.CustomData == null) return;
 
-            var data = state.CustomData;
+            var data = state.CustomData as Dictionary<string, object>;
             if (data == null) return;
 
             // Cancel any in-flight restoration

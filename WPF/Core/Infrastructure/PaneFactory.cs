@@ -107,7 +107,7 @@ namespace SuperTUI.Core.Infrastructure
                     Icon = "📁",
                     Creator = () =>
                     {
-                        var pane = new SimpleFileBrowserPane(logger, themeManager, projectContext, configManager);
+                        var pane = new SimpleFileBrowserPane(logger, themeManager, projectContext, configManager, eventBus);
                         SetFocusHistory(pane);
                         return pane;
                     },

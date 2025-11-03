@@ -135,56 +135,76 @@ namespace SuperTUI.Core.Infrastructure
 
         /// <summary>
         /// Sets focus to a specific pane
-        /// CRITICAL FIX: Coordinates SetActive() and focus transfer in single async operation to prevent race conditions
-        /// Previously: SetActive() called synchronously, then focus scheduled asynchronously
-        /// This caused visual updates before focus transfer, creating timing issues
         /// </summary>
         public void FocusPane(PaneBase pane)
         {
+            FocusDebugger.LogFocusOperation("PaneManager.FocusPane.Entry", pane, pane?.PaneName);
+
             if (pane == null || !openPanes.Contains(pane))
-                return;
-
-            var previousPane = focusedPane;
-
-            // CRITICAL FIX: Deactivate previous pane immediately (synchronous)
-            // This ensures visual state changes happen before we start the async focus operation
-            if (previousPane != null && previousPane != pane)
             {
-                previousPane.SetActive(false);
-                // Removed redundant OnFocusChanged() call
-                // SetActive already calls ApplyTheme internally
-
-                logger.Log(LogLevel.Debug, "PaneManager",
-                    $"Deactivated previous pane: {previousPane.PaneName}");
+                FocusDebugger.LogFocusResult("PaneManager.FocusPane.Rejected", false, pane, 0,
+                    pane == null ? "pane is null" : "pane not in openPanes");
+                return;
             }
 
-            // Update tracking immediately (synchronous)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            // Unfocus previous
+            if (focusedPane != null && focusedPane != pane)
+            {
+                FocusDebugger.LogPaneStateChange(focusedPane.PaneName, "Deactivating previous pane",
+                    focusedPane.IsActive, focusedPane.IsKeyboardFocusWithin);
+
+                focusedPane.SetActive(false);
+                focusedPane.OnFocusChanged();
+            }
+
+            // Focus new
             focusedPane = pane;
 
-            // CRITICAL FIX: Activate and apply focus in single async operation to prevent race
-            // SetActive(true) and actual focus transfer happen together at DispatcherPriority.Render
-            // This ensures visual state and keyboard focus are coordinated
-            Application.Current?.Dispatcher.InvokeAsync(() =>
+            FocusDebugger.LogPaneStateChange(pane.PaneName, "Activating new pane",
+                false, pane.IsKeyboardFocusWithin, "Before SetActive(true)");
+
+            focusedPane.SetActive(true);
+            focusedPane.OnFocusChanged();
+
+            // Use FocusHistoryManager's fallback chain to ensure focus is never lost
+            // This replaces manual focus attempts with a robust 4-level fallback:
+            // 1. Try the pane itself
+            // 2. Try first focusable child
+            // 3. Try pane again
+            // 4. Try main window as last resort
+            FocusDebugger.LogDispatcherOperation("ApplyFocusToPane", System.Windows.Threading.DispatcherPriority.Input,
+                $"Pane: {pane.PaneName}");
+
+            pane.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // Log state before activation
-                logger.Log(LogLevel.Debug, "PaneManager",
-                    $"Starting focus operation for {pane.PaneName}, IsLoaded={pane.IsLoaded}, IsKeyboardFocusWithin={pane.IsKeyboardFocusWithin}");
+                FocusDebugger.LogFocusOperation("PaneManager.FocusPane.AsyncApply", pane, pane.PaneName,
+                    $"IsKeyboardFocusWithin={pane.IsKeyboardFocusWithin}");
 
-                // Activate pane (applies visual state)
-                pane.SetActive(true);
-                // Removed redundant OnFocusChanged() call
-                // SetActive already calls ApplyTheme internally, no need to call it again
+                if (!pane.IsKeyboardFocusWithin)
+                {
+                    bool focusApplied = focusHistory.ApplyFocusToPane(pane);
 
-                logger.Log(LogLevel.Debug, "PaneManager",
-                    $"Activated pane: {pane.PaneName}");
+                    FocusDebugger.LogFocusResult("PaneManager.FocusPane.AsyncApply", focusApplied, pane, sw.ElapsedMilliseconds,
+                        focusApplied ? null : "FocusHistoryManager fallback chain failed");
 
-                // OnPaneGainedFocus (called by SetActive above) handles focusing the correct child control
-                // The pane knows which control should have focus (editor, list, etc.)
-                logger.Log(LogLevel.Debug, "PaneManager",
-                    $"Pane {pane.PaneName} activated, OnPaneGainedFocus will set focus to correct control");
-            }, System.Windows.Threading.DispatcherPriority.Render);
+                    if (!focusApplied)
+                    {
+                        logger.Log(LogLevel.Warning, "PaneManager",
+                            $"Failed to apply focus to pane {pane.PaneName} even with fallback chain");
+                    }
+                }
+                else
+                {
+                    FocusDebugger.LogFocusResult("PaneManager.FocusPane.AsyncApply.Skipped", true, pane, sw.ElapsedMilliseconds,
+                        "Pane already has keyboard focus");
+                }
+            }), System.Windows.Threading.DispatcherPriority.Input);
 
             PaneFocusChanged?.Invoke(this, new PaneEventArgs(pane));
+
+            FocusDebugger.LogFocusResult("PaneManager.FocusPane.Complete", true, pane, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -232,7 +252,7 @@ namespace SuperTUI.Core.Infrastructure
         {
             return new PaneManagerState
             {
-                OpenPaneTypes = openPanes.Select(p => p.GetType().Name).ToList(),  // Use Name not FullName for factory mapping
+                OpenPaneTypes = openPanes.Select(p => p.GetType().FullName).ToList(),
                 FocusedPaneIndex = focusedPane != null ? openPanes.IndexOf(focusedPane) : -1
             };
         }

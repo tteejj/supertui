@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Infrastructure;
@@ -19,6 +20,7 @@ namespace SuperTUI.Panes
     public class SimpleFileBrowserPane : PaneBase
     {
         private readonly IConfigurationManager config;
+        private readonly IEventBus eventBus;
 
         private ListBox fileList;
         private TextBlock pathDisplay;
@@ -30,10 +32,12 @@ namespace SuperTUI.Panes
             ILogger logger,
             IThemeManager themeManager,
             IProjectContextManager projectContext,
-            IConfigurationManager config)
+            IConfigurationManager config,
+            IEventBus eventBus)
             : base(logger, themeManager, projectContext)
         {
-            this.config = config;
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             PaneName = "Files";
             PaneIcon = "📁";
 
@@ -45,6 +49,37 @@ namespace SuperTUI.Panes
         {
             base.Initialize();
             LoadDirectory(currentPath);
+
+            // CRITICAL: Ensure focus goes to file list, not ContentControl wrapper
+            // Schedule focus after pane is fully loaded
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                if (fileList != null)
+                {
+                    Keyboard.Focus(fileList);
+                }
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// Set the initial path for the file browser (can be called after creation)
+        /// </summary>
+        public void SetInitialPath(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+            {
+                logger?.Log(LogLevel.Debug, "FileBrowser", $"SetInitialPath called: {path}");
+                LoadDirectory(path);
+
+                // Focus the file list after path change
+                Application.Current?.Dispatcher.InvokeAsync(() =>
+                {
+                    if (fileList != null)
+                    {
+                        Keyboard.Focus(fileList);
+                    }
+                }, System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         protected override UIElement BuildContent()
@@ -73,13 +108,31 @@ namespace SuperTUI.Panes
                 FontSize = 14,
                 Background = new SolidColorBrush(Color.FromRgb(20, 20, 20)),
                 Foreground = new SolidColorBrush(Colors.White),
-                BorderThickness = new Thickness(0)
+                BorderThickness = new Thickness(0),
+                Focusable = true,
+                IsTabStop = true
             };
             fileList.PreviewKeyDown += OnKeyDown;
             fileList.MouseDoubleClick += OnDoubleClick;
+
+            // CRITICAL: Set focus when ListBox is loaded and ready
+            fileList.Loaded += (s, e) =>
+            {
+                logger?.Log(LogLevel.Debug, "FileBrowser", "ListBox Loaded event - setting keyboard focus");
+                // Must set SelectedIndex BEFORE setting focus for proper keyboard navigation
+                if (fileList.Items.Count > 0 && fileList.SelectedIndex < 0)
+                {
+                    fileList.SelectedIndex = 0;
+                }
+                Keyboard.Focus(fileList);
+                fileList.Focus(); // Also call WPF Focus() for good measure
+                logger?.Log(LogLevel.Debug, "FileBrowser", $"Focus set. IsKeyboardFocused: {fileList.IsKeyboardFocused}, SelectedIndex: {fileList.SelectedIndex}");
+            };
+
             Grid.SetRow(fileList, 1);
             grid.Children.Add(fileList);
 
+            logger?.Log(LogLevel.Debug, "FileBrowser", "BuildContent: ListBox created and configured");
             return grid;
         }
 
@@ -133,6 +186,12 @@ namespace SuperTUI.Panes
                     catch { /* Skip inaccessible */ }
                 }
 
+                // Select first item for immediate keyboard navigation
+                if (fileList.Items.Count > 0)
+                {
+                    fileList.SelectedIndex = 0;
+                }
+
                 logger?.Log(LogLevel.Info, PaneName, $"Loaded {fileList.Items.Count} items from {path}");
             }
             catch (Exception ex)
@@ -177,9 +236,21 @@ namespace SuperTUI.Panes
                 }
                 else
                 {
-                    // File selected
+                    // File selected - publish to EventBus so other panes can react
                     logger?.Log(LogLevel.Info, PaneName, $"File selected: {item.FullPath}");
                     FileSelected?.Invoke(this, item.FullPath);
+
+                    // Also publish via EventBus for cross-pane communication
+                    logger?.Log(LogLevel.Debug, PaneName, $"Publishing FileSelectedEvent to EventBus for: {item.FullPath}");
+                    var evt = new Core.Events.FileSelectedEvent
+                    {
+                        FilePath = item.FullPath,
+                        FileName = Path.GetFileName(item.FullPath),
+                        FileSize = new FileInfo(item.FullPath).Length,
+                        SelectedAt = DateTime.Now
+                    };
+                    eventBus?.Publish(evt);
+                    logger?.Log(LogLevel.Debug, PaneName, $"FileSelectedEvent published. EventBus has subscribers: {eventBus?.HasSubscribers<Core.Events.FileSelectedEvent>()}");
                 }
             }
         }

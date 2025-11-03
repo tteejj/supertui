@@ -54,6 +54,10 @@ namespace SuperTUI
             focusHistory = serviceContainer.GetRequiredService<FocusHistoryManager>();
             notificationManager = serviceContainer.GetRequiredService<INotificationManager>();
 
+            // Initialize FocusDebugger for ultra-verbose focus logging
+            Core.Infrastructure.FocusDebugger.Initialize(logger);
+            logger.Log(LogLevel.Info, "MainWindow", "FocusDebugger initialized");
+
             // Initialize StatePersistenceManager so it can actually save state!
             statePersistence.Initialize();
             logger.Log(LogLevel.Info, "MainWindow", "StatePersistenceManager initialized");
@@ -761,8 +765,8 @@ namespace SuperTUI
             {
                 logger.Log(LogLevel.Info, "MainWindow", $"NotesPane requested FileBrowser for path: {notesPath}");
 
-                // Check if FileBrowser is already open
-                var existingFileBrowser = paneManager.OpenPanes.OfType<Panes.FileBrowserPane>().FirstOrDefault();
+                // Check if FileBrowser is already open (SimpleFileBrowserPane is the actual type)
+                var existingFileBrowser = paneManager.OpenPanes.OfType<Panes.SimpleFileBrowserPane>().FirstOrDefault();
 
                 if (existingFileBrowser != null)
                 {
@@ -773,19 +777,24 @@ namespace SuperTUI
                 }
                 else
                 {
-                    // Open new FileBrowser pane
-                    var fileBrowserPane = paneFactory.CreatePane("files") as Panes.FileBrowserPane;
+                    // Open new FileBrowser pane (SimpleFileBrowserPane is the actual type returned by factory)
+                    var fileBrowserPane = paneFactory.CreatePane("files") as Panes.SimpleFileBrowserPane;
                     if (fileBrowserPane != null)
                     {
                         paneManager.OpenPane(fileBrowserPane);
 
-                        // Set initial path to notes folder after pane is loaded
+                        // Set initial path to notes folder BEFORE focusing
+                        // This ensures the path is set when the pane becomes visible
+                        fileBrowserPane.SetInitialPath(notesPath);
+
+                        // Focus the newly opened FileBrowser so user can immediately navigate
+                        // Queue focus with Send priority to ensure it happens after SetInitialPath
                         Application.Current?.Dispatcher.InvokeAsync(() =>
                         {
-                            fileBrowserPane.SetInitialPath(notesPath);
-                        }, System.Windows.Threading.DispatcherPriority.Loaded);
+                            paneManager.FocusPane(fileBrowserPane);
+                        }, System.Windows.Threading.DispatcherPriority.Send);
 
-                        logger.Log(LogLevel.Info, "MainWindow", "Opened FileBrowser pane for notes folder");
+                        logger.Log(LogLevel.Info, "MainWindow", $"Opened FileBrowser pane for notes folder: {notesPath}");
                     }
                 }
             }

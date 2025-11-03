@@ -559,7 +559,9 @@ namespace SuperTUI.Core
                 ResizeDirection = System.Windows.Controls.GridResizeDirection.Rows,
                 ResizeBehavior = System.Windows.Controls.GridResizeBehavior.PreviousAndNext,
                 Background = theme != null ? new SolidColorBrush(theme.Border) : new SolidColorBrush(System.Windows.Media.Colors.Gray),
-                Cursor = System.Windows.Input.Cursors.SizeNS
+                Cursor = System.Windows.Input.Cursors.SizeNS,
+                Focusable = false,  // Prevent GridSplitter from stealing focus during Ctrl+Shift+Arrow navigation
+                IsTabStop = false   // Also exclude from tab navigation
             };
             return splitter;
         }
@@ -578,7 +580,9 @@ namespace SuperTUI.Core
                 ResizeDirection = System.Windows.Controls.GridResizeDirection.Columns,
                 ResizeBehavior = System.Windows.Controls.GridResizeBehavior.PreviousAndNext,
                 Background = theme != null ? new SolidColorBrush(theme.Border) : new SolidColorBrush(System.Windows.Media.Colors.Gray),
-                Cursor = System.Windows.Input.Cursors.SizeWE
+                Cursor = System.Windows.Input.Cursors.SizeWE,
+                Focusable = false,  // Prevent GridSplitter from stealing focus during Ctrl+Shift+Arrow navigation
+                IsTabStop = false   // Also exclude from tab navigation
             };
             return splitter;
         }
