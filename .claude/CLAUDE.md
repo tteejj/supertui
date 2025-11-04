@@ -441,7 +441,50 @@ pwsh SuperTUI.ps1
 
 ---
 
-**Last Verified:** 2025-11-02
+## UI/UX Design Decisions (2025-11-03)
+
+**Design Philosophy:** WPF TUI-Like Experience
+- Goal: Terminal aesthetics with WPF infrastructure (not a true TUI)
+- Keyboard-first navigation (arrow keys + letter shortcuts)
+- Text-based actions (no heavy button/GUI chrome)
+- Unified color schemes and backgrounds
+- Inline editing (not modal dialogs)
+
+**Key Decisions:**
+1. **Use WPF Border controls** - NOT ASCII box drawing (`┌─┐│└┘`)
+   - Reason: Unicode/ASCII box characters don't connect properly in WPF, creates visual headaches
+   - Alternative: Clean WPF borders with proper styling
+
+2. **Unified Backgrounds** - Single color per pane, no nested boxes with different backgrounds
+   - Problem: Tasks/items looked like "screenshots" due to color mismatches
+   - Solution: Same background for pane + list items
+
+3. **Inline Editing** - Edit tasks/projects WHERE THEY ARE in the list
+   - Problem: Modal dialogs disconnect user from context
+   - Solution: Row expands into edit form in-place (natural, terminal-like)
+
+4. **Text-Based Actions + Arrow Keys** - Navigate with arrows, execute with letter keys
+   - Pattern: j/k or arrows to navigate, A/E/D for actions
+   - NO vim modes (NORMAL/INSERT/VISUAL) - just regular app behavior
+
+5. **Focus Indicators** - Visual only, no explicit text labels
+   - Bright borders for focused elements
+   - No dimming when unfocused (creates confusion)
+   - Clear hierarchy through color refinement
+
+6. **Excel Import Workflow** - Skip keyboard-driven rewrite for now
+   - Reason: File picker already exists (FileBrowserPane)
+   - Decision: Use existing file picker, defer full Excel UI rewrite
+   - Future: May revisit if needed for workflow efficiency
+
+**Target Experience:**
+- Feels like using vim/htop/ranger (keyboard-first, terminal aesthetic)
+- Built on WPF (Windows-only, not SSH-compatible)
+- Best of both worlds: Terminal UX + WPF infrastructure
+
+---
+
+**Last Verified:** 2025-11-03
 **Build Status:** ✅ 0 Errors, ⚠️ 0 Warnings (~2-3s)
 **Architecture:** Pane-based system (7 panes + 1 legacy widget)
 **Recent Work:** Focus management refactoring complete (architectural overhaul, -768 lines)

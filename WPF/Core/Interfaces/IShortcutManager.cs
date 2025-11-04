@@ -47,6 +47,11 @@ namespace SuperTUI.Infrastructure
         IReadOnlyList<KeyboardShortcut> GetPaneShortcuts(string paneName);
 
         /// <summary>
+        /// Get all pane shortcuts organized by pane name
+        /// </summary>
+        IReadOnlyDictionary<string, IReadOnlyList<KeyboardShortcut>> GetAllPaneShortcuts();
+
+        /// <summary>
         /// Get all shortcuts for all contexts
         /// </summary>
         List<KeyboardShortcut> GetAllShortcuts();

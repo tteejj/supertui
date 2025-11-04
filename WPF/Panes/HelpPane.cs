@@ -22,14 +22,12 @@ namespace SuperTUI.Panes
         private readonly IConfigurationManager configManager;
 
         // UI Components
-        private TextBox searchBox;
         private ScrollViewer contentScrollViewer;
         private StackPanel shortcutsPanel;
         private TextBlock helpHeaderText;
 
         // Data
         private List<ShortcutGroup> allGroups;
-        private string searchQuery = "";
 
         public HelpPane(
             ILogger logger,
@@ -61,7 +59,6 @@ namespace SuperTUI.Panes
             // Main container
             var container = new Grid();
             container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Title
-            container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Search
             container.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
 
             // Title header
@@ -85,48 +82,6 @@ namespace SuperTUI.Panes
             Grid.SetRow(titleHeader, 0);
             container.Children.Add(titleHeader);
 
-            // Search box
-            var searchContainer = new Border
-            {
-                BorderBrush = new SolidColorBrush(theme.Border),
-                BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(12, 8, 12, 8),
-                Background = new SolidColorBrush(theme.Surface)
-            };
-
-            var searchGrid = new Grid();
-            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            var searchIcon = new TextBlock
-            {
-                Text = "🔍 ",
-                FontSize = 12,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0)
-            };
-            Grid.SetColumn(searchIcon, 0);
-            searchGrid.Children.Add(searchIcon);
-
-            searchBox = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 11,
-                Foreground = new SolidColorBrush(theme.Foreground),
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                CaretBrush = new SolidColorBrush(theme.Primary),
-                Text = ""
-            };
-            searchBox.TextChanged += OnSearchTextChanged;
-            searchBox.PreviewKeyDown += OnSearchBoxKeyDown;
-            Grid.SetColumn(searchBox, 1);
-            searchGrid.Children.Add(searchBox);
-
-            searchContainer.Child = searchGrid;
-            Grid.SetRow(searchContainer, 1);
-            container.Children.Add(searchContainer);
-
             // Shortcuts content (scrollable)
             contentScrollViewer = new ScrollViewer
             {
@@ -138,7 +93,7 @@ namespace SuperTUI.Panes
             shortcutsPanel = new StackPanel();
             contentScrollViewer.Content = shortcutsPanel;
 
-            Grid.SetRow(contentScrollViewer, 2);
+            Grid.SetRow(contentScrollViewer, 1);
             container.Children.Add(contentScrollViewer);
 
             // Build shortcuts display
@@ -169,24 +124,26 @@ namespace SuperTUI.Panes
             }
 
             // Group 2: Pane-Specific Shortcuts
-            // Get pane shortcuts for all known panes
-            var knownPanes = new[] { "Tasks", "Notes", "Files", "FileBrowser", "Projects", "CommandPalette", "Help", "Calendar", "ExcelImport" };
-            foreach (var paneName in knownPanes)
+            // Get all registered pane shortcuts (auto-discover from ShortcutManager)
+            var allPaneShortcuts = shortcutManager.GetAllPaneShortcuts();
+            foreach (var kvp in allPaneShortcuts)
             {
-                var paneShortcuts = shortcutManager.GetPaneShortcuts(paneName);
-                if (paneShortcuts.Count > 0)
+                var paneName = kvp.Key;
+                var shortcuts = kvp.Value;
+
+                if (shortcuts.Count > 0)
                 {
                     allGroups.Add(new ShortcutGroup
                     {
                         Title = $"{paneName} Pane",
                         Description = $"Available when {paneName} pane is focused",
-                        Shortcuts = paneShortcuts.ToList()
+                        Shortcuts = shortcuts.ToList()
                     });
                 }
             }
 
             // Add footer note
-            var footerNote = "Press Ctrl+F to search, Esc or Ctrl+Shift+Q to close this pane";
+            var footerNote = "Press Esc or Ctrl+Shift+Q to close this pane";
 
             // Render the groups
             RefreshDisplay(footerNote);
@@ -204,12 +161,8 @@ namespace SuperTUI.Panes
 
             foreach (var group in allGroups)
             {
-                // Filter shortcuts based on search
-                var filteredShortcuts = string.IsNullOrWhiteSpace(searchQuery)
-                    ? group.Shortcuts
-                    : group.Shortcuts.Where(s =>
-                        s.Description?.ToLower().Contains(searchQuery.ToLower()) == true ||
-                        FormatShortcutKeys(s).ToLower().Contains(searchQuery.ToLower()) == true).ToList();
+                // Show all shortcuts (search removed)
+                var filteredShortcuts = group.Shortcuts;
 
                 if (filteredShortcuts.Count == 0)
                     continue;
@@ -263,9 +216,7 @@ namespace SuperTUI.Panes
             {
                 var noResults = new TextBlock
                 {
-                    Text = string.IsNullOrWhiteSpace(searchQuery)
-                        ? "No shortcuts registered"
-                        : "No shortcuts found matching your search",
+                    Text = "No shortcuts registered",
                     FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                     FontSize = 12,
                     Foreground = new SolidColorBrush(Color.FromRgb(
@@ -422,31 +373,6 @@ namespace SuperTUI.Panes
             };
         }
 
-        /// <summary>
-        /// Handle search text changes
-        /// </summary>
-        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
-        {
-            searchQuery = searchBox.Text.Trim();
-            RefreshDisplay();
-        }
-
-        /// <summary>
-        /// Handle keyboard in search box
-        /// </summary>
-        private void OnSearchBoxKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape)
-            {
-                // Clear search if there's text, otherwise do nothing (let global handler close pane)
-                if (!string.IsNullOrWhiteSpace(searchBox.Text))
-                {
-                    searchBox.Text = "";
-                    e.Handled = true;
-                }
-            }
-        }
-
         private void OnThemeChanged(object sender, EventArgs e)
         {
             // CRITICAL: Use this.Dispatcher, not Application.Current.Dispatcher (EventBus may call from background thread)
@@ -461,11 +387,6 @@ namespace SuperTUI.Panes
             var theme = themeManager.CurrentTheme;
 
             // Update all controls
-            if (searchBox != null)
-            {
-                searchBox.Foreground = new SolidColorBrush(theme.Foreground);
-            }
-
             if (shortcutsPanel != null)
             {
                 // Rebuild display to apply new theme colors

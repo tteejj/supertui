@@ -249,6 +249,30 @@ namespace SuperTUI
                 () => OpenPane("calendar"),
                 "Open Calendar pane");
 
+            shortcuts.RegisterGlobal(Key.M, ModifierKeys.Control | ModifierKeys.Shift,
+                () => OpenPane("commands"),
+                "Open Commands pane (snippet library)");
+
+            shortcuts.RegisterGlobal(Key.O, ModifierKeys.Control | ModifierKeys.Shift,
+                () => OpenPane("pomodoro"),
+                "Open Pomodoro timer pane");
+
+            shortcuts.RegisterGlobal(Key.K, ModifierKeys.Control | ModifierKeys.Shift,
+                () => OpenPane("kanban"),
+                "Open Kanban board pane");
+
+            shortcuts.RegisterGlobal(Key.W, ModifierKeys.Control | ModifierKeys.Shift,
+                () => OpenPane("timetracking"),
+                "Open Time Tracking pane (Weekly hours)");
+
+            shortcuts.RegisterGlobal(Key.D0, ModifierKeys.Control | ModifierKeys.Shift,
+                () => OpenPane("clock"),
+                "Open Clock pane");
+
+            shortcuts.RegisterGlobal(Key.OemComma, ModifierKeys.Control,
+                () => OpenPane("settings"),
+                "Open Settings pane");
+
             // Close focused pane: Ctrl+Shift+Q
             shortcuts.RegisterGlobal(Key.Q, ModifierKeys.Control | ModifierKeys.Shift,
                 () => paneManager.CloseFocusedPane(),
@@ -500,21 +524,30 @@ namespace SuperTUI
                 }
 
                 // Restore panes
+                logger.Log(LogLevel.Info, "MainWindow", $"[WORKSPACE RESTORE] Attempting to restore {state.OpenPaneTypes.Count} panes");
                 var panesToRestore = new List<Core.Components.PaneBase>();
                 var failedPanes = new List<string>();
+                int index = 0;
                 foreach (var paneTypeName in state.OpenPaneTypes)
                 {
                     try
                     {
+                        logger.Log(LogLevel.Info, "MainWindow", $"[WORKSPACE RESTORE] [{index + 1}/{state.OpenPaneTypes.Count}] Restoring pane type: '{paneTypeName}'");
                         var pane = paneFactory.CreatePane(paneTypeName);
                         panesToRestore.Add(pane);
+                        logger.Log(LogLevel.Info, "MainWindow", $"[WORKSPACE RESTORE] ✓ Successfully restored pane [{index + 1}]: {pane.PaneName}");
+                        index++;
                     }
                     catch (Exception ex)
                     {
-                        logger.Log(LogLevel.Warning, "MainWindow", $"Failed to restore pane '{paneTypeName}': {ex.Message}");
+                        logger.Log(LogLevel.Error, "MainWindow", $"[WORKSPACE RESTORE] ✗ Failed to restore pane [{index + 1}] '{paneTypeName}': {ex.Message}");
+                        logger.Log(LogLevel.Error, "MainWindow", $"[WORKSPACE RESTORE] Stack trace: {ex.StackTrace}");
                         failedPanes.Add(paneTypeName);
+                        index++;
                     }
                 }
+
+                logger.Log(LogLevel.Info, "MainWindow", $"[WORKSPACE RESTORE] Restoration summary: {panesToRestore.Count} succeeded, {failedPanes.Count} failed");
 
                 // Show notification if any panes failed to restore
                 if (failedPanes.Count > 0)

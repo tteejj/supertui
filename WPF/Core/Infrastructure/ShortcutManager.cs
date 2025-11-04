@@ -253,6 +253,19 @@ namespace SuperTUI.Core
             }
         }
 
+        public IReadOnlyDictionary<string, IReadOnlyList<KeyboardShortcut>> GetAllPaneShortcuts()
+        {
+            lock (shortcutsLock)
+            {
+                var result = new Dictionary<string, IReadOnlyList<KeyboardShortcut>>();
+                foreach (var kvp in paneShortcuts)
+                {
+                    result[kvp.Key] = new List<KeyboardShortcut>(kvp.Value);
+                }
+                return result;
+            }
+        }
+
         public void ClearAll()
         {
             lock (shortcutsLock)

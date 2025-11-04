@@ -12,6 +12,7 @@ using SuperTUI.Core.Commands;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -351,6 +352,7 @@ namespace SuperTUI.Panes
                 BorderBrush = accentBrush
             };
             quickAddTitle.KeyDown += QuickAddField_KeyDown;
+            quickAddTitle.ApplyFocusStyling(themeManager);  // Apply focus indicator
             Grid.SetColumn(quickAddTitle, 0);
             quickAddForm.Children.Add(quickAddTitle);
 
@@ -379,6 +381,7 @@ namespace SuperTUI.Panes
                 BorderBrush = accentBrush
             };
             quickAddDueDate.KeyDown += QuickAddField_KeyDown;
+            quickAddDueDate.ApplyFocusStyling(themeManager);  // Apply focus indicator
             Grid.SetColumn(quickAddDueDate, 2);
             quickAddForm.Children.Add(quickAddDueDate);
 
@@ -409,6 +412,7 @@ namespace SuperTUI.Panes
                 MaxLength = 1
             };
             quickAddPriority.KeyDown += QuickAddField_KeyDown;
+            quickAddPriority.ApplyFocusStyling(themeManager);  // Apply focus indicator
             Grid.SetColumn(quickAddPriority, 4);
             quickAddForm.Children.Add(quickAddPriority);
 
@@ -793,8 +797,8 @@ namespace SuperTUI.Panes
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Expand icon
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Title
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Due date
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Tags
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120, GridUnitType.Pixel) }); // Due date - match header
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150, GridUnitType.Pixel) }); // Tags - match header
 
             grid.Tag = vm;
 
@@ -1306,6 +1310,7 @@ namespace SuperTUI.Panes
             };
             inlineEditBox.KeyDown += InlineEditBox_KeyDown;
             inlineEditBox.LostFocus += InlineEditBox_LostFocus;
+            inlineEditBox.ApplyFocusStyling(themeManager);  // Apply focus indicator
 
             editingTask = selectedTask;
             inlineEditBox.Text = selectedTask.Task.Title;
@@ -1687,6 +1692,7 @@ namespace SuperTUI.Panes
             };
             tagEditBox.KeyDown += TagEditBox_KeyDown;
             tagEditBox.LostFocus += TagEditBox_LostFocus;
+            tagEditBox.ApplyFocusStyling(themeManager);  // Apply focus indicator
 
             tagEditingTask = selectedTask;
 

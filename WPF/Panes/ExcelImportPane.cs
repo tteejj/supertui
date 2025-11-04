@@ -322,6 +322,21 @@ namespace SuperTUI.Panes
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0)
             };
+            startCellBox.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    // Trigger Read from Running Excel on Enter
+                    ReadFromRunningExcel();
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Down)
+                {
+                    // Down arrow to focus clipboard box
+                    System.Windows.Input.Keyboard.Focus(clipboardTextBox);
+                    e.Handled = true;
+                }
+            };
             Grid.SetColumn(startCellBox, 3);
             grid.Children.Add(startCellBox);
 

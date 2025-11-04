@@ -1128,4 +1128,44 @@ namespace SuperTUI.Extensions
             return sb.ToString();
         }
     }
+
+    // ============================================================================
+    // UI EXTENSIONS
+    // ============================================================================
+
+    /// <summary>
+    /// UI extension methods for WPF controls
+    /// </summary>
+    public static class UIExtensions
+    {
+        /// <summary>
+        /// Apply focus styling to a TextBox for better visibility
+        /// Uses theme.Focus color and thicker border when focused
+        /// </summary>
+        public static void ApplyFocusStyling(this System.Windows.Controls.TextBox textBox, IThemeManager themeManager)
+        {
+            if (textBox == null || themeManager == null)
+                return;
+
+            var theme = themeManager.CurrentTheme;
+
+            // Store original brush
+            var normalBorderBrush = textBox.BorderBrush?.CloneCurrentValue() ??
+                new System.Windows.Media.SolidColorBrush(theme.BorderActive);
+
+            textBox.GotFocus += (s, e) =>
+            {
+                var currentTheme = themeManager.CurrentTheme;
+                textBox.BorderBrush = new System.Windows.Media.SolidColorBrush(currentTheme.Focus);
+                textBox.BorderThickness = new System.Windows.Thickness(2);
+            };
+
+            textBox.LostFocus += (s, e) =>
+            {
+                var currentTheme = themeManager.CurrentTheme;
+                textBox.BorderBrush = new System.Windows.Media.SolidColorBrush(currentTheme.BorderActive);
+                textBox.BorderThickness = new System.Windows.Thickness(1);
+            };
+        }
+    }
 }

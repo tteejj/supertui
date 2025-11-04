@@ -172,6 +172,66 @@ namespace SuperTUI.Core.Infrastructure
                         SetFocusHistory(pane);
                         return pane;
                     }
+                },
+                ["pomodoro"] = new PaneMetadata
+                {
+                    Name = "pomodoro",
+                    Description = "Pomodoro timer - 25/5 work/break intervals",
+                    Icon = "🍅",
+                    Creator = () =>
+                    {
+                        var pane = new PomodoroPane(logger, themeManager, projectContext);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
+                },
+                ["kanban"] = new PaneMetadata
+                {
+                    Name = "kanban",
+                    Description = "Kanban board - Visual task management",
+                    Icon = "📋",
+                    Creator = () =>
+                    {
+                        var pane = new KanbanPane(logger, themeManager, projectContext, taskService, eventBus);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
+                },
+                ["timetracking"] = new PaneMetadata
+                {
+                    Name = "timetracking",
+                    Description = "Time tracking - Weekly reports and hour logging",
+                    Icon = "⏱️",
+                    Creator = () =>
+                    {
+                        var pane = new TimeTrackingPane(logger, themeManager, projectContext, timeTrackingService, projectService);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
+                },
+                ["clock"] = new PaneMetadata
+                {
+                    Name = "clock",
+                    Description = "Clock - Large time and date display",
+                    Icon = "🕐",
+                    Creator = () =>
+                    {
+                        var pane = new ClockPane(logger, themeManager, projectContext);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
+                },
+                ["settings"] = new PaneMetadata
+                {
+                    Name = "settings",
+                    Description = "Settings - Theme selector and configuration",
+                    Icon = "⚙️",
+                    Creator = () =>
+                    {
+                        var pane = new SettingsPane(logger, themeManager, projectContext, configManager);
+                        SetFocusHistory(pane);
+                        return pane;
+                    }
                 }
             };
 
@@ -187,7 +247,12 @@ namespace SuperTUI.Core.Infrastructure
                 ["ExcelImportPane"] = "excel-import",
                 ["HelpPane"] = "help",
                 ["CalendarPane"] = "calendar",
-                ["CommandLibraryPane"] = "commands"
+                ["CommandLibraryPane"] = "commands",
+                ["PomodoroPane"] = "pomodoro",
+                ["KanbanPane"] = "kanban",
+                ["TimeTrackingPane"] = "timetracking",
+                ["ClockPane"] = "clock",
+                ["SettingsPane"] = "settings"
             };
         }
 
@@ -218,8 +283,16 @@ namespace SuperTUI.Core.Infrastructure
             logger.Log(LogLevel.Debug, "PaneFactory", $"After trim: '{paneName}'");
 
             // Try to map .NET type name to factory name (for workspace restoration)
-            // This handles cases where SaveState() stored "TaskListPane" but we need "tasks"
-            if (typeNameToFactoryName.TryGetValue(paneName, out var factoryName))
+            // This handles cases where SaveState() stored "TaskListPane" or "SuperTUI.Panes.TaskListPane" but we need "tasks"
+            // First, strip namespace if present (e.g., "SuperTUI.Panes.TaskListPane" → "TaskListPane")
+            var simpleTypeName = paneName.Contains(".") ? paneName.Substring(paneName.LastIndexOf('.') + 1) : paneName;
+
+            if (typeNameToFactoryName.TryGetValue(simpleTypeName, out var factoryName))
+            {
+                paneName = factoryName;
+                logger.Log(LogLevel.Debug, "PaneFactory", $"Mapped type name '{simpleTypeName}' to factory name: {paneName}");
+            }
+            else if (typeNameToFactoryName.TryGetValue(paneName, out factoryName))
             {
                 paneName = factoryName;
                 logger.Log(LogLevel.Debug, "PaneFactory", $"Mapped type name to factory name: {paneName}");

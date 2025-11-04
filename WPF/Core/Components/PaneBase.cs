@@ -285,12 +285,12 @@ namespace SuperTUI.Core.Components
             var background = theme.Background;
             var headerBg = hasFocus ? theme.BorderActive : theme.Surface;  // Change header bg when focused
             var foreground = theme.Foreground;
-            var border = hasFocus ? theme.BorderActive : theme.Border;
+            var border = hasFocus ? theme.Focus : theme.Border;  // Use bright Focus color when focused
 
             // Container with focus indicator
             containerBorder.Background = new SolidColorBrush(background);
             containerBorder.BorderBrush = new SolidColorBrush(border);
-            containerBorder.BorderThickness = new Thickness(hasFocus ? 3 : 1);  // Much thicker border when focused (3px vs 1px)
+            containerBorder.BorderThickness = new Thickness(hasFocus ? 5 : 1);  // Much thicker border when focused (5px vs 1px)
 
             // Add drop shadow effect when focused
             if (hasFocus)
@@ -300,8 +300,8 @@ namespace SuperTUI.Core.Components
                     Color = border,
                     Direction = 0,
                     ShadowDepth = 0,
-                    BlurRadius = 12,
-                    Opacity = 0.8
+                    BlurRadius = 20,  // Increased for more visibility
+                    Opacity = 1.0     // Full opacity for brightness
                 };
             }
             else

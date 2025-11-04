@@ -72,6 +72,14 @@ namespace SuperTUI.Panes
             CacheThemeColors();
             RegisterPaneShortcuts();
             LoadCommands();
+
+            // Focus the list by default so shortcuts work immediately
+            this.Dispatcher.InvokeAsync(() =>
+            {
+                System.Windows.Input.Keyboard.Focus(commandListBox);
+                if (commandListBox.Items.Count > 0)
+                    commandListBox.SelectedIndex = 0;
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         protected override UIElement BuildContent()
@@ -123,6 +131,7 @@ namespace SuperTUI.Panes
                     searchBox.Text = "Search commands... (t:tag, +term1 +term2)";
             };
             searchBox.TextChanged += OnSearchTextChanged;
+            searchBox.KeyDown += SearchBox_KeyDown;
             Grid.SetRow(searchBox, 0);
             grid.Children.Add(searchBox);
 
@@ -138,6 +147,7 @@ namespace SuperTUI.Panes
                 HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
             commandListBox.SelectionChanged += OnCommandSelectionChanged;
+            commandListBox.KeyDown += CommandListBox_KeyDown;
             Grid.SetRow(commandListBox, 1);
             grid.Children.Add(commandListBox);
 
@@ -339,6 +349,35 @@ namespace SuperTUI.Panes
             {
                 selectedCommand = null;
                 detailPanel.Text = "Select a command to see details";
+            }
+        }
+
+        private void CommandListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Don't handle shortcuts if user is typing in the search box
+            if (Keyboard.Modifiers == ModifierKeys.None && Keyboard.FocusedElement is TextBox)
+                return;
+
+            var shortcuts = ShortcutManager.Instance;
+            if (shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, null, PaneName))
+                e.Handled = true;
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                searchBox.Text = "";
+                System.Windows.Input.Keyboard.Focus(commandListBox);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Down || e.Key == Key.Up)
+            {
+                // Allow arrow keys to move focus to list
+                System.Windows.Input.Keyboard.Focus(commandListBox);
+                if (commandListBox.Items.Count > 0 && commandListBox.SelectedIndex == -1)
+                    commandListBox.SelectedIndex = 0;
+                e.Handled = true;
             }
         }
 
@@ -604,6 +643,79 @@ namespace SuperTUI.Panes
 
             Grid.SetRow(buttonPanel, 4);
             grid.Children.Add(buttonPanel);
+
+            // Keyboard navigation: Enter advances fields, Ctrl+Enter saves, Escape cancels
+            titleBox.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    System.Windows.Input.Keyboard.Focus(descBox);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    window.DialogResult = false;
+                }
+            };
+
+            descBox.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    System.Windows.Input.Keyboard.Focus(cmdBox);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    window.DialogResult = false;
+                }
+            };
+
+            cmdBox.KeyDown += (s, e) =>
+            {
+                // Ctrl+Enter to save (don't interfere with normal Enter for multiline text)
+                if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    window.DialogResult = false;
+                }
+                // Tab to move to tags (default behavior)
+            };
+
+            tagsBox.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    window.DialogResult = false;
+                }
+            };
+
+            // Auto-focus title field on load
+            window.Loaded += (s, e) => System.Windows.Input.Keyboard.Focus(titleBox);
 
             window.Content = grid;
             return window;

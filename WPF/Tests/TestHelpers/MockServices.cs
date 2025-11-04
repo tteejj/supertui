@@ -44,6 +44,7 @@ namespace SuperTUI.Tests.TestHelpers
         public IReadOnlyList<KeyboardShortcut> GetGlobalShortcuts() => new List<KeyboardShortcut>();
         public IReadOnlyList<KeyboardShortcut> GetWorkspaceShortcuts(string workspaceName) => new List<KeyboardShortcut>();
         public IReadOnlyList<KeyboardShortcut> GetPaneShortcuts(string paneName) => new List<KeyboardShortcut>();
+        public IReadOnlyDictionary<string, IReadOnlyList<KeyboardShortcut>> GetAllPaneShortcuts() => new Dictionary<string, IReadOnlyList<KeyboardShortcut>>();
         public List<KeyboardShortcut> GetAllShortcuts() => new List<KeyboardShortcut>();
         public void ClearAll() { }
         public void ClearWorkspace(string workspaceName) { }
