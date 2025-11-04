@@ -52,6 +52,14 @@ namespace SuperTUI.Panes
         private TaskItemViewModel dateEditingTask;
         private TaskItemViewModel tagEditingTask;
 
+        // Full inline edit form
+        private Grid inlineEditForm;
+        private TextBox inlineEditTitle;
+        private TextBox inlineEditDueDate;
+        private TextBox inlineEditPriority;
+        private TextBox inlineEditTags;
+        private TaskItemViewModel fullEditingTask;
+
         // State
         private List<TaskItemViewModel> taskViewModels = new List<TaskItemViewModel>();
         private TaskItemViewModel selectedTask;
@@ -217,15 +225,20 @@ namespace SuperTUI.Panes
                 () => ShowQuickAdd(),
                 "Show quick add form");
 
-            // E (no modifiers): Start inline edit
+            // E (no modifiers): Start full inline edit (all fields)
             shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.None,
-                () => { if (selectedTask != null) StartInlineEdit(); },
-                "Start inline edit");
+                () => { if (selectedTask != null) StartFullInlineEdit(); },
+                "Start full inline edit");
 
-            // Enter (no modifiers): Start inline edit
-            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+            // Shift+E: Quick title-only edit
+            shortcuts.RegisterForPane(PaneName, Key.E, ModifierKeys.Shift,
                 () => { if (selectedTask != null) StartInlineEdit(); },
-                "Start inline edit");
+                "Quick title edit");
+
+            // Enter (no modifiers): Start full inline edit (all fields)
+            shortcuts.RegisterForPane(PaneName, Key.Enter, ModifierKeys.None,
+                () => { if (selectedTask != null) StartFullInlineEdit(); },
+                "Start full inline edit");
 
             // D (no modifiers): Delete selected task
             shortcuts.RegisterForPane(PaneName, Key.D, ModifierKeys.None,
@@ -274,9 +287,14 @@ namespace SuperTUI.Panes
         protected override void OnPaneGainedFocus()
         {
             // Determine which control should have focus based on current state
-            if (inlineEditBox != null && inlineEditBox.Visibility == Visibility.Visible)
+            if (inlineEditForm != null && inlineEditForm.Visibility == Visibility.Visible)
             {
-                // If editing, return focus to edit box
+                // If full editing, return focus to edit form title
+                System.Windows.Input.Keyboard.Focus(inlineEditTitle);
+            }
+            else if (inlineEditBox != null && inlineEditBox.Visibility == Visibility.Visible)
+            {
+                // If quick editing, return focus to edit box
                 System.Windows.Input.Keyboard.Focus(inlineEditBox);
             }
             else if (taskListBox != null)
@@ -322,102 +340,13 @@ namespace SuperTUI.Panes
         private Grid BuildTaskListPanel()
         {
             var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Quick add
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Filter bar
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Column headers
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Task list
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status bar
 
-            // Quick add form (hidden by default)
-            quickAddForm = new Grid
-            {
-                Background = surfaceBrush,
-                Visibility = Visibility.Collapsed
-            };
-            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }); // Title
-            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
-            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // DueDate
-            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
-            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
-
-            // Title field
-            quickAddTitle = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Padding = new Thickness(8, 4, 8, 4),
-                Background = surfaceBrush,
-                Foreground = fgBrush,
-                BorderThickness = new Thickness(1, 1, 0, 1),
-                BorderBrush = accentBrush
-            };
-            quickAddTitle.KeyDown += QuickAddField_KeyDown;
-            quickAddTitle.ApplyFocusStyling(themeManager);  // Apply focus indicator
-            Grid.SetColumn(quickAddTitle, 0);
-            quickAddForm.Children.Add(quickAddTitle);
-
-            // Separator
-            var sep1 = new TextBlock
-            {
-                Text = " | ",
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = borderBrush,
-                VerticalAlignment = VerticalAlignment.Center,
-                Background = surfaceBrush
-            };
-            Grid.SetColumn(sep1, 1);
-            quickAddForm.Children.Add(sep1);
-
-            // Due date field
-            quickAddDueDate = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Padding = new Thickness(8, 4, 8, 4),
-                Background = surfaceBrush,
-                Foreground = fgBrush,
-                BorderThickness = new Thickness(0, 1, 0, 1),
-                BorderBrush = accentBrush
-            };
-            quickAddDueDate.KeyDown += QuickAddField_KeyDown;
-            quickAddDueDate.ApplyFocusStyling(themeManager);  // Apply focus indicator
-            Grid.SetColumn(quickAddDueDate, 2);
-            quickAddForm.Children.Add(quickAddDueDate);
-
-            // Separator
-            var sep2 = new TextBlock
-            {
-                Text = " | ",
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = borderBrush,
-                VerticalAlignment = VerticalAlignment.Center,
-                Background = surfaceBrush
-            };
-            Grid.SetColumn(sep2, 3);
-            quickAddForm.Children.Add(sep2);
-
-            // Priority field
-            quickAddPriority = new TextBox
-            {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Padding = new Thickness(8, 4, 8, 4),
-                Background = surfaceBrush,
-                Foreground = fgBrush,
-                BorderThickness = new Thickness(0, 1, 1, 1),
-                BorderBrush = accentBrush,
-                Width = 60,
-                MaxLength = 1
-            };
-            quickAddPriority.KeyDown += QuickAddField_KeyDown;
-            quickAddPriority.ApplyFocusStyling(themeManager);  // Apply focus indicator
-            Grid.SetColumn(quickAddPriority, 4);
-            quickAddForm.Children.Add(quickAddPriority);
-
-            Grid.SetRow(quickAddForm, 0);
-            grid.Children.Add(quickAddForm);
+            // Build quick add form (will be inserted inline in task list, not as grid row)
+            BuildQuickAddForm();
 
             // Filter bar
             var filterBar = new StackPanel
@@ -435,13 +364,13 @@ namespace SuperTUI.Panes
             };
             filterBar.Children.Add(filterLabel);
 
-            Grid.SetRow(filterBar, 1);
+            Grid.SetRow(filterBar, 0);
             grid.Children.Add(filterBar);
 
             // Column headers
             var headerGrid = new Grid
             {
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Margin = new Thickness(0, 0, 0, 4)
             };
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Checkbox space
@@ -513,7 +442,7 @@ namespace SuperTUI.Panes
             Grid.SetColumn(tagsHeader, 6);
             headerGrid.Children.Add(tagsHeader);
 
-            Grid.SetRow(headerGrid, 2);
+            Grid.SetRow(headerGrid, 1);
             grid.Children.Add(headerGrid);
 
             // Task list with virtualization enabled
@@ -543,21 +472,120 @@ namespace SuperTUI.Panes
             VirtualizingPanel.SetVirtualizationMode(taskListBox, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(taskListBox, ScrollUnit.Pixel);
 
-            Grid.SetRow(taskListBox, 3);
+            Grid.SetRow(taskListBox, 2);
             grid.Children.Add(taskListBox);
 
-            // Status bar
+            // TUI-style status line at bottom (like vim/emacs)
+            var statusLineContainer = new Border
+            {
+                Background = surfaceBrush,
+                BorderThickness = new Thickness(0, 1, 0, 0),
+                BorderBrush = borderBrush,
+                Padding = new Thickness(8, 4, 8, 4)
+            };
+
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = dimBrush,
-                Margin = new Thickness(0, 8, 0, 0)
+                FontSize = 10,
+                Foreground = accentBrush,
+                Text = GetStatusLineText()
             };
-            Grid.SetRow(statusBar, 4);
-            grid.Children.Add(statusBar);
+            statusLineContainer.Child = statusBar;
+            Grid.SetRow(statusLineContainer, 3);
+            grid.Children.Add(statusLineContainer);
 
             return grid;
+        }
+
+        private void BuildQuickAddForm()
+        {
+            // Quick add form (hidden by default, inserted as first item in task list)
+            quickAddForm = new Grid
+            {
+                Background = bgBrush,
+                Visibility = Visibility.Collapsed,
+                Margin = new Thickness(0, 0, 0, 4)  // Match spacing of task items
+            };
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }); // Title
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // DueDate
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            quickAddForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
+
+            // Title field
+            quickAddTitle = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(1, 1, 0, 1),
+                BorderBrush = accentBrush
+            };
+            quickAddTitle.KeyDown += QuickAddField_KeyDown;
+            quickAddTitle.ApplyFocusStyling(themeManager);  // Apply focus indicator
+            Grid.SetColumn(quickAddTitle, 0);
+            quickAddForm.Children.Add(quickAddTitle);
+
+            // Separator
+            var sep1 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(sep1, 1);
+            quickAddForm.Children.Add(sep1);
+
+            // Due date field
+            quickAddDueDate = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 0, 1),
+                BorderBrush = accentBrush
+            };
+            quickAddDueDate.KeyDown += QuickAddField_KeyDown;
+            quickAddDueDate.ApplyFocusStyling(themeManager);  // Apply focus indicator
+            Grid.SetColumn(quickAddDueDate, 2);
+            quickAddForm.Children.Add(quickAddDueDate);
+
+            // Separator
+            var sep2 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(sep2, 3);
+            quickAddForm.Children.Add(sep2);
+
+            // Priority field
+            quickAddPriority = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 1, 1),
+                BorderBrush = accentBrush,
+                Width = 60,
+                MaxLength = 1
+            };
+            quickAddPriority.KeyDown += QuickAddField_KeyDown;
+            quickAddPriority.ApplyFocusStyling(themeManager);  // Apply focus indicator
+            Grid.SetColumn(quickAddPriority, 4);
+            quickAddForm.Children.Add(quickAddPriority);
         }
 
         private void SubscribeToTaskEvents()
@@ -721,6 +749,9 @@ namespace SuperTUI.Panes
         {
             taskListBox.Items.Clear();
 
+            // ALWAYS insert quick add form as first item (index 0) - inline with list
+            taskListBox.Items.Insert(0, quickAddForm);
+
             if (!taskViewModels.Any())
             {
                 var emptyText = new TextBlock
@@ -743,26 +774,29 @@ namespace SuperTUI.Panes
                 taskListBox.Items.Add(item);
             }
 
-            // Set selection and focus for keyboard navigation
-            if (taskListBox.Items.Count > 0)
+            // Set selection and focus for keyboard navigation (account for quick add form at index 0)
+            if (taskListBox.Items.Count > 1)
             {
-                // Preserve selection if possible, otherwise select first item
+                // Preserve selection if possible, otherwise select first task (index 1, since 0 is quick add)
                 if (selectedTask != null)
                 {
                     var index = taskViewModels.IndexOf(selectedTask);
                     if (index >= 0)
                     {
-                        taskListBox.SelectedIndex = index;
+                        // Add 1 to account for quick add form at index 0
+                        taskListBox.SelectedIndex = index + 1;
                     }
                     else
                     {
-                        taskListBox.SelectedIndex = 0;
+                        // First task is at index 1
+                        taskListBox.SelectedIndex = 1;
                         selectedTask = taskViewModels[0];
                     }
                 }
                 else
                 {
-                    taskListBox.SelectedIndex = 0;
+                    // First task is at index 1 (index 0 is quick add form)
+                    taskListBox.SelectedIndex = 1;
                     if (taskViewModels.Count > 0)
                     {
                         selectedTask = taskViewModels[0];
@@ -1002,11 +1036,62 @@ namespace SuperTUI.Panes
 
         private void UpdateStatusBar()
         {
-            var total = taskViewModels.Count;
-            var completed = taskViewModels.Count(vm => vm.Task.Status == TaskStatus.Completed);
-            var overdue = taskViewModels.Count(vm => vm.Task.IsOverdue);
+            if (statusBar != null)
+            {
+                statusBar.Text = GetStatusLineText();
+            }
+        }
 
-            statusBar.Text = $"{total} tasks | {completed} completed | {overdue} overdue | A:Add S:Subtask E:Edit D:Delete Space:Toggle Shift+D:Date Shift+T:Tags";
+        /// <summary>
+        /// Get context-aware status line text based on current pane state
+        /// Shows available keyboard actions like vim/emacs status lines
+        /// </summary>
+        private string GetStatusLineText()
+        {
+            // Command mode
+            if (isInternalCommand)
+            {
+                return commandBuffer;
+            }
+
+            // Full inline editing mode
+            if (inlineEditForm?.Visibility == Visibility.Visible || fullEditingTask != null)
+            {
+                return "[Enter] Save  [Tab] Next Field  [Esc] Cancel";
+            }
+
+            // Quick inline editing mode (title only)
+            if (inlineEditBox?.Visibility == Visibility.Visible || editingTask != null)
+            {
+                return "[Enter] Save  [Esc] Cancel";
+            }
+
+            // Date editing mode
+            if (dateEditBox?.Visibility == Visibility.Visible || dateEditingTask != null)
+            {
+                return "[Enter] Save  [Esc] Cancel  Format: today, tomorrow, 2024-12-25, 5d, 2w, mon, fri";
+            }
+
+            // Tag editing mode
+            if (tagEditBox?.Visibility == Visibility.Visible || tagEditingTask != null)
+            {
+                return "[Enter] Save  [Esc] Cancel  Format: tag1, tag2, tag3 (comma-separated)";
+            }
+
+            // Quick add mode
+            if (quickAddForm?.Visibility == Visibility.Visible)
+            {
+                return "[Enter] Create Task  [Tab] Next Field  [Esc] Cancel";
+            }
+
+            // Task selected mode
+            if (selectedTask != null)
+            {
+                return "[Enter] Edit All  [E]dit All  [Shift+E] Quick Edit Title  [D]elete  [Shift+T] Tags  [Shift+D] Date  [Space] Toggle  [C]omplete  [S]ubtask  [A]dd";
+            }
+
+            // No task selected mode (empty list or nothing selected)
+            return "[A]dd Task  [Ctrl+N] New Task  [/] Filter  [?] Help  [Ctrl+R] Refresh";
         }
 
         // Event Handlers
@@ -1026,6 +1111,9 @@ namespace SuperTUI.Panes
                     SourceWidget = "TaskListPane"
                 });
             }
+
+            // Update status line when selection changes
+            UpdateStatusBar();
         }
 
         private void TaskListBox_KeyDown(object sender, KeyEventArgs e)
@@ -1107,7 +1195,7 @@ namespace SuperTUI.Panes
                     ShowQuickAdd();
                     break;
                 case "edit":
-                    StartInlineEdit();
+                    StartFullInlineEdit();
                     break;
                 case "delete":
                 case "del":
@@ -1226,6 +1314,7 @@ namespace SuperTUI.Panes
             quickAddDueDate.Text = string.Empty;
             quickAddPriority.Text = "2"; // Default to Medium
             System.Windows.Input.Keyboard.Focus(quickAddTitle);
+            UpdateStatusBar();
         }
 
         private void HideQuickAdd()
@@ -1233,6 +1322,7 @@ namespace SuperTUI.Panes
             quickAddForm.Visibility = Visibility.Collapsed;
             pendingSubtaskParentId = null; // Clear if cancelled
             System.Windows.Input.Keyboard.Focus(taskListBox);
+            UpdateStatusBar();
         }
 
         private void CreateTaskFromQuickAdd()
@@ -1279,8 +1369,270 @@ namespace SuperTUI.Panes
 
             taskService.AddTask(task);
             pendingSubtaskParentId = null; // Clear after creating task
-            HideQuickAdd();
+
+            // Clear fields but keep form visible (inline with list)
+            quickAddTitle.Text = string.Empty;
+            quickAddDueDate.Text = string.Empty;
+            quickAddPriority.Text = "2"; // Reset to Medium
+
+            // Refresh task list (quick add form stays at index 0)
             RefreshTaskList();
+
+            // Return focus to quick add title for next task
+            System.Windows.Input.Keyboard.Focus(quickAddTitle);
+        }
+
+        private void StartFullInlineEdit()
+        {
+            if (selectedTask == null)
+                return;
+
+            // Find the selected item in the ListBox
+            var selectedIndex = taskListBox.SelectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= taskListBox.Items.Count)
+                return;
+
+            // Build full inline edit form
+            BuildInlineEditForm();
+
+            // Pre-populate fields with current task values
+            fullEditingTask = selectedTask;
+            inlineEditTitle.Text = selectedTask.Task.Title;
+            inlineEditDueDate.Text = selectedTask.Task.DueDate?.ToString("yyyy-MM-dd") ?? "";
+            inlineEditPriority.Text = ((int)selectedTask.Task.Priority).ToString();
+            inlineEditTags.Text = selectedTask.Task.Tags != null && selectedTask.Task.Tags.Any()
+                ? string.Join(", ", selectedTask.Task.Tags)
+                : "";
+
+            // Remove old item and insert edit form (avoids parenting error)
+            taskListBox.Items.RemoveAt(selectedIndex);
+            taskListBox.Items.Insert(selectedIndex, inlineEditForm);
+            taskListBox.SelectedIndex = selectedIndex;
+
+            System.Windows.Input.Keyboard.Focus(inlineEditTitle);
+            inlineEditTitle.SelectAll();
+            UpdateStatusBar();
+        }
+
+        private void BuildInlineEditForm()
+        {
+            // Full inline edit form (similar to quick add form)
+            inlineEditForm = new Grid
+            {
+                Background = bgBrush,
+                Visibility = Visibility.Visible,
+                Margin = new Thickness(0, 0, 0, 4)  // Match spacing of task items
+            };
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }); // Title
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // DueDate
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Priority
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Separator
+            inlineEditForm.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Tags
+
+            // Title field
+            inlineEditTitle = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(1, 1, 0, 1),
+                BorderBrush = accentBrush
+            };
+            inlineEditTitle.KeyDown += InlineEditField_KeyDown;
+            inlineEditTitle.ApplyFocusStyling(themeManager);
+            Grid.SetColumn(inlineEditTitle, 0);
+            inlineEditForm.Children.Add(inlineEditTitle);
+
+            // Separator
+            var sep1 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(sep1, 1);
+            inlineEditForm.Children.Add(sep1);
+
+            // Due date field
+            inlineEditDueDate = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 0, 1),
+                BorderBrush = accentBrush
+            };
+            inlineEditDueDate.KeyDown += InlineEditField_KeyDown;
+            inlineEditDueDate.ApplyFocusStyling(themeManager);
+            Grid.SetColumn(inlineEditDueDate, 2);
+            inlineEditForm.Children.Add(inlineEditDueDate);
+
+            // Separator
+            var sep2 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(sep2, 3);
+            inlineEditForm.Children.Add(sep2);
+
+            // Priority field
+            inlineEditPriority = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = fgBrush,
+                BorderThickness = new Thickness(0, 1, 0, 1),
+                BorderBrush = accentBrush,
+                Width = 60,
+                MaxLength = 1
+            };
+            inlineEditPriority.KeyDown += InlineEditField_KeyDown;
+            inlineEditPriority.ApplyFocusStyling(themeManager);
+            Grid.SetColumn(inlineEditPriority, 4);
+            inlineEditForm.Children.Add(inlineEditPriority);
+
+            // Separator
+            var sep3 = new TextBlock
+            {
+                Text = " | ",
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Foreground = borderBrush,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(sep3, 5);
+            inlineEditForm.Children.Add(sep3);
+
+            // Tags field
+            inlineEditTags = new TextBox
+            {
+                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontSize = 18,
+                Padding = new Thickness(8, 4, 8, 4),
+                Background = bgBrush,
+                Foreground = new SolidColorBrush(themeManager.CurrentTheme.Info),
+                BorderThickness = new Thickness(0, 1, 1, 1),
+                BorderBrush = accentBrush
+            };
+            inlineEditTags.KeyDown += InlineEditField_KeyDown;
+            inlineEditTags.ApplyFocusStyling(themeManager);
+            Grid.SetColumn(inlineEditTags, 6);
+            inlineEditForm.Children.Add(inlineEditTags);
+        }
+
+        private void InlineEditField_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SaveFullInlineEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelFullInlineEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Tab)
+            {
+                // Tab navigation between fields
+                if (sender == inlineEditTitle)
+                {
+                    System.Windows.Input.Keyboard.Focus(inlineEditDueDate);
+                    e.Handled = true;
+                }
+                else if (sender == inlineEditDueDate)
+                {
+                    System.Windows.Input.Keyboard.Focus(inlineEditPriority);
+                    e.Handled = true;
+                }
+                else if (sender == inlineEditPriority)
+                {
+                    System.Windows.Input.Keyboard.Focus(inlineEditTags);
+                    e.Handled = true;
+                }
+                else if (sender == inlineEditTags)
+                {
+                    System.Windows.Input.Keyboard.Focus(inlineEditTitle);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void SaveFullInlineEdit()
+        {
+            if (fullEditingTask == null || inlineEditForm == null)
+                return;
+
+            var task = taskService.GetTask(fullEditingTask.Task.Id);
+            if (task != null)
+            {
+                // Update title
+                var newTitle = inlineEditTitle.Text.Trim();
+                if (!string.IsNullOrEmpty(newTitle))
+                {
+                    task.Title = newTitle;
+                }
+
+                // Update due date
+                var dueDateText = inlineEditDueDate.Text.Trim();
+                if (!string.IsNullOrEmpty(dueDateText))
+                {
+                    var parsedDate = ParseDateInput(dueDateText);
+                    task.DueDate = parsedDate;
+                }
+                else
+                {
+                    task.DueDate = null;
+                }
+
+                // Update priority
+                var priorityText = inlineEditPriority.Text.Trim();
+                if (!string.IsNullOrEmpty(priorityText))
+                {
+                    task.Priority = priorityText switch
+                    {
+                        "1" => TaskPriority.High,
+                        "2" => TaskPriority.Medium,
+                        "3" => TaskPriority.Low,
+                        "0" => TaskPriority.Today,
+                        _ => task.Priority
+                    };
+                }
+
+                // Update tags
+                var tagInput = inlineEditTags.Text.Trim();
+                task.Tags = ParseTagInput(tagInput);
+
+                task.UpdatedAt = DateTime.Now;
+                taskService.UpdateTask(task);
+            }
+
+            fullEditingTask = null;
+            RefreshTaskList();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
+            UpdateStatusBar();
+        }
+
+        private void CancelFullInlineEdit()
+        {
+            fullEditingTask = null;
+            RefreshTaskList();
+            System.Windows.Input.Keyboard.Focus(taskListBox);
+            UpdateStatusBar();
         }
 
         private void StartInlineEdit()
@@ -1302,7 +1654,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
                 Padding = new Thickness(6, 2, 6, 2),
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderThickness = new Thickness(1),
                 BorderBrush = accentBrush,
@@ -1322,6 +1674,7 @@ namespace SuperTUI.Panes
 
             System.Windows.Input.Keyboard.Focus(inlineEditBox);
             inlineEditBox.SelectAll();
+            UpdateStatusBar();
         }
 
         private void InlineEditBox_KeyDown(object sender, KeyEventArgs e)
@@ -1363,6 +1716,7 @@ namespace SuperTUI.Panes
             editingTask = null;
             RefreshTaskList();
             System.Windows.Input.Keyboard.Focus(taskListBox);
+            UpdateStatusBar();
         }
 
         private void CancelInlineEdit()
@@ -1370,6 +1724,7 @@ namespace SuperTUI.Panes
             editingTask = null;
             RefreshTaskList();
             System.Windows.Input.Keyboard.Focus(taskListBox);
+            UpdateStatusBar();
         }
 
         // Date editing methods
@@ -1684,7 +2039,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
                 Padding = new Thickness(6, 2, 6, 2),
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = new SolidColorBrush(themeManager.CurrentTheme.Info),  // Theme-aware tag color
                 BorderThickness = new Thickness(1),
                 BorderBrush = new SolidColorBrush(themeManager.CurrentTheme.Info),
@@ -1714,8 +2069,8 @@ namespace SuperTUI.Panes
             System.Windows.Input.Keyboard.Focus(tagEditBox);
             tagEditBox.SelectAll();
 
-            // Update status bar with hints
-            statusBar.Text = "🏷️  Tags: comma-separated (bug, feature, urgent) | Enter: save | Esc: cancel";
+            // Update status bar with context-aware hints
+            UpdateStatusBar();
         }
 
         private void TagEditBox_KeyDown(object sender, KeyEventArgs e)
@@ -2203,26 +2558,26 @@ namespace SuperTUI.Panes
             // Update all controls
             if (quickAddForm != null)
             {
-                quickAddForm.Background = surfaceBrush;
+                quickAddForm.Background = bgBrush;
             }
 
             if (quickAddTitle != null)
             {
-                quickAddTitle.Background = surfaceBrush;
+                quickAddTitle.Background = bgBrush;
                 quickAddTitle.Foreground = fgBrush;
                 quickAddTitle.BorderBrush = accentBrush;
             }
 
             if (quickAddDueDate != null)
             {
-                quickAddDueDate.Background = surfaceBrush;
+                quickAddDueDate.Background = bgBrush;
                 quickAddDueDate.Foreground = fgBrush;
                 quickAddDueDate.BorderBrush = accentBrush;
             }
 
             if (quickAddPriority != null)
             {
-                quickAddPriority.Background = surfaceBrush;
+                quickAddPriority.Background = bgBrush;
                 quickAddPriority.Foreground = fgBrush;
                 quickAddPriority.BorderBrush = accentBrush;
             }
@@ -2239,7 +2594,14 @@ namespace SuperTUI.Panes
 
             if (statusBar != null)
             {
-                statusBar.Foreground = dimBrush;
+                statusBar.Foreground = accentBrush;
+
+                // Update status line container
+                if (statusBar.Parent is Border statusContainer)
+                {
+                    statusContainer.Background = surfaceBrush;
+                    statusContainer.BorderBrush = borderBrush;
+                }
             }
 
             // Refresh the task list to update all task items with new colors

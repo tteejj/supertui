@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -170,27 +171,25 @@ namespace SuperTUI.Panes
             Grid.SetRow(noteEditor, 0);
             mainLayout.Children.Add(noteEditor);
 
-            // Status bar
-            var statusBorder = new Border
+            // TUI-style status line at bottom (like vim/emacs)
+            var statusLineContainer = new Border
             {
-                BorderBrush = borderBrush,
+                Background = new SolidColorBrush(theme.Surface),
                 BorderThickness = new Thickness(0, 1, 0, 0),
-                Height = 24,
-                Padding = new Thickness(12, 0, 12, 0)
+                BorderBrush = borderBrush,
+                Padding = new Thickness(8, 4, 8, 4)
             };
 
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 18,
-                Foreground = fgBrush,
-                VerticalAlignment = VerticalAlignment.Center,
-                Text = "Ready"
+                FontSize = 10,
+                Foreground = new SolidColorBrush(theme.Primary),
+                Text = GetStatusLineText()
             };
-
-            statusBorder.Child = statusBar;
-            Grid.SetRow(statusBorder, 1);
-            mainLayout.Children.Add(statusBorder);
+            statusLineContainer.Child = statusBar;
+            Grid.SetRow(statusLineContainer, 1);
+            mainLayout.Children.Add(statusLineContainer);
 
             // Set up keyboard shortcuts
             this.PreviewKeyDown += OnPreviewKeyDown;
@@ -254,12 +253,13 @@ namespace SuperTUI.Panes
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
             };
             noteEditor.TextChanged += OnEditorTextChanged;
+            noteEditor.ApplyFocusStyling(themeManager);
         }
 
         private Border BuildCommandPalette()
         {
             var theme = themeManager.CurrentTheme;
-            var bgBrush = new SolidColorBrush(theme.Surface);
+            var bgBrush = new SolidColorBrush(theme.Background);
             var fgBrush = new SolidColorBrush(theme.Foreground);
             var borderBrush = new SolidColorBrush(theme.BorderActive);
             var transparentBrush = new SolidColorBrush(Colors.Transparent);
@@ -296,6 +296,7 @@ namespace SuperTUI.Panes
             };
             commandInput.TextChanged += OnCommandInputChanged;
             commandInput.PreviewKeyDown += OnCommandInputKeyDown;
+            commandInput.ApplyFocusStyling(themeManager);
 
             Grid.SetRow(commandInput, 0);
             grid.Children.Add(commandInput);
@@ -999,7 +1000,7 @@ namespace SuperTUI.Panes
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
                 ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(theme.Surface)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             var grid = new Grid();
@@ -1013,11 +1014,12 @@ namespace SuperTUI.Panes
                 FontSize = 18,
                 Margin = new Thickness(16),
                 Padding = new Thickness(8),
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1)
             };
+            nameInput.ApplyFocusStyling(themeManager);
 
             Grid.SetRow(nameInput, 0);
             grid.Children.Add(nameInput);
@@ -1509,33 +1511,32 @@ namespace SuperTUI.Panes
 
         private void UpdateStatusBar()
         {
-            if (currentNote == null)
+            if (statusBar != null)
             {
-                statusBar.Text = $"{filteredNotes.Count} notes | A:New O:Open E:Edit D:Delete S:Search F:Filter";
-                return;
+                statusBar.Text = GetStatusLineText();
+            }
+        }
+
+        /// <summary>
+        /// Get context-aware status line text based on current pane state
+        /// Shows available keyboard actions like vim/emacs status lines
+        /// </summary>
+        private string GetStatusLineText()
+        {
+            // When editing a note
+            if (currentNote != null && noteEditor != null && noteEditor.Visibility == Visibility.Visible)
+            {
+                return "[Ctrl+S] Save  [Ctrl+N] New Note  [Ctrl+D] Delete  [Esc] Exit";
             }
 
-            // Get line and column info
-            var currentLine = 1;
-            var currentCol = 1;
-            var totalLines = 1;
-
-            if (noteEditor != null && noteEditor.Text != null)
+            // When selecting from list
+            if (notesListBox != null && notesListBox.SelectedItem != null)
             {
-                totalLines = noteEditor.LineCount;
-                currentLine = noteEditor.GetLineIndexFromCharacterIndex(noteEditor.CaretIndex) + 1;
-                var lineStart = noteEditor.GetCharacterIndexFromLineIndex(currentLine - 1);
-                currentCol = noteEditor.CaretIndex - lineStart + 1;
+                return "[Enter] Open  [Ctrl+N] New  [Ctrl+D] Delete";
             }
 
-            // Get word and character count
-            var wordCount = noteEditor.Text.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
-            var charCount = noteEditor.Text.Length;
-            var modifiedIndicator = hasUnsavedChanges ? " •" : "";
-
-            // Simple notepad-style status bar
-            statusBar.Text = $"{currentNote.Name}{modifiedIndicator} | Ln {currentLine}/{totalLines} Col {currentCol} | " +
-                $"{wordCount}w {charCount}c | Ctrl+S:Save ESC:Close";
+            // Default state (no selection)
+            return "[A] New Note  [O] Open External  [E] Edit  [?] Help";
         }
 
         private void ShowStatus(string message, bool isError = false)
@@ -2521,10 +2522,10 @@ namespace SuperTUI.Panes
             var bgBrush = new SolidColorBrush(theme.Background);
             var fgBrush = new SolidColorBrush(theme.Foreground);
             var borderBrush = new SolidColorBrush(theme.Border);
-            var surfaceBrush = new SolidColorBrush(theme.Surface);
             var accentBrush = new SolidColorBrush(theme.Primary);
+            var surfaceBrush = new SolidColorBrush(theme.Surface);
 
-            // Update all controls
+            // Update all controls - use transparent backgrounds to show single pane background
             if (notesListBox != null)
             {
                 notesListBox.Foreground = fgBrush;
@@ -2539,7 +2540,14 @@ namespace SuperTUI.Panes
 
             if (statusBar != null)
             {
-                statusBar.Foreground = fgBrush;
+                statusBar.Foreground = accentBrush;
+
+                // Update status line container
+                if (statusBar.Parent is Border statusContainer)
+                {
+                    statusContainer.Background = surfaceBrush;
+                    statusContainer.BorderBrush = borderBrush;
+                }
             }
 
             this.InvalidateVisual();

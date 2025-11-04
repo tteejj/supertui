@@ -4,7 +4,9 @@
       "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED\")",
       "Bash(git checkout:*)",
       "Bash(Select-String -Pattern \"(error|warning|Build)\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(Select-String -Pattern \"Error|Warning|Build succeeded|Build failed\")",
+      "Bash(Select-Object -Last 10)"
     ],
     "deny": [],
     "ask": []

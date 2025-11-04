@@ -254,7 +254,7 @@ namespace SuperTUI.Panes
                 pathHeader.Foreground = new SolidColorBrush(foreground);
                 if (pathHeader.Parent is Border headerBorder)
                 {
-                    headerBorder.Background = new SolidColorBrush(surface);
+                    headerBorder.Background = new SolidColorBrush(background);
                     headerBorder.BorderBrush = new SolidColorBrush(border);
                 }
             }

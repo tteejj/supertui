@@ -10,6 +10,7 @@ using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Interfaces;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -137,6 +138,7 @@ namespace SuperTUI.Panes
             };
             searchBox.TextChanged += OnSearchTextChanged;
             searchBox.PreviewKeyDown += OnSearchBoxKeyDown;
+            searchBox.ApplyFocusStyling(themeManager);
             searchContainer.Child = searchBox;
             Grid.SetRow(searchContainer, 0);
             contentGrid.Children.Add(searchContainer);
@@ -180,6 +182,7 @@ namespace SuperTUI.Panes
             // Status bar
             var statusBar = new Border
             {
+                Background = new SolidColorBrush(theme.Background),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(0, 1, 0, 0),
                 Padding = new Thickness(16, 8, 16, 8)

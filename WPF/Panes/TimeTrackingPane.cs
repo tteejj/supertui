@@ -13,6 +13,7 @@ using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Core.Services;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -140,7 +141,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 13,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderBrush = borderBrush,
                 BorderThickness = new Thickness(1),
@@ -158,7 +159,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
                 Foreground = accentBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(16, 12, 16, 12),
                 Margin = new Thickness(16, 0, 16, 12),
                 Text = "Total: 0.0 hrs | 0 entries"
@@ -173,7 +174,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 12,
                 Foreground = fgBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(16, 8, 16, 8),
                 TextWrapping = TextWrapping.Wrap
             };
@@ -472,7 +473,7 @@ namespace SuperTUI.Panes
                 Width = 500,
                 Height = 450,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Owner = Window.GetWindow(this)
             };
 
@@ -497,6 +498,7 @@ namespace SuperTUI.Panes
                 Margin = new Thickness(0, 0, 0, 12),
                 MaxLength = 6
             };
+            timecodeBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(timecodeBox, row++);
             grid.Children.Add(timecodeBox);
 
@@ -537,6 +539,7 @@ namespace SuperTUI.Panes
                 Padding = new Thickness(8),
                 Margin = new Thickness(0, 0, 0, 12)
             };
+            hoursBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(hoursBox, row++);
             grid.Children.Add(hoursBox);
 
@@ -556,12 +559,13 @@ namespace SuperTUI.Panes
                 AcceptsReturn = true,
                 Height = 60
             };
+            descBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(descBox, row++);
             grid.Children.Add(descBox);
 
             // Buttons
             var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
-            var saveButton = new Button { Content = "Save", Width = 80, Margin = new Thickness(0, 0, 8, 0), Background = accentBrush, Foreground = bgBrush };
+            var saveButton = new Button { Content = "Save", Width = 80, Margin = new Thickness(0, 0, 8, 0), Background = accentBrush, Foreground = fgBrush };
             saveButton.Click += (s, e) =>
             {
                 var timecode = timecodeBox.Text.Trim();
@@ -600,7 +604,7 @@ namespace SuperTUI.Panes
                 window.Tag = entry;
                 window.DialogResult = true;
             };
-            var cancelButton = new Button { Content = "Cancel", Width = 80, Background = surfaceBrush, Foreground = fgBrush };
+            var cancelButton = new Button { Content = "Cancel", Width = 80, Background = bgBrush, Foreground = fgBrush };
             cancelButton.Click += (s, e) => window.DialogResult = false;
 
             // Tab order: timecode -> hours -> description (skip project unless needed)

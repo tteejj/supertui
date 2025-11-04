@@ -11,6 +11,7 @@ using SuperTUI.Core;
 using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -197,7 +198,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 18,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderBrush = borderBrush,
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -206,6 +207,7 @@ namespace SuperTUI.Panes
                 Visibility = Visibility.Collapsed
             };
             quickAddBox.KeyDown += QuickAddBox_KeyDown;
+            quickAddBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(quickAddBox, 0); // Changed from 1 to 0 (search box removed)
             grid.Children.Add(quickAddBox);
 
@@ -216,7 +218,7 @@ namespace SuperTUI.Panes
                 FontSize = 14,
                 Foreground = accentBrush,
                 Padding = new Thickness(8, 4, 8, 4),
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Text = $"Filter: {currentFilter}"
             };
             Grid.SetRow(filterLabel, 1); // Changed from 2 to 1 (search box removed)
@@ -244,18 +246,25 @@ namespace SuperTUI.Panes
             Grid.SetRow(projectListBox, 2); // Changed from 3 to 2 (search box removed)
             grid.Children.Add(projectListBox);
 
-            // Status bar
+            // TUI-style status line at bottom (like vim/emacs)
+            var statusLineContainer = new Border
+            {
+                Background = surfaceBrush,
+                BorderThickness = new Thickness(0, 1, 0, 0),
+                BorderBrush = borderBrush,
+                Padding = new Thickness(8, 4, 8, 4)
+            };
+
             statusBar = new TextBlock
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 14,
-                Foreground = dimBrush,
-                Background = surfaceBrush,
-                Padding = new Thickness(8, 4, 8, 4),
-                Text = GetStatusBarText()
+                FontSize = 10,
+                Foreground = accentBrush,
+                Text = GetStatusLineText()
             };
-            Grid.SetRow(statusBar, 3); // Changed from 4 to 3 (search box removed)
-            grid.Children.Add(statusBar);
+            statusLineContainer.Child = statusBar;
+            Grid.SetRow(statusLineContainer, 3); // Changed from 4 to 3 (search box removed)
+            grid.Children.Add(statusLineContainer);
 
             return grid;
         }
@@ -535,7 +544,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
                 Foreground = fgBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 BorderBrush = accentBrush,
                 BorderThickness = new Thickness(1),
                 Text = currentValue,
@@ -1168,18 +1177,29 @@ namespace SuperTUI.Panes
                 return;
             }
 
-            statusBar.Text = GetStatusBarText();
+            statusBar.Text = GetStatusLineText();
         }
 
-        private string GetStatusBarText()
+        /// <summary>
+        /// Get context-aware status line text based on current pane state
+        /// Shows available keyboard actions like vim/emacs status lines
+        /// </summary>
+        private string GetStatusLineText()
         {
-            var contextInfo = projectContext.CurrentProject != null
-                ? $" | Context: {projectContext.CurrentProject.Name}"
-                : "";
+            // When editing a field
+            if (editingFieldName != null)
+            {
+                return "[Enter] Save  [Esc] Cancel";
+            }
 
-            var modIndicator = modifiedFields.Count > 0 ? $" | {modifiedFields.Count} modified" : "";
+            // When project selected
+            if (selectedProject != null)
+            {
+                return "[Enter] Edit  [E]dit  [D]elete  [A]dd  [Esc] Deselect";
+            }
 
-            return $"{allProjects.Count} projects{modIndicator} | A:Add D:Delete F:Filter K:SetContext X:ExportT2020 Click:Edit{contextInfo}";
+            // Default state (no selection)
+            return "[A]dd Project  [/] Filter  [?] Help";
         }
 
         private void OnThemeChanged(object sender, EventArgs e)
@@ -1198,7 +1218,7 @@ namespace SuperTUI.Panes
             // Update all controls
             if (quickAddBox != null)
             {
-                quickAddBox.Background = surfaceBrush;
+                quickAddBox.Background = bgBrush;
                 quickAddBox.Foreground = fgBrush;
                 quickAddBox.BorderBrush = borderBrush;
             }
@@ -1206,7 +1226,7 @@ namespace SuperTUI.Panes
             if (filterLabel != null)
             {
                 filterLabel.Foreground = accentBrush;
-                filterLabel.Background = surfaceBrush;
+                filterLabel.Background = bgBrush;
             }
 
             if (projectListBox != null)
@@ -1222,8 +1242,14 @@ namespace SuperTUI.Panes
 
             if (statusBar != null)
             {
-                statusBar.Foreground = dimBrush;
-                statusBar.Background = surfaceBrush;
+                statusBar.Foreground = accentBrush;
+
+                // Update status line container
+                if (statusBar.Parent is Border statusContainer)
+                {
+                    statusContainer.Background = surfaceBrush;
+                    statusContainer.BorderBrush = borderBrush;
+                }
             }
 
             // Refresh project list and details to update colors

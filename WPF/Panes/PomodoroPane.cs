@@ -159,7 +159,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
                 Foreground = fgBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(16, 8, 16, 8)
             };
             Grid.SetRow(statusBar, 5);

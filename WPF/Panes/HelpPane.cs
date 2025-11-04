@@ -64,7 +64,7 @@ namespace SuperTUI.Panes
             // Title header
             var titleHeader = new Border
             {
-                Background = new SolidColorBrush(theme.Surface),
+                Background = new SolidColorBrush(theme.Background),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Padding = new Thickness(16, 12, 16, 12)

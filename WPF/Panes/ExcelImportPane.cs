@@ -10,6 +10,7 @@ using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Core.Services;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -109,7 +110,6 @@ namespace SuperTUI.Panes
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Clipboard input
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Preview
             mainLayout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status
-            mainLayout.Background = bgBrush;
             mainLayout.PreviewKeyDown += MainLayout_PreviewKeyDown;
             mainLayout.Focusable = true;
 
@@ -164,7 +164,7 @@ namespace SuperTUI.Panes
                 Margin = new Thickness(0, 0, 10, 0),
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = accentBrush,
                 BorderBrush = accentBrush,
                 BorderThickness = new Thickness(2),
@@ -178,7 +178,7 @@ namespace SuperTUI.Panes
                 Padding = new Thickness(12, 8, 12, 8),
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderBrush = borderBrush,
                 BorderThickness = new Thickness(2),
@@ -208,7 +208,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderBrush = borderBrush,
                 BorderThickness = new Thickness(1),
@@ -220,6 +220,7 @@ namespace SuperTUI.Panes
                 TextWrapping = TextWrapping.NoWrap
             };
             clipboardTextBox.TextChanged += ClipboardTextBox_TextChanged;
+            clipboardTextBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(clipboardTextBox, 5);
             mainLayout.Children.Add(clipboardTextBox);
 
@@ -230,7 +231,7 @@ namespace SuperTUI.Panes
                 FontSize = 12,
                 Foreground = dimBrush,
                 Padding = new Thickness(16, 8, 16, 8),
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Margin = new Thickness(16, 0, 16, 8),
                 TextWrapping = TextWrapping.Wrap,
                 Text = "Preview: (paste data to see preview)"
@@ -244,7 +245,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 14,
                 Foreground = fgBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(16, 8, 16, 8),
                 Text = "Ready to import | Ctrl+R:Read from Excel | P:CycleProfile I:Import"
             };
@@ -262,7 +263,7 @@ namespace SuperTUI.Panes
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.Margin = new Thickness(16, 0, 16, 12);
-            grid.Background = surfaceBrush;
+            grid.Background = bgBrush;
             grid.Height = 40;
 
             // Profile label
@@ -337,6 +338,7 @@ namespace SuperTUI.Panes
                     e.Handled = true;
                 }
             };
+            startCellBox.ApplyFocusStyling(themeManager);
             Grid.SetColumn(startCellBox, 3);
             grid.Children.Add(startCellBox);
 
@@ -736,7 +738,7 @@ namespace SuperTUI.Panes
             // Update all controls
             if (clipboardTextBox != null)
             {
-                clipboardTextBox.Background = surfaceBrush;
+                clipboardTextBox.Background = bgBrush;
                 clipboardTextBox.Foreground = fgBrush;
                 clipboardTextBox.BorderBrush = borderBrush;
             }
@@ -744,13 +746,13 @@ namespace SuperTUI.Panes
             if (previewText != null)
             {
                 previewText.Foreground = fgBrush;
-                previewText.Background = surfaceBrush;
+                previewText.Background = bgBrush;
             }
 
             if (statusLabel != null)
             {
                 statusLabel.Foreground = fgBrush;
-                statusLabel.Background = surfaceBrush;
+                statusLabel.Background = bgBrush;
             }
 
             this.InvalidateVisual();

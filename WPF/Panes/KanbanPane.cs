@@ -13,6 +13,7 @@ using SuperTUI.Core.Components;
 using SuperTUI.Core.Infrastructure;
 using SuperTUI.Core.Models;
 using SuperTUI.Core.Services;
+using SuperTUI.Extensions;
 using SuperTUI.Infrastructure;
 
 namespace SuperTUI.Panes
@@ -143,7 +144,7 @@ namespace SuperTUI.Panes
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 12,
                 Foreground = fgBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(16, 8, 16, 8),
                 TextWrapping = TextWrapping.Wrap
             };
@@ -167,7 +168,7 @@ namespace SuperTUI.Panes
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
                 Foreground = accentBrush,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Padding = new Thickness(12, 8, 12, 8),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 TextAlignment = TextAlignment.Center
@@ -180,7 +181,7 @@ namespace SuperTUI.Panes
             {
                 FontFamily = new FontFamily("JetBrains Mono, Consolas"),
                 FontSize = 13,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Foreground = fgBrush,
                 BorderBrush = borderBrush,
                 BorderThickness = new Thickness(1),
@@ -430,7 +431,7 @@ namespace SuperTUI.Panes
                 Width = 400,
                 Height = 150,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Background = surfaceBrush,
+                Background = bgBrush,
                 Owner = Window.GetWindow(this)
             };
 
@@ -452,13 +453,14 @@ namespace SuperTUI.Panes
                 if (e.Key == Key.Enter) dialog.DialogResult = true;
                 else if (e.Key == Key.Escape) dialog.DialogResult = false;
             };
+            titleBox.ApplyFocusStyling(themeManager);
             Grid.SetRow(titleBox, 0);
             grid.Children.Add(titleBox);
 
             var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
             var saveButton = new Button { Content = "Add", Width = 80, Margin = new Thickness(0, 0, 8, 0), Background = accentBrush, Foreground = bgBrush };
             saveButton.Click += (s, e) => dialog.DialogResult = true;
-            var cancelButton = new Button { Content = "Cancel", Width = 80, Background = surfaceBrush, Foreground = fgBrush };
+            var cancelButton = new Button { Content = "Cancel", Width = 80, Background = bgBrush, Foreground = fgBrush };
             cancelButton.Click += (s, e) => dialog.DialogResult = false;
             buttonPanel.Children.Add(saveButton);
             buttonPanel.Children.Add(cancelButton);

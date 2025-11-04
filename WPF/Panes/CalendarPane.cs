@@ -583,7 +583,7 @@ namespace SuperTUI.Panes
             {
                 BorderBrush = hasHighlightedTask ? accentBrush : borderBrush,
                 BorderThickness = hasHighlightedTask ? new Thickness(2) : new Thickness(0.5),
-                Background = isSelected ? new SolidColorBrush(theme.Surface) :
+                Background = isSelected ? new SolidColorBrush(Color.FromArgb(60, theme.Background.R, theme.Background.G, theme.Background.B)) :
                              hasHighlightedTask ? new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B)) :
                              isToday ? new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B)) :
                              bgBrush,
@@ -781,7 +781,7 @@ namespace SuperTUI.Panes
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this),
                 ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(theme.Surface)
+                Background = new SolidColorBrush(theme.Background)
             };
 
             var grid = new Grid();
@@ -806,7 +806,7 @@ namespace SuperTUI.Panes
                 FontSize = 14,
                 Margin = new Thickness(16, 0, 16, 16),
                 Padding = new Thickness(8, 4, 8, 4),
-                Background = new SolidColorBrush(theme.BackgroundSecondary),
+                Background = new SolidColorBrush(theme.Background),
                 Foreground = new SolidColorBrush(theme.Foreground),
                 BorderBrush = new SolidColorBrush(theme.Border),
                 BorderThickness = new Thickness(1)
