@@ -92,22 +92,25 @@ namespace SuperTUI.Panes
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Centered palette box
+            // Centered palette box - CRT TERMINAL AESTHETIC
+            var phosphorGreen = Color.FromRgb(0, 255, 0);  // #00FF00
+            var darkGreen = Color.FromRgb(0, 20, 0);  // Very dark green background
+
             paletteBox = new Border
             {
                 Width = 600,
                 Height = 400,
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Border),
+                Background = new SolidColorBrush(Colors.Black),  // Pure black CRT background
+                BorderBrush = new SolidColorBrush(phosphorGreen),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(4),
+                BorderThickness = new Thickness(2),  // Thicker for visibility
+                CornerRadius = new CornerRadius(0),  // Sharp corners, no rounding
                 Effect = new System.Windows.Media.Effects.DropShadowEffect
                 {
-                    Color = Colors.Black,
-                    Opacity = 0.5,
-                    BlurRadius = 20,
+                    Color = phosphorGreen,  // Green glow, not black shadow
+                    Opacity = 0.8,
+                    BlurRadius = 15,  // Phosphor glow effect
                     ShadowDepth = 0
                 }
             };
@@ -118,22 +121,22 @@ namespace SuperTUI.Panes
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Results
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Status
 
-            // Search box
+            // Search box - CRT TERMINAL STYLE
             var searchContainer = new Border
             {
-                BorderBrush = new SolidColorBrush(theme.Border),
+                BorderBrush = new SolidColorBrush(phosphorGreen),
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(16, 12, 16, 12)
+                Padding = new Thickness(4, 2, 4, 2)  // Minimal padding for terminal look
             };
 
             searchBox = new TextBox
             {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 14,
-                Foreground = new SolidColorBrush(theme.Foreground),
+                FontFamily = new FontFamily("Consolas"),  // True terminal font
+                FontSize = 12,
+                Foreground = new SolidColorBrush(phosphorGreen),  // Green text
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                CaretBrush = new SolidColorBrush(theme.Primary),
+                CaretBrush = new SolidColorBrush(phosphorGreen),  // Green cursor
                 Text = ""
             };
             searchBox.TextChanged += OnSearchTextChanged;
@@ -143,34 +146,35 @@ namespace SuperTUI.Panes
             Grid.SetRow(searchContainer, 0);
             contentGrid.Children.Add(searchContainer);
 
-            // Results list
+            // Results list - CRT TERMINAL STYLE
             resultsListBox = new ListBox
             {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
-                FontSize = 12,
-                Foreground = new SolidColorBrush(theme.Foreground),
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(phosphorGreen),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Padding = new Thickness(8, 8, 8, 8)
+                Padding = new Thickness(2, 2, 2, 2)  // Minimal padding, compact
             };
             ScrollViewer.SetHorizontalScrollBarVisibility(resultsListBox, ScrollBarVisibility.Disabled);
 
-            // Clean list style
+            // Clean list style - CRT TERMINAL
             var itemStyle = new Style(typeof(ListBoxItem));
             itemStyle.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, Brushes.Transparent));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(theme.Foreground)));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(8, 6, 8, 6)));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(phosphorGreen)));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.PaddingProperty, new Thickness(2, 1, 2, 1)));  // Tight spacing
             itemStyle.Setters.Add(new Setter(ListBoxItem.BorderThicknessProperty, new Thickness(0)));
-            itemStyle.Setters.Add(new Setter(ListBoxItem.MarginProperty, new Thickness(0, 2, 0, 2)));
+            itemStyle.Setters.Add(new Setter(ListBoxItem.MarginProperty, new Thickness(0)));  // No margins between items
 
-            // Hover effect (semi-transparent primary/accent color)
+            // Hover effect (darker green background)
             var hoverTrigger = new Trigger { Property = ListBoxItem.IsMouseOverProperty, Value = true };
-            hoverTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, theme.Primary.R, theme.Primary.G, theme.Primary.B))));
+            hoverTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(darkGreen)));
             itemStyle.Triggers.Add(hoverTrigger);
 
-            // Selection effect (semi-transparent primary/accent color, slightly brighter)
+            // Selection effect (full green background, black text for contrast)
             var selectedTrigger = new Trigger { Property = ListBoxItem.IsSelectedProperty, Value = true };
-            selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(60, theme.Primary.R, theme.Primary.G, theme.Primary.B))));
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.BackgroundProperty, new SolidColorBrush(phosphorGreen)));
+            selectedTrigger.Setters.Add(new Setter(ListBoxItem.ForegroundProperty, new SolidColorBrush(Colors.Black)));  // Invert colors
             itemStyle.Triggers.Add(selectedTrigger);
 
             resultsListBox.ItemContainerStyle = itemStyle;
@@ -179,30 +183,21 @@ namespace SuperTUI.Panes
             Grid.SetRow(resultsListBox, 1);
             contentGrid.Children.Add(resultsListBox);
 
-            // Status bar
+            // Status bar - CRT TERMINAL STYLE
             var statusBar = new Border
             {
-                Background = new SolidColorBrush(theme.Background),
-                BorderBrush = new SolidColorBrush(theme.Border),
+                Background = Brushes.Transparent,
+                BorderBrush = new SolidColorBrush(phosphorGreen),
                 BorderThickness = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(16, 8, 16, 8)
+                Padding = new Thickness(4, 2, 4, 2)  // Minimal padding
             };
-
-            // Muted foreground for status text (use ForegroundSecondary or calculate if not available)
-            var mutedFg = theme.ForegroundSecondary != default(Color)
-                ? new SolidColorBrush(theme.ForegroundSecondary)
-                : new SolidColorBrush(Color.FromRgb(
-                    (byte)(theme.Foreground.R * 0.6),
-                    (byte)(theme.Foreground.G * 0.6),
-                    (byte)(theme.Foreground.B * 0.6)
-                ));
 
             statusText = new TextBlock
             {
-                FontFamily = new FontFamily("JetBrains Mono, Consolas"),
+                FontFamily = new FontFamily("Consolas"),
                 FontSize = 10,
-                Foreground = mutedFg,
-                Text = "Type to search panes and commands | ↑↓ Navigate | Enter Execute | Esc Close"
+                Foreground = new SolidColorBrush(phosphorGreen),
+                Text = "↑↓ Navigate | Enter Execute | Esc Close"  // Shorter, terminal-style
             };
             statusBar.Child = statusText;
             Grid.SetRow(statusBar, 2);
