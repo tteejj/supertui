@@ -68,6 +68,7 @@ namespace SuperTUI.Panes
         private bool isInternalCommand = false;
         private string commandBuffer = string.Empty;
         private Guid? pendingSubtaskParentId = null; // Parent ID for subtask being created via quick add
+        private TaskItemViewModel pendingDeleteTask = null; // Task awaiting delete confirmation (inline, no modal)
 
         // Theme colors (cached for performance)
         private SolidColorBrush bgBrush;
@@ -1122,6 +1123,15 @@ namespace SuperTUI.Panes
             if (isInternalCommand)
             {
                 HandleInternalCommand(e);
+                return;
+            }
+
+            // Handle Escape to cancel pending delete confirmation (inline TUI-style)
+            if (e.Key == Key.Escape && pendingDeleteTask != null)
+            {
+                pendingDeleteTask = null;
+                UpdateStatusBar("Delete cancelled");
+                e.Handled = true;
                 return;
             }
 
@@ -2213,19 +2223,38 @@ namespace SuperTUI.Panes
             if (selectedTask == null)
                 return;
 
-            var result = MessageBox.Show(
-                $"Delete task '{selectedTask.Task.Title}'?\n\nYou can undo with Ctrl+Z.",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
+            // TUI-style inline confirmation: no modal dialog
+            // First press: Mark for deletion and show confirmation in status bar
+            // Second press (within 3 seconds): Actually delete
+            if (pendingDeleteTask == null || pendingDeleteTask.Task.Id != selectedTask.Task.Id)
             {
-                // Use command pattern for undo support
-                var deleteCommand = new DeleteTaskCommand(taskService, selectedTask.Task);
+                // First press - mark for deletion
+                pendingDeleteTask = selectedTask;
+                UpdateStatusBar($"⚠ DELETE '{selectedTask.Task.Title}'? Press D again to confirm, Esc to cancel (Ctrl+Z to undo)");
+
+                // Auto-cancel after 3 seconds
+                var timer = new System.Windows.Threading.DispatcherTimer();
+                timer.Interval = TimeSpan.FromSeconds(3);
+                timer.Tick += (s, e) =>
+                {
+                    if (pendingDeleteTask == selectedTask)
+                    {
+                        pendingDeleteTask = null;
+                        UpdateStatusBar();
+                    }
+                    timer.Stop();
+                };
+                timer.Start();
+            }
+            else
+            {
+                // Second press - confirmed, execute delete
+                var deleteCommand = new DeleteTaskCommand(taskService, pendingDeleteTask.Task);
                 commandHistory.Execute(deleteCommand);
 
+                pendingDeleteTask = null;
                 RefreshTaskList();
+                UpdateStatusBar($"Task deleted (Ctrl+Z to undo)");
                 System.Windows.Input.Keyboard.Focus(taskListBox);
             }
         }
