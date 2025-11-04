@@ -174,16 +174,25 @@ namespace SuperTUI.Core.Infrastructure
             // 2. Try first focusable child
             // 3. Try pane again
             // 4. Try main window as last resort
-            FocusDebugger.LogDispatcherOperation("ApplyFocusToPane", System.Windows.Threading.DispatcherPriority.Input,
-                $"Pane: {pane.PaneName}");
 
-            pane.Dispatcher.BeginInvoke(new Action(() =>
+            // CRITICAL FIX: Check focus BEFORE queuing async operation to avoid race condition
+            // If pane already has focus, skip async operation entirely
+            if (pane.IsKeyboardFocusWithin)
             {
-                FocusDebugger.LogFocusOperation("PaneManager.FocusPane.AsyncApply", pane, pane.PaneName,
-                    $"IsKeyboardFocusWithin={pane.IsKeyboardFocusWithin}");
+                FocusDebugger.LogFocusResult("PaneManager.FocusPane.AlreadyFocused", true, pane, sw.ElapsedMilliseconds,
+                    "Pane already has keyboard focus (skipped async operation)");
+            }
+            else
+            {
+                FocusDebugger.LogDispatcherOperation("ApplyFocusToPane", System.Windows.Threading.DispatcherPriority.Input,
+                    $"Pane: {pane.PaneName}");
 
-                if (!pane.IsKeyboardFocusWithin)
+                pane.Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    FocusDebugger.LogFocusOperation("PaneManager.FocusPane.AsyncApply", pane, pane.PaneName,
+                        $"IsKeyboardFocusWithin={pane.IsKeyboardFocusWithin}");
+
+                    // Apply focus (focus might have been gained by the time this executes, but that's okay)
                     bool focusApplied = focusHistory.ApplyFocusToPane(pane);
 
                     FocusDebugger.LogFocusResult("PaneManager.FocusPane.AsyncApply", focusApplied, pane, sw.ElapsedMilliseconds,
@@ -194,13 +203,8 @@ namespace SuperTUI.Core.Infrastructure
                         logger.Log(LogLevel.Warning, "PaneManager",
                             $"Failed to apply focus to pane {pane.PaneName} even with fallback chain");
                     }
-                }
-                else
-                {
-                    FocusDebugger.LogFocusResult("PaneManager.FocusPane.AsyncApply.Skipped", true, pane, sw.ElapsedMilliseconds,
-                        "Pane already has keyboard focus");
-                }
-            }), System.Windows.Threading.DispatcherPriority.Input);
+                }), System.Windows.Threading.DispatcherPriority.Input);
+            }
 
             PaneFocusChanged?.Invoke(this, new PaneEventArgs(pane));
 

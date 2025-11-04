@@ -744,10 +744,22 @@ namespace SuperTUI
         /// </summary>
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            // CRITICAL: Block shortcuts when modal is open (let modal handle its own keyboard input)
+            if (ModalOverlay != null && ModalOverlay.Visibility == Visibility.Visible)
+            {
+                // Modal is open - don't process global/workspace shortcuts
+                // The modal (CommandPalette) will handle its own keyboard events
+                return;
+            }
+
             var shortcuts = serviceContainer.GetRequiredService<IShortcutManager>();
 
-            // Let ShortcutManager handle registered shortcuts first
-            bool handled = shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers);
+            // Get current context for shortcut handling
+            string currentWorkspace = workspaceManager?.CurrentWorkspace?.Name;
+            string focusedPaneName = paneManager?.FocusedPane?.PaneName;
+
+            // Let ShortcutManager handle registered shortcuts first (with context)
+            bool handled = shortcuts.HandleKeyPress(e.Key, e.KeyboardDevice.Modifiers, currentWorkspace, focusedPaneName);
 
             if (handled)
             {
