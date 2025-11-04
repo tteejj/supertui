@@ -128,54 +128,69 @@ namespace SuperTUI.Panes
         {
             var shortcuts = ShortcutManager.Instance;
 
-            // Navigation shortcuts
+            // Day-by-day navigation (TUI-style: arrow keys = single steps)
             shortcuts.RegisterForPane(PaneName, Key.Left, ModifierKeys.None,
                 () => {
-                    if (viewMode == CalendarViewMode.Month)
+                    selectedDate = (selectedDate ?? DateTime.Today).AddDays(-1);
+                    // Auto-navigate to previous month if we go before current month
+                    if (selectedDate.Value.Month != currentMonth.Month || selectedDate.Value.Year != currentMonth.Year)
                     {
-                        currentMonth = currentMonth.AddMonths(-1);
-                    }
-                    else
-                    {
-                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(-7);
+                        currentMonth = new DateTime(selectedDate.Value.Year, selectedDate.Value.Month, 1);
                     }
                     RenderCalendar();
                 },
-                "Previous month/week");
+                "Move selection left (previous day)");
 
             shortcuts.RegisterForPane(PaneName, Key.Right, ModifierKeys.None,
                 () => {
-                    if (viewMode == CalendarViewMode.Month)
+                    selectedDate = (selectedDate ?? DateTime.Today).AddDays(1);
+                    // Auto-navigate to next month if we go beyond current month
+                    if (selectedDate.Value.Month != currentMonth.Month || selectedDate.Value.Year != currentMonth.Year)
                     {
-                        currentMonth = currentMonth.AddMonths(1);
-                    }
-                    else
-                    {
-                        selectedDate = (selectedDate ?? DateTime.Today).AddDays(7);
+                        currentMonth = new DateTime(selectedDate.Value.Year, selectedDate.Value.Month, 1);
                     }
                     RenderCalendar();
                 },
-                "Next month/week");
+                "Move selection right (next day)");
 
             shortcuts.RegisterForPane(PaneName, Key.Up, ModifierKeys.None,
                 () => {
-                    if (selectedDate.HasValue)
+                    selectedDate = (selectedDate ?? DateTime.Today).AddDays(-7);
+                    // Auto-navigate if we go to different month
+                    if (selectedDate.Value.Month != currentMonth.Month || selectedDate.Value.Year != currentMonth.Year)
                     {
-                        selectedDate = selectedDate.Value.AddDays(-7);
-                        RenderCalendar();
+                        currentMonth = new DateTime(selectedDate.Value.Year, selectedDate.Value.Month, 1);
                     }
+                    RenderCalendar();
                 },
-                "Move selection up one week");
+                "Move selection up (one week earlier)");
 
             shortcuts.RegisterForPane(PaneName, Key.Down, ModifierKeys.None,
                 () => {
-                    if (selectedDate.HasValue)
+                    selectedDate = (selectedDate ?? DateTime.Today).AddDays(7);
+                    // Auto-navigate if we go to different month
+                    if (selectedDate.Value.Month != currentMonth.Month || selectedDate.Value.Year != currentMonth.Year)
                     {
-                        selectedDate = selectedDate.Value.AddDays(7);
-                        RenderCalendar();
+                        currentMonth = new DateTime(selectedDate.Value.Year, selectedDate.Value.Month, 1);
                     }
+                    RenderCalendar();
                 },
-                "Move selection down one week");
+                "Move selection down (one week later)");
+
+            // Month navigation
+            shortcuts.RegisterForPane(PaneName, Key.OemOpenBrackets, ModifierKeys.None,
+                () => {
+                    currentMonth = currentMonth.AddMonths(-1);
+                    RenderCalendar();
+                },
+                "Previous month");
+
+            shortcuts.RegisterForPane(PaneName, Key.OemCloseBrackets, ModifierKeys.None,
+                () => {
+                    currentMonth = currentMonth.AddMonths(1);
+                    RenderCalendar();
+                },
+                "Next month");
 
             // View mode shortcuts
             shortcuts.RegisterForPane(PaneName, Key.M, ModifierKeys.None,
@@ -197,19 +212,19 @@ namespace SuperTUI.Panes
                 () => {
                     if (selectedDate.HasValue)
                     {
-                        ShowTasksForDate(selectedDate.Value);
-                    }
-                },
-                "Show tasks for selected date");
-
-            shortcuts.RegisterForPane(PaneName, Key.T, ModifierKeys.Control,
-                () => {
-                    if (selectedDate.HasValue)
-                    {
                         CreateTaskForDate(selectedDate.Value);
                     }
                 },
                 "Create new task for selected date");
+
+            shortcuts.RegisterForPane(PaneName, Key.V, ModifierKeys.None,
+                () => {
+                    if (selectedDate.HasValue)
+                    {
+                        ShowTasksForDate(selectedDate.Value);
+                    }
+                },
+                "View tasks for selected date");
 
             shortcuts.RegisterForPane(PaneName, Key.Home, ModifierKeys.None,
                 () => {
@@ -253,7 +268,7 @@ namespace SuperTUI.Panes
                 FontSize = 12,
                 Foreground = dimBrush,
                 Margin = new Thickness(8, 4, 8, 4),
-                Text = "←/→: Prev/Next Month | M: Month View | W: Week View | Enter: View Tasks | Ctrl+T: New Task"
+                Text = "Arrows: Navigate Days | [/]: Prev/Next Month | Enter: Create Task | V: View Tasks | M/W: Month/Week View"
             };
             Grid.SetRow(statusBar, 3);
             mainLayout.Children.Add(statusBar);
